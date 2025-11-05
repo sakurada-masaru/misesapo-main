@@ -267,6 +267,68 @@ main { width: 100%; max-width: var(--container-lg); margin: 24px auto; padding: 
   .offcanvas, .offcanvas-overlay { transition: none; }
 }
 
+/* Splash Screen */
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+}
+.splash-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.splash-logo {
+  width: 144px;
+  height: 144px;
+  animation: splash-fade-in 0.8s ease-out, splash-pulse 1.5s ease-in-out 0.8s infinite;
+}
+@keyframes splash-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes splash-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+.page-content-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+@media (min-width: 768px) {
+  .splash-screen {
+    display: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo {
+    animation: none;
+  }
+  .splash-screen {
+    transition: none;
+  }
+}
+
 /* Edge swipe hint (mobile) */
 .edge-swipe-hint { position: fixed; left: 4px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-left: 12px solid #FF679C; opacity: .6; pointer-events: none; z-index: 30; display: none; }
 @media (max-width: 767.98px) { .edge-swipe-hint { display: block; } }

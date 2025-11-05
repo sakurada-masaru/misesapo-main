@@ -203,8 +203,11 @@
           modal.style.display = 'none';
           document.body.style.overflow = '';
           error.style.display = 'none';
-          // Show page content
-          document.getElementById('page-content').classList.remove('page-content-hidden');
+          // Show page content (splash screen will handle the animation)
+          const pageContent = document.getElementById('page-content');
+          if (pageContent) {
+            pageContent.classList.remove('page-content-hidden');
+          }
         } else {
           error.style.display = 'block';
           input.value = '';
@@ -213,10 +216,18 @@
       });
       
       // Hide page content until authenticated
-      document.getElementById('page-content').classList.add('page-content-hidden');
+      const pageContent = document.getElementById('page-content');
+      if (pageContent) {
+        pageContent.classList.add('page-content-hidden');
+      }
     } else {
       // Already authenticated, hide modal
       document.getElementById('password-protection-modal').style.display = 'none';
+      // Show page content (splash screen will handle the animation)
+      const pageContent = document.getElementById('page-content');
+      if (pageContent) {
+        pageContent.classList.remove('page-content-hidden');
+      }
     }
   })();
   
