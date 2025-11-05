@@ -265,6 +265,15 @@ def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) 
     base_path = context.get("base_path", "/")
     if base_path != "/":
         base_prefix = base_path.rstrip("/")
+        # First, protect base tag from replacement
+        base_tag_pattern = r'<base\s+href=["\']([^"\']*)["\']\s*/>'
+        base_match = re.search(base_tag_pattern, text)
+        if base_match:
+            # Store original base tag
+            original_base = base_match.group(0)
+            # Temporarily replace with placeholder
+            text = text.replace(original_base, "___BASE_TAG_PLACEHOLDER___")
+        
         # Replace absolute paths in href, src, url attributes
         # But preserve external URLs (http://, https://, //)
         text = re.sub(r'(href|src|url)\s*=\s*["\'](/[^"\']*)["\']', 
@@ -281,6 +290,10 @@ def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) 
         text = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', 
                      lambda m: f'url("{base_prefix}/{m.group(1)}")',
                      text)
+        
+        # Restore original base tag
+        if base_match:
+            text = text.replace("___BASE_TAG_PLACEHOLDER___", original_base)
     
     return text
 
