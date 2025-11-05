@@ -264,14 +264,19 @@ def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) 
     # 4) Fix absolute paths for GitHub Pages (replace /path with /repo/path if base_path is not /)
     base_path = context.get("base_path", "/")
     if base_path != "/":
-        # Replace absolute paths (href="/...", src="/...", url("/..."))
+        base_prefix = base_path.rstrip("/")
+        # Replace absolute paths in href, src, url attributes
         # But preserve external URLs (http://, https://, //)
         text = re.sub(r'(href|src|url)\s*=\s*["\'](/[^"\']*)["\']', 
-                     lambda m: f'{m.group(1)}="{base_path.rstrip("/")}{m.group(2)}"',
+                     lambda m: f'{m.group(1)}="{base_prefix}{m.group(2)}"',
+                     text)
+        # Replace absolute paths in srcset attribute (handles multiple URLs)
+        text = re.sub(r'srcset\s*=\s*["\']([^"\']*)["\']', 
+                     lambda m: f'srcset="{re.sub(r"/([^\s]+)", lambda n: f"{base_prefix}/{n.group(1)}", m.group(1))}"',
                      text)
         # Also handle CSS url() syntax
         text = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', 
-                     lambda m: f'url("{base_path.rstrip("/")}/{m.group(1)}")',
+                     lambda m: f'url("{base_prefix}/{m.group(1)}")',
                      text)
     
     return text
