@@ -1,0 +1,724 @@
+@layout('layouts.base')
+@json('data/meta/admin_clients_title.json', $title)
+@json('data/meta/admin_clients_body_class.json', $body_class)
+@json('data/clients.json', clients_data)
+
+<main id="main" class="admin-clients-page">
+  <!-- Left Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-square">ミセサポ</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/admin/clients.html" class="nav-item active">
+        <i class="fas fa-users"></i>
+        <span>顧客一覧</span>
+      </a>
+      <a href="/admin/equipment/new.html" class="nav-item">
+        <i class="fas fa-building"></i>
+        <span>新規設備追加</span>
+      </a>
+      <a href="/admin/cleaning/new.html" class="nav-item">
+        <i class="fas fa-broom"></i>
+        <span>新規清掃追加</span>
+      </a>
+      <a href="/admin/reports.html" class="nav-item">
+        <i class="fas fa-file-alt"></i>
+        <span>レポート</span>
+      </a>
+      <a href="/admin/workers/schedule.html" class="nav-item">
+        <i class="fas fa-calendar-user"></i>
+        <span>ワーカースケジュール</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="admin-main-content">
+    <!-- Header -->
+    <div class="content-header">
+      <h1 class="page-title">顧客一覧</h1>
+    </div>
+
+    <!-- Customer List Section -->
+    <div class="customer-list-section">
+      <div class="list-header">
+        <div class="list-count">
+          <span class="count-text">顧客一覧</span>
+          <span class="count-number">全<span id="total-count">120</span>件</span>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="all">全て</button>
+          <button class="filter-btn" data-filter="industry">
+            業種▼
+            <select class="filter-dropdown" style="display: none;">
+              <option value="">すべて</option>
+              <option value="izakaya">居酒屋</option>
+              <option value="bar">バー</option>
+              <option value="restaurant">レストラン</option>
+              <option value="cafe">カフェ</option>
+            </select>
+          </button>
+          <button class="filter-btn" data-filter="region">
+            地域▼
+            <select class="filter-dropdown" style="display: none;">
+              <option value="">すべて</option>
+              <option value="tokyo">東京都</option>
+              <option value="osaka">大阪府</option>
+              <option value="kyoto">京都府</option>
+            </select>
+          </button>
+          <button class="filter-btn" data-filter="regular">定期</button>
+          <button class="filter-btn" data-filter="spot">スポット</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" class="search-input" id="keyword-search" placeholder="キーワードを入力して下さい" />
+          <button class="search-btn">
+            <i class="fas fa-search"></i>
+            検索
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Summary -->
+      <div class="filter-summary">
+        <span>絞り込み: <span id="filtered-count">12</span>件 / 全<span id="total-summary">120</span>件</span>
+      </div>
+
+      <!-- Sort Options -->
+      <div class="sort-options">
+        <button class="sort-btn" data-sort="name">五十音順</button>
+        <button class="sort-btn" data-sort="registered">登録順</button>
+        <button class="sort-btn" data-sort="contract">契約日順</button>
+        <a href="/admin/clients/new.html" class="btn-add-new">
+          <i class="fas fa-plus"></i>
+          新規追加
+        </a>
+      </div>
+
+      <!-- Customer List -->
+      <div class="customer-list" id="customer-list">
+        <!-- Customers will be rendered by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Sidebar -->
+  <aside class="admin-right-sidebar">
+    <!-- Calendar Widget -->
+    <div class="widget calendar-widget">
+      <div class="widget-header">
+        <div class="widget-title">カレンダー</div>
+        <div class="widget-controls">
+          <button class="widget-btn" title="今日">今日</button>
+          <button class="widget-btn" title="前へ"><i class="fas fa-chevron-left"></i></button>
+          <button class="widget-btn" title="次へ"><i class="fas fa-chevron-right"></i></button>
+          <button class="widget-btn" title="検索"><i class="fas fa-search"></i></button>
+          <button class="widget-btn" title="設定"><i class="fas fa-cog"></i></button>
+          <select class="widget-select">
+            <option>2025年7月</option>
+          </select>
+          <button class="widget-btn" title="確定"><i class="fas fa-check"></i></button>
+        </div>
+      </div>
+      <div class="calendar-container">
+        <div class="calendar-weekdays">
+          <div>月</div>
+          <div>火</div>
+          <div>水</div>
+          <div>木</div>
+          <div>金</div>
+          <div>土</div>
+          <div>日</div>
+        </div>
+        <div class="calendar-grid" id="calendar-grid">
+          <!-- Calendar will be rendered by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Schedule Widget -->
+    <div class="widget schedule-widget">
+      <div class="widget-header">
+        <div class="widget-title">日次スケジュール</div>
+        <div class="widget-controls">
+          <button class="widget-btn" title="今日">今日</button>
+          <button class="widget-btn" title="前へ"><i class="fas fa-chevron-left"></i></button>
+          <button class="widget-btn" title="次へ"><i class="fas fa-chevron-right"></i></button>
+          <button class="widget-btn" title="検索"><i class="fas fa-search"></i></button>
+          <button class="widget-btn" title="設定"><i class="fas fa-cog"></i></button>
+          <button class="widget-btn" title="カレンダー"><i class="fas fa-calendar"></i></button>
+          <button class="widget-btn" title="確定"><i class="fas fa-check"></i></button>
+        </div>
+      </div>
+      <div class="schedule-date">2025年7月31日（木 31）</div>
+      <div class="schedule-timeline">
+        <div class="time-slot">午前10時</div>
+        <div class="time-slot">午前11時</div>
+        <div class="time-slot">午前12時</div>
+        <div class="time-slot">午後1時</div>
+        <div class="schedule-event" style="grid-row: 4 / 6;">
+          <div class="event-title">居酒屋○○ 茅場店 定期清掃</div>
+          <div class="event-time">午後1時 - 午後3時</div>
+        </div>
+        <div class="time-slot">午後2時</div>
+        <div class="time-slot">午後3時</div>
+        <div class="time-slot">午後4時</div>
+        <div class="time-slot">午後5時</div>
+        <div class="time-slot">午後6時</div>
+        <div class="time-slot">午後7時</div>
+        <div class="time-slot">午後8時</div>
+        <div class="time-slot">午後9時</div>
+        <div class="time-slot">午後10時</div>
+      </div>
+      <button class="btn-report-check">
+        <i class="fas fa-file-alt"></i>
+        レポートを確認する
+      </button>
+    </div>
+  </aside>
+
+  <script type="application/json" id="clients-data">
+    @jsonvar $clients_data
+  </script>
+
+  <style>
+    .admin-clients-page {
+      display: grid;
+      grid-template-columns: 240px 1fr 320px;
+      min-height: 100vh;
+      background: #f5f5f5;
+    }
+    /* Left Sidebar */
+    .admin-sidebar {
+      background: #ffffff;
+      border-right: 1px solid #e5e7eb;
+      padding: 20px 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      padding: 0 20px 30px;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 20px;
+    }
+    .logo-square {
+      width: 60px;
+      height: 60px;
+      background: var(--primary);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      border-radius: 8px;
+    }
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 0 12px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: #6b7280;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .nav-item:hover {
+      background: #f9fafb;
+      color: #111827;
+    }
+    .nav-item.active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .nav-item i {
+      width: 20px;
+      text-align: center;
+    }
+    /* Main Content */
+    .admin-main-content {
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .content-header {
+      margin-bottom: 24px;
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .customer-list-section {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .list-header {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .list-count {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .count-text {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+    }
+    .count-number {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .count-number span {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .filter-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #374151;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .filter-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .filter-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+      min-width: 300px;
+    }
+    .search-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .search-btn {
+      padding: 8px 20px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .search-btn:hover {
+      background: #ff6b9d;
+    }
+    .filter-summary {
+      margin-bottom: 16px;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .filter-summary span {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    /* Sort Options */
+    .sort-options {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .sort-btn {
+      padding: 6px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #374151;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sort-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .btn-add-new {
+      margin-left: auto;
+      padding: 8px 16px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-add-new:hover {
+      background: #ff6b9d;
+    }
+    /* Customer List */
+    .customer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .customer-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      transition: all 0.2s;
+    }
+    .customer-item:hover {
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .customer-name {
+      font-size: 0.95rem;
+      color: #111827;
+      font-weight: 500;
+    }
+    .customer-arrow {
+      color: var(--primary);
+      cursor: pointer;
+    }
+    /* Right Sidebar */
+    .admin-right-sidebar {
+      background: #ffffff;
+      border-left: 1px solid #e5e7eb;
+      padding: 24px;
+      overflow-y: auto;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .widget {
+      margin-bottom: 24px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      background: #ffffff;
+    }
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .widget-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #111827;
+    }
+    .widget-controls {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .widget-btn {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #6b7280;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+    .widget-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .widget-select {
+      padding: 4px 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .calendar-container {
+      margin-top: 12px;
+    }
+    .calendar-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .calendar-weekdays div {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .calendar-day:hover {
+      background: #f9fafb;
+    }
+    .calendar-day.today {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+    .calendar-day.has-event {
+      border-color: #10b981;
+    }
+    .calendar-event {
+      width: 100%;
+      height: 4px;
+      background: #10b981;
+      border-radius: 2px;
+      margin-top: 2px;
+    }
+    .schedule-date {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    .schedule-timeline {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .time-slot {
+      padding: 8px;
+      font-size: 0.75rem;
+      color: #6b7280;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .schedule-event {
+      position: absolute;
+      left: 0;
+      right: 0;
+      padding: 8px;
+      background: #dbeafe;
+      border-left: 3px solid #3b82f6;
+      border-radius: 4px;
+      margin: 4px 0;
+    }
+    .event-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #111827;
+    }
+    .event-time {
+      font-size: 0.625rem;
+      color: #6b7280;
+    }
+    .btn-report-check {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-report-check:hover {
+      background: #ff6b9d;
+    }
+    @media (max-width: 1400px) {
+      .admin-clients-page {
+        grid-template-columns: 200px 1fr 280px;
+      }
+    }
+    @media (max-width: 1200px) {
+      .admin-clients-page {
+        grid-template-columns: 1fr;
+      }
+      .admin-sidebar,
+      .admin-right-sidebar {
+        display: none;
+      }
+    }
+  </style>
+  <script>
+    // Load and render customers
+    (function() {
+      const clientsDataEl = document.getElementById('clients-data');
+      const customerListEl = document.getElementById('customer-list');
+      const totalCountEl = document.getElementById('total-count');
+      const totalSummaryEl = document.getElementById('total-summary');
+      const filteredCountEl = document.getElementById('filtered-count');
+      
+      if (!clientsDataEl || !customerListEl) return;
+      
+      const clientsData = JSON.parse(clientsDataEl.textContent);
+      const clients = clientsData.clients || [];
+      const total = clientsData.total || clients.length;
+      
+      if (totalCountEl) totalCountEl.textContent = total;
+      if (totalSummaryEl) totalSummaryEl.textContent = total;
+      
+      // Render customers
+      function renderCustomers(customersToRender) {
+        customerListEl.innerHTML = customersToRender.map(client => {
+          return `
+            <div class="customer-item" data-id="${client.id}">
+              <span class="customer-name">${client.company_name || '株式会社○○フーズ'}</span>
+              <i class="fas fa-chevron-down customer-arrow"></i>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      // Initial render (show first 10)
+      renderCustomers(clients.slice(0, 10));
+      if (filteredCountEl) filteredCountEl.textContent = Math.min(10, clients.length);
+      
+      // Calendar rendering
+      const calendarGrid = document.getElementById('calendar-grid');
+      if (calendarGrid) {
+        const year = 2025;
+        const month = 6; // July (0-indexed)
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        let html = '';
+        // Empty cells for days before month starts
+        for (let i = 0; i < firstDay; i++) {
+          html += '<div class="calendar-day"></div>';
+        }
+        // Days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+          const isToday = day === 31;
+          const hasEvent = day === 7 || day === 21;
+          html += `
+            <div class="calendar-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}">
+              ${day}
+              ${hasEvent ? '<div class="calendar-event"></div>' : ''}
+            </div>
+          `;
+        }
+        calendarGrid.innerHTML = html;
+      }
+      
+      // Search functionality
+      const keywordSearch = document.getElementById('keyword-search');
+      if (keywordSearch) {
+        keywordSearch.addEventListener('input', function() {
+          const query = this.value.toLowerCase().trim();
+          if (query) {
+            const filtered = clients.filter(c => 
+              (c.company_name || '').toLowerCase().includes(query) ||
+              (c.store_name || '').toLowerCase().includes(query) ||
+              (c.contact_person || '').toLowerCase().includes(query)
+            );
+            renderCustomers(filtered.slice(0, 10));
+            if (filteredCountEl) filteredCountEl.textContent = Math.min(10, filtered.length);
+          } else {
+            renderCustomers(clients.slice(0, 10));
+            if (filteredCountEl) filteredCountEl.textContent = Math.min(10, clients.length);
+          }
+        });
+      }
+      
+      // Filter buttons
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          filterButtons.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          // TODO: Implement filter logic
+        });
+      });
+      
+      // Sort buttons
+      const sortButtons = document.querySelectorAll('.sort-btn');
+      sortButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          sortButtons.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          // TODO: Implement sort logic
+        });
+      });
+    })();
+  </script>
+</main>
+

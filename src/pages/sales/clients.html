@@ -1,0 +1,417 @@
+@layout('layouts.base')
+@json('data/meta/sales_clients_title.json', $title)
+@json('data/meta/sales_clients_body_class.json', $body_class)
+@json('data/clients.json', clients_data)
+
+<main id="main" class="container sales-clients">
+  <div class="page-header">
+    <a href="/sales/dashboard.html" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">顧客一覧</h1>
+    <a href="/sales/clients/new.html" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus"></i> 新規登録
+    </a>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button class="filter-tab active" data-filter="all">すべて</button>
+    <button class="filter-tab" data-filter="稼働中">稼働中</button>
+    <button class="filter-tab" data-filter="休止">休止</button>
+    <button class="filter-tab" data-filter="契約終了">契約終了</button>
+  </div>
+
+  <!-- Search -->
+  <div class="search-section">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="会社名・店舗名・担当者で検索..." class="search-input" id="client-search" />
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-label">総顧客数</span>
+      <span class="stat-value">{{ clients_data.total }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">稼働中</span>
+      <span class="stat-value" id="active-count">0</span>
+    </div>
+  </div>
+
+  <!-- Clients List -->
+  <div class="clients-list" id="clients-list">
+    <!-- Clients will be rendered by JavaScript -->
+  </div>
+  
+  <script type="application/json" id="clients-data">
+    @jsonvar $clients_data
+  </script>
+
+  <style>
+    .sales-clients {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      flex: 1;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 8px;
+    }
+    .filter-tab {
+      padding: 8px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-tab:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .filter-tab.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+    .search-section {
+      margin-bottom: 16px;
+    }
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-box i {
+      position: absolute;
+      left: 16px;
+      color: #6b7280;
+      z-index: 1;
+    }
+    .search-input {
+      width: 100%;
+      padding: 14px 16px 14px 48px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 1rem;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .clients-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .client-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: all 0.2s;
+    }
+    .client-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    .client-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .client-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .client-company {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 4px 0;
+    }
+    .client-store {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    .status-稼働中 {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-休止 {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-契約終了 {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .client-details {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .detail-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+    }
+    .detail-row i {
+      width: 20px;
+      color: var(--primary);
+      text-align: center;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: #6b7280;
+      min-width: 80px;
+    }
+    .detail-value {
+      color: #111827;
+      flex: 1;
+    }
+    .client-footer {
+      display: flex;
+      gap: 8px;
+      padding-top: 16px;
+      border-top: 1px solid #f3f4f6;
+    }
+    .client-footer .btn {
+      flex: 1;
+    }
+    @media (max-width: 768px) {
+      .sales-clients {
+        padding: 12px;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .client-card {
+        padding: 16px;
+      }
+      .client-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .stats-bar {
+        flex-direction: column;
+        gap: 12px;
+      }
+    }
+  </style>
+  <script>
+    // Load and render clients
+    (function() {
+      const clientsDataEl = document.getElementById('clients-data');
+      const clientsListEl = document.getElementById('clients-list');
+      const activeCountEl = document.getElementById('active-count');
+      
+      if (!clientsDataEl || !clientsListEl) return;
+      
+      const clientsData = JSON.parse(clientsDataEl.textContent);
+      const clients = clientsData.clients || [];
+      
+      // Count active clients
+      const activeClients = clients.filter(c => c.status === '稼働中');
+      if (activeCountEl) {
+        activeCountEl.textContent = activeClients.length;
+      }
+      
+      // Render clients
+      function renderClients(clientsToRender) {
+        clientsListEl.innerHTML = clientsToRender.map(client => {
+          const urlBtn = client.url ? `
+            <a href="${client.url}" target="_blank" class="btn btn-outline btn-sm">
+              <i class="fas fa-external-link-alt"></i> URL
+            </a>
+          ` : '';
+          
+          return `
+            <div class="client-card" data-status="${client.status || ''}" data-search="${(client.company_name || '')} ${(client.store_name || '')} ${(client.contact_person || '')}">
+              <div class="client-header">
+                <div class="client-info">
+                  <h3 class="client-company">${client.company_name || ''}</h3>
+                  <div class="client-store">${client.store_name || ''}</div>
+                </div>
+                <span class="status-badge status-${client.status || ''}">${client.status || ''}</span>
+              </div>
+              <div class="client-details">
+                <div class="detail-row">
+                  <i class="fas fa-building"></i>
+                  <span class="detail-label">ブランド:</span>
+                  <span class="detail-value">${client.brand_name || ''}</span>
+                </div>
+                <div class="detail-row">
+                  <i class="fas fa-user"></i>
+                  <span class="detail-label">担当者:</span>
+                  <span class="detail-value">${client.contact_person || ''}</span>
+                </div>
+                <div class="detail-row">
+                  <i class="fas fa-envelope"></i>
+                  <span class="detail-label">メール:</span>
+                  <span class="detail-value">${client.email || ''}</span>
+                </div>
+                <div class="detail-row">
+                  <i class="fas fa-user-tie"></i>
+                  <span class="detail-label">営業担当:</span>
+                  <span class="detail-value">${client.sales_rep || ''}</span>
+                </div>
+                <div class="detail-row">
+                  <i class="fas fa-calendar-alt"></i>
+                  <span class="detail-label">次回清掃:</span>
+                  <span class="detail-value">${client.next_date || ''}</span>
+                </div>
+                <div class="detail-row">
+                  <i class="fas fa-sync-alt"></i>
+                  <span class="detail-label">清掃頻度:</span>
+                  <span class="detail-value">${client.cleaning_frequency || ''}</span>
+                </div>
+              </div>
+              <div class="client-footer">
+                <a href="/sales/clients/${client.id}.html" class="btn btn-primary btn-sm">詳細を見る</a>
+                ${urlBtn}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      // Initial render
+      renderClients(clients);
+      
+      // Filter functionality
+      const filterTabs = document.querySelectorAll('.filter-tab');
+      const searchInput = document.getElementById('client-search');
+      
+      // Filter by status
+      filterTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          filterTabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          
+          const filter = tab.dataset.filter;
+          filterClients(filter);
+        });
+      });
+      
+      // Search functionality
+      if (searchInput) {
+        searchInput.addEventListener('input', function() {
+          const query = this.value.toLowerCase().trim();
+          filterClients(null, query);
+        });
+      }
+      
+      function filterClients(statusFilter, searchQuery = '') {
+        const clientCards = document.querySelectorAll('.client-card');
+        
+        clientCards.forEach(card => {
+          const status = card.dataset.status;
+          const searchText = card.dataset.search.toLowerCase();
+          
+          let show = true;
+          
+          if (statusFilter && statusFilter !== 'all') {
+            show = show && (status === statusFilter);
+          }
+          
+          if (searchQuery) {
+            show = show && searchText.includes(searchQuery);
+          }
+          
+          card.style.display = show ? 'block' : 'none';
+        });
+      }
+    })();
+  </script>
+</main>
+

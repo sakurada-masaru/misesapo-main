@@ -1,0 +1,335 @@
+@layout('layouts.base')
+@json('data/meta/staff_assignments_title.json', $title)
+@json('data/meta/staff_assignments_body_class.json', $body_class)
+
+<main id="main" class="container staff-assignments">
+  <div class="page-header">
+    <a href="/staff/dashboard.html" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">作業割り当て一覧</h1>
+  </div>
+
+  <div class="filter-tabs">
+    <button class="tab-btn active" data-filter="all">全て</button>
+    <button class="tab-btn" data-filter="today">本日</button>
+    <button class="tab-btn" data-filter="upcoming">今後の予定</button>
+    <button class="tab-btn" data-filter="completed">完了</button>
+  </div>
+
+  <div class="assignments-list">
+    <!-- Assignment 1 -->
+    <div class="assignment-card" data-status="today">
+      <div class="assignment-header">
+        <div class="assignment-date">
+          <span class="date-label">2025年3月28日</span>
+          <span class="time-label">10:30</span>
+        </div>
+        <span class="status-badge status-upcoming">予定</span>
+      </div>
+      <div class="assignment-content">
+        <div class="assignment-location">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>神楽坂店</span>
+        </div>
+        <div class="assignment-tasks">
+          <div class="task-item">
+            <i class="fas fa-check-circle"></i>
+            <span>レンジフード洗浄</span>
+          </div>
+          <div class="task-item">
+            <i class="fas fa-check-circle"></i>
+            <span>グリストラップ清掃</span>
+          </div>
+        </div>
+        <div class="assignment-notes">
+          <i class="fas fa-info-circle"></i>
+          <span>店舗入り口は正面玄関から。担当者：田中さんに連絡してください。</span>
+        </div>
+      </div>
+      <div class="assignment-actions">
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='/staff/assignments/1.html'">詳細を見る</button>
+        <button class="btn btn-primary btn-sm">作業開始</button>
+      </div>
+    </div>
+
+    <!-- Assignment 2 -->
+    <div class="assignment-card" data-status="upcoming">
+      <div class="assignment-header">
+        <div class="assignment-date">
+          <span class="date-label">2025年4月5日</span>
+          <span class="time-label">13:00</span>
+        </div>
+        <span class="status-badge status-upcoming">予定</span>
+      </div>
+      <div class="assignment-content">
+        <div class="assignment-location">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>日本橋茅場町店</span>
+        </div>
+        <div class="assignment-tasks">
+          <div class="task-item">
+            <i class="fas fa-check-circle"></i>
+            <span>エアコン分解洗浄</span>
+          </div>
+          <div class="task-item">
+            <i class="fas fa-check-circle"></i>
+            <span>床清掃</span>
+          </div>
+        </div>
+      </div>
+      <div class="assignment-actions">
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='/staff/assignments/2.html'">詳細を見る</button>
+      </div>
+    </div>
+
+    <!-- Assignment 3 (Completed) -->
+    <div class="assignment-card" data-status="completed">
+      <div class="assignment-header">
+        <div class="assignment-date">
+          <span class="date-label">2025年3月19日</span>
+          <span class="time-label">13:00</span>
+        </div>
+        <span class="status-badge status-completed">完了</span>
+      </div>
+      <div class="assignment-content">
+        <div class="assignment-location">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>大塚店</span>
+        </div>
+        <div class="assignment-tasks">
+          <div class="task-item completed">
+            <i class="fas fa-check-circle"></i>
+            <span>レンジフード洗浄</span>
+          </div>
+        </div>
+      </div>
+      <div class="assignment-actions">
+        <a href="/staff/reports/1.html" class="btn btn-outline btn-sm">レポートを見る</a>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .staff-assignments {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      padding: 8px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+    .assignments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .assignment-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .assignment-card[data-status="completed"] {
+      opacity: 0.7;
+    }
+    .assignment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .assignment-date {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .date-label {
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.95rem;
+    }
+    .time-label {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-upcoming {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .status-completed {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .assignment-content {
+      margin-bottom: 16px;
+    }
+    .assignment-location {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #374151;
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+    .assignment-location i {
+      color: var(--primary);
+    }
+    .assignment-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .task-item i {
+      color: var(--primary);
+      font-size: 0.875rem;
+    }
+    .task-item.completed {
+      color: #059669;
+    }
+    .assignment-notes {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 12px;
+      background: #fef3c7;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      color: #92400e;
+    }
+    .assignment-notes i {
+      color: #f59e0b;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .assignment-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid #f3f4f6;
+    }
+    .assignment-actions .btn {
+      flex: 1;
+    }
+    @media (max-width: 768px) {
+      .staff-assignments {
+        padding: 12px;
+      }
+      .assignment-card {
+        padding: 12px;
+      }
+      .assignment-actions {
+        flex-direction: column;
+      }
+      .assignment-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+  <script>
+    // Filter functionality
+    (function() {
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const assignmentCards = document.querySelectorAll('.assignment-card');
+      
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          const filter = btn.dataset.filter;
+          
+          assignmentCards.forEach(card => {
+            if (filter === 'all') {
+              card.style.display = 'block';
+            } else if (filter === 'today') {
+              card.style.display = (card.dataset.status === 'today') ? 'block' : 'none';
+            } else if (filter === 'upcoming') {
+              card.style.display = (card.dataset.status === 'upcoming' || card.dataset.status === 'today') ? 'block' : 'none';
+            } else if (filter === 'completed') {
+              card.style.display = (card.dataset.status === 'completed') ? 'block' : 'none';
+            }
+          });
+        });
+      });
+    })();
+  </script>
+</main>
+

@@ -1,0 +1,806 @@
+@layout('layouts.base')
+@json('data/meta/sales_dashboard_title.json', $title)
+@json('data/meta/sales_dashboard_body_class.json', $body_class)
+@json('data/clients.json', clients_data)
+@json('data/estimates.json', estimates_data)
+@json('data/sales_schedule.json', schedule_data)
+@json('data/new_inquiries.json', inquiries_data)
+
+<main id="main" class="container sales-dashboard">
+  <div class="dashboard-header">
+    <div class="header-content">
+      <a href="/concierge.html" class="back-link">
+        <i class="fas fa-arrow-left"></i> コンシェルジュに戻る
+      </a>
+      <h1 class="page-title">営業ダッシュボード</h1>
+      <p class="page-subtitle">詳細な統計・分析情報</p>
+    </div>
+    <div class="user-info">
+      <span class="user-name">正田和輝</span>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="total-clients">0</div>
+        <div class="stat-label">担当顧客数</div>
+        <div class="stat-change" id="active-clients">稼働中: 0</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-bell"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="new-inquiries-count">0</div>
+        <div class="stat-label">新規問い合わせ</div>
+        <div class="stat-change" id="pending-inquiries">未対応: 0</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-shopping-cart"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="processing-orders">0</div>
+        <div class="stat-label">処理中発注</div>
+        <div class="stat-change" id="pending-orders">承認待ち: 0</div>
+      </div>
+    </div>
+    <div class="stat-card highlight">
+      <div class="stat-icon">
+        <i class="fas fa-yen-sign"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="monthly-sales">¥0</div>
+        <div class="stat-label">今月売上</div>
+        <div class="stat-change" id="sales-growth">前月比: -</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Statistics -->
+  <div class="stats-detail-grid">
+    <!-- Estimates Statistics -->
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="fas fa-file-invoice"></i>
+          見積もり統計
+        </h2>
+        <a href="/sales/estimates.html" class="btn btn-outline btn-sm">すべて見る</a>
+      </div>
+      <div class="estimates-stats-grid">
+        <div class="estimate-stat-item">
+          <div class="estimate-stat-value" id="draft-estimates">0</div>
+          <div class="estimate-stat-label">下書き</div>
+        </div>
+        <div class="estimate-stat-item">
+          <div class="estimate-stat-value" id="sent-estimates">0</div>
+          <div class="estimate-stat-label">送付済み</div>
+        </div>
+        <div class="estimate-stat-item">
+          <div class="estimate-stat-value" id="approved-estimates">0</div>
+          <div class="estimate-stat-label">承認済み</div>
+        </div>
+        <div class="estimate-stat-item highlight">
+          <div class="estimate-stat-value" id="pending-approval-estimates">0</div>
+          <div class="estimate-stat-label">承認待ち</div>
+        </div>
+      </div>
+      <div class="estimates-summary">
+        <div class="summary-item">
+          <span class="summary-label">今月の見積もり総額:</span>
+          <span class="summary-value" id="monthly-estimates-total">¥0</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">承認率:</span>
+          <span class="summary-value" id="approval-rate">0%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Client Statistics -->
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="fas fa-building"></i>
+          顧客統計
+        </h2>
+        <a href="/sales/clients.html" class="btn btn-outline btn-sm">すべて見る</a>
+      </div>
+      <div class="client-stats-grid">
+        <div class="client-stat-item">
+          <div class="client-stat-value" id="active-clients-count">0</div>
+          <div class="client-stat-label">稼働中</div>
+        </div>
+        <div class="client-stat-item">
+          <div class="client-stat-value" id="inactive-clients-count">0</div>
+          <div class="client-stat-label">休止</div>
+        </div>
+        <div class="client-stat-item">
+          <div class="client-stat-value" id="terminated-clients-count">0</div>
+          <div class="client-stat-label">契約終了</div>
+        </div>
+      </div>
+      <div class="client-summary">
+        <div class="summary-item">
+          <span class="summary-label">総店舗数:</span>
+          <span class="summary-value" id="total-stores">0店舗</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">今月の新規顧客:</span>
+          <span class="summary-value" id="new-clients-this-month">0件</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Schedule Overview -->
+  <section class="dashboard-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-calendar-alt"></i>
+        スケジュール概要
+      </h2>
+      <a href="/sales/schedule.html" class="btn btn-outline btn-sm">すべて見る</a>
+    </div>
+    <div class="schedule-overview">
+      <div class="overview-item">
+        <div class="overview-icon today">
+          <i class="fas fa-calendar-day"></i>
+        </div>
+        <div class="overview-content">
+          <div class="overview-value" id="today-schedules-count">0</div>
+          <div class="overview-label">本日の予定</div>
+        </div>
+      </div>
+      <div class="overview-item">
+        <div class="overview-icon week">
+          <i class="fas fa-calendar-week"></i>
+        </div>
+        <div class="overview-content">
+          <div class="overview-value" id="week-schedules-count">0</div>
+          <div class="overview-label">今週の予定</div>
+        </div>
+      </div>
+      <div class="overview-item">
+        <div class="overview-icon month">
+          <i class="fas fa-calendar"></i>
+        </div>
+        <div class="overview-content">
+          <div class="overview-value" id="month-schedules-count">0</div>
+          <div class="overview-label">今月の予定</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Activity -->
+  <section class="dashboard-section">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-history"></i>
+        最近のアクティビティ
+      </h2>
+    </div>
+    <div class="activity-list" id="activity-list">
+      <!-- Activity items will be rendered by JavaScript -->
+    </div>
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="dashboard-section">
+    <h2 class="section-title">クイックアクション</h2>
+    <div class="quick-actions">
+      <a href="/sales/clients/new.html" class="action-btn">
+        <i class="fas fa-user-plus"></i>
+        <span>新規顧客登録</span>
+      </a>
+      <a href="/sales/estimates/new.html" class="action-btn">
+        <i class="fas fa-file-invoice"></i>
+        <span>見積もり作成</span>
+      </a>
+      <a href="/sales/orders.html" class="action-btn">
+        <i class="fas fa-list"></i>
+        <span>発注管理</span>
+      </a>
+      <a href="/sales/schedule.html" class="action-btn">
+        <i class="fas fa-calendar"></i>
+        <span>スケジュール</span>
+      </a>
+      <a href="/sales/reports.html" class="action-btn">
+        <i class="fas fa-file-alt"></i>
+        <span>レポート</span>
+      </a>
+      <a href="/concierge.html" class="action-btn">
+        <i class="fas fa-home"></i>
+        <span>TOPに戻る</span>
+      </a>
+    </div>
+  </section>
+
+  <style>
+    .sales-dashboard {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+    }
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-content {
+      flex: 1;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.875rem;
+      color: #6b7280;
+      text-decoration: none;
+      margin-bottom: 8px;
+      transition: color 0.2s;
+    }
+    .back-link:hover {
+      color: var(--primary);
+    }
+    .back-link i {
+      font-size: 0.75rem;
+    }
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 4px 0;
+    }
+    .page-subtitle {
+      font-size: 0.95rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .user-name {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-card.highlight {
+      border: 2px solid var(--primary);
+      background: linear-gradient(135deg, #ffffff 0%, #fff5f9 100%);
+    }
+    .stat-icon {
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: rgba(255, 103, 156, 0.1);
+      color: var(--primary);
+      font-size: 1.5rem;
+    }
+    .stat-content {
+      flex: 1;
+    }
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 4px;
+      line-height: 1.2;
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .stat-change {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .stats-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .dashboard-section {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .estimates-stats-grid,
+    .client-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .estimate-stat-item,
+    .client-stat-item {
+      text-align: center;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .estimate-stat-item.highlight {
+      background: #fef3c7;
+      border-color: #f59e0b;
+    }
+    .estimate-stat-value,
+    .client-stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    .estimate-stat-label,
+    .client-stat-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .estimates-summary,
+    .client-summary {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .summary-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .summary-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+    }
+    .schedule-overview {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .overview-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .overview-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 1.25rem;
+    }
+    .overview-icon.today {
+      background: rgba(255, 103, 156, 0.1);
+      color: var(--primary);
+    }
+    .overview-icon.week {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+    .overview-icon.month {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+    .overview-content {
+      flex: 1;
+    }
+    .overview-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    .overview-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+    }
+    .activity-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: rgba(255, 103, 156, 0.1);
+      color: var(--primary);
+    }
+    .activity-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .activity-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 2px;
+    }
+    .activity-meta {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .activity-time {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 8px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #374151;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      background: #ffffff;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .action-btn i {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+    .action-btn span {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    @media (max-width: 768px) {
+      .sales-dashboard {
+        padding: 12px;
+      }
+      .stats-grid,
+      .stats-detail-grid {
+        grid-template-columns: 1fr;
+      }
+      .estimates-stats-grid,
+      .client-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .schedule-overview {
+        grid-template-columns: 1fr;
+      }
+      .dashboard-section {
+        padding: 16px;
+      }
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+
+  <script type="application/json" id="clients-data">
+    {{ clients_data | tojson }}
+  </script>
+  <script type="application/json" id="estimates-data">
+    {{ estimates_data | tojson }}
+  </script>
+  <script type="application/json" id="schedule-data">
+    {{ schedule_data | tojson }}
+  </script>
+  <script type="application/json" id="inquiries-data">
+    {{ inquiries_data | tojson }}
+  </script>
+
+  <script>
+    (function() {
+      // Load data
+      const clientsData = JSON.parse(document.getElementById('clients-data').textContent);
+      const estimatesData = JSON.parse(document.getElementById('estimates-data').textContent);
+      const scheduleData = JSON.parse(document.getElementById('schedule-data').textContent);
+      const inquiriesData = JSON.parse(document.getElementById('inquiries-data').textContent);
+      
+      const clients = clientsData.clients || [];
+      const estimates = estimatesData.estimates || [];
+      const schedules = scheduleData.schedules || [];
+      const inquiries = inquiriesData.inquiries || [];
+      
+      // Current sales rep (mock)
+      const currentSalesRep = '正田和輝';
+      
+      // Filter by sales rep
+      const myClients = clients.filter(c => c.sales_rep === currentSalesRep);
+      const myEstimates = estimates.filter(e => e.sales_rep === currentSalesRep);
+      const mySchedules = schedules;
+      const myInquiries = inquiries;
+      
+      // Calculate statistics
+      function calculateStats() {
+        // Client stats
+        const totalClients = myClients.length;
+        const activeClients = myClients.filter(c => c.status === '稼働中').length;
+        const inactiveClients = myClients.filter(c => c.status === '休止').length;
+        const terminatedClients = myClients.filter(c => c.status === '契約終了').length;
+        
+        // Unique companies
+        const uniqueCompanies = new Set(myClients.map(c => c.company_name));
+        const totalStores = myClients.length;
+        
+        // Inquiry stats
+        const newInquiries = myInquiries.length;
+        const pendingInquiries = myInquiries.filter(i => i.status === 'pending').length;
+        
+        // Estimate stats
+        const draftEstimates = myEstimates.filter(e => e.status === 'draft').length;
+        const sentEstimates = myEstimates.filter(e => e.status === 'sent').length;
+        const approvedEstimates = myEstimates.filter(e => e.status === 'approved').length;
+        
+        // Pending approval (sent more than 1 day ago)
+        const oneDayAgo = new Date();
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+        oneDayAgo.setHours(0, 0, 0, 0);
+        const pendingApproval = myEstimates.filter(e => {
+          if (e.status !== 'sent' || !e.sent_date) return false;
+          try {
+            const dateStr = e.sent_date.replace(/年/g, '-').replace(/月/g, '-').replace(/日/g, '');
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+              const year = parseInt(parts[0], 10);
+              const month = parseInt(parts[1], 10);
+              const day = parseInt(parts[2], 10);
+              const sentDate = new Date(year, month - 1, day);
+              sentDate.setHours(0, 0, 0, 0);
+              return sentDate < oneDayAgo;
+            }
+          } catch (err) {
+            return false;
+          }
+          return false;
+        }).length;
+        
+        // Monthly estimates total
+        const monthlyEstimates = myEstimates.filter(e => {
+          if (!e.created_date) return false;
+          try {
+            const dateStr = e.created_date.replace(/年/g, '-').replace(/月/g, '-').replace(/日/g, '');
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+              const year = parseInt(parts[0], 10);
+              const month = parseInt(parts[1], 10);
+              const createdDate = new Date(year, month - 1, 1);
+              const now = new Date();
+              return createdDate.getFullYear() === now.getFullYear() && 
+                     createdDate.getMonth() === now.getMonth();
+            }
+          } catch (err) {
+            return false;
+          }
+          return false;
+        });
+        
+        const monthlyTotal = monthlyEstimates.reduce((sum, e) => {
+          const total = parseInt(e.total.replace(/[¥,]/g, '')) || 0;
+          return sum + total;
+        }, 0);
+        
+        // Approval rate
+        const approvalRate = sentEstimates + approvedEstimates > 0
+          ? Math.round((approvedEstimates / (sentEstimates + approvedEstimates)) * 100)
+          : 0;
+        
+        // Schedule stats
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const todaySchedules = mySchedules.filter(s => s.date === todayStr && s.status !== 'completed').length;
+        
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        const weekSchedules = mySchedules.filter(s => {
+          const scheduleDate = new Date(s.date);
+          return scheduleDate >= weekStart && scheduleDate <= weekEnd && s.status !== 'completed';
+        }).length;
+        
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        const monthSchedules = mySchedules.filter(s => {
+          const scheduleDate = new Date(s.date);
+          return scheduleDate >= monthStart && scheduleDate <= monthEnd && s.status !== 'completed';
+        }).length;
+        
+        // Update UI
+        document.getElementById('total-clients').textContent = totalClients;
+        document.getElementById('active-clients').textContent = `稼働中: ${activeClients}`;
+        document.getElementById('new-inquiries-count').textContent = newInquiries;
+        document.getElementById('pending-inquiries').textContent = `未対応: ${pendingInquiries}`;
+        document.getElementById('processing-orders').textContent = '8'; // Mock data
+        document.getElementById('pending-orders').textContent = '承認待ち: 3'; // Mock data
+        document.getElementById('monthly-sales').textContent = `¥${monthlyTotal.toLocaleString()}`;
+        document.getElementById('sales-growth').textContent = '前月比: -'; // Mock data
+        
+        document.getElementById('draft-estimates').textContent = draftEstimates;
+        document.getElementById('sent-estimates').textContent = sentEstimates;
+        document.getElementById('approved-estimates').textContent = approvedEstimates;
+        document.getElementById('pending-approval-estimates').textContent = pendingApproval;
+        document.getElementById('monthly-estimates-total').textContent = `¥${monthlyTotal.toLocaleString()}`;
+        document.getElementById('approval-rate').textContent = `${approvalRate}%`;
+        
+        document.getElementById('active-clients-count').textContent = activeClients;
+        document.getElementById('inactive-clients-count').textContent = inactiveClients;
+        document.getElementById('terminated-clients-count').textContent = terminatedClients;
+        document.getElementById('total-stores').textContent = `${totalStores}店舗`;
+        document.getElementById('new-clients-this-month').textContent = '0件'; // Mock data
+        
+        document.getElementById('today-schedules-count').textContent = todaySchedules;
+        document.getElementById('week-schedules-count').textContent = weekSchedules;
+        document.getElementById('month-schedules-count').textContent = monthSchedules;
+      }
+      
+      // Calculate statistics
+      calculateStats();
+      
+      // Render activity list
+      function renderActivity() {
+        const activities = [];
+        
+        // Add recent estimates
+        myEstimates.slice(0, 3).forEach(estimate => {
+          activities.push({
+            type: 'estimate',
+            icon: 'fas fa-file-invoice',
+            title: `見積もり${estimate.status_label || '作成'}: ${estimate.client_name} ${estimate.store_name}`,
+            meta: estimate.created_date || estimate.sent_date,
+            link: `/sales/estimates/${estimate.id}.html`
+          });
+        });
+        
+        // Add recent inquiries
+        myInquiries.slice(0, 2).forEach(inquiry => {
+          activities.push({
+            type: 'inquiry',
+            icon: 'fas fa-bell',
+            title: `新規問い合わせ: ${inquiry.company_name}`,
+            meta: `${inquiry.date} ${inquiry.time}`,
+            link: `/sales/clients/new.html?inquiry=${inquiry.id}`
+          });
+        });
+        
+        // Add recent schedules
+        const upcomingSchedules = mySchedules.filter(s => {
+          const scheduleDate = new Date(s.date);
+          return scheduleDate >= new Date() && s.status !== 'completed';
+        }).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 2);
+        
+        upcomingSchedules.forEach(schedule => {
+          activities.push({
+            type: 'schedule',
+            icon: 'fas fa-calendar',
+            title: `訪問予定: ${schedule.client_name} ${schedule.store_name}`,
+            meta: `${schedule.date} ${schedule.time}`,
+            link: `/sales/schedule.html`
+          });
+        });
+        
+        // Sort by date (most recent first) and limit to 6
+        activities.sort((a, b) => {
+          // Simple sort by meta field
+          return b.meta.localeCompare(a.meta);
+        });
+        
+        const activityListEl = document.getElementById('activity-list');
+        if (activities.length === 0) {
+          activityListEl.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">アクティビティはありません</p>';
+          return;
+        }
+        
+        activityListEl.innerHTML = activities.slice(0, 6).map(activity => {
+          return `
+            <div class="activity-item" onclick="window.location.href='${activity.link}'">
+              <div class="activity-icon">
+                <i class="${activity.icon}"></i>
+              </div>
+              <div class="activity-content">
+                <div class="activity-title">${activity.title}</div>
+                <div class="activity-meta">${activity.meta}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      // Initialize
+      renderActivity();
+    })();
+  </script>
+</main>

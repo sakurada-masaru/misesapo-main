@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+    @include('partials.head-links')
+  </head>
+  <body class="theme-pink {{ body_class }}">
+    @include('partials.header')
+    <!-- リリース前チェックボックス -->
+    <div id="release-check-section" class="release-check-section">
+      <div class="release-check-container">
+        <div class="release-check-label">リリース前チェック</div>
+        <div class="release-check-boxes">
+          <label class="release-check-item">
+            <input type="checkbox" id="check-admin" class="release-checkbox" data-check-type="admin" />
+            <span>管理者</span>
+          </label>
+          <label class="release-check-item">
+            <input type="checkbox" id="check-developer" class="release-checkbox" data-check-type="developer" />
+            <span>開発者</span>
+          </label>
+          <label class="release-check-item">
+            <input type="checkbox" id="check-other" class="release-checkbox" data-check-type="other" />
+            <span>その他</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <main>
+      {{ content }}
+    </main>
+    @include('partials.footer')
+    <!-- Off-canvas (left) -->
+    <div id="offcanvas-overlay" class="offcanvas-overlay" aria-hidden="true"></div>
+    <aside id="offcanvas" class="offcanvas" aria-hidden="true" aria-label="メニュー">
+      <h2 class="offcanvas-title">ダッシュボード</h2>
+      <nav class="offcanvas-nav" aria-label="スライドメニュー">
+        <a class="nav-link" href="/signin.html" aria-label="ログイン">
+          <img class="offcanvas-link-img" src="/images/loginicon.svg" alt="ログイン" />
+        </a>
+        <a class="nav-link" href="/mypage.html" aria-label="マイページ">
+          <img class="offcanvas-link-img" src="/images/mypageicon.svg" alt="マイページ" />
+        </a>
+        <a class="nav-link" href="/report.html" aria-label="レポート">
+          <img class="offcanvas-link-img" src="/images/reporticon.svg" alt="レポート" />
+        </a>
+        <a class="nav-link" href="/signup.html" aria-label="新規登録">
+          <img class="offcanvas-link-img" src="/images/newicon.svg" alt="新規登録" />
+        </a>
+        <a class="nav-link" href="/cart.html" aria-label="カート">
+          <img class="offcanvas-link-img" src="/images/carticon.svg" alt="カート" />
+        </a>
+      </nav>
+    </aside>
+    <!-- Edge swipe hint (mobile only) -->
+    <div class="edge-swipe-hint" aria-hidden="true">
+      <i class="fas fa-chevron-right"></i>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+  </html>
+
+
