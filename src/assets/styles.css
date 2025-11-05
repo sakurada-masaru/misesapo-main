@@ -634,3 +634,140 @@ main { width: 100%; max-width: var(--container-lg); margin: 24px auto; padding: 
   .hide-sm { display: none !important; }
   .show-sm { display: initial !important; }
 }
+
+/* Password Protection Modal */
+.password-protection-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.password-protection-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.password-protection-dialog {
+  position: relative;
+  z-index: 10000;
+  width: 90%;
+  max-width: 400px;
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.password-protection-content {
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.password-protection-logo {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
+  display: block;
+}
+
+.password-protection-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
+.password-protection-message {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 24px;
+  line-height: 1.6;
+}
+
+.password-protection-form {
+  margin-top: 24px;
+}
+
+.password-protection-field {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.password-protection-input {
+  width: 100%;
+  padding: 12px 48px 12px 16px;
+  font-size: 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+
+.password-protection-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.password-protection-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.password-protection-toggle:hover {
+  color: var(--text);
+}
+
+.password-protection-error {
+  color: var(--alert);
+  font-size: 14px;
+  margin-bottom: 16px;
+  text-align: left;
+  padding: 8px 12px;
+  background: #fee;
+  border-radius: 6px;
+  border: 1px solid #fcc;
+}
+
+.password-protection-submit {
+  width: 100%;
+  margin-top: 8px;
+}
+
+@media (max-width: 767.98px) {
+  .password-protection-dialog {
+    width: 95%;
+    margin: 16px;
+  }
+  
+  .password-protection-content {
+    padding: 24px 20px;
+  }
+  
+  .password-protection-title {
+    font-size: 20px;
+  }
+}
