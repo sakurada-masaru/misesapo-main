@@ -271,9 +271,12 @@ def render_page(path: Path, preset_context: Optional[Dict[str, object]] = None) 
                      lambda m: f'{m.group(1)}="{base_prefix}{m.group(2)}"',
                      text)
         # Replace absolute paths in srcset attribute (handles multiple URLs)
-        text = re.sub(r'srcset\s*=\s*["\']([^"\']*)["\']', 
-                     lambda m: f'srcset="{re.sub(r"/([^\s]+)", lambda n: f"{base_prefix}/{n.group(1)}", m.group(1))}"',
-                     text)
+        def fix_srcset(match):
+            srcset_content = match.group(1)
+            # Replace /path with /repo/path in srcset
+            fixed = re.sub(r'/([^\s,]+)', rf'{base_prefix}/\1', srcset_content)
+            return f'srcset="{fixed}"'
+        text = re.sub(r'srcset\s*=\s*["\']([^"\']*)["\']', fix_srcset, text)
         # Also handle CSS url() syntax
         text = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', 
                      lambda m: f'url("{base_prefix}/{m.group(1)}")',
