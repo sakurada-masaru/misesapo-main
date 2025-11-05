@@ -36,89 +36,65 @@
     <!-- Off-canvas (left) -->
     <div id="offcanvas-overlay" class="offcanvas-overlay" aria-hidden="true"></div>
     <aside id="offcanvas" class="offcanvas" aria-hidden="true" aria-label="メニュー">
-      <h2 class="offcanvas-title">ダッシュボード</h2>
-      <nav class="offcanvas-nav" aria-label="スライドメニュー">
-        <!-- クイックアクセス -->
-        <div class="offcanvas-section">
-          <h3 class="offcanvas-section-title">クイックアクセス</h3>
-          <div class="offcanvas-links">
-            <a class="offcanvas-link" href="/signin.html" aria-label="ログイン">
-              <img class="offcanvas-link-img" src="/images/loginicon.svg" alt="ログイン" />
-            </a>
-            <a class="offcanvas-link" href="/mypage.html" aria-label="マイページ">
-              <img class="offcanvas-link-img" src="/images/mypageicon.svg" alt="マイページ" />
-            </a>
-            <a class="offcanvas-link" href="/report.html" aria-label="レポート">
-              <img class="offcanvas-link-img" src="/images/reporticon.svg" alt="レポート" />
-            </a>
-            <a class="offcanvas-link" href="/signup.html" aria-label="新規登録">
-              <img class="offcanvas-link-img" src="/images/newicon.svg" alt="新規登録" />
-            </a>
-            <a class="offcanvas-link" href="/cart.html" aria-label="カート">
-              <img class="offcanvas-link-img" src="/images/carticon.svg" alt="カート" />
-            </a>
+      <h2 class="offcanvas-title">サイトマップ</h2>
+      <nav class="offcanvas-nav" aria-label="サイトマップ">
+        <!-- 1. パブリックサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">1. パブリックサイト</h3>
+          <div class="offcanvas-sitemap-links">
+            <a href="/index.html" class="offcanvas-sitemap-link">トップページ（発注）</a>
+            <a href="/signin.html" class="offcanvas-sitemap-link">ログイン</a>
+            <a href="/signup.html" class="offcanvas-sitemap-link">新規登録</a>
+            <a href="/reset-password.html" class="offcanvas-sitemap-link">パスワードリセット</a>
           </div>
         </div>
         
-        <!-- サイトマップ -->
-        <div class="offcanvas-section">
-          <h3 class="offcanvas-section-title">サイトマップ</h3>
-          <div class="offcanvas-sitemap">
-            <!-- パブリック -->
-            <div class="offcanvas-sitemap-group">
-              <h4 class="offcanvas-sitemap-group-title">パブリック</h4>
-              <div class="offcanvas-sitemap-links">
-                <a href="/index.html" class="offcanvas-sitemap-link">トップページ</a>
-                <a href="/signin.html" class="offcanvas-sitemap-link">ログイン</a>
-                <a href="/signup.html" class="offcanvas-sitemap-link">新規登録</a>
-              </div>
-            </div>
-            
-            <!-- 顧客向け -->
-            <div class="offcanvas-sitemap-group">
-              <h4 class="offcanvas-sitemap-group-title">顧客向け</h4>
-              <div class="offcanvas-sitemap-links">
-                <a href="/mypage.html" class="offcanvas-sitemap-link">マイページ</a>
-                <a href="/mypage/info.html" class="offcanvas-sitemap-link">アカウント情報</a>
-                <a href="/cart.html" class="offcanvas-sitemap-link">カート</a>
-                <a href="/report.html" class="offcanvas-sitemap-link">レポート一覧</a>
-              </div>
-            </div>
-            
-            <!-- 営業向け -->
-            <div class="offcanvas-sitemap-group">
-              <h4 class="offcanvas-sitemap-group-title">営業向け</h4>
-              <div class="offcanvas-sitemap-links">
-                <a href="/concierge.html" class="offcanvas-sitemap-link">コンシェルジュ</a>
-                <a href="/sales/dashboard.html" class="offcanvas-sitemap-link">ダッシュボード</a>
-                <a href="/sales/clients.html" class="offcanvas-sitemap-link">顧客一覧</a>
-                <a href="/sales/estimates.html" class="offcanvas-sitemap-link">見積もり</a>
-                <a href="/sales/schedule.html" class="offcanvas-sitemap-link">スケジュール</a>
-              </div>
-            </div>
-            
-            <!-- 清掃員向け -->
-            <div class="offcanvas-sitemap-group">
-              <h4 class="offcanvas-sitemap-group-title">清掃員向け</h4>
-              <div class="offcanvas-sitemap-links">
-                <a href="/staff/dashboard.html" class="offcanvas-sitemap-link">ダッシュボード</a>
-                <a href="/staff/assignments.html" class="offcanvas-sitemap-link">作業割り当て</a>
-                <a href="/staff/training.html" class="offcanvas-sitemap-link">研修動画</a>
-              </div>
-            </div>
-            
-            <!-- 管理者向け -->
-            <div class="offcanvas-sitemap-group">
-              <h4 class="offcanvas-sitemap-group-title">管理者向け</h4>
-              <div class="offcanvas-sitemap-links">
-                <a href="/admin/dashboard.html" class="offcanvas-sitemap-link">ダッシュボード</a>
-                <a href="/admin/sitemap.html" class="offcanvas-sitemap-link">サイトマップ</a>
-                <a href="/admin/services.html" class="offcanvas-sitemap-link">サービス管理</a>
-                <a href="/admin/users/customers.html" class="offcanvas-sitemap-link">顧客管理</a>
-                <a href="/admin/users/staff.html" class="offcanvas-sitemap-link">清掃員管理</a>
-                <a href="/admin/users/sales.html" class="offcanvas-sitemap-link">営業管理</a>
-              </div>
-            </div>
+        <!-- 2. ユーザー（顧客）向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">2. 顧客向けサイト</h3>
+          <div class="offcanvas-sitemap-links">
+            <a href="/mypage.html" class="offcanvas-sitemap-link">マイページ</a>
+            <a href="/mypage/info.html" class="offcanvas-sitemap-link">アカウント情報</a>
+            <a href="/mypage/company/edit.html" class="offcanvas-sitemap-link">会社基本情報編集</a>
+            <a href="/mypage/store/edit.html" class="offcanvas-sitemap-link">店舗情報編集</a>
+            <a href="/cart.html" class="offcanvas-sitemap-link">カート</a>
+            <a href="/report.html" class="offcanvas-sitemap-link">レポート一覧</a>
+          </div>
+        </div>
+        
+        <!-- 3. 清掃員向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">3. 清掃員向けサイト</h3>
+          <div class="offcanvas-sitemap-links">
+            <a href="/staff/dashboard.html" class="offcanvas-sitemap-link">ダッシュボード</a>
+            <a href="/staff/assignments.html" class="offcanvas-sitemap-link">作業割り当て</a>
+            <a href="/staff/training.html" class="offcanvas-sitemap-link">研修動画アーカイブ</a>
+          </div>
+        </div>
+        
+        <!-- 4. 営業マン向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">4. 営業マン向けサイト</h3>
+          <div class="offcanvas-sitemap-links">
+            <a href="/concierge.html" class="offcanvas-sitemap-link">コンシェルジュ</a>
+            <a href="/sales/dashboard.html" class="offcanvas-sitemap-link">ダッシュボード</a>
+            <a href="/sales/clients.html" class="offcanvas-sitemap-link">顧客一覧</a>
+            <a href="/sales/estimates.html" class="offcanvas-sitemap-link">見積もり一覧</a>
+            <a href="/sales/estimates/new.html" class="offcanvas-sitemap-link">見積もり作成</a>
+            <a href="/sales/schedule.html" class="offcanvas-sitemap-link">スケジュール管理</a>
+          </div>
+        </div>
+        
+        <!-- 5. 管理者向けサイト -->
+        <div class="offcanvas-sitemap-section">
+          <h3 class="offcanvas-sitemap-section-title">5. 管理者向けサイト</h3>
+          <div class="offcanvas-sitemap-links">
+            <a href="/admin/dashboard.html" class="offcanvas-sitemap-link">管理ダッシュボード</a>
+            <a href="/admin/sitemap.html" class="offcanvas-sitemap-link">サイトマップ（管理）</a>
+            <a href="/admin/services.html" class="offcanvas-sitemap-link">サービス管理</a>
+            <a href="/admin/users/customers.html" class="offcanvas-sitemap-link">顧客管理</a>
+            <a href="/admin/users/staff.html" class="offcanvas-sitemap-link">清掃員管理</a>
+            <a href="/admin/users/sales.html" class="offcanvas-sitemap-link">営業管理</a>
           </div>
         </div>
       </nav>
