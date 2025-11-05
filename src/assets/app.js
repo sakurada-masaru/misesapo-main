@@ -29,7 +29,8 @@
           card.className = 'item-card text-center';
           const img = document.createElement('img');
           img.className = 'avatar-round';
-          img.src = (it['img-url'] || it['img'] || 'https://placehold.co/150x150/e2e8f0/666');
+          const imgPath = it['img-url'] || it['img'] || 'https://placehold.co/150x150/e2e8f0/666';
+          img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : (imgPath.startsWith('/') ? imgPath : (document.querySelector('base')?.href.replace(/\/$/, '') || '') + '/' + imgPath);
           img.alt = (it['text'] || '');
           const p = document.createElement('p');
           p.className = 'item-name';
@@ -70,7 +71,8 @@
           input.className = 'radio';
           const img = document.createElement('img');
           img.className = 'thumb-211';
-          img.src = (it['img-url'] || it['img'] || '/images/service-300x200.svg');
+          const imgPath = it['img-url'] || it['img'] || '/images/service-300x200.svg';
+          img.src = imgPath.startsWith('/') ? imgPath : (document.querySelector('base')?.href.replace(/\/$/, '') || '') + '/' + imgPath;
           img.alt = (it['text'] || '');
           const span = document.createElement('span');
           span.textContent = it['text'] || '';
@@ -118,7 +120,14 @@
     const title = $('#modal-title', modal);
     const formBox = $('#modal-form', modal);
 
-    if (img) img.src = data.image || '/images/service-300x200.svg';
+    if (img) {
+      const imgPath = data.image || '/images/service-300x200.svg';
+      img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') 
+        ? imgPath 
+        : (imgPath.startsWith('/') 
+          ? imgPath 
+          : (document.querySelector('base')?.href.replace(/\/$/, '') || '') + '/' + imgPath);
+    }
     if (title) title.textContent = data.title || 'サービス詳細（ダミー）';
 
     // render dynamic form sections if provided
@@ -143,7 +152,14 @@
     const img = $('#details-modal-image', modal);
     const title = $('#details-modal-title', modal);
     const box = $('#details-form', modal);
-    if (img) img.src = data.image || '/images/service-300x200.svg';
+    if (img) {
+      const imgPath = data.image || '/images/service-300x200.svg';
+      img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') 
+        ? imgPath 
+        : (imgPath.startsWith('/') 
+          ? imgPath 
+          : (document.querySelector('base')?.href.replace(/\/$/, '') || '') + '/' + imgPath);
+    }
     if (title) title.textContent = data.title || 'サービス詳細（ダミー）';
     if (box) renderSections(box, data.details, 'detail');
     modal.classList.add('open');
@@ -165,7 +181,14 @@
     const img = $('#cart-added-item-image', modal);
     const title = $('#cart-added-item-title', modal);
     const details = $('#cart-added-item-details', modal);
-    if (img) img.src = data.image || '/images/service-300x200.svg';
+    if (img) {
+      const imgPath = data.image || '/images/service-300x200.svg';
+      img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') 
+        ? imgPath 
+        : (imgPath.startsWith('/') 
+          ? imgPath 
+          : (document.querySelector('base')?.href.replace(/\/$/, '') || '') + '/' + imgPath);
+    }
     if (title) title.textContent = data.title || 'サービス名';
     if (details) details.textContent = '選択内容: ダミー';
     modal.classList.add('open');
