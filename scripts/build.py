@@ -445,6 +445,7 @@ def convert_csv_to_json(csv_path: Path, json_path: Path) -> None:
 def copy_assets(outputs: List[str]) -> None:
     if not ASSETS_DIR.exists():
         return
+    base_path = get_base_path()
     for src_path in ASSETS_DIR.rglob("*"):
         if src_path.is_dir():
             continue
@@ -452,7 +453,18 @@ def copy_assets(outputs: List[str]) -> None:
         rel = src_path.relative_to(ASSETS_DIR)
         dst_path = PUBLIC / rel
         ensure_dir(dst_path)
-        shutil.copy2(src_path, dst_path)
+        
+        # Process CSS files to fix absolute paths for GitHub Pages
+        if src_path.suffix == ".css" and base_path != "/":
+            content = read_text(src_path)
+            base_prefix = base_path.rstrip("/")
+            # Fix CSS url() syntax for absolute paths
+            content = re.sub(r'url\(["\']?/([^"\']*)["\']?\)', 
+                           lambda m: f'url("{base_prefix}/{m.group(1)}")',
+                           content)
+            dst_path.write_text(content, encoding="utf-8")
+        else:
+            shutil.copy2(src_path, dst_path)
         outputs.append(str(dst_path))
 
 
