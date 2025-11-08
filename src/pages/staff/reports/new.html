@@ -1,0 +1,378 @@
+@layout('layouts.base')
+@json('data/meta/staff_reports_new_title.json', $title)
+@json('data/meta/staff_reports_new_body_class.json', $body_class)
+
+<main id="main" class="container staff-report-new">
+  <div class="page-header">
+    <a href="/staff/dashboard.html" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">レポート作成</h1>
+  </div>
+
+  <form id="report-form" class="report-form">
+    <!-- Assignment Info -->
+    <div class="form-section">
+      <h2 class="section-title">作業情報</h2>
+      <div class="info-card">
+        <div class="info-item">
+          <span class="info-label">店舗</span>
+          <span class="info-value">神楽坂店</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">作業日時</span>
+          <span class="info-value">2025年3月28日 10:30</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">作業内容</span>
+          <span class="info-value">レンジフード洗浄、グリストラップ清掃</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Work Content -->
+    <div class="form-section">
+      <h2 class="section-title">作業内容</h2>
+      <div class="form-group">
+        <label class="form-label">作業内容を選択</label>
+        <div class="checkbox-group">
+          <label class="checkbox-item">
+            <input type="checkbox" name="work-content" value="レンジフード洗浄" checked />
+            <span>レンジフード洗浄</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="work-content" value="グリストラップ清掃" checked />
+            <span>グリストラップ清掃</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="work-content" value="ダクト清掃" />
+            <span>ダクト清掃</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="work-content" value="エアコン分解洗浄" />
+            <span>エアコン分解洗浄</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Photos -->
+    <div class="form-section">
+      <h2 class="section-title">写真アップロード</h2>
+      <div class="photo-upload">
+        <div class="photo-grid">
+          <div class="photo-item">
+            <label class="photo-upload-btn">
+              <input type="file" accept="image/*" capture="environment" />
+              <i class="fas fa-camera"></i>
+              <span>写真を追加</span>
+            </label>
+          </div>
+          <!-- Placeholder for uploaded photos -->
+        </div>
+        <p class="form-note">作業前・作業後の写真を撮影してください</p>
+      </div>
+    </div>
+
+    <!-- Work Memo -->
+    <div class="form-section">
+      <h2 class="section-title">作業メモ</h2>
+      <div class="form-group">
+        <label class="form-label">特記事項</label>
+        <textarea class="form-textarea" name="work-memo" rows="4" placeholder="作業時の注意点や特記事項を入力してください"></textarea>
+      </div>
+    </div>
+
+    <!-- Location -->
+    <div class="form-section">
+      <h2 class="section-title">位置情報</h2>
+      <div class="location-info">
+        <button type="button" class="btn btn-outline btn-sm" id="get-location">
+          <i class="fas fa-map-marker-alt"></i>
+          現在位置を取得
+        </button>
+        <div id="location-display" class="location-display" style="display: none;">
+          <span class="location-text">取得済み</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline btn-block" onclick="window.location.href='/staff/dashboard.html'">キャンセル</button>
+      <button type="submit" class="btn btn-primary btn-block">作業完了を報告</button>
+    </div>
+  </form>
+
+  <style>
+    .staff-report-new {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+      padding-bottom: 100px;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .report-form {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .form-section {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+    }
+    .info-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .info-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .info-value {
+      font-weight: 600;
+      color: #111827;
+      font-size: 0.95rem;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+    .form-label {
+      display: block;
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.875rem;
+      margin-bottom: 8px;
+    }
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .checkbox-item:hover {
+      background: #ffffff;
+      border-color: var(--primary);
+    }
+    .checkbox-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .checkbox-item input[type="checkbox"]:checked + span {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .photo-upload {
+      margin-top: 12px;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .photo-item {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .photo-upload-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background: #f9fafb;
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .photo-upload-btn:hover {
+      background: #ffffff;
+      border-color: var(--primary);
+    }
+    .photo-upload-btn input[type="file"] {
+      display: none;
+    }
+    .photo-upload-btn i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .photo-upload-btn span {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .form-note {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    .form-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+    }
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .location-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .location-display {
+      padding: 12px;
+      background: #d1fae5;
+      border-radius: 8px;
+      color: #065f46;
+      font-size: 0.875rem;
+    }
+    .form-actions {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+      z-index: 100;
+    }
+    .form-actions .btn {
+      flex: 1;
+    }
+    @media (max-width: 768px) {
+      .staff-report-new {
+        padding: 12px;
+        padding-bottom: 100px;
+      }
+      .form-section {
+        padding: 12px;
+      }
+      .photo-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .form-actions {
+        padding: 12px;
+      }
+    }
+  </style>
+  <script>
+    // Photo upload preview
+    (function() {
+      const photoUploadBtns = document.querySelectorAll('.photo-upload-btn input[type="file"]');
+      
+      photoUploadBtns.forEach(input => {
+        input.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              const photoItem = input.closest('.photo-item');
+              photoItem.innerHTML = `
+                <img src="${e.target.result}" alt="Uploaded photo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
+                <button type="button" class="photo-remove" onclick="this.closest('.photo-item').remove()" style="position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;">
+                  <i class="fas fa-times"></i>
+                </button>
+              `;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      });
+    })();
+
+    // Location get
+    document.getElementById('get-location').addEventListener('click', function() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          document.getElementById('location-display').style.display = 'block';
+        });
+      }
+    });
+
+    // Form submit
+    document.getElementById('report-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // TODO: Backend integration
+      alert('作業完了を報告しました。');
+      window.location.href = '/staff/dashboard.html';
+    });
+  </script>
+</main>
+

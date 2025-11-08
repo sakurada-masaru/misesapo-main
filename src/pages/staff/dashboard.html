@@ -1,0 +1,319 @@
+@layout('layouts.base')
+@json('data/meta/staff_dashboard_title.json', $title)
+@json('data/meta/staff_dashboard_body_class.json', $body_class)
+
+<main id="main" class="container staff-dashboard">
+  <div class="dashboard-header">
+    <h1 class="page-title">清掃員ダッシュボード</h1>
+    <div class="user-info">
+      <span class="user-name">山田 太郎</span>
+    </div>
+  </div>
+
+  <!-- Today's Schedule -->
+  <section class="dashboard-section">
+    <h2 class="section-title">
+      <i class="fas fa-calendar-day"></i>
+      本日の予定
+    </h2>
+    <div class="schedule-list">
+      <div class="schedule-card today">
+        <div class="schedule-time">10:30</div>
+        <div class="schedule-content">
+          <div class="schedule-location">
+            <i class="fas fa-map-marker-alt"></i>
+            神楽坂店
+          </div>
+          <div class="schedule-task">レンジフード洗浄、グリストラップ清掃</div>
+        </div>
+        <div class="schedule-status">
+          <span class="status-badge status-upcoming">予定</span>
+        </div>
+      </div>
+      <div class="schedule-card today">
+        <div class="schedule-time">14:00</div>
+        <div class="schedule-content">
+          <div class="schedule-location">
+            <i class="fas fa-map-marker-alt"></i>
+            日本橋茅場町店
+          </div>
+          <div class="schedule-task">エアコン分解洗浄</div>
+        </div>
+        <div class="schedule-status">
+          <span class="status-badge status-upcoming">予定</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- This Week's Schedule -->
+  <section class="dashboard-section">
+    <h2 class="section-title">
+      <i class="fas fa-calendar-week"></i>
+      今週の予定
+    </h2>
+    <div class="week-summary">
+      <div class="week-stat">
+        <div class="stat-value">8</div>
+        <div class="stat-label">件</div>
+      </div>
+      <div class="week-stat">
+        <div class="stat-value">6</div>
+        <div class="stat-label">店舗</div>
+      </div>
+    </div>
+    <a href="/staff/schedule.html" class="btn btn-outline btn-block">スケジュール一覧を見る</a>
+  </section>
+
+  <!-- Pending Reports -->
+  <section class="dashboard-section">
+    <h2 class="section-title">
+      <i class="fas fa-clipboard-list"></i>
+      作業完了待ち
+    </h2>
+    <div class="pending-list">
+      <div class="pending-card">
+        <div class="pending-info">
+          <div class="pending-date">2025年3月19日 13:00</div>
+          <div class="pending-location">大塚店</div>
+        </div>
+        <a href="/staff/reports/new.html?assignment=1" class="btn btn-primary btn-sm">レポート作成</a>
+      </div>
+      <div class="pending-card">
+        <div class="pending-info">
+          <div class="pending-date">2025年3月18日 10:00</div>
+          <div class="pending-location">高円寺店</div>
+        </div>
+        <a href="/staff/reports/new.html?assignment=2" class="btn btn-primary btn-sm">レポート作成</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="dashboard-section">
+    <h2 class="section-title">クイックアクション</h2>
+    <div class="quick-actions">
+      <a href="/staff/assignments.html" class="action-btn">
+        <i class="fas fa-tasks"></i>
+        <span>作業一覧</span>
+      </a>
+      <a href="/staff/reports.html" class="action-btn">
+        <i class="fas fa-file-alt"></i>
+        <span>レポート一覧</span>
+      </a>
+      <a href="/staff/schedule.html" class="action-btn">
+        <i class="fas fa-calendar"></i>
+        <span>スケジュール</span>
+      </a>
+      <a href="/staff/training.html" class="action-btn">
+        <i class="fas fa-video"></i>
+        <span>研修動画</span>
+      </a>
+    </div>
+  </section>
+
+  <style>
+    .staff-dashboard {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+    }
+    .dashboard-header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 8px 0;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .user-name {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    .dashboard-section {
+      margin-bottom: 24px;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .schedule-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+    }
+    .schedule-time {
+      min-width: 60px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #111827;
+      text-align: center;
+    }
+    .schedule-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .schedule-location {
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .schedule-location i {
+      color: var(--primary);
+      font-size: 0.875rem;
+    }
+    .schedule-task {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .schedule-status {
+      flex-shrink: 0;
+    }
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-upcoming {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .status-completed {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .week-summary {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .week-stat {
+      flex: 1;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.2;
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .pending-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .pending-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #fef3c7;
+      border-radius: 8px;
+      border-left: 4px solid #f59e0b;
+    }
+    .pending-info {
+      flex: 1;
+    }
+    .pending-date {
+      font-weight: 600;
+      color: #92400e;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+    .pending-location {
+      font-size: 0.875rem;
+      color: #78350f;
+    }
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 768px) {
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 8px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #374151;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      background: #ffffff;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .action-btn i {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+    .action-btn span {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    @media (max-width: 768px) {
+      .staff-dashboard {
+        padding: 12px;
+      }
+      .dashboard-section {
+        padding: 12px;
+      }
+      .quick-actions {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</main>
+

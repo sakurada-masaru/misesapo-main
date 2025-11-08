@@ -1,0 +1,247 @@
+@layout('layouts.base')
+@json('data/meta/admin_services_title.json', $page_title)
+@json('data/meta/admin_services_body_class.json', $body_class)
+
+<main id="main" class="container admin-service-detail">
+  <div class="page-header">
+    <a href="/admin/services.html" class="back-link">
+      <i class="fas fa-arrow-left"></i> サービス一覧に戻る
+    </a>
+    <h1 class="page-title">{{ title }}</h1>
+  </div>
+
+  <div class="service-detail-card">
+    <div class="service-detail-header">
+      <div class="service-info">
+        <h2 class="service-name">{{ title }}</h2>
+        <div class="service-meta">
+          <span class="service-category">{{ category }}</span>
+          <span class="service-id">サービスID: {{ id }}</span>
+        </div>
+      </div>
+      <div class="service-price-large">{{ price }}</div>
+    </div>
+
+    <div class="service-detail-content">
+      <section class="detail-section">
+        <h3 class="section-title">サービス説明</h3>
+        <p class="section-content">{{ description }}</p>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-title">問題点</h3>
+        <ul class="problems-list">
+          @foreach $problems
+          <li>{{ value }}</li>
+          @endforeach
+        </ul>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-title">解決策・サービス内容</h3>
+        <p class="section-content solution-text">{{ solution }}</p>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-title">サービス画像</h3>
+        <div class="service-image">
+          <img src="/{{ detail_image }}" alt="{{ title }}" />
+        </div>
+      </section>
+    </div>
+
+    <div class="service-detail-actions">
+      <a href="/admin/services.html" class="btn btn-outline">
+        <i class="fas fa-arrow-left"></i> 一覧に戻る
+      </a>
+      <a href="/admin/services/{{ id }}/edit.html" class="btn btn-primary">
+        <i class="fas fa-edit"></i> 編集
+      </a>
+      <button class="btn btn-danger" onclick="deleteService({{ id }})">
+        <i class="fas fa-trash"></i> 削除
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Edit and delete functions (placeholder)
+    window.editService = function(id) {
+      // TODO: Implement edit functionality
+      alert(`サービスID ${id} の編集機能は実装予定です。`);
+    };
+
+    window.deleteService = function(id) {
+      if (confirm(`サービスID ${id} を削除してもよろしいですか？`)) {
+        // TODO: Implement delete functionality
+        alert(`サービスID ${id} の削除機能は実装予定です。`);
+      }
+    };
+  </script>
+
+  <style>
+    .admin-service-detail {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f9fafb;
+    }
+    .page-header {
+      margin-bottom: 24px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #6b7280;
+      text-decoration: none;
+      font-size: 0.875rem;
+      margin-bottom: 12px;
+      transition: color 0.2s;
+    }
+    .back-link:hover {
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .service-detail-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .service-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .service-name {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 12px 0;
+    }
+    .service-meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .service-category {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .service-id {
+      font-size: 0.875rem;
+      color: #9ca3af;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .service-price-large {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .service-detail-content {
+      margin-bottom: 32px;
+    }
+    .detail-section {
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .section-content {
+      font-size: 0.95rem;
+      color: #374151;
+      line-height: 1.8;
+      margin: 0;
+    }
+    .solution-text {
+      padding: 16px;
+      background: #d1fae5;
+      border-radius: 8px;
+      border-left: 4px solid #059669;
+      color: #065f46;
+      font-weight: 500;
+    }
+    .problems-list {
+      margin: 0;
+      padding-left: 24px;
+    }
+    .problems-list li {
+      font-size: 0.95rem;
+      color: #374151;
+      line-height: 1.8;
+      margin-bottom: 8px;
+    }
+    .service-image {
+      margin-top: 16px;
+    }
+    .service-image img {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .service-detail-actions {
+      display: flex;
+      gap: 12px;
+      padding-top: 24px;
+      border-top: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+    }
+    .service-detail-actions .btn {
+      flex: 1;
+      min-width: 120px;
+    }
+    .btn-danger {
+      background: #dc2626;
+      color: #ffffff;
+      border: 1px solid #dc2626;
+    }
+    .btn-danger:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+    }
+    @media (max-width: 768px) {
+      .admin-service-detail {
+        padding: 16px;
+      }
+      .service-detail-card {
+        padding: 20px;
+      }
+      .service-detail-header {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .service-price-large {
+        font-size: 1.5rem;
+      }
+      .service-detail-actions {
+        flex-direction: column;
+      }
+      .service-detail-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</main>
+
