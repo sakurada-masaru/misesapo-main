@@ -5,9 +5,15 @@
 <main id="main" class="container admin-services">
   <div class="page-header">
     <h1 class="page-title">サービス管理</h1>
-    <a href="/admin/services/new.html" class="btn btn-primary">
-      <i class="fas fa-plus"></i> 新規サービス登録
-    </a>
+    <div class="header-actions">
+      <div class="pending-changes-badge" id="pending-changes-badge" style="display: none;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="pending-changes-count">0</span>件の未反映の変更があります
+      </div>
+      <a href="/admin/services/new.html" class="btn btn-primary">
+        <i class="fas fa-plus"></i> 新規サービス登録
+      </a>
+    </div>
   </div>
 
   <div class="filter-bar">
@@ -36,6 +42,26 @@
   <script type="application/json" id="service-items-data">
     @jsonvar $service_items
   </script>
+
+  <!-- 未反映の変更通知 -->
+  <div class="pending-changes-alert" id="pending-changes-alert" style="display: none;">
+    <div class="alert-content">
+      <i class="fas fa-info-circle"></i>
+      <div class="alert-text">
+        <strong>未反映の変更があります</strong>
+        <p>ローカルで編集・作成されたサービスがあります。GitHub Pagesに反映するには、技術者にプッシュを依頼してください。</p>
+        <div class="pending-changes-list" id="pending-changes-list"></div>
+        <div class="alert-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="btn-pull-from-github">
+            <i class="fas fa-download"></i> GitHubから最新データを取得
+          </button>
+          <button type="button" class="btn btn-outline btn-sm btn-danger" id="btn-discard-changes">
+            <i class="fas fa-undo"></i> ローカルの変更を破棄
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="services-grid" id="services-grid">
     <!-- Service cards will be rendered dynamically by JavaScript -->
@@ -112,6 +138,9 @@
       // Initial render
       renderServices(services);
       
+      // Check for pending changes (uncommitted changes)
+      checkPendingChanges();
+      
       // Filter functionality
       function filterServices() {
         const searchQuery = searchInput.value.toLowerCase().trim();
@@ -169,6 +198,130 @@
           alert(`サービスID ${id} の削除機能は実装予定です。`);
         }
       };
+      
+      // Check for pending changes (uncommitted changes in git)
+      async function checkPendingChanges() {
+        try {
+          const response = await fetch('/api/pending-changes');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.hasChanges) {
+              displayPendingChanges(data);
+            }
+          }
+        } catch (err) {
+          // API not available or error - silently fail
+          console.log('Pending changes check failed:', err);
+        }
+      }
+      
+      function displayPendingChanges(data) {
+        const badge = document.getElementById('pending-changes-badge');
+        const alert = document.getElementById('pending-changes-alert');
+        const countEl = document.getElementById('pending-changes-count');
+        const listEl = document.getElementById('pending-changes-list');
+        
+        if (data.changes && data.changes.length > 0) {
+          countEl.textContent = data.changes.length;
+          badge.style.display = 'flex';
+          alert.style.display = 'block';
+          
+          // List changes
+          listEl.innerHTML = data.changes.map(change => {
+            const serviceName = change.serviceName || `サービスID ${change.serviceId}`;
+            const changeType = change.type === 'created' ? '新規作成' : '編集';
+            const icon = change.type === 'created' ? 'plus-circle' : 'edit';
+            const link = `/admin/services/${change.serviceId}.html`;
+            return `
+              <div class="pending-change-item">
+                <i class="fas fa-${icon}"></i>
+                <span>
+                  <a href="${link}" class="pending-change-link"><strong>${serviceName}</strong></a>
+                  - ${changeType} (${change.timestamp})
+                </span>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+      
+      // GitHubから最新データを取得
+      const btnPull = document.getElementById('btn-pull-from-github');
+      if (btnPull) {
+        btnPull.addEventListener('click', async function() {
+          if (!confirm('GitHubから最新データを取得しますか？\nローカルの変更が上書きされる可能性があります。')) {
+            return;
+          }
+          
+          btnPull.disabled = true;
+          btnPull.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 取得中...';
+          
+          try {
+            const response = await fetch('/api/pull', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('GitHubから最新データを取得しました。\nページを再読み込みします。');
+              window.location.reload();
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnPull.disabled = false;
+              btnPull.innerHTML = '<i class="fas fa-download"></i> GitHubから最新データを取得';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnPull.disabled = false;
+            btnPull.innerHTML = '<i class="fas fa-download"></i> GitHubから最新データを取得';
+          }
+        });
+      }
+      
+      // ローカルの変更を破棄
+      const btnDiscard = document.getElementById('btn-discard-changes');
+      if (btnDiscard) {
+        btnDiscard.addEventListener('click', async function() {
+          if (!confirm('ローカルの変更を破棄しますか？\nこの操作は取り消せません。')) {
+            return;
+          }
+          
+          if (!confirm('本当に変更を破棄しますか？')) {
+            return;
+          }
+          
+          btnDiscard.disabled = true;
+          btnDiscard.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 破棄中...';
+          
+          try {
+            const response = await fetch('/api/discard-changes', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+              alert('ローカルの変更を破棄しました。\nページを再読み込みします。');
+              window.location.reload();
+            } else {
+              alert(`エラー: ${data.message}`);
+              btnDiscard.disabled = false;
+              btnDiscard.innerHTML = '<i class="fas fa-undo"></i> ローカルの変更を破棄';
+            }
+          } catch (err) {
+            alert(`エラーが発生しました: ${err.message}`);
+            btnDiscard.disabled = false;
+            btnDiscard.innerHTML = '<i class="fas fa-undo"></i> ローカルの変更を破棄';
+          }
+        });
+      }
     })();
   </script>
 
@@ -186,6 +339,102 @@
       margin-bottom: 24px;
       padding-bottom: 16px;
       border-bottom: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .pending-changes-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #fef3c7;
+      border: 1px solid #fbbf24;
+      border-radius: 8px;
+      color: #92400e;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .pending-changes-badge i {
+      color: #f59e0b;
+    }
+    .pending-changes-alert {
+      background: #fef3c7;
+      border: 1px solid #fbbf24;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .alert-content {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .alert-content i {
+      color: #f59e0b;
+      font-size: 1.25rem;
+      margin-top: 2px;
+    }
+    .alert-text {
+      flex: 1;
+    }
+    .alert-text strong {
+      display: block;
+      color: #92400e;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+    .alert-text p {
+      color: #78350f;
+      font-size: 0.875rem;
+      margin: 0 0 12px 0;
+      line-height: 1.6;
+    }
+    .pending-changes-list {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #fbbf24;
+    }
+    .pending-change-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      color: #78350f;
+      font-size: 0.875rem;
+    }
+    .pending-change-item i {
+      color: #f59e0b;
+      font-size: 0.875rem;
+    }
+    .pending-change-link {
+      color: #78350f;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .pending-change-link:hover {
+      color: #92400e;
+      text-decoration: underline;
+    }
+    .alert-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+    .btn-danger:hover {
+      background: #fecaca;
+      color: #7f1d1d;
     }
     .page-title {
       font-size: 2rem;

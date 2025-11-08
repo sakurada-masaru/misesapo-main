@@ -38,6 +38,36 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             # 通常の静的ファイル配信
             super().do_GET()
     
+    def handle_api_get(self):
+        """API GET処理"""
+        if self.path == '/api/services':
+            # サービス一覧を返す
+            try:
+                with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
+                    services = json.load(f)
+                self.send_json_response(services)
+            except Exception as e:
+                self.send_error(500, f"Failed to load services: {e}")
+        elif self.path == '/api/pending-changes':
+            # 未反映の変更を確認
+            self.handle_pending_changes()
+        else:
+            self.send_error(404, "API endpoint not found")
+    
+    def handle_api_post(self):
+        """API POST処理"""
+        if self.path == '/api/services':
+            # 新規サービス作成
+            self.handle_create_service()
+        elif self.path == '/api/pull':
+            # GitHubから最新データを取得
+            self.handle_git_pull()
+        elif self.path == '/api/discard-changes':
+            # ローカルの変更を破棄
+            self.handle_discard_changes()
+        else:
+            self.send_error(404, "API endpoint not found")
+    
     def do_POST(self):
         """POSTリクエスト: API処理"""
         if self.path.startswith('/api/'):
@@ -59,60 +89,279 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         else:
             self.send_error(404, "Not Found")
     
-    def handle_api_get(self):
-        """API GET処理"""
-        if self.path == '/api/services':
-            # サービス一覧を返す
-            try:
-                with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
-                    services = json.load(f)
-                self.send_json_response(services)
-            except Exception as e:
-                self.send_error(500, f"Failed to load services: {e}")
-        else:
-            self.send_error(404, "API endpoint not found")
-    
-    def handle_api_post(self):
-        """API POST処理: 新規サービス登録"""
-        if self.path == '/api/services':
-            try:
-                # リクエストボディを読み込む
-                content_length = int(self.headers.get('Content-Length', 0))
-                body = self.rfile.read(content_length)
-                service_data = json.loads(body.decode('utf-8'))
-                
-                # 既存のサービスを読み込む
+    def handle_pending_changes(self):
+        """未反映の変更（Gitの未コミット変更）を確認"""
+        try:
+            # Gitリポジトリか確認
+            git_dir = ROOT / ".git"
+            if not git_dir.exists():
+                self.send_json_response({'hasChanges': False, 'changes': []})
+                return
+            
+            # 未コミットの変更を確認
+            result = subprocess.run(
+                ['git', 'status', '--porcelain'],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if not result.stdout.strip():
+                self.send_json_response({'hasChanges': False, 'changes': []})
+                return
+            
+            # service_items.jsonの変更を確認
+            changes = []
+            has_service_json_change = False
+            has_public_change = False
+            modified_service_ids = set()
+            new_service_ids = set()
+            
+            for line in result.stdout.strip().split('\n'):
+                line_stripped = line.strip()
+                # service_items.jsonの変更を検出
+                if 'service_items.json' in line_stripped:
+                    has_service_json_change = True
+                # public/admin/services/ の変更を検出（新規ページ生成）
+                if 'public/admin/services' in line_stripped:
+                    has_public_change = True
+                    # 新規ページのIDを抽出（例: public/admin/services/20.html）
+                    import re
+                    match = re.search(r'/services/(\d+)\.html', line_stripped)
+                    if match:
+                        new_service_ids.add(int(match.group(1)))
+            
+            # 変更がある場合、詳細情報を取得
+            if has_service_json_change or has_public_change:
                 if SERVICE_ITEMS_JSON.exists():
                     with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
                         services = json.load(f)
-                else:
-                    services = []
-                
-                # 新しいIDを生成
-                max_id = max([s.get('id', 0) for s in services], default=0)
-                new_id = max_id + 1
-                service_data['id'] = new_id
-                
-                # 新しいサービスを追加
-                services.append(service_data)
-                
-                # JSONファイルを保存
-                with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
-                    json.dump(services, f, ensure_ascii=False, indent=2)
-                
+                    
+                    # Gitの差分を確認して、編集されたサービスIDを特定
+                    if has_service_json_change:
+                        try:
+                            diff_result = subprocess.run(
+                                ['git', 'diff', 'HEAD', '--', str(SERVICE_ITEMS_JSON.relative_to(ROOT))],
+                                cwd=str(ROOT),
+                                capture_output=True,
+                                text=True,
+                                timeout=5
+                            )
+                            
+                            if diff_result.stdout:
+                                # 差分からサービスIDを抽出
+                                import re
+                                # "id": 数字 のパターンを検索
+                                id_matches = re.findall(r'"id"\s*:\s*(\d+)', diff_result.stdout)
+                                for service_id_str in id_matches:
+                                    modified_service_ids.add(int(service_id_str))
+                        except:
+                            pass
+                    
+                    # 変更されたサービスをリストアップ
+                    processed_ids = set()
+                    
+                    # 新規作成されたサービス
+                    for service_id in new_service_ids:
+                        if service_id not in processed_ids:
+                            service = next((s for s in services if s.get('id') == service_id), None)
+                            if service:
+                                changes.append({
+                                    'serviceId': service_id,
+                                    'serviceName': service.get('title', f'サービスID {service_id}'),
+                                    'type': 'created',
+                                    'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON)
+                                })
+                                processed_ids.add(service_id)
+                    
+                    # 編集されたサービス
+                    for service_id in modified_service_ids:
+                        if service_id not in processed_ids:
+                            service = next((s for s in services if s.get('id') == service_id), None)
+                            if service:
+                                changes.append({
+                                    'serviceId': service_id,
+                                    'serviceName': service.get('title', f'サービスID {service_id}'),
+                                    'type': 'modified',
+                                    'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON)
+                                })
+                                processed_ids.add(service_id)
+                    
+                    # 変更が検出できない場合（新規ファイルなど）、最新のサービスを表示
+                    if not changes and services:
+                        max_id = max([s.get('id', 0) for s in services], default=0)
+                        max_service = next((s for s in services if s.get('id') == max_id), None)
+                        if max_service:
+                            changes.append({
+                                'serviceId': max_id,
+                                'serviceName': max_service.get('title', f'サービスID {max_id}'),
+                                'type': 'created' if has_public_change else 'modified',
+                                'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON)
+                            })
+            
+            self.send_json_response({
+                'hasChanges': len(changes) > 0,
+                'changes': changes
+            })
+        except Exception as e:
+            self.send_json_response({'hasChanges': False, 'changes': [], 'error': str(e)})
+    
+    def get_file_timestamp(self, file_path: Path) -> str:
+        """ファイルの更新日時を取得"""
+        try:
+            import datetime
+            mtime = file_path.stat().st_mtime
+            dt = datetime.datetime.fromtimestamp(mtime)
+            return dt.strftime('%Y-%m-%d %H:%M')
+        except:
+            return '不明'
+    
+    def handle_create_service(self):
+        """新規サービス作成処理"""
+        try:
+            # リクエストボディを読み込む
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            service_data = json.loads(body.decode('utf-8'))
+            
+            # 既存のサービスを読み込む
+            if SERVICE_ITEMS_JSON.exists():
+                with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
+                    services = json.load(f)
+            else:
+                services = []
+            
+            # 新しいIDを生成
+            max_id = max([s.get('id', 0) for s in services], default=0)
+            new_id = max_id + 1
+            service_data['id'] = new_id
+            
+            # 新しいサービスを追加
+            services.append(service_data)
+            
+            # JSONファイルを保存
+            with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
+                json.dump(services, f, ensure_ascii=False, indent=2)
+            
+            # ビルドを実行（非同期）
+            self.run_build_async()
+            
+            # 成功レスポンス
+            self.send_json_response({
+                'status': 'success',
+                'id': new_id,
+                'message': 'サービスを登録しました'
+            })
+        except Exception as e:
+            self.send_error(500, f"Failed to create service: {e}")
+    
+    def handle_git_pull(self):
+        """GitHubから最新データを取得"""
+        try:
+            # Gitリポジトリか確認
+            git_dir = ROOT / ".git"
+            if not git_dir.exists():
+                self.send_json_response({
+                    'status': 'error',
+                    'message': 'Gitリポジトリが見つかりません'
+                })
+                return
+            
+            # git pullを実行
+            result = subprocess.run(
+                ['git', 'pull', 'origin', 'main'],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            
+            if result.returncode == 0:
                 # ビルドを実行（非同期）
                 self.run_build_async()
                 
-                # 成功レスポンス
                 self.send_json_response({
                     'status': 'success',
-                    'id': new_id,
-                    'message': 'サービスを登録しました'
+                    'message': 'GitHubから最新データを取得しました',
+                    'output': result.stdout
                 })
-            except Exception as e:
-                self.send_error(500, f"Failed to create service: {e}")
-        else:
-            self.send_error(404, "API endpoint not found")
+            else:
+                self.send_json_response({
+                    'status': 'error',
+                    'message': 'git pullに失敗しました',
+                    'error': result.stderr
+                })
+        except subprocess.TimeoutExpired:
+            self.send_json_response({
+                'status': 'error',
+                'message': 'git pullがタイムアウトしました'
+            })
+        except Exception as e:
+            self.send_json_response({
+                'status': 'error',
+                'message': f'エラーが発生しました: {str(e)}'
+            })
+    
+    def handle_discard_changes(self):
+        """ローカルの変更を破棄"""
+        try:
+            # Gitリポジトリか確認
+            git_dir = ROOT / ".git"
+            if not git_dir.exists():
+                self.send_json_response({
+                    'status': 'error',
+                    'message': 'Gitリポジトリが見つかりません'
+                })
+                return
+            
+            # 変更を破棄（service_items.jsonとpublic/admin/services/）
+            files_to_discard = [
+                str(SERVICE_ITEMS_JSON.relative_to(ROOT)),
+                'public/admin/services/'
+            ]
+            
+            results = []
+            for file_path in files_to_discard:
+                result = subprocess.run(
+                    ['git', 'restore', file_path],
+                    cwd=str(ROOT),
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                results.append({
+                    'file': file_path,
+                    'success': result.returncode == 0,
+                    'error': result.stderr if result.returncode != 0 else None
+                })
+            
+            # 未追跡ファイルを削除（public/admin/services/内の新規ファイル）
+            subprocess.run(
+                ['git', 'clean', '-fd', 'public/admin/services/'],
+                cwd=str(ROOT),
+                capture_output=True,
+                timeout=10
+            )
+            
+            # ビルドを実行（非同期）
+            self.run_build_async()
+            
+            self.send_json_response({
+                'status': 'success',
+                'message': 'ローカルの変更を破棄しました',
+                'results': results
+            })
+        except subprocess.TimeoutExpired:
+            self.send_json_response({
+                'status': 'error',
+                'message': '変更の破棄がタイムアウトしました'
+            })
+        except Exception as e:
+            self.send_json_response({
+                'status': 'error',
+                'message': f'エラーが発生しました: {str(e)}'
+            })
     
     def handle_api_put(self):
         """API PUT処理: サービス更新"""
@@ -215,6 +464,10 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 )
                 if result.returncode != 0:
                     print(f"Build error: {result.stderr}", file=sys.stderr)
+                    return
+                
+                # ビルド成功後、自動的にGitHubにコミット・プッシュ（オプション）
+                self.auto_commit_and_push()
             except Exception as e:
                 print(f"Build exception: {e}", file=sys.stderr)
         
@@ -222,6 +475,74 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         thread = threading.Thread(target=build)
         thread.daemon = True
         thread.start()
+    
+    def auto_commit_and_push(self):
+        """自動的にGitHubにコミット・プッシュ（オプション機能）"""
+        try:
+            # Gitリポジトリか確認
+            git_dir = ROOT / ".git"
+            if not git_dir.exists():
+                print("⚠️  Gitリポジトリではありません。自動コミットをスキップします。")
+                return
+            
+            # 変更があるか確認
+            result = subprocess.run(
+                ['git', 'status', '--porcelain'],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if not result.stdout.strip():
+                print("ℹ️  変更がないため、コミットをスキップします。")
+                return
+            
+            # 変更をステージング
+            subprocess.run(
+                ['git', 'add', 'src/data/service_items.json', 'public/'],
+                cwd=str(ROOT),
+                capture_output=True,
+                timeout=10
+            )
+            
+            # コミット
+            commit_message = f"chore: サービス管理の更新（自動コミット）"
+            subprocess.run(
+                ['git', 'commit', '-m', commit_message],
+                cwd=str(ROOT),
+                capture_output=True,
+                timeout=10
+            )
+            
+            # プッシュ（リモートが設定されている場合のみ）
+            result = subprocess.run(
+                ['git', 'remote', '-v'],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.stdout.strip():
+                subprocess.run(
+                    ['git', 'push', 'origin', 'main'],
+                    cwd=str(ROOT),
+                    capture_output=True,
+                    timeout=30
+                )
+                print("✅ GitHubに自動プッシュしました。数分後にGitHub Pagesに反映されます。")
+            else:
+                print("⚠️  リモートリポジトリが設定されていません。手動でプッシュしてください。")
+                
+        except subprocess.TimeoutExpired:
+            print("⚠️  Git操作がタイムアウトしました。手動でプッシュしてください。")
+        except Exception as e:
+            print(f"⚠️  自動コミット・プッシュに失敗しました: {e}")
+            print("   手動で以下のコマンドを実行してください:")
+            print("   git add src/data/service_items.json public/")
+            print("   git commit -m 'chore: サービス管理の更新'")
+            print("   git push origin main")
     
     def log_message(self, format, *args):
         """ログメッセージをカスタマイズ"""
