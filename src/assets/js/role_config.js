@@ -97,8 +97,7 @@ const ROLE_CONFIG = {
   navigation: {
     guest: [
       { href: '/index.html', label: '発注', icon: 'fa-shopping-cart' },
-      { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' },
-      { href: '/concierge.html', label: 'コンシェルジュ', icon: 'fa-concierge-bell' }
+      { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' }
     ],
     customer: [
       { href: '/index.html', label: '発注', icon: 'fa-shopping-cart' },
