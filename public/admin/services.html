@@ -461,12 +461,61 @@
       // Check for pending changes (uncommitted changes in git)
       async function checkPendingChanges() {
         try {
-          const response = await fetch(resolvePath('/api/pending-changes'));
-          if (response.ok) {
-            const data = await response.json();
-            if (data.hasChanges) {
-              displayPendingChanges(data);
+          let data = { hasChanges: false, changes: [] };
+          
+          // まずAPIエンドポイントを試す（ローカル環境の場合）
+          try {
+            const apiResponse = await fetch(resolvePath('/api/pending-changes'));
+            if (apiResponse.ok) {
+              data = await apiResponse.json();
+            } else {
+              throw new Error('API not available');
             }
+          } catch (apiError) {
+            // APIが利用できない場合（GitHub Pagesなど）、静的ファイルを読み込む
+            try {
+              const staticResponse = await fetch(resolvePath('/data/browser_changes.json'));
+              if (staticResponse.ok) {
+                const browserChanges = await staticResponse.json();
+                if (browserChanges && browserChanges.length > 0) {
+                  // 現在のサービスデータを読み込む
+                  const servicesResponse = await fetch(resolvePath('/data/service_items.json'));
+                  const services = servicesResponse.ok ? await servicesResponse.json() : [];
+                  
+                  // ブラウザ経由の変更を処理
+                  const changes = [];
+                  for (const changeLog of browserChanges) {
+                    const serviceId = changeLog.serviceId;
+                    const changeType = changeLog.type;
+                    const serviceName = changeLog.serviceName || `サービスID ${serviceId}`;
+                    const timestamp = changeLog.timestamp || '不明';
+                    
+                    const service = services.find(s => s.id === serviceId);
+                    if (!service) continue;
+                    
+                    changes.push({
+                      serviceId: serviceId,
+                      serviceName: serviceName,
+                      type: changeType,
+                      timestamp: timestamp,
+                      changedFields: [] // 簡易版では空配列
+                    });
+                  }
+                  
+                  data = {
+                    hasChanges: changes.length > 0,
+                    changes: changes
+                  };
+                }
+              }
+            } catch (staticError) {
+              // 静的ファイルも読み込めない場合は無視
+              console.log('Pending changes check failed:', staticError);
+            }
+          }
+          
+          if (data.hasChanges) {
+            displayPendingChanges(data);
           }
         } catch (err) {
           // API not available or error - silently fail
@@ -1784,8 +1833,8 @@
 </script>
 
 
-    <script src="/assets/js/role_config.js"></script>
-    <script src="/assets/js/auth.js"></script>
+    <script src="/js/role_config.js"></script>
+    <script src="/js/auth.js"></script>
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
   </body>
