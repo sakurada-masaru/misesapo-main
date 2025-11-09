@@ -106,14 +106,29 @@
 
       <section class="card p-24">
         <p class="small text-center mb-16">
-          メールアドレスとパスワードを入力してください。
+          ロールを選択してパスワードを入力してください。
         </p>
 
-        <form action="#" method="post" class="stack lg mt-8">
+        <form id="login-form" action="#" method="post" class="stack lg mt-8">
+          <div>
+            <label for="role" class="label">
+              ロール
+              <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+            </label>
+            <select id="role" name="role" class="input" required>
+              <option value="">選択してください</option>
+              <option value="customer">顧客</option>
+              <option value="staff">清掃員</option>
+              <option value="sales">営業マン</option>
+              <option value="admin">管理者</option>
+              <option value="developer">開発者</option>
+            </select>
+          </div>
+
           <div>
             <label for="email" class="label">
               メールアドレス
-              <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+              <span class="pill" style="margin-left: 8px; background: #e5e7eb; color: #6b7280;">任意</span>
             </label>
             <input type="email" id="email" name="email" class="input" placeholder="name@example.com" autocomplete="username" />
           </div>
@@ -124,12 +139,14 @@
               <span class="pill pill-required" style="margin-left: 8px;">必須</span>
             </label>
             <div class="field">
-              <input type="password" id="password" name="password" class="input" autocomplete="current-password" />
+              <input type="password" id="password" name="password" class="input" autocomplete="current-password" required />
               <button type="button" class="toggle-visibility" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password')">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
           </div>
+
+          <div id="login-error" class="error-message" style="display: none; padding: 12px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #991b1b; margin-bottom: 16px;"></div>
 
           <div>
             <button type="submit" class="btn btn-primary btn-round btn-full btn-lg fw-700">ログイン</button>
@@ -162,6 +179,77 @@
           icon.classList.add('fa-eye');
         }
       }
+      
+      // ログインフォーム処理
+      (function() {
+        const loginForm = document.getElementById('login-form');
+        const errorDiv = document.getElementById('login-error');
+        
+        if (loginForm) {
+          loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const role = document.getElementById('role').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value || null;
+            
+            if (!role) {
+              errorDiv.textContent = 'ロールを選択してください';
+              errorDiv.style.display = 'block';
+              return;
+            }
+            
+            if (!password) {
+              errorDiv.textContent = 'パスワードを入力してください';
+              errorDiv.style.display = 'block';
+              return;
+            }
+            
+            // 認証処理
+            const result = window.Auth.login(role, password, email);
+            
+            if (result.success) {
+              errorDiv.style.display = 'none';
+              
+              // リダイレクト先を取得
+              const urlParams = new URLSearchParams(window.location.search);
+              const redirect = urlParams.get('redirect');
+              
+              if (redirect) {
+                window.location.href = decodeURIComponent(redirect);
+              } else {
+                // デフォルトのリダイレクト先
+                const basePath = document.querySelector('base')?.getAttribute('href') || '/';
+                if (basePath === '/') {
+                  window.location.href = '/index.html';
+                } else {
+                  window.location.href = basePath + 'index.html';
+                }
+              }
+            } else {
+              errorDiv.textContent = result.message || 'ログインに失敗しました';
+              errorDiv.style.display = 'block';
+            }
+          });
+        }
+        
+        // 既にログイン済みの場合はリダイレクト
+        if (window.Auth && window.Auth.checkAuth()) {
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirect = urlParams.get('redirect');
+          
+          if (redirect) {
+            window.location.href = decodeURIComponent(redirect);
+          } else {
+            const basePath = document.querySelector('base')?.getAttribute('href') || '/';
+            if (basePath === '/') {
+              window.location.href = '/index.html';
+            } else {
+              window.location.href = basePath + 'index.html';
+            }
+          }
+        }
+      })();
     </script>
 
     </main>
@@ -819,6 +907,8 @@
 </script>
 
 
+    <script src="/assets/js/role_config.js"></script>
+    <script src="/assets/js/auth.js"></script>
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
   </body>

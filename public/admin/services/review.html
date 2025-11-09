@@ -262,9 +262,125 @@
         const changesList = document.getElementById('changes-list');
         
         try {
-          // 未反映の変更を取得
-          const response = await fetch('/api/pending-changes');
-          const data = await response.ok ? await response.json() : { hasChanges: false, changes: [] };
+          // まずAPIエンドポイントを試す（ローカル環境の場合）
+          let data = { hasChanges: false, changes: [] };
+          try {
+            const apiResponse = await fetch('/api/pending-changes');
+            if (apiResponse.ok) {
+              data = await apiResponse.json();
+            } else {
+              throw new Error('API not available');
+            }
+          } catch (apiError) {
+            // APIが利用できない場合（GitHub Pagesなど）、静的ファイルを読み込む
+            try {
+              const staticResponse = await fetch('/data/browser_changes.json');
+              if (staticResponse.ok) {
+                const browserChanges = await staticResponse.json();
+                // 静的ファイルから変更データを構築
+                if (browserChanges && browserChanges.length > 0) {
+                  // 現在のサービスデータを読み込む（変更内容の詳細を取得するため）
+                  const servicesResponse = await fetch('/data/service_items.json');
+                  const services = servicesResponse.ok ? await servicesResponse.json() : [];
+                  
+                  // HEADのサービスデータを読み込む（変更前の値を取得するため）
+                  // GitHub PagesではHEADデータは取得できないので、空配列とする
+                  const headServices = [];
+                  
+                  // ブラウザ経由の変更を処理
+                  const changes = [];
+                  for (const changeLog of browserChanges) {
+                    const serviceId = changeLog.serviceId;
+                    const changeType = changeLog.type; // 'created' or 'modified'
+                    const serviceName = changeLog.serviceName || `サービスID ${serviceId}`;
+                    const timestamp = changeLog.timestamp || '不明';
+                    
+                    // 現在のサービスデータを取得
+                    const service = services.find(s => s.id === serviceId);
+                    if (!service) continue;
+                    
+                    // 変更内容の詳細を取得（簡易版）
+                    const changedFields = [];
+                    if (changeType === 'created') {
+                      // 新規作成の場合、すべてのフィールドを表示
+                      const importantFields = ['title', 'category', 'price', 'image', 'description', 'problems', 'solution'];
+                      for (const field of importantFields) {
+                        const value = service[field];
+                        if (value !== undefined && value !== '' && value !== [] && value !== null) {
+                          changedFields.push({
+                            field: field,
+                            fieldName: getFieldName(field),
+                            oldValue: null,
+                            newValue: formatFieldValue(field, value)
+                          });
+                        }
+                      }
+                    } else {
+                      // 編集の場合、変更されたフィールドのみを表示（簡易版）
+                      // GitHub PagesではHEADデータが取得できないため、すべてのフィールドを表示
+                      const importantFields = ['title', 'category', 'price', 'image', 'description', 'problems', 'solution'];
+                      for (const field of importantFields) {
+                        const value = service[field];
+                        if (value !== undefined && value !== '' && value !== [] && value !== null) {
+                          changedFields.push({
+                            field: field,
+                            fieldName: getFieldName(field),
+                            oldValue: '(変更前の値は取得できません)',
+                            newValue: formatFieldValue(field, value)
+                          });
+                        }
+                      }
+                    }
+                    
+                    changes.push({
+                      serviceId: serviceId,
+                      serviceName: serviceName,
+                      type: changeType,
+                      timestamp: timestamp,
+                      changedFields: changedFields
+                    });
+                  }
+                  
+                  data = {
+                    hasChanges: changes.length > 0,
+                    changes: changes
+                  };
+                }
+              }
+            } catch (staticError) {
+              console.warn('Failed to load browser changes:', staticError);
+              data = { hasChanges: false, changes: [] };
+            }
+          }
+          
+          // フィールド名とフォーマット関数（簡易版）
+          function getFieldName(field) {
+            const fieldNames = {
+              'title': 'サービス名',
+              'category': 'カテゴリー',
+              'price': '価格',
+              'image': 'サービスメイン画像',
+              'description': '説明',
+              'problems': '問題点',
+              'solution': '解決策'
+            };
+            return fieldNames[field] || field;
+          }
+          
+          function formatFieldValue(field, value) {
+            if (value === null || value === undefined) return '(未設定)';
+            if (value === '') return '(空)';
+            if (Array.isArray(value) && value.length === 0) return '(空の配列)';
+            
+            if (field === 'problems' && Array.isArray(value)) {
+              return `${value.length}項目: ${value.slice(0, 3).join(', ')}${value.length > 3 ? '...' : ''}`;
+            }
+            if (typeof value === 'string' && value.length > 50) {
+              return value.substring(0, 50) + '...';
+            }
+            
+            return String(value);
+          }
           
           if (data.hasChanges && data.changes && data.changes.length > 0) {
             statusSummary.innerHTML = `
@@ -1623,6 +1739,8 @@
 </script>
 
 
+    <script src="/assets/js/role_config.js"></script>
+    <script src="/assets/js/auth.js"></script>
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
   </body>
