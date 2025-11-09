@@ -209,11 +209,14 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                         if service_id not in processed_ids:
                             service = next((s for s in services if s.get('id') == service_id), None)
                             if service:
+                                # 新規サービスの場合は、すべてのフィールドを変更内容として表示
+                                changed_fields = self.get_changed_fields(None, service)
                                 changes.append({
                                     'serviceId': service_id,
                                     'serviceName': service.get('title', f'サービスID {service_id}'),
                                     'type': 'created',
-                                    'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON)
+                                    'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON),
+                                    'changedFields': changed_fields
                                 })
                                 processed_ids.add(service_id)
                     
@@ -221,12 +224,16 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                     for service_id in modified_service_ids:
                         if service_id not in processed_ids:
                             service = next((s for s in services if s.get('id') == service_id), None)
+                            head_service = next((s for s in head_services if s.get('id') == service_id), None)
                             if service:
+                                # 変更されたフィールドを特定
+                                changed_fields = self.get_changed_fields(head_service, service)
                                 changes.append({
                                     'serviceId': service_id,
                                     'serviceName': service.get('title', f'サービスID {service_id}'),
                                     'type': 'modified',
-                                    'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON)
+                                    'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON),
+                                    'changedFields': changed_fields
                                 })
                                 processed_ids.add(service_id)
                     
@@ -235,11 +242,14 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                         max_id = max([s.get('id', 0) for s in services], default=0)
                         max_service = next((s for s in services if s.get('id') == max_id), None)
                         if max_service:
+                            head_service = next((s for s in head_services if s.get('id') == max_id), None) if head_services else None
+                            changed_fields = self.get_changed_fields(head_service, max_service)
                             changes.append({
                                 'serviceId': max_id,
                                 'serviceName': max_service.get('title', f'サービスID {max_id}'),
                                 'type': 'modified',
-                                'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON)
+                                'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON),
+                                'changedFields': changed_fields
                             })
             
             self.send_json_response({
@@ -280,6 +290,76 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             self.send_json_response({'images': images})
         except Exception as e:
             self.send_json_response({'images': [], 'error': str(e)})
+    
+    def get_changed_fields(self, old_service, new_service):
+        """サービスオブジェクトの変更されたフィールドを特定して返す"""
+        if old_service is None:
+            # 新規サービスの場合、すべてのフィールドを変更として表示
+            changed_fields = []
+            important_fields = ['title', 'category', 'price', 'image', 'description', 'problems', 'solution', 'sections', 'forms', 'details']
+            for field in important_fields:
+                value = new_service.get(field)
+                if value is not None and value != '' and value != []:
+                    changed_fields.append({
+                        'field': field,
+                        'fieldName': self.get_field_name(field),
+                        'oldValue': None,
+                        'newValue': self.format_field_value(field, value)
+                    })
+            return changed_fields
+        
+        # 編集されたサービスの場合、変更されたフィールドのみを表示
+        changed_fields = []
+        important_fields = ['title', 'category', 'price', 'image', 'description', 'problems', 'solution', 'sections', 'forms', 'details']
+        
+        for field in important_fields:
+            old_value = old_service.get(field)
+            new_value = new_service.get(field)
+            
+            # 値が異なる場合のみ変更として扱う
+            if old_value != new_value:
+                changed_fields.append({
+                    'field': field,
+                    'fieldName': self.get_field_name(field),
+                    'oldValue': self.format_field_value(field, old_value),
+                    'newValue': self.format_field_value(field, new_value)
+                })
+        
+        return changed_fields
+    
+    def get_field_name(self, field):
+        """フィールド名を日本語に変換"""
+        field_names = {
+            'title': 'サービス名',
+            'category': 'カテゴリー',
+            'price': '価格',
+            'image': 'サービスメイン画像',
+            'description': '説明',
+            'problems': '問題点',
+            'solution': '解決策',
+            'sections': 'モーダルセクション',
+            'forms': 'フォームセクション',
+            'details': '詳細セクション'
+        }
+        return field_names.get(field, field)
+    
+    def format_field_value(self, field, value):
+        """フィールドの値を表示用にフォーマット"""
+        if value is None:
+            return '(未設定)'
+        if value == '':
+            return '(空)'
+        if value == []:
+            return '(空の配列)'
+        
+        if field == 'problems' and isinstance(value, list):
+            return f"{len(value)}項目: {', '.join(str(v) for v in value[:3])}" + ('...' if len(value) > 3 else '')
+        if field in ['sections', 'forms', 'details'] and isinstance(value, list):
+            return f"{len(value)}セクション"
+        if isinstance(value, str) and len(value) > 50:
+            return value[:50] + '...'
+        
+        return str(value)
     
     def get_file_timestamp(self, file_path: Path) -> str:
         """ファイルの更新日時を取得"""

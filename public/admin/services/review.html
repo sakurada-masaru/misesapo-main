@@ -281,24 +281,92 @@
             actionPanel.style.display = 'block';
             
             // 変更内容を表示
-            changesList.innerHTML = data.changes.map(change => {
+            changesList.innerHTML = data.changes.map((change, idx) => {
               const serviceName = change.serviceName || `サービスID ${change.serviceId}`;
               const changeType = change.type === 'created' ? '新規作成' : '編集';
               const icon = change.type === 'created' ? 'plus-circle' : 'edit';
               const link = `/admin/services/${change.serviceId}.html`;
+              const changedFields = change.changedFields || [];
+              
+              // 変更されたフィールドの詳細を表示
+              const fieldsHtml = changedFields.length > 0 ? changedFields.map(field => {
+                if (change.type === 'created') {
+                  // 新規作成の場合
+                  return `
+                    <div class="field-change">
+                      <span class="field-name">${field.fieldName}:</span>
+                      <span class="field-value new">${escapeHtml(field.newValue)}</span>
+                    </div>
+                  `;
+                } else {
+                  // 編集の場合
+                  return `
+                    <div class="field-change">
+                      <span class="field-name">${field.fieldName}:</span>
+                      <div class="field-diff">
+                        <div class="field-old">
+                          <span class="diff-label">変更前:</span>
+                          <span class="field-value old">${escapeHtml(field.oldValue)}</span>
+                        </div>
+                        <div class="field-new">
+                          <span class="diff-label">変更後:</span>
+                          <span class="field-value new">${escapeHtml(field.newValue)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }
+              }).join('') : '<p class="no-changes">変更内容の詳細を取得できませんでした</p>';
+              
               return `
-                <div class="change-item">
-                  <i class="fas fa-${icon}"></i>
-                  <div class="change-details">
-                    <a href="${link}" target="_blank" class="change-link">
-                      <strong>${serviceName}</strong>
-                    </a>
-                    <span class="change-type">${changeType}</span>
-                    <span class="change-time">${change.timestamp}</span>
+                <div class="change-item" data-change-idx="${idx}">
+                  <div class="change-header">
+                    <i class="fas fa-${icon}"></i>
+                    <div class="change-details">
+                      <a href="${link}" target="_blank" class="change-link">
+                        <strong>${serviceName}</strong>
+                      </a>
+                      <span class="change-type">${changeType}</span>
+                      <span class="change-time">${change.timestamp}</span>
+                    </div>
+                    <button type="button" class="btn-toggle-details" data-target="${idx}">
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
+                  </div>
+                  <div class="change-fields-details" id="change-details-${idx}" style="display: none;">
+                    <div class="fields-list">
+                      ${fieldsHtml}
+                    </div>
                   </div>
                 </div>
               `;
             }).join('');
+            
+            // 詳細表示/非表示のトグル
+            changesList.querySelectorAll('.btn-toggle-details').forEach(btn => {
+              btn.addEventListener('click', function() {
+                const targetId = this.dataset.target;
+                const details = document.getElementById(`change-details-${targetId}`);
+                const icon = this.querySelector('i');
+                
+                if (details.style.display === 'none') {
+                  details.style.display = 'block';
+                  icon.classList.remove('fa-chevron-down');
+                  icon.classList.add('fa-chevron-up');
+                } else {
+                  details.style.display = 'none';
+                  icon.classList.remove('fa-chevron-up');
+                  icon.classList.add('fa-chevron-down');
+                }
+              });
+            });
+            
+            // HTMLエスケープ関数
+            function escapeHtml(text) {
+              const div = document.createElement('div');
+              div.textContent = text;
+              return div.innerHTML;
+            }
           } else {
             statusSummary.innerHTML = `
               <div class="status-card status-success">
@@ -634,15 +702,24 @@
     }
     
     .change-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px;
       border-bottom: 1px solid #e5e7eb;
     }
     
     .change-item:last-child {
       border-bottom: none;
+    }
+    
+    .change-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .change-header:hover {
+      background-color: #f9fafb;
     }
     
     .change-item i {
@@ -680,6 +757,92 @@
     .change-time {
       color: #6b7280;
       font-size: 0.875rem;
+    }
+    
+    .btn-toggle-details {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    
+    .btn-toggle-details:hover {
+      background-color: #e5e7eb;
+    }
+    
+    .change-fields-details {
+      padding: 16px;
+      padding-top: 0;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    .fields-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .field-change {
+      padding: 12px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .field-name {
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    .field-value {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    
+    .field-value.old {
+      background: #fee2e2;
+      color: #991b1b;
+      text-decoration: line-through;
+    }
+    
+    .field-value.new {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .field-diff {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .field-old,
+    .field-new {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    .diff-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 500;
+      min-width: 60px;
+    }
+    
+    .no-changes {
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-style: italic;
+      margin: 0;
     }
     
     /* 操作ボタン */
