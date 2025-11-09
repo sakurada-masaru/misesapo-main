@@ -118,7 +118,10 @@
             <span class="service-id">サービスID: 34</span>
           </div>
         </div>
-        <div class="service-price-large">¥ 50,000</div>
+        <div class="service-price-section">
+          <div class="service-price-large">¥ 50,000</div>
+          <p class="price-note">表示価格は目安です。状況により金額が変動する可能性があります。</p>
+        </div>
       </div>
 
       <div class="service-detail-content">
@@ -472,10 +475,20 @@
     color: #9ca3af;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
+  .service-price-section {
+    text-align: right;
+  }
   .service-price-large {
     font-size: 2rem;
     font-weight: 700;
     color: var(--primary);
+    margin-bottom: 8px;
+  }
+  .price-note {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.4;
   }
   .service-detail-content {
     margin-bottom: 32px;
@@ -550,6 +563,9 @@
     .service-detail-header {
       flex-direction: column;
       gap: 16px;
+    }
+    .service-price-section {
+      text-align: left;
     }
     .service-price-large {
       font-size: 1.5rem;

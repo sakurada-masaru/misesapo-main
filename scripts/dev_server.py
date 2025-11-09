@@ -104,66 +104,102 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({'hasChanges': False, 'changes': []})
                 return
             
-            # 未コミットの変更を確認
-            result = subprocess.run(
-                ['git', 'status', '--porcelain'],
+            # service_items.jsonの変更のみを確認（public/内のビルド生成ファイルは無視）
+            # まず、git statusで変更があるか確認
+            status_result = subprocess.run(
+                ['git', 'status', '--porcelain', '--', str(SERVICE_ITEMS_JSON.relative_to(ROOT))],
                 cwd=str(ROOT),
                 capture_output=True,
                 text=True,
                 timeout=5
             )
             
-            if not result.stdout.strip():
+            # 次に、実際に差分があるか確認（git diffでHEADとの差分を確認）
+            diff_result = subprocess.run(
+                ['git', 'diff', 'HEAD', '--', str(SERVICE_ITEMS_JSON.relative_to(ROOT))],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            # ステージング済みの変更も確認
+            staged_diff_result = subprocess.run(
+                ['git', 'diff', '--cached', 'HEAD', '--', str(SERVICE_ITEMS_JSON.relative_to(ROOT))],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            # 実際に差分がない場合は、変更なしとして返す
+            has_actual_diff = bool(diff_result.stdout.strip()) or bool(staged_diff_result.stdout.strip())
+            
+            if not has_actual_diff:
                 self.send_json_response({'hasChanges': False, 'changes': []})
                 return
             
             # service_items.jsonの変更を確認
             changes = []
-            has_service_json_change = False
-            has_public_change = False
+            has_service_json_change = True
             modified_service_ids = set()
             new_service_ids = set()
             
-            for line in result.stdout.strip().split('\n'):
-                line_stripped = line.strip()
-                # service_items.jsonの変更を検出
-                if 'service_items.json' in line_stripped:
-                    has_service_json_change = True
-                # public/admin/services/ の変更を検出（新規ページ生成）
-                if 'public/admin/services' in line_stripped:
-                    has_public_change = True
-                    # 新規ページのIDを抽出（例: public/admin/services/20.html）
-                    import re
-                    match = re.search(r'/services/(\d+)\.html', line_stripped)
-                    if match:
-                        new_service_ids.add(int(match.group(1)))
-            
-            # 変更がある場合、詳細情報を取得
-            if has_service_json_change or has_public_change:
+            # service_items.jsonの変更がある場合、詳細情報を取得
+            if has_service_json_change:
                 if SERVICE_ITEMS_JSON.exists():
                     with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
                         services = json.load(f)
                     
-                    # Gitの差分を確認して、編集されたサービスIDを特定
-                    if has_service_json_change:
+                    # Gitの差分を確認して、編集されたサービスIDと新規サービスIDを特定
+                    try:
+                        # HEADとの差分を確認（新規ファイルの場合はHEADが存在しない可能性がある）
+                        diff_result = subprocess.run(
+                            ['git', 'diff', 'HEAD', '--', str(SERVICE_ITEMS_JSON.relative_to(ROOT))],
+                            cwd=str(ROOT),
+                            capture_output=True,
+                            text=True,
+                            timeout=5
+                        )
+                        
+                        # 現在のHEADのサービス一覧を取得（比較用）
+                        head_services = []
                         try:
-                            diff_result = subprocess.run(
-                                ['git', 'diff', 'HEAD', '--', str(SERVICE_ITEMS_JSON.relative_to(ROOT))],
+                            head_result = subprocess.run(
+                                ['git', 'show', f'HEAD:{SERVICE_ITEMS_JSON.relative_to(ROOT)}'],
                                 cwd=str(ROOT),
                                 capture_output=True,
                                 text=True,
                                 timeout=5
                             )
-                            
-                            if diff_result.stdout:
-                                # 差分からサービスIDを抽出
-                                import re
-                                # "id": 数字 のパターンを検索
-                                id_matches = re.findall(r'"id"\s*:\s*(\d+)', diff_result.stdout)
-                                for service_id_str in id_matches:
-                                    modified_service_ids.add(int(service_id_str))
+                            if head_result.returncode == 0 and head_result.stdout:
+                                head_services = json.loads(head_result.stdout)
                         except:
+                            # HEADにファイルがない場合（新規ファイル）は空リスト
                             pass
+                        
+                        # 現在のサービスIDセット
+                        current_ids = {s.get('id') for s in services if s.get('id')}
+                        # HEADのサービスIDセット
+                        head_ids = {s.get('id') for s in head_services if s.get('id')}
+                        
+                        # 新規追加されたサービスID
+                        new_service_ids = current_ids - head_ids
+                        # 編集されたサービスID（差分から抽出）
+                        if diff_result.stdout:
+                            import re
+                            # 差分からサービスIDを抽出
+                            id_matches = re.findall(r'"id"\s*:\s*(\d+)', diff_result.stdout)
+                            for service_id_str in id_matches:
+                                service_id = int(service_id_str)
+                                # 新規でない場合は編集として扱う
+                                if service_id not in new_service_ids:
+                                    modified_service_ids.add(service_id)
+                    except Exception as e:
+                        # エラーが発生した場合、最新のサービスを変更として表示
+                        if services:
+                            max_id = max([s.get('id', 0) for s in services], default=0)
+                            modified_service_ids.add(max_id)
                     
                     # 変更されたサービスをリストアップ
                     processed_ids = set()
@@ -202,7 +238,7 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                             changes.append({
                                 'serviceId': max_id,
                                 'serviceName': max_service.get('title', f'サービスID {max_id}'),
-                                'type': 'created' if has_public_change else 'modified',
+                                'type': 'modified',
                                 'timestamp': self.get_file_timestamp(SERVICE_ITEMS_JSON)
                             })
             
