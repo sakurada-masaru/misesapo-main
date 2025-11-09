@@ -199,7 +199,17 @@
           
           // service.htmlと同期させるため、imageを優先的に使用
           const imagePath = service.image || service['detail-image'] || '';
-          const imageUrl = imagePath ? (imagePath.startsWith('/') ? imagePath : '/' + imagePath) : '/images/service-300x200.svg';
+          const basePath = getBasePath();
+          let imageUrl;
+          if (imagePath) {
+            if (imagePath.startsWith('/')) {
+              imageUrl = basePath === '/' ? imagePath : basePath.slice(0, -1) + imagePath;
+            } else {
+              imageUrl = basePath === '/' ? '/' + imagePath : basePath + imagePath;
+            }
+          } else {
+            imageUrl = resolvePath('/images/service-300x200.svg');
+          }
           
           // 問題点を最大3項目に制限
           const truncatedProblems = service.problems ? truncateProblems(service.problems, 3) : [];
@@ -213,14 +223,14 @@
             <div class="service-card" data-category="${category}" data-search="${(service.title || '').toLowerCase()}">
               ${imagePath ? `
                 <div class="service-image">
-                  <img src="${imageUrl}" alt="${service.title || ''}" loading="lazy" onerror="this.src='/images/service-300x200.svg'" />
+                  <img src="${imageUrl}" alt="${service.title || ''}" loading="lazy" onerror="this.src='${resolvePath('/images/service-300x200.svg')}'" />
                 </div>
               ` : ''}
               <div class="service-card-content">
                 <div class="service-header">
                 <div class="service-info">
                   <h3 class="service-name">
-                    <a href="/admin/services/${service.id}.html" class="service-name-link">${service.title || ''}</a>
+                    <a href="${resolvePath('/admin/services/' + service.id + '.html')}" class="service-name-link">${service.title || ''}</a>
                   </h3>
                   <div class="service-meta">
                     <span class="service-category">${category}</span>
@@ -243,12 +253,12 @@
                 ` : '<div class="service-problems placeholder"><strong>問題点:</strong> <span class="placeholder-text">未設定</span></div>'}
               </div>
               <div class="service-actions">
-                <a href="/admin/services/${service.id}.html" class="btn btn-outline btn-sm">
-                  <i class="fas fa-eye"></i> 詳細
-                </a>
-                <a href="/admin/services/${service.id}/edit.html" class="btn btn-outline btn-sm">
-                  <i class="fas fa-edit"></i> 編集
-                </a>
+              <a href="${resolvePath('/admin/services/' + service.id + '.html')}" class="btn btn-outline btn-sm">
+                <i class="fas fa-eye"></i> 詳細
+              </a>
+              <a href="${resolvePath('/admin/services/' + service.id + '/edit.html')}" class="btn btn-outline btn-sm">
+                <i class="fas fa-edit"></i> 編集
+              </a>
                 <button class="btn btn-outline btn-sm" onclick="deleteService(${service.id})">
                   <i class="fas fa-trash"></i> 削除
                 </button>
@@ -323,10 +333,40 @@
         }
       };
       
+      // ベースパスを取得（GitHub Pages対応）
+      function getBasePath() {
+        const base = document.querySelector('base');
+        if (base && base.href) {
+          try {
+            const url = new URL(base.href);
+            return url.pathname;
+          } catch (e) {
+            return base.getAttribute('href') || '/';
+          }
+        }
+        const path = window.location.pathname;
+        if (path.includes('/misesapo/')) {
+          return '/misesapo/';
+        }
+        return '/';
+      }
+
+      // 絶対パスをベースパス付きに変換
+      function resolvePath(path) {
+        if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+          return path;
+        }
+        const basePath = getBasePath();
+        if (path.startsWith('/')) {
+          return basePath === '/' ? path : basePath.slice(0, -1) + path;
+        }
+        return basePath === '/' ? '/' + path : basePath + path;
+      }
+
       // Check for pending changes (uncommitted changes in git)
       async function checkPendingChanges() {
         try {
-          const response = await fetch('/api/pending-changes');
+          const response = await fetch(resolvePath('/api/pending-changes'));
           if (response.ok) {
             const data = await response.json();
             if (data.hasChanges) {
@@ -355,7 +395,7 @@
             const serviceName = change.serviceName || `サービスID ${change.serviceId}`;
             const changeType = change.type === 'created' ? '新規作成' : '編集';
             const icon = change.type === 'created' ? 'plus-circle' : 'edit';
-            const link = `/admin/services/${change.serviceId}.html`;
+            const link = resolvePath(`/admin/services/${change.serviceId}.html`);
             return `
               <div class="pending-change-item">
                 <i class="fas fa-${icon}"></i>

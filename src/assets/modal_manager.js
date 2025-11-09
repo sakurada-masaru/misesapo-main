@@ -7,10 +7,42 @@
   let modalConfig = null;
   let currentModalData = null;
 
+  // ベースパスを取得（GitHub Pages対応）
+  function getBasePath() {
+    const base = document.querySelector('base');
+    if (base && base.href) {
+      try {
+        const url = new URL(base.href);
+        return url.pathname;
+      } catch (e) {
+        // baseタグが相対パスの場合
+        return base.getAttribute('href') || '/';
+      }
+    }
+    // baseタグがない場合は、現在のパスから推測
+    const path = window.location.pathname;
+    if (path.includes('/misesapo/')) {
+      return '/misesapo/';
+    }
+    return '/';
+  }
+
+  // 絶対パスをベースパス付きに変換
+  function resolvePath(path) {
+    if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+      return path;
+    }
+    const basePath = getBasePath();
+    if (path.startsWith('/')) {
+      return basePath === '/' ? path : basePath.slice(0, -1) + path;
+    }
+    return basePath === '/' ? '/' + path : basePath + path;
+  }
+
   // モーダル設定を読み込む
   async function loadModalConfig() {
     try {
-      const response = await fetch('/data/modal_flow.json');
+      const response = await fetch(resolvePath('/data/modal_flow.json'));
       modalConfig = await response.json();
       return modalConfig;
     } catch (error) {

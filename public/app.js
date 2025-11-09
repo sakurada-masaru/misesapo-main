@@ -5,6 +5,36 @@
 
   function clear(el) { while (el && el.firstChild) el.removeChild(el.firstChild); }
 
+  // ベースパスを取得（GitHub Pages対応）
+  function getBasePath() {
+    const base = document.querySelector('base');
+    if (base && base.href) {
+      try {
+        const url = new URL(base.href);
+        return url.pathname;
+      } catch (e) {
+        return base.getAttribute('href') || '/';
+      }
+    }
+    const path = window.location.pathname;
+    if (path.includes('/misesapo/')) {
+      return '/misesapo/';
+    }
+    return '/';
+  }
+
+  // 絶対パスをベースパス付きに変換
+  function resolvePath(path) {
+    if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+      return path;
+    }
+    const basePath = getBasePath();
+    if (path.startsWith('/')) {
+      return basePath === '/' ? path : basePath.slice(0, -1) + path;
+    }
+    return basePath === '/' ? '/' + path : basePath + path;
+  }
+
   function renderSections(container, sections, namePrefix) {
     if (!container) return;
     clear(container);
@@ -19,14 +49,8 @@
         img.className = 'section-image';
         img.style.cssText = 'width: 100%; max-width: 400px; height: auto; border-radius: 8px; margin-bottom: 12px; object-fit: cover;';
         const imgPath = sectionImage.trim();
-        // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
-        if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-          img.src = imgPath;
-        } else if (imgPath.startsWith('/')) {
-          img.src = imgPath;
-        } else {
-          img.src = '/' + imgPath;
-        }
+        // 画像パスの処理: GitHub Pages対応
+        img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : resolvePath(imgPath.startsWith('/') ? imgPath : '/' + imgPath);
         img.alt = sec['section-title'] || 'セクション画像';
         img.onerror = function() {
           this.style.display = 'none';
@@ -53,17 +77,11 @@
           const img = document.createElement('img');
           img.className = 'avatar-round';
           const imgPath = it['img-url'] || it['img'] || 'https://placehold.co/150x150/e2e8f0/666';
-          // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
-          if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-            img.src = imgPath;
-          } else if (imgPath.startsWith('/')) {
-            img.src = imgPath;
-          } else {
-            img.src = '/' + imgPath;
-          }
+          // 画像パスの処理: GitHub Pages対応
+          img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : resolvePath(imgPath.startsWith('/') ? imgPath : '/' + imgPath);
           img.alt = (it['text'] || '');
           img.onerror = function() {
-            this.src = '/images/service-300x200.svg';
+            this.src = resolvePath('/images/service-300x200.svg');
           };
           const p = document.createElement('p');
           p.className = 'item-name';
@@ -104,18 +122,12 @@
           input.className = 'radio';
           const img = document.createElement('img');
           img.className = 'thumb-211';
-          const imgPath = it['img-url'] || it['img'] || '/images/service-300x200.svg';
-          // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
-          if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-            img.src = imgPath;
-          } else if (imgPath.startsWith('/')) {
-            img.src = imgPath;
-          } else {
-            img.src = '/' + imgPath;
-          }
+          const imgPath = it['img-url'] || it['img'] || resolvePath('/images/service-300x200.svg');
+          // 画像パスの処理: GitHub Pages対応
+          img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : resolvePath(imgPath.startsWith('/') ? imgPath : '/' + imgPath);
           img.alt = (it['text'] || '');
           img.onerror = function() {
-            this.src = '/images/service-300x200.svg';
+            this.src = resolvePath('/images/service-300x200.svg');
           };
           const span = document.createElement('span');
           span.textContent = it['text'] || '';
@@ -165,17 +177,11 @@
 
     if (img) {
       // サービス詳細ページで設定された画像（detail-image）を優先、なければ image を使用
-      const imgPath = data['detail-image'] || data.image || '/images/service-300x200.svg';
-      // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
-      if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-        img.src = imgPath;
-      } else if (imgPath.startsWith('/')) {
-        img.src = imgPath;
-      } else {
-        img.src = '/' + imgPath;
-      }
+      const imgPath = data['detail-image'] || data.image || resolvePath('/images/service-300x200.svg');
+      // 画像パスの処理: GitHub Pages対応
+      img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : resolvePath(imgPath.startsWith('/') ? imgPath : '/' + imgPath);
       img.onerror = function() {
-        this.src = '/images/service-300x200.svg';
+        this.src = resolvePath('/images/service-300x200.svg');
       };
     }
     if (title) title.textContent = data.title || 'サービス詳細（ダミー）';
@@ -206,17 +212,11 @@
     const box = $('#details-form', modal);
     if (img) {
       // サービス詳細ページで設定された画像（detail-image）を優先、なければ image を使用
-      const imgPath = data['detail-image'] || data.image || '/images/service-300x200.svg';
-      // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
-      if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-        img.src = imgPath;
-      } else if (imgPath.startsWith('/')) {
-        img.src = imgPath;
-      } else {
-        img.src = '/' + imgPath;
-      }
+      const imgPath = data['detail-image'] || data.image || resolvePath('/images/service-300x200.svg');
+      // 画像パスの処理: GitHub Pages対応
+      img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : resolvePath(imgPath.startsWith('/') ? imgPath : '/' + imgPath);
       img.onerror = function() {
-        this.src = '/images/service-300x200.svg';
+        this.src = resolvePath('/images/service-300x200.svg');
       };
     }
     if (title) title.textContent = data.title || 'サービス詳細（ダミー）';
@@ -245,17 +245,11 @@
     const title = $('#cart-added-item-title', modal);
     const details = $('#cart-added-item-details', modal);
     if (img) {
-      const imgPath = data.image || '/images/service-300x200.svg';
-      // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
-      if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-        img.src = imgPath;
-      } else if (imgPath.startsWith('/')) {
-        img.src = imgPath;
-      } else {
-        img.src = '/' + imgPath;
-      }
+      const imgPath = data.image || resolvePath('/images/service-300x200.svg');
+      // 画像パスの処理: GitHub Pages対応
+      img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : resolvePath(imgPath.startsWith('/') ? imgPath : '/' + imgPath);
       img.onerror = function() {
-        this.src = '/images/service-300x200.svg';
+        this.src = resolvePath('/images/service-300x200.svg');
       };
     }
     if (title) title.textContent = data.title || 'サービス名';
@@ -470,15 +464,9 @@
       const img = $('#order-modal-image', modal);
       const title = $('#order-modal-title', modal);
       if (img) {
-        const imgPath = data['detail-image'] || data.image || '/images/service-300x200.svg';
-        // 画像パスの処理: http/https で始まる場合はそのまま、/で始まる場合はそのまま、それ以外は / を追加
-        if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-          img.src = imgPath;
-        } else if (imgPath.startsWith('/')) {
-          img.src = imgPath;
-        } else {
-          img.src = '/' + imgPath;
-        }
+        const imgPath = data['detail-image'] || data.image || resolvePath('/images/service-300x200.svg');
+        // 画像パスの処理: GitHub Pages対応
+        img.src = imgPath.startsWith('http://') || imgPath.startsWith('https://') ? imgPath : resolvePath(imgPath.startsWith('/') ? imgPath : '/' + imgPath);
         img.onerror = function() {
           this.src = '/images/service-300x200.svg';
         };
