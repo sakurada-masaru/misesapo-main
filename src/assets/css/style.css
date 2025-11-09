@@ -158,6 +158,25 @@ header {
     align-items: center;
     width: 100%;
     padding: 0 1.2rem;
+    gap: 1rem;
+}
+.header-order-button {
+    display: inline-block;
+    background: var(--main-bg-color);
+    color: var(--white) !important;
+    padding: 0.8rem 1.6rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.4rem;
+    text-align: center;
+    transition: var(--normal-transition);
+    box-shadow: var(--main-box-shadow);
+    white-space: nowrap;
+}
+.header-order-button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.3);
 }
 .header-logo {
     position: relative;
@@ -399,22 +418,6 @@ header .header-flex #g-nav #g-nav-list ul li:nth-of-type(7) {
     gap: 1rem;
     width: min(100%, 370px);
     margin: 0 auto;
-}
-.key-visual-link.order-button-link {
-    background: var(--main-bg-color);
-    color: var(--white) !important;
-    border: none;
-    font-weight: 700;
-    padding: 1.2rem 2rem;
-    font-size: 1.6rem;
-    width: 100%;
-    text-align: center;
-    box-shadow: var(--main-box-shadow);
-}
-.key-visual-link.order-button-link:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
-    box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.3);
 }
 
 /*===========================
@@ -1247,6 +1250,11 @@ input[type="submit"]:hover {
         height: 100%;
         max-width: 100%;
         padding: 0 2rem;
+        gap: 2rem;
+    }
+    .header-order-button {
+        font-size: 1.6rem;
+        padding: 1rem 2.4rem;
     }
     #g-nav, .order-button {
         display: block;
@@ -1337,12 +1345,6 @@ input[type="submit"]:hover {
         justify-content: flex-end;
         flex-wrap: wrap;
         gap: 1.5rem;
-    }
-    .key-visual-link.order-button-link {
-        width: auto;
-        min-width: 200px;
-        font-size: 1.8rem;
-        padding: 1.5rem 3rem;
     }
     .key-visual-orderBox-title {
         font-weight: bold;
