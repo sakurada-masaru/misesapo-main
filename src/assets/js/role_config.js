@@ -11,9 +11,9 @@ const ROLE_CONFIG = {
       displayName: 'ゲスト'
     },
     customer: { 
-      name: '顧客', 
+      name: 'ユーザー（顧客）', 
       password: 'customer1234',
-      displayName: '顧客'
+      displayName: 'ユーザー'
     },
     staff: { 
       name: '清掃員', 
@@ -21,9 +21,9 @@ const ROLE_CONFIG = {
       displayName: '清掃員'
     },
     sales: { 
-      name: '営業マン', 
+      name: 'コンシェルジュ（営業マン）', 
       password: 'sales1234',
-      displayName: '営業マン'
+      displayName: 'コンシェルジュ'
     },
     admin: { 
       name: '管理者', 
@@ -38,13 +38,14 @@ const ROLE_CONFIG = {
   },
   
   // ロール階層（上位ロールは下位ロールの権限も持つ）
+  // 階層: 管理者 > コンシェルジュ（営業マン） > 清掃員・ユーザー（同レベル）
   roleHierarchy: {
     guest: ['guest'],
-    customer: ['guest', 'customer'],
-    staff: ['guest', 'staff'],
-    sales: ['guest', 'sales'],
-    admin: ['guest', 'customer', 'staff', 'sales', 'admin'],
-    developer: ['guest', 'customer', 'staff', 'sales', 'admin', 'developer']
+    customer: ['guest', 'customer'],  // ユーザー（顧客）
+    staff: ['guest', 'staff'],        // 清掃員
+    sales: ['guest', 'customer', 'staff', 'sales'],  // コンシェルジュ（営業マン）: 清掃員とユーザーの権限も持つ
+    admin: ['guest', 'customer', 'staff', 'sales', 'admin'],  // 管理者: すべての権限
+    developer: ['guest', 'customer', 'staff', 'sales', 'admin', 'developer']  // 開発者: すべての権限
   },
   
   // ページ別アクセス制御（パスパターン）
@@ -61,22 +62,22 @@ const ROLE_CONFIG = {
     '/contact.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
     '/concierge.html': ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],
     
-    // 顧客向けページ
-    '/mypage.html': ['customer', 'admin', 'developer'],
-    '/mypage/': ['customer', 'admin', 'developer'],
-    '/cart.html': ['customer', 'admin', 'developer'],
-    '/checkout.html': ['customer', 'admin', 'developer'],
-    '/order/': ['customer', 'admin', 'developer'],
-    '/order-complete.html': ['customer', 'admin', 'developer'],
-    '/order-confirm.html': ['customer', 'admin', 'developer'],
+    // 顧客向けページ（ユーザーと清掃員がアクセス可能、コンシェルジュと管理者も可）
+    '/mypage.html': ['customer', 'staff', 'sales', 'admin', 'developer'],
+    '/mypage/': ['customer', 'staff', 'sales', 'admin', 'developer'],
+    '/cart.html': ['customer', 'staff', 'sales', 'admin', 'developer'],
+    '/checkout.html': ['customer', 'staff', 'sales', 'admin', 'developer'],
+    '/order/': ['customer', 'staff', 'sales', 'admin', 'developer'],
+    '/order-complete.html': ['customer', 'staff', 'sales', 'admin', 'developer'],
+    '/order-confirm.html': ['customer', 'staff', 'sales', 'admin', 'developer'],
     
-    // 清掃員向けページ
-    '/staff/': ['staff', 'admin', 'developer'],
-    '/schedule.html': ['staff', 'admin', 'developer'],
-    '/report.html': ['staff', 'admin', 'developer'],
-    '/reports/': ['staff', 'admin', 'developer'],
+    // 清掃員向けページ（清掃員とユーザーがアクセス可能、コンシェルジュと管理者も可）
+    '/staff/': ['staff', 'customer', 'sales', 'admin', 'developer'],
+    '/schedule.html': ['staff', 'customer', 'sales', 'admin', 'developer'],
+    '/report.html': ['staff', 'customer', 'sales', 'admin', 'developer'],
+    '/reports/': ['staff', 'customer', 'sales', 'admin', 'developer'],
     
-    // 営業マン向けページ
+    // 営業マン向けページ（コンシェルジュと管理者のみ）
     '/sales/': ['sales', 'admin', 'developer'],
     
     // 管理者向けページ（管理者と開発者のみ）
