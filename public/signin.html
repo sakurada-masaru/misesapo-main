@@ -197,13 +197,21 @@
               if (redirect) {
                 window.location.href = decodeURIComponent(redirect);
               } else {
-                // デフォルトのリダイレクト先
+                // ロールごとのデフォルトページにリダイレクト
+                const defaultPage = window.Auth.getDefaultPageForRole(role);
                 const basePath = document.querySelector('base')?.getAttribute('href') || '/';
-                if (basePath === '/') {
-                  window.location.href = '/index.html';
-                } else {
-                  window.location.href = basePath + 'index.html';
+                
+                // ベースパスを考慮したパス解決
+                let redirectPath = defaultPage;
+                if (basePath !== '/' && !defaultPage.startsWith('http')) {
+                  if (defaultPage.startsWith('/')) {
+                    redirectPath = basePath.slice(0, -1) + defaultPage;
+                  } else {
+                    redirectPath = basePath + defaultPage;
+                  }
                 }
+                
+                window.location.href = redirectPath;
               }
             } else {
               errorDiv.textContent = result.message || 'ログインに失敗しました';
@@ -220,12 +228,22 @@
           if (redirect) {
             window.location.href = decodeURIComponent(redirect);
           } else {
+            // 現在のロールに応じたデフォルトページにリダイレクト
+            const currentRole = window.Auth.getCurrentRole();
+            const defaultPage = window.Auth.getDefaultPageForRole(currentRole);
             const basePath = document.querySelector('base')?.getAttribute('href') || '/';
-            if (basePath === '/') {
-              window.location.href = '/index.html';
-            } else {
-              window.location.href = basePath + 'index.html';
+            
+            // ベースパスを考慮したパス解決
+            let redirectPath = defaultPage;
+            if (basePath !== '/' && !defaultPage.startsWith('http')) {
+              if (defaultPage.startsWith('/')) {
+                redirectPath = basePath.slice(0, -1) + defaultPage;
+              } else {
+                redirectPath = basePath + defaultPage;
+              }
             }
+            
+            window.location.href = redirectPath;
           }
         }
       })();

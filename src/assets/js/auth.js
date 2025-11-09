@@ -108,6 +108,22 @@
   }
   
   /**
+   * ロールごとのデフォルトページを取得
+   */
+  function getDefaultPageForRole(role) {
+    const rolePages = {
+      'customer': '/mypage.html',
+      'staff': '/staff/dashboard.html',
+      'sales': '/sales/dashboard.html',
+      'admin': '/admin/dashboard.html',
+      'developer': '/admin/dashboard.html',
+      'master': '/admin/sitemap.html',
+      'guest': '/index.html'
+    };
+    return rolePages[role] || '/index.html';
+  }
+  
+  /**
    * ログアウト
    */
   function logout() {
@@ -433,6 +449,7 @@
     getCurrentRole: getCurrentRole,
     checkPageAccess: checkPageAccessForPath,
     checkCurrentPageAccess: checkCurrentPageAccess,
+    getDefaultPageForRole: getDefaultPageForRole,
     updateHeaderNavigation: updateHeaderNavigation,
     getAuthData: getAuthData
   };
