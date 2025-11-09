@@ -8,7 +8,8 @@
 (function() {
   'use strict';
   
-  // role_config.jsから関数を取得（グローバルスコープから）
+  // role_config.jsから関数と設定を取得（グローバルスコープから）
+  const ROLE_CONFIG = window.RoleConfig?.ROLE_CONFIG;
   const checkPageAccess = window.RoleConfig?.checkPageAccess || function() { return false; };
   const getRoleDisplayName = window.RoleConfig?.getRoleDisplayName || function(role) { return role; };
   const getNavigationForRole = window.RoleConfig?.getNavigationForRole || function(role) { return []; };
@@ -71,6 +72,10 @@
    * ログイン
    */
   function login(role, password, email = null) {
+    if (!ROLE_CONFIG) {
+      return { success: false, message: 'ロール設定が読み込まれていません' };
+    }
+    
     const roleConfig = ROLE_CONFIG.roles[role];
     if (!roleConfig) {
       return { success: false, message: '無効なロールです' };
