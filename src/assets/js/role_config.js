@@ -54,6 +54,17 @@ const ROLE_CONFIG = {
     master: ['guest', 'customer', 'staff', 'sales', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
   },
   
+  // ロールごとのログイン後リダイレクト先
+  defaultPages: {
+    'customer': '/mypage.html',
+    'staff': '/staff/dashboard.html',
+    'sales': '/sales/dashboard.html',
+    'admin': '/admin/dashboard.html',
+    'developer': '/admin/dashboard.html',
+    'master': '/admin/sitemap.html',
+    'guest': '/index.html'
+  },
+  
   // ページ別アクセス制御（パスパターン）
   pageAccess: {
     // パブリックページ（全員アクセス可能）
@@ -261,6 +272,13 @@ function getMasterNavigation() {
   return ROLE_CONFIG.masterNavigation || {};
 }
 
+/**
+ * ロールごとのデフォルトページ（ログイン後リダイレクト先）を取得
+ */
+function getDefaultPageForRole(role) {
+  return ROLE_CONFIG.defaultPages[role] || ROLE_CONFIG.defaultPages.guest || '/index.html';
+}
+
 // グローバルに公開
 window.RoleConfig = {
   ROLE_CONFIG: ROLE_CONFIG,
@@ -268,6 +286,7 @@ window.RoleConfig = {
   checkPageAccess: checkPageAccess,
   getRoleDisplayName: getRoleDisplayName,
   getNavigationForRole: getNavigationForRole,
-  getMasterNavigation: getMasterNavigation
+  getMasterNavigation: getMasterNavigation,
+  getDefaultPageForRole: getDefaultPageForRole
 };
 

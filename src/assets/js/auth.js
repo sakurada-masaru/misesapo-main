@@ -18,6 +18,7 @@
   const getRoleDisplayName = window.RoleConfig?.getRoleDisplayName || function(role) { return role; };
   const getNavigationForRole = window.RoleConfig?.getNavigationForRole || function(role) { return []; };
   const getMasterNavigation = window.RoleConfig?.getMasterNavigation || function() { return {}; };
+  const getDefaultPageForRole = window.RoleConfig?.getDefaultPageForRole || function(role) { return '/index.html'; };
   
   // 認証設定
   const AUTH_KEY = 'misesapo_auth';
@@ -105,22 +106,6 @@
     setAuthData(role, email);
     
     return { success: true, role: role };
-  }
-  
-  /**
-   * ロールごとのデフォルトページを取得
-   */
-  function getDefaultPageForRole(role) {
-    const rolePages = {
-      'customer': '/mypage.html',
-      'staff': '/staff/dashboard.html',
-      'sales': '/sales/dashboard.html',
-      'admin': '/admin/dashboard.html',
-      'developer': '/admin/dashboard.html',
-      'master': '/admin/sitemap.html',
-      'guest': '/index.html'
-    };
-    return rolePages[role] || '/index.html';
   }
   
   /**
@@ -453,6 +438,9 @@
     updateHeaderNavigation: updateHeaderNavigation,
     getAuthData: getAuthData
   };
+  
+  // getDefaultPageForRoleを直接使用可能にする（後方互換性のため）
+  window.Auth.getDefaultPageForRole = getDefaultPageForRole;
   
   // ページ読み込み時に実行
   if (document.readyState === 'loading') {
