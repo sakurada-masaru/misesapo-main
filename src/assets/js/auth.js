@@ -12,6 +12,7 @@
   const checkPageAccess = window.RoleConfig?.checkPageAccess || function() { return false; };
   const getRoleDisplayName = window.RoleConfig?.getRoleDisplayName || function(role) { return role; };
   const getNavigationForRole = window.RoleConfig?.getNavigationForRole || function(role) { return []; };
+  const getMasterNavigation = window.RoleConfig?.getMasterNavigation || function() { return {}; };
   
   // 認証設定
   const AUTH_KEY = 'misesapo_auth';
@@ -152,8 +153,8 @@
     const currentPath = window.location.pathname;
     const currentRole = getCurrentRole();
     
-    // 管理者と開発者はすべてのページにアクセス可能
-    if (currentRole === 'admin' || currentRole === 'developer') {
+    // マスター、管理者、開発者はすべてのページにアクセス可能
+    if (currentRole === 'master' || currentRole === 'admin' || currentRole === 'developer') {
       return true;
     }
     
@@ -177,6 +178,124 @@
   }
   
   /**
+   * マスター権限用のドロップダウンリストを生成
+   */
+  function createMasterDropdown() {
+    const masterNav = getMasterNavigation();
+    const basePath = getBasePath();
+    
+    const dropdownContainer = document.createElement('div');
+    dropdownContainer.className = 'master-nav-dropdown';
+    dropdownContainer.style.cssText = 'position: relative; display: inline-block;';
+    
+    const dropdownButton = document.createElement('button');
+    dropdownButton.className = 'nav-link master-dropdown-btn';
+    dropdownButton.innerHTML = '<i class="fas fa-crown"></i> ページ一覧 <i class="fas fa-chevron-down"></i>';
+    dropdownButton.style.cssText = 'cursor: pointer; border: none; background: none; color: inherit; font: inherit; padding: 0;';
+    dropdownButton.setAttribute('aria-haspopup', 'true');
+    dropdownButton.setAttribute('aria-expanded', 'false');
+    
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.className = 'master-dropdown-menu';
+    dropdownMenu.style.cssText = `
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      min-width: 300px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 1000;
+      margin-top: 8px;
+      padding: 16px;
+    `;
+    
+    // カテゴリごとに項目を生成
+    Object.entries(masterNav).forEach(([category, items]) => {
+      const categoryDiv = document.createElement('div');
+      categoryDiv.style.cssText = 'margin-bottom: 24px;';
+      
+      const categoryTitle = document.createElement('h4');
+      categoryTitle.textContent = category;
+      categoryTitle.style.cssText = `
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #6b7280;
+        margin: 0 0 8px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      `;
+      categoryDiv.appendChild(categoryTitle);
+      
+      const itemsList = document.createElement('div');
+      itemsList.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
+      
+      items.forEach(item => {
+        const link = document.createElement('a');
+        link.href = resolvePath(item.href);
+        link.className = 'master-dropdown-item';
+        link.style.cssText = `
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          color: #374151;
+          text-decoration: none;
+          border-radius: 4px;
+          transition: background-color 0.2s;
+        `;
+        link.onmouseenter = function() {
+          this.style.backgroundColor = '#f3f4f6';
+        };
+        link.onmouseleave = function() {
+          this.style.backgroundColor = 'transparent';
+        };
+        
+        if (item.icon) {
+          const icon = document.createElement('i');
+          icon.className = `fas ${item.icon}`;
+          icon.style.cssText = 'width: 16px; text-align: center; color: #6b7280;';
+          link.appendChild(icon);
+        }
+        
+        const label = document.createElement('span');
+        label.textContent = item.label;
+        link.appendChild(label);
+        
+        itemsList.appendChild(link);
+      });
+      
+      categoryDiv.appendChild(itemsList);
+      dropdownMenu.appendChild(categoryDiv);
+    });
+    
+    // ドロップダウンの開閉
+    dropdownButton.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const isOpen = dropdownMenu.style.display === 'block';
+      dropdownMenu.style.display = isOpen ? 'none' : 'block';
+      dropdownButton.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    });
+    
+    // 外側をクリックしたら閉じる
+    document.addEventListener('click', function(e) {
+      if (!dropdownContainer.contains(e.target)) {
+        dropdownMenu.style.display = 'none';
+        dropdownButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+    
+    dropdownContainer.appendChild(dropdownButton);
+    dropdownContainer.appendChild(dropdownMenu);
+    
+    return dropdownContainer;
+  }
+  
+  /**
    * ヘッダーナビゲーションの表示/非表示を制御
    */
   function updateHeaderNavigation() {
@@ -189,33 +308,39 @@
       // 既存のナビゲーション項目をクリア
       navLeft.innerHTML = '';
       
-      // ロールごとのナビゲーション項目を取得
-      const navItems = getNavigationForRole(currentRole);
-      
-      // ナビゲーション項目を生成
-      navItems.forEach(item => {
-        const link = document.createElement('a');
-        link.className = 'nav-link';
-        link.href = resolvePath(item.href);
+      // マスター権限の場合はドロップダウンリストを表示
+      if (currentRole === 'master') {
+        const dropdown = createMasterDropdown();
+        navLeft.appendChild(dropdown);
+      } else {
+        // その他のロールは通常のナビゲーション項目を表示
+        const navItems = getNavigationForRole(currentRole);
         
-        // アイコンがある場合は追加
-        if (item.icon) {
-          const icon = document.createElement('i');
-          icon.className = `fas ${item.icon}`;
-          link.appendChild(icon);
-          link.appendChild(document.createTextNode(' ' + item.label));
-        } else {
-          link.textContent = item.label;
-        }
-        
-        navLeft.appendChild(link);
-      });
+        // ナビゲーション項目を生成
+        navItems.forEach(item => {
+          const link = document.createElement('a');
+          link.className = 'nav-link';
+          link.href = resolvePath(item.href);
+          
+          // アイコンがある場合は追加
+          if (item.icon) {
+            const icon = document.createElement('i');
+            icon.className = `fas ${item.icon}`;
+            link.appendChild(icon);
+            link.appendChild(document.createTextNode(' ' + item.label));
+          } else {
+            link.textContent = item.label;
+          }
+          
+          navLeft.appendChild(link);
+        });
+      }
     }
     
-    // 開発用ナビゲーション（管理者と開発者のみ表示）
+    // 開発用ナビゲーション（管理者、開発者、マスターのみ表示）
     const navDev = document.querySelector('.nav-dev');
     if (navDev) {
-      if (currentRole === 'admin' || currentRole === 'developer') {
+      if (currentRole === 'master' || currentRole === 'admin' || currentRole === 'developer') {
         navDev.style.display = '';
       } else {
         navDev.style.display = 'none';

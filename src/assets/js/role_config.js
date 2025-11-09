@@ -34,6 +34,11 @@ const ROLE_CONFIG = {
       name: '開発者', 
       password: 'misesapo1234',
       displayName: '開発者'
+    },
+    master: { 
+      name: 'マスター', 
+      password: 'master1234',
+      displayName: 'マスター'
     }
   },
   
@@ -45,7 +50,8 @@ const ROLE_CONFIG = {
     staff: ['guest', 'staff'],        // 清掃員
     sales: ['guest', 'customer', 'staff', 'sales'],  // コンシェルジュ（営業マン）: 清掃員とユーザーの権限も持つ
     admin: ['guest', 'customer', 'staff', 'sales', 'admin'],  // 管理者: すべての権限
-    developer: ['guest', 'customer', 'staff', 'sales', 'admin', 'developer']  // 開発者: すべての権限
+    developer: ['guest', 'customer', 'staff', 'sales', 'admin', 'developer'],  // 開発者: すべての権限
+    master: ['guest', 'customer', 'staff', 'sales', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
   },
   
   // ページ別アクセス制御（パスパターン）
@@ -131,6 +137,65 @@ const ROLE_CONFIG = {
       { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
       { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
+    ],
+    master: [
+      // マスター権限はドロップダウンリストを使用するため、通常のナビゲーション項目は最小限
+      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap', special: 'dropdown' }
+    ]
+  },
+  
+  // マスター権限用のドロップダウンリスト項目（カテゴリ別）
+  masterNavigation: {
+    'パブリック': [
+      { href: '/index.html', label: 'トップページ（発注）', icon: 'fa-home' },
+      { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' },
+      { href: '/concierge.html', label: 'コンシェルジュ', icon: 'fa-concierge-bell' },
+      { href: '/contact.html', label: 'お問い合わせ', icon: 'fa-envelope' },
+      { href: '/signin.html', label: 'ログイン', icon: 'fa-sign-in-alt' },
+      { href: '/signup.html', label: '新規登録', icon: 'fa-user-plus' }
+    ],
+    'ユーザー（顧客）': [
+      { href: '/mypage.html', label: 'マイページ', icon: 'fa-user' },
+      { href: '/mypage/info.html', label: 'オーナー情報', icon: 'fa-id-card' },
+      { href: '/mypage/settings.html', label: '設定', icon: 'fa-cog' },
+      { href: '/mypage/support.html', label: 'サポートセンター', icon: 'fa-life-ring' },
+      { href: '/cart.html', label: 'カート', icon: 'fa-shopping-bag' },
+      { href: '/checkout.html', label: '決済確認', icon: 'fa-credit-card' },
+      { href: '/order/history.html', label: '注文履歴', icon: 'fa-history' },
+      { href: '/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
+      { href: '/report.html', label: 'レポート一覧', icon: 'fa-file-alt' }
+    ],
+    '清掃員': [
+      { href: '/staff/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/staff/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
+      { href: '/staff/assignments.html', label: '作業一覧', icon: 'fa-tasks' },
+      { href: '/staff/reports/new.html', label: 'レポート作成', icon: 'fa-file-alt' },
+      { href: '/staff/training.html', label: 'トレーニング', icon: 'fa-graduation-cap' }
+    ],
+    '営業マン（コンシェルジュ）': [
+      { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/sales/clients.html', label: '顧客管理', icon: 'fa-users' },
+      { href: '/sales/clients/new.html', label: '新規顧客登録', icon: 'fa-user-plus' },
+      { href: '/sales/estimates.html', label: '見積もり一覧', icon: 'fa-file-invoice' },
+      { href: '/sales/estimates/new.html', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },
+      { href: '/sales/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
+      { href: '/sales/orders.html', label: '発注管理', icon: 'fa-shopping-cart' }
+    ],
+    '管理者': [
+      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
+      { href: '/admin/services/new.html', label: '新規サービス登録', icon: 'fa-plus-circle' },
+      { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
+      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
+      { href: '/admin/users/customers.html', label: '顧客一覧', icon: 'fa-users' },
+      { href: '/admin/users/sales.html', label: '営業マン一覧', icon: 'fa-user-tie' },
+      { href: '/admin/users/staff.html', label: '清掃員一覧', icon: 'fa-user-cog' },
+      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
+    ],
+    '開発者': [
+      { href: '/admin/services/review.html', label: '変更レビュー', icon: 'fa-code-branch' },
+      { href: '/admin/images.html', label: '画像一覧', icon: 'fa-images' }
     ]
   }
 };
@@ -155,8 +220,8 @@ function matchPathPattern(path, pattern) {
  * ページへのアクセス権限をチェック
  */
 function checkPageAccess(path, userRole) {
-  // 管理者と開発者はすべてのページにアクセス可能
-  if (userRole === 'admin' || userRole === 'developer') {
+  // マスター、管理者、開発者はすべてのページにアクセス可能
+  if (userRole === 'master' || userRole === 'admin' || userRole === 'developer') {
     return true;
   }
   
@@ -190,12 +255,20 @@ function getNavigationForRole(role) {
   return ROLE_CONFIG.navigation[role] || ROLE_CONFIG.navigation.guest;
 }
 
+/**
+ * マスター権限用のドロップダウンリスト項目を取得
+ */
+function getMasterNavigation() {
+  return ROLE_CONFIG.masterNavigation || {};
+}
+
 // グローバルに公開
 window.RoleConfig = {
   ROLE_CONFIG: ROLE_CONFIG,
   matchPathPattern: matchPathPattern,
   checkPageAccess: checkPageAccess,
   getRoleDisplayName: getRoleDisplayName,
-  getNavigationForRole: getNavigationForRole
+  getNavigationForRole: getNavigationForRole,
+  getMasterNavigation: getMasterNavigation
 };
 
