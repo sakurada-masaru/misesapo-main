@@ -85,6 +85,53 @@ const ROLE_CONFIG = {
     
     // 開発者向けページ（開発者のみ）
     '/admin/services/review.html': ['developer']
+  },
+  
+  // ロールごとのナビゲーション項目
+  navigation: {
+    guest: [
+      { href: '/index.html', label: '発注', icon: 'fa-shopping-cart' },
+      { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' },
+      { href: '/concierge.html', label: 'コンシェルジュ', icon: 'fa-concierge-bell' }
+    ],
+    customer: [
+      { href: '/index.html', label: '発注', icon: 'fa-shopping-cart' },
+      { href: '/service.html', label: 'サービス一覧', icon: 'fa-list' },
+      { href: '/mypage.html', label: 'マイページ', icon: 'fa-user' },
+      { href: '/cart.html', label: 'カート', icon: 'fa-shopping-bag' },
+      { href: '/order/history.html', label: '注文履歴', icon: 'fa-history' }
+    ],
+    staff: [
+      { href: '/staff/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/staff/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
+      { href: '/staff/assignments.html', label: '作業一覧', icon: 'fa-tasks' },
+      { href: '/staff/reports/new.html', label: 'レポート作成', icon: 'fa-file-alt' },
+      { href: '/staff/training.html', label: 'トレーニング', icon: 'fa-graduation-cap' }
+    ],
+    sales: [
+      { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/sales/clients.html', label: '顧客管理', icon: 'fa-users' },
+      { href: '/sales/estimates.html', label: '見積もり', icon: 'fa-file-invoice' },
+      { href: '/sales/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
+      { href: '/sales/orders.html', label: '発注管理', icon: 'fa-shopping-cart' }
+    ],
+    admin: [
+      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
+      { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
+      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
+      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
+    ],
+    developer: [
+      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' },
+      { href: '/admin/services/review.html', label: '変更レビュー', icon: 'fa-code-branch' },
+      { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
+      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' },
+      { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
+    ]
   }
 };
 
@@ -136,11 +183,19 @@ function getRoleDisplayName(role) {
   return ROLE_CONFIG.roles[role]?.displayName || role;
 }
 
+/**
+ * ロールごとのナビゲーション項目を取得
+ */
+function getNavigationForRole(role) {
+  return ROLE_CONFIG.navigation[role] || ROLE_CONFIG.navigation.guest;
+}
+
 // グローバルに公開
 window.RoleConfig = {
   ROLE_CONFIG: ROLE_CONFIG,
   matchPathPattern: matchPathPattern,
   checkPageAccess: checkPageAccess,
-  getRoleDisplayName: getRoleDisplayName
+  getRoleDisplayName: getRoleDisplayName,
+  getNavigationForRole: getNavigationForRole
 };
 

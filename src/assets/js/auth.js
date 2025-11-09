@@ -11,6 +11,7 @@
   // role_config.jsから関数を取得（グローバルスコープから）
   const checkPageAccess = window.RoleConfig?.checkPageAccess || function() { return false; };
   const getRoleDisplayName = window.RoleConfig?.getRoleDisplayName || function(role) { return role; };
+  const getNavigationForRole = window.RoleConfig?.getNavigationForRole || function(role) { return []; };
   
   // 認証設定
   const AUTH_KEY = 'misesapo_auth';
@@ -180,9 +181,39 @@
    */
   function updateHeaderNavigation() {
     const currentRole = getCurrentRole();
-    const navDev = document.querySelector('.nav-dev');
+    const basePath = getBasePath();
     
-    // 管理者と開発者以外は開発用ナビゲーションを非表示
+    // メインナビゲーション（左側）を更新
+    const navLeft = document.querySelector('.nav-left nav');
+    if (navLeft) {
+      // 既存のナビゲーション項目をクリア
+      navLeft.innerHTML = '';
+      
+      // ロールごとのナビゲーション項目を取得
+      const navItems = getNavigationForRole(currentRole);
+      
+      // ナビゲーション項目を生成
+      navItems.forEach(item => {
+        const link = document.createElement('a');
+        link.className = 'nav-link';
+        link.href = resolvePath(item.href);
+        
+        // アイコンがある場合は追加
+        if (item.icon) {
+          const icon = document.createElement('i');
+          icon.className = `fas ${item.icon}`;
+          link.appendChild(icon);
+          link.appendChild(document.createTextNode(' ' + item.label));
+        } else {
+          link.textContent = item.label;
+        }
+        
+        navLeft.appendChild(link);
+      });
+    }
+    
+    // 開発用ナビゲーション（管理者と開発者のみ表示）
+    const navDev = document.querySelector('.nav-dev');
     if (navDev) {
       if (currentRole === 'admin' || currentRole === 'developer') {
         navDev.style.display = '';
@@ -207,16 +238,42 @@
           };
         }
         
+        // 新規登録リンクを非表示
+        const signupLink = navRight.querySelector('a[href*="signup.html"]');
+        if (signupLink) {
+          signupLink.style.display = 'none';
+        }
+        
         // ロール表示（オプション）
-        const roleDisplay = document.createElement('span');
-        roleDisplay.className = 'nav-role';
+        let roleDisplay = navRight.querySelector('.nav-role');
+        if (!roleDisplay) {
+          roleDisplay = document.createElement('span');
+          roleDisplay.className = 'nav-role';
+          navRight.insertBefore(roleDisplay, navRight.firstChild);
+        }
         const roleName = (typeof getRoleDisplayName === 'function') 
           ? getRoleDisplayName(currentRole) 
           : currentRole;
         roleDisplay.textContent = `(${roleName})`;
         roleDisplay.style.cssText = 'font-size: 0.75rem; color: #6b7280; margin-left: 8px;';
-        if (!navRight.querySelector('.nav-role')) {
-          navRight.insertBefore(roleDisplay, navRight.firstChild);
+      } else {
+        // 未ログインの場合、ログイン・新規登録リンクを表示
+        const loginLink = navRight.querySelector('a[href*="signin.html"]');
+        if (loginLink) {
+          loginLink.textContent = 'ログイン';
+          loginLink.href = resolvePath('/signin.html');
+          loginLink.onclick = null;
+        }
+        
+        const signupLink = navRight.querySelector('a[href*="signup.html"]');
+        if (signupLink) {
+          signupLink.style.display = '';
+        }
+        
+        // ロール表示を削除
+        const roleDisplay = navRight.querySelector('.nav-role');
+        if (roleDisplay) {
+          roleDisplay.remove();
         }
       }
     }
