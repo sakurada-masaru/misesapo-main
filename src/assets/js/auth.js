@@ -183,11 +183,22 @@
       return true;
     }
     
+    // ベースパスを除去したパスでチェック（GitHub Pages対応）
+    const basePath = getBasePath();
+    let normalizedPath = currentPath;
+    if (basePath !== '/' && currentPath.startsWith(basePath)) {
+      normalizedPath = currentPath.substring(basePath.length - 1); // 先頭の/を残す
+    }
+    
+    // パブリックページ（index.html, service.html）は常にアクセス可能
+    if (normalizedPath === '/index.html' || normalizedPath === '/service.html' || normalizedPath.startsWith('/service/')) {
+      return true;
+    }
+    
     // ページアクセス権限をチェック
-    if (typeof checkPageAccess === 'function' && !checkPageAccess(currentPath, currentRole)) {
+    if (typeof checkPageAccess === 'function' && !checkPageAccess(normalizedPath, currentRole)) {
       // アクセス権限がない場合、ログインページにリダイレクト
       const redirectUrl = encodeURIComponent(window.location.href);
-      const basePath = getBasePath();
       window.location.href = basePath === '/' 
         ? `/signin.html?redirect=${redirectUrl}` 
         : `${basePath}signin.html?redirect=${redirectUrl}`;
