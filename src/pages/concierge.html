@@ -1853,12 +1853,12 @@
 
     /* SP版のヘッダーとロゴを非表示 */
     @media (max-width: 767.98px) {
-      .concierge-page ~ header.site-header,
-      .concierge-page ~ header.site-header .brand-logo,
-      .concierge-page ~ header.site-header .nav-left,
-      .concierge-page ~ header.site-header .nav-right,
-      .concierge-page ~ header.site-header .hamburger-btn,
-      .concierge-page ~ header.site-header .mobile-nav {
+      body:has(.concierge-page) header.site-header,
+      body:has(.concierge-page) header.site-header .brand-logo,
+      body:has(.concierge-page) header.site-header .nav-left,
+      body:has(.concierge-page) header.site-header .nav-right,
+      body:has(.concierge-page) header.site-header .hamburger-btn,
+      body:has(.concierge-page) header.site-header .mobile-nav {
         display: none !important;
       }
       
@@ -1958,7 +1958,7 @@
 
         // アクティブ状態を更新
         screens.forEach(s => s.classList.remove('active'));
-        screen.classList.add('active');
+        targetScreen.classList.add('active');
         
         // 一段目のメニューボタンのアクティブ状態を更新
         quickMenuBtns.forEach(btn => {
