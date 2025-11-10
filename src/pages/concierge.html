@@ -1178,7 +1178,7 @@
       background: #f9fafb;
       border-top: 1px solid #e5e7eb;
       box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-      z-index: 999;
+      z-index: 1001;
       padding: 8px 0;
       transform: translateY(100%);
       transition: transform 0.3s ease-out;
@@ -1187,10 +1187,12 @@
 
     .concierge-quick-menu-second.visible {
       transform: translateY(0);
-      /* 視覚的効果：背景を少し暗く、ボーダーを強調 */
+      /* 視覚的効果：ハイライト状態で表示 */
       background: #ffffff;
       border-top: 3px solid var(--primary);
-      box-shadow: 0 -4px 16px rgba(255, 107, 157, 0.3);
+      box-shadow: 0 -4px 20px rgba(255, 107, 157, 0.4), 0 0 0 1px rgba(255, 107, 157, 0.1);
+      /* 明るく強調 */
+      filter: brightness(1.05);
     }
 
     /* メニュー展開中の視覚的効果 */
@@ -1206,7 +1208,7 @@
       right: 0;
       bottom: 0;
       background: rgba(0, 0, 0, 0.3);
-      z-index: 998;
+      z-index: 1000;
       pointer-events: none;
       animation: fadeIn 0.3s ease-out;
     }
