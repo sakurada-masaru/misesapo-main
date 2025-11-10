@@ -64,7 +64,17 @@
   </section>
       </div>
 
-      <!-- 画面2: 顧客情報画面 -->
+      <!-- 画面2: スケジュール画面 -->
+      <div class="concierge-screen" data-screen="schedule">
+        <div class="screen-header">
+          <h1 class="screen-title">スケジュール</h1>
+        </div>
+        <div class="schedule-container" id="schedule-container">
+          <!-- Schedule will be rendered by JavaScript -->
+        </div>
+      </div>
+
+      <!-- 画面3: 顧客情報画面 -->
       <div class="concierge-screen" data-screen="client">
         <div class="screen-header">
           <h1 class="screen-title">顧客情報</h1>
@@ -74,7 +84,7 @@
         </div>
         </div>
 
-      <!-- 画面3: サービス・価格画面 -->
+      <!-- 画面4: サービス・価格画面 -->
       <div class="concierge-screen" data-screen="services">
         <div class="screen-header">
           <h1 class="screen-title">サービス・価格</h1>
@@ -84,7 +94,7 @@
         </div>
         </div>
 
-      <!-- 画面4: 仮見積もり作成画面 -->
+      <!-- 画面5: 仮見積もり作成画面 -->
       <div class="concierge-screen" data-screen="estimate">
         <div class="screen-header">
           <h1 class="screen-title">仮見積もり作成</h1>
@@ -172,7 +182,7 @@
         </div>
       </div>
 
-      <!-- 画面8: メモ帳画面 -->
+      <!-- 画面7: メモ帳画面 -->
       <div class="concierge-screen" data-screen="notes">
         <div class="screen-header">
           <h1 class="screen-title">メモ帳</h1>
@@ -190,7 +200,7 @@
         </div>
       </div>
 
-      <!-- 画面9: カメラ画面 -->
+      <!-- 画面8: カメラ画面 -->
       <div class="concierge-screen" data-screen="camera">
         <div class="screen-header">
           <h1 class="screen-title">カメラ</h1>
@@ -214,6 +224,22 @@
           </div>
           <div class="camera-gallery" id="camera-gallery">
             <!-- Captured photos will be displayed here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 画面9: 地図画面 -->
+      <div class="concierge-screen" data-screen="map">
+        <div class="screen-header">
+          <h1 class="screen-title">地図</h1>
+    </div>
+        <div class="map-container" id="map-container">
+          <div class="map-placeholder" id="map-placeholder">
+            <i class="fas fa-map-marked-alt"></i>
+            <p>地図を開く</p>
+          </div>
+          <div class="map-schedule-list" id="map-schedule-list">
+            <!-- Map schedule will be rendered by JavaScript -->
           </div>
         </div>
       </div>
