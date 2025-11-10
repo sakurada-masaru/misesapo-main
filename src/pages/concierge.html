@@ -1323,7 +1323,7 @@
         }, 100);
       });
 
-      // クイックメニューボタンクリック
+      // クイックメニューボタンクリック（一段目）
       quickMenuBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
           const screenName = btn.dataset.screen;
@@ -1331,6 +1331,27 @@
             const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
             if (screenIndex !== -1) {
               switchScreen(screenIndex);
+            }
+          }
+        });
+      });
+
+      // クイックメニューボタンクリック（二段目）
+      const quickMenuBtnsSecond = document.querySelectorAll('.quick-menu-btn-second[data-screen]');
+      quickMenuBtnsSecond.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const screenName = btn.dataset.screen;
+          if (screenName) {
+            const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+            if (screenIndex !== -1) {
+              switchScreen(screenIndex);
+              // 画面切り替え後、メニューを閉じる
+              if (quickMenu) {
+                quickMenu.classList.remove('slide-up');
+              }
+              if (quickMenuSecond) {
+                quickMenuSecond.classList.remove('visible');
+              }
             }
           }
         });
@@ -1875,10 +1896,7 @@
           // ファイル選択をリセット（同じファイルを再度選択できるように）
           photoInput.value = '';
         });
-
-      window.removePhoto = function(btn) {
-        btn.closest('.photo-item').remove();
-      };
+      }
 
       // 見積もり保存・送信
       document.getElementById('btn-save-estimate').addEventListener('click', () => {
