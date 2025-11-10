@@ -20,7 +20,7 @@
             <span>ダッシュボード</span>
           </a>
           <h1 class="screen-title">アクティビティ</h1>
-        </div>
+  </div>
 
         <!-- 緊急対応が必要な顧客 -->
         <section class="activity-section urgent-section">
@@ -94,14 +94,14 @@
           <div class="estimate-total">
             <span class="total-label">合計見積もり</span>
             <span class="total-value" id="estimate-total">¥0</span>
-          </div>
+        </div>
           <!-- 追加されたサービス一覧 -->
           <div class="selected-services" id="selected-services">
             <div class="empty-state">
               <i class="fas fa-shopping-cart"></i>
               <p>サービスを選択してください</p>
-            </div>
-          </div>
+        </div>
+      </div>
           <div class="estimate-photos" id="estimate-photos">
             <div class="photos-header">
               <h3>写真</h3>
@@ -132,7 +132,7 @@
       <div class="concierge-screen" data-screen="map">
         <div class="screen-header">
           <h1 class="screen-title">地図</h1>
-        </div>
+    </div>
         <div class="map-container" id="map-container">
           <div class="map-placeholder" id="map-placeholder">
             <i class="fas fa-map-marked-alt"></i>
@@ -250,7 +250,7 @@
       <span>アクティビティ</span>
     </button>
     <button class="quick-menu-btn" data-screen="schedule" title="スケジュール">
-      <i class="fas fa-calendar"></i>
+        <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
     </button>
     <button class="quick-menu-btn" data-screen="client" title="顧客情報">
@@ -265,7 +265,7 @@
       <i class="fas fa-file-invoice"></i>
       <span>見積</span>
     </button>
-  </div>
+    </div>
   
   <!-- 二段目のメニュー -->
   <div class="concierge-quick-menu-second" id="quick-menu-second">
@@ -335,7 +335,7 @@
 
     .concierge-slider {
       display: flex;
-      width: 1000vw; /* 10画面分 */
+      width: 500vw; /* 5画面分（メニューに応じて切り替え） */
       height: 100%;
     }
 
@@ -1485,7 +1485,7 @@
 
     .todo-input {
       flex: 1;
-      padding: 12px;
+        padding: 12px;
       border: 1px solid #d1d5db;
       border-radius: 8px;
       font-size: 0.875rem;
@@ -1603,7 +1603,7 @@
     .note-item {
       background: #ffffff;
       border-radius: 8px;
-      padding: 16px;
+        padding: 16px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
@@ -1644,7 +1644,7 @@
     /* カメラ画面 */
     .camera-container {
       display: flex;
-      flex-direction: column;
+        flex-direction: column;
       gap: 16px;
     }
 
@@ -1667,7 +1667,7 @@
       width: 100%;
       height: 100%;
       display: flex;
-      flex-direction: column;
+        flex-direction: column;
       align-items: center;
       justify-content: center;
       color: #ffffff;
@@ -1749,7 +1749,7 @@
     }
 
     .camera-gallery-item img {
-      width: 100%;
+        width: 100%;
       height: 100%;
       object-fit: cover;
     }
@@ -1851,6 +1851,23 @@
       background: #dc2626;
     }
 
+    /* SP版のヘッダーとロゴを非表示 */
+    @media (max-width: 767.98px) {
+      .concierge-page ~ header.site-header,
+      .concierge-page ~ header.site-header .brand-logo,
+      .concierge-page ~ header.site-header .nav-left,
+      .concierge-page ~ header.site-header .nav-right,
+      .concierge-page ~ header.site-header .hamburger-btn,
+      .concierge-page ~ header.site-header .mobile-nav {
+        display: none !important;
+      }
+      
+      /* ヘッダーが非表示になるので、ページの上部余白を調整 */
+      .concierge-page {
+        top: 0;
+      }
+    }
+
     /* PC対応（縦並び表示） */
     @media (min-width: 768px) {
       .concierge-slider {
@@ -1905,15 +1922,24 @@
       // 画面切り替え
       function switchScreen(index) {
         if (index < 0 || index >= screens.length) return;
-        currentScreen = index;
-        const screen = screens[index];
-        const screenName = screen.dataset.screen;
+        
+        // 表示中の画面のみを対象にする
+        const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+        const visibleScreenElements = Array.from(screens).filter(s => visibleScreens.includes(s.dataset.screen));
+        
+        if (index >= visibleScreenElements.length) return;
+        
+        const targetScreen = visibleScreenElements[index];
+        const screenName = targetScreen.dataset.screen;
+        const actualIndex = Array.from(screens).indexOf(targetScreen);
+        
+        currentScreen = actualIndex;
         
         // PC版とSP版で異なる処理
         const isMobile = window.innerWidth <= 767.98;
         
         if (isMobile) {
-          // SP版: 横スライドで切り替え
+          // SP版: 横スライドで切り替え（表示中の画面の中でのインデックスを使用）
           slider.scrollTo({
             left: index * window.innerWidth,
             behavior: 'smooth'
@@ -1922,7 +1948,7 @@
           // PC版: 直接表示（横スライドなし）
           // 各画面を縦に並べて表示
           screens.forEach((s, i) => {
-            if (i === index) {
+            if (i === actualIndex) {
               s.style.display = 'block';
             } else {
               s.style.display = 'none';
@@ -2018,12 +2044,25 @@
         const diff = touchStartX - touchEndX;
 
         if (Math.abs(diff) > swipeThreshold) {
+          // 表示中の画面のみを対象にする
+          const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+          const visibleScreenElements = Array.from(screens).filter(s => visibleScreens.includes(s.dataset.screen));
+          const currentVisibleIndex = visibleScreenElements.findIndex(s => s.classList.contains('active'));
+          
           if (diff > 0) {
             // 左スワイプ（次の画面）
-            switchScreen(currentScreen + 1);
+            if (currentVisibleIndex < visibleScreenElements.length - 1) {
+              const nextScreen = visibleScreenElements[currentVisibleIndex + 1];
+              const nextIndex = visibleScreenElements.indexOf(nextScreen);
+              switchScreen(nextIndex);
+            }
           } else {
             // 右スワイプ（前の画面）
-            switchScreen(currentScreen - 1);
+            if (currentVisibleIndex > 0) {
+              const prevScreen = visibleScreenElements[currentVisibleIndex - 1];
+              const prevIndex = visibleScreenElements.indexOf(prevScreen);
+              switchScreen(prevIndex);
+            }
           }
         }
       }
@@ -2189,11 +2228,11 @@
           <div class="client-header">
             <h2 class="client-name">${client.company_name || client.name}</h2>
             <p class="client-store">${client.store_name || firstSchedule.store_name}</p>
-                </div>
+              </div>
           <div class="client-contact">
             ${client.phone ? `<a href="tel:${client.phone}" class="contact-item"><i class="fas fa-phone"></i><span>${client.phone}</span></a>` : ''}
             ${client.email ? `<a href="mailto:${client.email}" class="contact-item"><i class="fas fa-envelope"></i><span>${client.email}</span></a>` : ''}
-              </div>
+            </div>
           <div class="client-address">
             <p class="address-text">${client.address || firstSchedule.address}</p>
             <a href="${mapUrl}" target="_blank" class="btn-map"><i class="fas fa-map-marker-alt"></i> 地図で開く</a>
@@ -2488,6 +2527,33 @@
       let isMenuSliding = false;
       let hasSwapped = false; // 入れ替えが実行されたかどうか
 
+      // 一段目メニューに対応する画面
+      const firstTierScreens = ['activity', 'schedule', 'client', 'services', 'estimate'];
+      // 二段目メニューに対応する画面
+      const secondTierScreens = ['todo', 'notes', 'camera', 'map', 'logout'];
+      
+      // 現在表示中のメニュータイプ（'first' または 'second'）
+      let currentMenuTier = 'first';
+
+      // 表示する画面を切り替える関数
+      function updateVisibleScreens() {
+        const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+        
+        screens.forEach(screen => {
+          const screenName = screen.dataset.screen;
+          if (visibleScreens.includes(screenName)) {
+            screen.style.display = 'block';
+          } else {
+            screen.style.display = 'none';
+          }
+        });
+
+        // スライダーの幅を調整
+        if (slider) {
+          slider.style.width = `${visibleScreens.length * 100}vw`;
+        }
+      }
+
       // メニューを入れ替える関数（フリップアニメーション付き）
       function swapMenus() {
         if (!quickMenu || !quickMenuSecond) return;
@@ -2533,6 +2599,12 @@
             }
           });
 
+          // メニュータイプを切り替え
+          currentMenuTier = currentMenuTier === 'first' ? 'second' : 'first';
+          
+          // 表示する画面を更新
+          updateVisibleScreens();
+
           // フリップアニメーションを終了
           quickMenu.classList.remove('flipping');
           quickMenuSecond.classList.remove('flipping');
@@ -2544,9 +2616,14 @@
           const newFirstTierFirstItem = quickMenu.querySelector('[data-screen]');
           if (newFirstTierFirstItem) {
             const screenName = newFirstTierFirstItem.dataset.screen;
-            const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+            const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+            const screenIndex = visibleScreens.indexOf(screenName);
             if (screenIndex !== -1) {
-              switchScreen(screenIndex);
+              // 表示中の画面の中でのインデックスを計算
+              const actualScreenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+              if (actualScreenIndex !== -1) {
+                switchScreen(actualScreenIndex);
+              }
             }
           }
         }, 300); // アニメーション時間（0.6s / 2）
@@ -2563,7 +2640,9 @@
           
           newBtn.addEventListener('click', () => {
             const screenName = newBtn.dataset.screen;
-            const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+            const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+            const visibleScreenElements = Array.from(screens).filter(s => visibleScreens.includes(s.dataset.screen));
+            const screenIndex = visibleScreenElements.findIndex(s => s.dataset.screen === screenName);
             if (screenIndex !== -1) {
               switchScreen(screenIndex);
             }
@@ -2579,7 +2658,9 @@
           
           newBtn.addEventListener('click', () => {
             const screenName = newBtn.dataset.screen;
-            const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+            const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+            const visibleScreenElements = Array.from(screens).filter(s => visibleScreens.includes(s.dataset.screen));
+            const screenIndex = visibleScreenElements.findIndex(s => s.dataset.screen === screenName);
             if (screenIndex !== -1) {
               switchScreen(screenIndex);
               // 画面切り替え後、メニューを閉じる
@@ -2700,7 +2781,7 @@
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
         const todaySchedules = schedules.filter(s => s.date === todayStr);
-
+        
         if (todaySchedules.length === 0) {
           mapScheduleList.innerHTML = '<div class="empty-state"><i class="fas fa-map-marked-alt"></i><p>本日のスケジュールがありません</p></div>';
           return;
@@ -2773,7 +2854,7 @@
           scheduleContainer.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>スケジュールがありません</p></div>';
           return;
         }
-
+        
         scheduleContainer.innerHTML = sortedSchedules.map(schedule => {
           const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(schedule.address)}`;
           return `
@@ -2782,7 +2863,7 @@
                 <span class="schedule-time-hour">${schedule.time}</span>
                 <span class="schedule-time-date">${schedule.date}</span>
               </div>
-              <div class="schedule-client">${schedule.client_name}</div>
+                <div class="schedule-client">${schedule.client_name}</div>
               <div class="schedule-store">${schedule.store_name} - ${schedule.purpose}</div>
               <div class="schedule-actions">
                 ${schedule.phone ? `<a href="tel:${schedule.phone}" class="schedule-action-btn"><i class="fas fa-phone"></i> 電話</a>` : ''}
@@ -2793,7 +2874,7 @@
           `;
         }).join('');
       }
-
+      
       // TODOリスト画面のレンダリング
       let todos = JSON.parse(localStorage.getItem('concierge-todos') || '[]');
       
@@ -2813,7 +2894,7 @@
             <button class="btn-todo-delete" onclick="deleteTodo(${index})">
               <i class="fas fa-trash"></i>
             </button>
-          </div>
+            </div>
         `).join('');
       }
 
@@ -2861,7 +2942,7 @@
           notesList.innerHTML = '<div class="empty-state"><i class="fas fa-sticky-note"></i><p>メモがありません</p></div>';
           return;
         }
-
+        
         notesList.innerHTML = notes.map((note, index) => `
           <div class="note-item">
             <div class="note-header">
@@ -2869,9 +2950,9 @@
               <button class="btn-note-delete" onclick="deleteNote(${index})">
                 <i class="fas fa-trash"></i>
               </button>
-            </div>
+                </div>
             <div class="note-content">${note.content}</div>
-          </div>
+              </div>
         `).join('');
       }
 
