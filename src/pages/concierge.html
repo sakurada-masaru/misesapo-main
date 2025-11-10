@@ -2015,10 +2015,8 @@
               }
             });
           } else {
-            // SP版: すべて表示して横スライド可能に
-            screens.forEach(s => {
-              s.style.display = 'block';
-            });
+            // SP版: 表示中の画面のみ表示
+            updateVisibleScreens();
           }
         }, 100);
       });
