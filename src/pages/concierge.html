@@ -2116,10 +2116,16 @@
         
         if (isMobile) {
           // SP版: 横スライドで切り替え（表示中の画面の中でのインデックスを使用）
-          slider.scrollTo({
-            left: index * window.innerWidth,
-            behavior: 'smooth'
-          });
+          // 表示中の画面のみを対象にする
+          const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+          const visibleScreenElements = Array.from(screens).filter(s => visibleScreens.includes(s.dataset.screen));
+          
+          if (index >= 0 && index < visibleScreenElements.length) {
+            slider.scrollTo({
+              left: index * window.innerWidth,
+              behavior: 'smooth'
+            });
+          }
         } else {
           // PC版: 直接表示（横スライドなし）
           // 各画面を縦に並べて表示
@@ -2735,18 +2741,23 @@
       function updateVisibleScreens() {
         const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
         
+        // すべての画面を一旦非表示にする
+        screens.forEach(screen => {
+          screen.style.display = 'none';
+        });
+        
+        // 表示する画面のみを表示
         screens.forEach(screen => {
           const screenName = screen.dataset.screen;
           if (visibleScreens.includes(screenName)) {
             screen.style.display = 'block';
-          } else {
-            screen.style.display = 'none';
           }
         });
 
-        // スライダーの幅を調整
+        // スライダーの幅を調整（表示中の画面数 × 100vw）
         if (slider) {
-          slider.style.width = `${visibleScreens.length * 100}vw`;
+          const visibleCount = visibleScreens.length;
+          slider.style.width = `${visibleCount * 100}vw`;
         }
       }
 
