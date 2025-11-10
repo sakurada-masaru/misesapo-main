@@ -797,6 +797,53 @@
       transition: max-height 0.3s ease-in;
     }
 
+    .selected-service-multiplier {
+      padding: 16px;
+      border-top: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+
+    .selected-service-multiplier label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .multiplier-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .multiplier-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: #ffffff;
+      border: 2px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .multiplier-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .multiplier-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .multiplier-btn:active {
+      transform: scale(0.98);
+    }
+
     .selected-service-memo {
       padding: 0 16px 16px 16px;
       border-top: 1px solid #e5e7eb;
@@ -1695,11 +1742,12 @@
         serviceItem.className = 'selected-service-item';
         serviceItem.dataset.serviceId = id;
         serviceItem.dataset.priceValue = priceValue;
+        serviceItem.dataset.multiplier = '1'; // デフォルト倍率は1
         serviceItem.innerHTML = `
           <div class="selected-service-header" onclick="toggleServiceMemo(this.querySelector('.btn-service-memo'))">
             <div class="selected-service-info">
               <p class="selected-service-name">${name}</p>
-              <p class="selected-service-price">${price}</p>
+              <p class="selected-service-price" id="service-price-${id}">${price}</p>
             </div>
             <div class="selected-service-actions" onclick="event.stopPropagation()">
               <button class="btn-service-memo" onclick="toggleServiceMemo(this)" title="メモ">
@@ -1710,6 +1758,14 @@
             </div>
           </div>
           <div class="selected-service-content">
+            <div class="selected-service-multiplier">
+              <label>倍率</label>
+              <div class="multiplier-buttons">
+                <button class="multiplier-btn active" data-multiplier="1" onclick="setServiceMultiplier(${id}, 1)">x1</button>
+                <button class="multiplier-btn" data-multiplier="1.5" onclick="setServiceMultiplier(${id}, 1.5)">x1.5</button>
+                <button class="multiplier-btn" data-multiplier="2" onclick="setServiceMultiplier(${id}, 2)">x2</button>
+              </div>
+            </div>
             <div class="selected-service-memo">
               <label for="service-memo-${id}">備考</label>
               <textarea id="service-memo-${id}" class="service-memo-input" placeholder="このサービスに関する備考を入力してください" oninput="saveServiceMemo(${id}, this.value)"></textarea>
@@ -1719,8 +1775,7 @@
         selectedServices.appendChild(serviceItem);
         updateEstimateTotal();
         
-        // 仮見積もり画面に切り替え
-        switchScreen(3);
+        // サービス画面にとどまる（見積もり画面に遷移しない）
       };
 
       // サービスメモの開閉
@@ -1779,13 +1834,52 @@
         updateEstimateTotal();
       };
 
+      // サービス倍率を設定
+      window.setServiceMultiplier = function(serviceId, multiplier) {
+        const serviceItem = document.querySelector(`.selected-service-item[data-service-id="${serviceId}"]`);
+        if (!serviceItem) return;
+
+        // 倍率を保存
+        serviceItem.dataset.multiplier = multiplier.toString();
+
+        // ボタンのアクティブ状態を更新
+        const multiplierBtns = serviceItem.querySelectorAll('.multiplier-btn');
+        multiplierBtns.forEach(btn => {
+          if (parseFloat(btn.dataset.multiplier) === multiplier) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+
+        // 価格を再計算して表示を更新
+        const basePrice = parseInt(serviceItem.dataset.priceValue || '0', 10);
+        const multipliedPrice = Math.round(basePrice * multiplier);
+        const priceDisplay = serviceItem.querySelector(`#service-price-${serviceId}`);
+        if (priceDisplay) {
+          // 元の価格フォーマットを保持（¥ 21,000〜 のような形式）
+          const originalPrice = serviceItem.querySelector('.selected-service-price').textContent;
+          const priceMatch = originalPrice.match(/¥\s*([\d,]+)/);
+          if (priceMatch) {
+            priceDisplay.textContent = `¥${multipliedPrice.toLocaleString()}`;
+          } else {
+            priceDisplay.textContent = `¥${multipliedPrice.toLocaleString()}`;
+          }
+        }
+
+        // 見積もり合計を更新
+        updateEstimateTotal();
+      };
+
       // 見積もり合計を更新
       function updateEstimateTotal() {
         const selectedItems = document.querySelectorAll('.selected-service-item');
         let total = 0;
         selectedItems.forEach(item => {
-          const priceValue = parseInt(item.dataset.priceValue || '0', 10);
-          total += priceValue;
+          const basePrice = parseInt(item.dataset.priceValue || '0', 10);
+          const multiplier = parseFloat(item.dataset.multiplier || '1', 10);
+          const multipliedPrice = Math.round(basePrice * multiplier);
+          total += multipliedPrice;
         });
         document.getElementById('estimate-total').textContent = total > 0 ? `¥${total.toLocaleString()}` : '¥0';
       }
