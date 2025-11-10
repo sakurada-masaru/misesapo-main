@@ -1187,6 +1187,37 @@
 
     .concierge-quick-menu-second.visible {
       transform: translateY(0);
+      /* 視覚的効果：背景を少し暗く、ボーダーを強調 */
+      background: #ffffff;
+      border-top: 3px solid var(--primary);
+      box-shadow: 0 -4px 16px rgba(255, 107, 157, 0.3);
+    }
+
+    /* メニュー展開中の視覚的効果 */
+    body.menu-expanded {
+      position: relative;
+    }
+
+    body.menu-expanded::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 998;
+      pointer-events: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
     }
 
     .quick-menu-btn-second {
@@ -1398,6 +1429,10 @@
               }
               if (quickMenuSecond) {
                 quickMenuSecond.classList.remove('visible');
+                // ページスクロールを再有効化
+                document.body.style.overflow = '';
+                // 視覚的効果を削除
+                document.body.classList.remove('menu-expanded');
               }
             }
           }
@@ -1909,12 +1944,20 @@
             quickMenu.classList.add('slide-up');
             if (quickMenuSecond) {
               quickMenuSecond.classList.add('visible');
+              // ページスクロールを無効化
+              document.body.style.overflow = 'hidden';
+              // 視覚的効果を追加
+              document.body.classList.add('menu-expanded');
             }
           } else if (deltaY < -30) {
             // 下にスワイプで閉じる
             quickMenu.classList.remove('slide-up');
             if (quickMenuSecond) {
               quickMenuSecond.classList.remove('visible');
+              // ページスクロールを再有効化
+              document.body.style.overflow = '';
+              // 視覚的効果を削除
+              document.body.classList.remove('menu-expanded');
             }
           }
         }, { passive: true });
@@ -1939,6 +1982,10 @@
             if (deltaY < -30) {
               quickMenu.classList.remove('slide-up');
               quickMenuSecond.classList.remove('visible');
+              // ページスクロールを再有効化
+              document.body.style.overflow = '';
+              // 視覚的効果を削除
+              document.body.classList.remove('menu-expanded');
             }
           }, { passive: true });
 
