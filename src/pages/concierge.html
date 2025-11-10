@@ -1437,6 +1437,14 @@
           emptyState.remove();
         }
 
+        // 既に同じサービスが追加されているかチェック
+        const existingItem = selectedServices.querySelector(`.selected-service-item[data-service-id="${id}"]`);
+        if (existingItem) {
+          // 既に追加されている場合は、その項目を開く
+          toggleServiceMemo(existingItem.querySelector('.btn-service-memo'));
+          return;
+        }
+
         // 価格から数値を抽出（¥ 21,000〜 → 21000）
         const priceMatch = price.match(/¥\s*([\d,]+)/);
         const priceValue = priceMatch ? parseInt(priceMatch[1].replace(/,/g, ''), 10) : 0;
@@ -1446,17 +1454,77 @@
         serviceItem.dataset.serviceId = id;
         serviceItem.dataset.priceValue = priceValue;
         serviceItem.innerHTML = `
-          <div>
-            <p class="selected-service-name">${name}</p>
-            <p class="selected-service-price">${price}</p>
+          <div class="selected-service-header" onclick="toggleServiceMemo(this.querySelector('.btn-service-memo'))">
+            <div class="selected-service-info">
+              <p class="selected-service-name">${name}</p>
+              <p class="selected-service-price">${price}</p>
+            </div>
+            <div class="selected-service-actions" onclick="event.stopPropagation()">
+              <button class="btn-service-memo" onclick="toggleServiceMemo(this)" title="メモ">
+                <i class="fas fa-sticky-note"></i>
+                <span>メモ</span>
+              </button>
+              <button class="btn-remove-service" onclick="removeServiceFromEstimate(this)">削除</button>
+            </div>
           </div>
-          <button class="btn-remove-service" onclick="removeServiceFromEstimate(this)">削除</button>
+          <div class="selected-service-content">
+            <div class="selected-service-memo">
+              <label for="service-memo-${id}">備考</label>
+              <textarea id="service-memo-${id}" class="service-memo-input" placeholder="このサービスに関する備考を入力してください" oninput="saveServiceMemo(${id}, this.value)"></textarea>
+            </div>
+          </div>
         `;
         selectedServices.appendChild(serviceItem);
         updateEstimateTotal();
         
         // 仮見積もり画面に切り替え
         switchScreen(3);
+      };
+
+      // サービスメモの開閉
+      window.toggleServiceMemo = function(btn) {
+        const serviceItem = btn.closest('.selected-service-item');
+        if (!serviceItem) return;
+
+        const isExpanded = serviceItem.classList.contains('expanded');
+        
+        if (isExpanded) {
+          serviceItem.classList.remove('expanded');
+          btn.classList.remove('active');
+        } else {
+          serviceItem.classList.add('expanded');
+          btn.classList.add('active');
+          // メモ入力欄にフォーカス
+          const memoTextarea = serviceItem.querySelector('.service-memo-input');
+          if (memoTextarea) {
+            setTimeout(() => {
+              memoTextarea.focus();
+            }, 100);
+          }
+        }
+      };
+
+      // サービスメモを保存
+      window.saveServiceMemo = function(serviceId, memo) {
+        const serviceItem = document.querySelector(`.selected-service-item[data-service-id="${serviceId}"]`);
+        if (serviceItem) {
+          serviceItem.dataset.memo = memo;
+          // メモがある場合はメモボタンにバッジを表示
+          const memoBtn = serviceItem.querySelector('.btn-service-memo');
+          if (memo && memo.trim()) {
+            if (!memoBtn.querySelector('.memo-badge')) {
+              const badge = document.createElement('span');
+              badge.className = 'memo-badge';
+              badge.innerHTML = '<i class="fas fa-circle"></i>';
+              memoBtn.appendChild(badge);
+            }
+          } else {
+            const badge = memoBtn.querySelector('.memo-badge');
+            if (badge) {
+              badge.remove();
+            }
+          }
+        }
       };
 
       // 仮見積もりからサービスを削除
