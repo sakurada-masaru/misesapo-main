@@ -220,7 +220,7 @@
     .recruit-work-container,
     .recruit-job-container,
     .recruit-faq-container {
-      max-width: 1440px;
+      max-width: 1200px;
       width: 100%;
       margin: 0 auto;
       padding: 0 24px;
@@ -365,14 +365,18 @@
       margin-bottom: 16px;
     }
     .job-card-image {
-      width: 100%;
-      height: 200px;
+      width: auto;
+      height: auto;
       overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     .job-card-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      display: block;
     }
     .job-card-button {
       display: block;
