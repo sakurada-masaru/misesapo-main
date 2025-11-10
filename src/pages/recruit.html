@@ -9,21 +9,21 @@
   </div>
 
   <!-- Hero Section -->
-  <section class="recruit-hero">
+  <section class="recruit-hero scroll-fade-in">
     <div class="recruit-hero-container">
       <img src="images/recruit/mainimage.png" alt="ミセサポ求人サイト" class="recruit-hero-image" />
     </div>
   </section>
 
   <!-- Recruitment Banner -->
-  <section class="recruit-banner">
+  <section class="recruit-banner scroll-fade-in">
     <a href="/recruit/apply/cleaning.html" class="recruit-banner-link">
       <img src="images/recruit/banner.png" alt="清掃員 積極採用中" class="recruit-banner-image" />
     </a>
   </section>
 
   <!-- ABOUT Section -->
-  <section class="recruit-about">
+  <section class="recruit-about scroll-fade-in">
     <div class="recruit-about-container">
       <div class="recruit-about-content">
         <div class="recruit-about-image">
@@ -47,7 +47,7 @@
   </section>
 
   <!-- WORK Section -->
-  <section class="recruit-work">
+  <section class="recruit-work scroll-fade-in">
     <div class="recruit-work-container">
       <h2 class="recruit-section-title">WORK</h2>
       <p class="recruit-section-subtitle">―店舗の清潔を保つのがミセサポの仕事</p>
@@ -58,7 +58,7 @@
   </section>
 
   <!-- JOB Section -->
-  <section class="recruit-job">
+  <section class="recruit-job scroll-fade-in">
     <div class="recruit-job-container">
       <h2 class="recruit-section-title">JOB</h2>
       <p class="recruit-section-subtitle">―ミセサポでは、現在以下の職種を募集しております。</p>
@@ -119,7 +119,7 @@
   </section>
 
   <!-- FAQ Section -->
-  <section class="recruit-faq">
+  <section class="recruit-faq scroll-fade-in">
     <div class="recruit-faq-container">
       <h2 class="recruit-faq-title">よくあるご質問 (FAQ)</h2>
       <div class="recruit-faq-list">
@@ -619,6 +619,16 @@
       background: #ff6b9d;
       transform: translateY(-4px);
     }
+    /* Scroll Fade In Animation */
+    .scroll-fade-in {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    }
+    .scroll-fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
     /* Responsive */
     @media (max-width: 768px) {
       .recruit-hero-image {
@@ -674,9 +684,43 @@
         // フェードアウト完了後に非表示
         setTimeout(function() {
           splash.classList.add('hidden');
+          // スプラッシュスクリーンが非表示になったらスクロールアニメーションを開始
+          initScrollFadeIn();
         }, 800); // フェードアウトの時間（0.8s）に合わせる
       }, 3000); // 3秒表示
+
+      // スプラッシュスクリーンが表示されていない場合は即座に開始
+      if (splash.classList.contains('hidden')) {
+        initScrollFadeIn();
+      }
     })();
+
+    // スクロールアニメーションの初期化
+    function initScrollFadeIn() {
+      const fadeElements = document.querySelectorAll('.scroll-fade-in');
+      
+      // Intersection Observerの設定
+      const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+      };
+
+      const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            // 一度表示されたら監視を解除
+            observer.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+
+      // 各要素を監視
+      fadeElements.forEach(function(element) {
+        observer.observe(element);
+      });
+    }
   </script>
 </div>
 
