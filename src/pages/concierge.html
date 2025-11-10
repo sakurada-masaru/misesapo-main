@@ -5,151 +5,168 @@
 @json('data/sales_schedule.json', schedule_data)
 @json('data/new_inquiries.json', inquiries_data)
 @json('data/estimates.json', estimates_data)
+@json('data/service_items.json', service_items_data)
 
-<main id="main" class="container concierge-page">
-  <!-- Page Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">コンシェルジュ</h1>
-      <p class="page-subtitle">営業マンのTOPページ</p>
+<main id="main" class="concierge-page">
+  <!-- 横スライドコンテナ -->
+  <div class="concierge-slider-container">
+    <div class="concierge-slider" id="concierge-slider">
+      
+      <!-- 画面1: アクティビティ画面（デフォルト） -->
+      <div class="concierge-screen active" data-screen="activity">
+        <div class="screen-header">
+          <h1 class="screen-title">アクティビティ</h1>
+        </div>
+        
+        <!-- 緊急対応が必要な顧客 -->
+        <section class="activity-section urgent-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="fas fa-exclamation-triangle"></i>
+              緊急対応が必要な顧客
+            </h2>
+            <span class="urgent-badge" id="urgent-count">0</span>
+          </div>
+          <div class="urgent-list" id="urgent-list">
+            <!-- Urgent items will be rendered by JavaScript -->
+          </div>
+        </section>
+
+        <!-- 本日のスケジュール -->
+        <section class="activity-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="fas fa-calendar-day"></i>
+              本日のスケジュール
+            </h2>
+          </div>
+          <div class="schedule-list" id="schedule-list">
+            <!-- Schedules will be rendered by JavaScript -->
+          </div>
+        </section>
+
+        <!-- 新規問い合わせ -->
+        <section class="activity-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <i class="fas fa-bell"></i>
+              新規問い合わせ
+              <span class="notification-badge" id="inquiry-count">0</span>
+            </h2>
+          </div>
+          <div class="inquiry-list" id="inquiry-list">
+            <!-- Inquiries will be rendered by JavaScript -->
+          </div>
+        </section>
+      </div>
+
+      <!-- 画面2: 顧客情報画面 -->
+      <div class="concierge-screen" data-screen="client">
+        <div class="screen-header">
+          <h1 class="screen-title">顧客情報</h1>
+        </div>
+        <div class="client-info-container" id="client-info-container">
+          <!-- Client info will be rendered by JavaScript -->
+        </div>
+      </div>
+
+      <!-- 画面3: サービス・価格画面 -->
+      <div class="concierge-screen" data-screen="services">
+        <div class="screen-header">
+          <h1 class="screen-title">サービス・価格</h1>
+        </div>
+        <div class="services-container" id="services-container">
+          <!-- Services will be rendered by JavaScript -->
+        </div>
+      </div>
+
+      <!-- 画面4: 仮見積もり作成画面 -->
+      <div class="concierge-screen" data-screen="estimate">
+        <div class="screen-header">
+          <h1 class="screen-title">仮見積もり作成</h1>
+        </div>
+        <div class="estimate-form-container" id="estimate-form-container">
+          <div class="selected-services" id="selected-services">
+            <div class="empty-state">
+              <i class="fas fa-shopping-cart"></i>
+              <p>サービスを選択してください</p>
+            </div>
+          </div>
+          <div class="estimate-total">
+            <span class="total-label">合計</span>
+            <span class="total-value" id="estimate-total">¥0</span>
+          </div>
+          <div class="estimate-photos" id="estimate-photos">
+            <div class="photos-header">
+              <h3>写真</h3>
+              <button class="btn-photo-add" id="btn-photo-add">
+                <i class="fas fa-camera"></i> 追加
+              </button>
+            </div>
+            <div class="photos-grid" id="photos-grid">
+              <!-- Photos will be added here -->
+            </div>
+          </div>
+          <div class="estimate-notes">
+            <label for="estimate-notes-input">メモ</label>
+            <textarea id="estimate-notes-input" class="notes-input" placeholder="メモを入力してください"></textarea>
+          </div>
+          <div class="estimate-actions">
+            <button class="btn-save" id="btn-save-estimate">
+              <i class="fas fa-save"></i> 保存
+            </button>
+            <button class="btn-send" id="btn-send-estimate">
+              <i class="fas fa-paper-plane"></i> 送信
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 画面5: 地図画面 -->
+      <div class="concierge-screen" data-screen="map">
+        <div class="screen-header">
+          <h1 class="screen-title">地図</h1>
+        </div>
+        <div class="map-container" id="map-container">
+          <div class="map-placeholder" id="map-placeholder">
+            <i class="fas fa-map-marked-alt"></i>
+            <p>地図を読み込んでいます...</p>
+          </div>
+        </div>
+        <div class="map-schedule-list" id="map-schedule-list">
+          <!-- Schedule items will be rendered by JavaScript -->
+        </div>
+      </div>
+
     </div>
-    <a href="/sales/dashboard.html" class="btn btn-outline btn-sm">
-      <i class="fas fa-chart-line"></i> ダッシュボード
-    </a>
   </div>
 
-  <!-- 1. 緊急対応が必要な顧客 -->
-  <section class="dashboard-section urgent-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-exclamation-triangle"></i>
-        緊急対応が必要な顧客
-      </h2>
-      <span class="urgent-badge" id="urgent-count">0</span>
-    </div>
-    <div class="urgent-list" id="urgent-list">
-      <!-- Urgent items will be rendered by JavaScript -->
-    </div>
-  </section>
+  <!-- 画面下部固定クイックメニュー -->
+  <div class="concierge-quick-menu">
+    <button class="quick-menu-btn" data-screen="activity" title="アクティビティ">
+      <i class="fas fa-bolt"></i>
+      <span>アクティビティ</span>
+    </button>
+    <button class="quick-menu-btn" data-screen="client" title="顧客情報">
+      <i class="fas fa-user"></i>
+      <span>顧客</span>
+    </button>
+    <button class="quick-menu-btn" id="btn-camera" title="写真撮影">
+      <i class="fas fa-camera"></i>
+      <span>写真</span>
+    </button>
+    <button class="quick-menu-btn" data-screen="estimate" title="仮見積もり">
+      <i class="fas fa-file-invoice"></i>
+      <span>見積</span>
+    </button>
+    <button class="quick-menu-btn" data-screen="map" title="地図">
+      <i class="fas fa-map-marked-alt"></i>
+      <span>地図</span>
+    </button>
+  </div>
 
-  <!-- 2. 本日のスケジュール -->
-  <section class="dashboard-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-calendar-day"></i>
-        本日のスケジュール
-      </h2>
-      <a href="/sales/schedule.html" class="btn btn-outline btn-sm">すべて見る</a>
-    </div>
-    <div class="schedule-list" id="schedule-list">
-      <!-- Schedules will be rendered by JavaScript -->
-    </div>
-  </section>
-
-  <!-- 3. 新規問い合わせ・通知 -->
-  <section class="dashboard-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-bell"></i>
-        新規問い合わせ
-        <span class="notification-badge" id="inquiry-count">0</span>
-      </h2>
-      <a href="/sales/clients.html?filter=new" class="btn btn-outline btn-sm">すべて見る</a>
-    </div>
-    <div class="inquiry-list" id="inquiry-list">
-      <!-- Inquiries will be rendered by JavaScript -->
-    </div>
-  </section>
-
-  <!-- 4. 見積もり状況 -->
-  <section class="dashboard-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-file-invoice"></i>
-        見積もり状況
-      </h2>
-      <a href="/sales/estimates.html" class="btn btn-outline btn-sm">すべて見る</a>
-    </div>
-    <div class="estimates-stats">
-      <div class="estimate-stat-card">
-        <div class="stat-icon draft">
-          <i class="fas fa-file-alt"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value" id="draft-count">0</div>
-          <div class="stat-label">下書き</div>
-        </div>
-      </div>
-      <div class="estimate-stat-card">
-        <div class="stat-icon sent">
-          <i class="fas fa-paper-plane"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value" id="sent-count">0</div>
-          <div class="stat-label">送付済み</div>
-        </div>
-      </div>
-      <div class="estimate-stat-card">
-        <div class="stat-icon approved">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value" id="approved-count">0</div>
-          <div class="stat-label">承認済み</div>
-        </div>
-      </div>
-      <div class="estimate-stat-card">
-        <div class="stat-icon pending">
-          <i class="fas fa-clock"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value" id="pending-approval-count">0</div>
-          <div class="stat-label">承認待ち</div>
-        </div>
-      </div>
-    </div>
-    <div class="estimates-action">
-      <a href="/sales/estimates/new.html" class="btn btn-primary btn-block">
-        <i class="fas fa-plus"></i> 新規見積もり作成
-      </a>
-    </div>
-  </section>
-
-  <!-- 5. クイックアクション -->
-  <section class="dashboard-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-bolt"></i>
-        クイックアクション
-      </h2>
-    </div>
-    <div class="quick-actions">
-      <a href="/sales/clients.html" class="action-btn">
-        <i class="fas fa-users"></i>
-        <span>顧客一覧</span>
-      </a>
-      <a href="/sales/clients/new.html" class="action-btn">
-        <i class="fas fa-user-plus"></i>
-        <span>新規顧客登録</span>
-      </a>
-      <a href="/sales/estimates/new.html" class="action-btn">
-        <i class="fas fa-file-invoice"></i>
-        <span>見積もり作成</span>
-      </a>
-      <a href="/sales/orders.html" class="action-btn">
-        <i class="fas fa-shopping-cart"></i>
-        <span>発注管理</span>
-      </a>
-      <a href="/sales/reports.html" class="action-btn">
-        <i class="fas fa-file-alt"></i>
-        <span>レポート確認</span>
-      </a>
-      <a href="/sales/schedule.html" class="action-btn">
-        <i class="fas fa-calendar"></i>
-        <span>スケジュール管理</span>
-      </a>
-    </div>
-  </section>
+  <!-- 隠しカメラ入力 -->
+  <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" multiple>
 
   <!-- Data Scripts -->
   <script type="application/json" id="clients-data">
@@ -164,59 +181,89 @@
   <script type="application/json" id="estimates-data">
     @jsonvar $estimates_data
   </script>
+  <script type="application/json" id="service-items-data">
+    @jsonvar $service_items_data
+  </script>
 
   <style>
+    /* 基本レイアウト */
     .concierge-page {
-      max-width: 100%;
-      margin: 0;
-      padding: 16px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
       background: #f9fafb;
+      padding-bottom: 80px; /* クイックメニューの高さ分 */
     }
-    .page-header {
+
+    /* 横スライドコンテナ */
+    .concierge-slider-container {
+      width: 100%;
+      height: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+    }
+
+    .concierge-slider {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
+      width: 500vw; /* 5画面分 */
+      height: 100%;
+    }
+
+    /* 各画面 */
+    .concierge-screen {
+      width: 100vw;
+      height: 100%;
+      flex-shrink: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 16px;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .screen-header {
+      margin-bottom: 20px;
+      padding-bottom: 12px;
       border-bottom: 2px solid #e5e7eb;
-      flex-wrap: wrap;
-      gap: 12px;
     }
-    .header-content {
-      flex: 1;
-    }
-    .page-title {
-      font-size: 1.75rem;
+
+    .screen-title {
+      font-size: 1.5rem;
       font-weight: 700;
       color: #111827;
-      margin: 0 0 4px 0;
-    }
-    .page-subtitle {
-      font-size: 0.95rem;
-      color: #6b7280;
       margin: 0;
     }
-    .dashboard-section {
+
+    /* アクティビティ画面 */
+    .activity-section {
       background: #ffffff;
       border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 24px;
+      padding: 16px;
+      margin-bottom: 16px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
+
     .urgent-section {
       border: 2px solid #ef4444;
       background: #fef2f2;
     }
+
     .section-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      gap: 12px;
+      margin-bottom: 12px;
     }
+
     .section-title {
-      font-size: 1.25rem;
+      font-size: 1.125rem;
       font-weight: 700;
       color: #111827;
       margin: 0;
@@ -224,9 +271,11 @@
       align-items: center;
       gap: 8px;
     }
+
     .section-title i {
       color: var(--primary);
     }
+
     .urgent-badge,
     .notification-badge {
       display: inline-flex;
@@ -241,523 +290,790 @@
       font-size: 0.75rem;
       font-weight: 700;
     }
-    .urgent-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .urgent-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px;
-      background: #ffffff;
-      border: 1px solid #fee2e2;
-      border-left: 4px solid #ef4444;
-      border-radius: 8px;
-      gap: 12px;
-    }
-    .urgent-item:hover {
-      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
-    }
-    .urgent-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .urgent-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #111827;
-      margin: 0 0 4px 0;
-    }
-    .urgent-description {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin: 0;
-    }
-    .urgent-priority {
-      padding: 4px 8px;
-      background: #fee2e2;
-      color: #991b1b;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .schedule-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .schedule-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-left: 4px solid var(--primary);
-      border-radius: 8px;
-      transition: all 0.2s;
-    }
-    .schedule-card:hover {
-      border-color: var(--primary);
-      box-shadow: 0 2px 8px rgba(255, 103, 156, 0.15);
-    }
-    .schedule-time {
-      min-width: 60px;
-      text-align: center;
-    }
-    .schedule-time-hour {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary);
-      line-height: 1;
-    }
-    .schedule-time-date {
-      font-size: 0.75rem;
-      color: #6b7280;
-      margin-top: 4px;
-    }
-    .schedule-content {
-      flex: 1;
-      min-width: 0;
-    }
-    .schedule-client {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #111827;
-      margin: 0 0 4px 0;
-    }
-    .schedule-store {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin: 0 0 4px 0;
-    }
-    .schedule-purpose {
-      font-size: 0.875rem;
-      color: #374151;
-      margin: 0;
-    }
-    .schedule-actions {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .schedule-action-btn {
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: #ffffff;
-      color: #6b7280;
-      text-decoration: none;
-      transition: all 0.2s;
-      cursor: pointer;
-    }
-    .schedule-action-btn:hover {
-      background: #f9fafb;
-      border-color: var(--primary);
-      color: var(--primary);
-    }
+
+    .urgent-list,
+    .schedule-list,
     .inquiry-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
+
+    .urgent-item,
+    .schedule-card,
     .inquiry-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       padding: 16px;
-      background: #f9fafb;
+      background: #ffffff;
       border: 1px solid #e5e7eb;
       border-left: 4px solid var(--primary);
       border-radius: 8px;
-      gap: 12px;
+      transition: all 0.2s;
     }
-    .inquiry-card:hover {
-      border-color: var(--primary);
-      box-shadow: 0 2px 8px rgba(255, 103, 156, 0.15);
+
+    .urgent-item {
+      border-left-color: #ef4444;
+      background: #ffffff;
     }
-    .inquiry-info {
-      flex: 1;
-      min-width: 0;
+
+    .urgent-item:active,
+    .schedule-card:active,
+    .inquiry-card:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
+
+    .urgent-title,
+    .schedule-client,
     .inquiry-company {
       font-size: 1rem;
       font-weight: 600;
       color: #111827;
       margin: 0 0 4px 0;
     }
+
+    .urgent-description,
+    .schedule-store,
     .inquiry-meta {
-      display: flex;
-      gap: 12px;
       font-size: 0.875rem;
       color: #6b7280;
-      margin: 0 0 4px 0;
-      flex-wrap: wrap;
-    }
-    .inquiry-message {
-      font-size: 0.875rem;
-      color: #374151;
       margin: 0;
     }
-    .estimates-stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .estimate-stat-card {
+
+    .schedule-time {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 16px;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .schedule-time-hour {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .schedule-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .schedule-action-btn {
+      flex: 1;
+      padding: 10px;
       background: #f9fafb;
       border: 1px solid #e5e7eb;
       border-radius: 8px;
-    }
-    .estimate-stat-card .stat-icon {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      font-size: 1.25rem;
-    }
-    .estimate-stat-card .stat-icon.draft {
-      background: rgba(107, 114, 128, 0.1);
       color: #6b7280;
+      text-decoration: none;
+      text-align: center;
+      font-size: 0.875rem;
+      transition: all 0.2s;
     }
-    .estimate-stat-card .stat-icon.sent {
-      background: rgba(59, 130, 246, 0.1);
-      color: #3b82f6;
+
+    .schedule-action-btn:active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
     }
-    .estimate-stat-card .stat-icon.approved {
-      background: rgba(16, 185, 129, 0.1);
-      color: #10b981;
+
+    /* 顧客情報画面 */
+    .client-info-container {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .estimate-stat-card .stat-icon.pending {
-      background: rgba(245, 158, 11, 0.1);
-      color: #f59e0b;
+
+    .client-header {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
     }
-    .estimate-stat-card .stat-content {
-      flex: 1;
-    }
-    .estimate-stat-card .stat-value {
+
+    .client-name {
       font-size: 1.5rem;
       font-weight: 700;
       color: #111827;
-      line-height: 1;
-      margin-bottom: 4px;
+      margin: 0 0 8px 0;
     }
-    .estimate-stat-card .stat-label {
+
+    .client-store {
+      font-size: 1rem;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .client-contact {
+      margin-bottom: 20px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      text-decoration: none;
+      color: #111827;
+    }
+
+    .contact-item:active {
+      background: #e5e7eb;
+    }
+
+    .contact-item i {
+      width: 24px;
+      color: var(--primary);
+    }
+
+    .client-address {
+      margin-bottom: 20px;
+    }
+
+    .address-text {
       font-size: 0.875rem;
       color: #6b7280;
+      margin: 0 0 12px 0;
     }
-    .estimates-action {
-      margin-top: 16px;
+
+    .btn-map {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .quick-actions {
+
+    .btn-map:active {
+      background: #ff6b9d;
+      transform: scale(0.98);
+    }
+
+    .client-estimates {
+      margin-top: 20px;
+    }
+
+    .estimates-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 12px 0;
+    }
+
+    .estimate-history-item {
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .estimate-history-date {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0 0 4px 0;
+    }
+
+    .estimate-history-service {
+      font-size: 0.875rem;
+      color: #111827;
+      margin: 0 0 4px 0;
+    }
+
+    .estimate-history-price {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0;
+    }
+
+    /* サービス・価格画面 */
+    .services-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .service-category {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .category-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 12px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .service-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+
+    .service-item:active {
+      background: #e5e7eb;
+      transform: scale(0.98);
+    }
+
+    .service-info {
+      flex: 1;
+    }
+
+    .service-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 4px 0;
+    }
+
+    .service-price {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .service-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-service-detail,
+    .btn-service-add {
+      padding: 8px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #111827;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-service-add {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .btn-service-add:active {
+      background: #ff6b9d;
+    }
+
+    /* 仮見積もり作成画面 */
+    .estimate-form-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .selected-services {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      min-height: 100px;
+    }
+
+    .selected-service-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .selected-service-name {
+      font-size: 0.875rem;
+      color: #111827;
+      margin: 0;
+    }
+
+    .selected-service-price {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .btn-remove-service {
+      padding: 4px 8px;
+      background: #ef4444;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .estimate-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 12px;
+    }
+
+    .total-label {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .total-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+
+    .estimate-photos {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .photos-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .photos-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+
+    .btn-photo-add {
+      padding: 8px 16px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-photo-add:active {
+      background: #ff6b9d;
+    }
+
+    .photos-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .photo-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-item .btn-remove-photo {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: rgba(0,0,0,0.6);
+      color: #ffffff;
+      border: none;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .estimate-notes {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .estimate-notes label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .notes-input {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .estimate-actions {
+      display: flex;
       gap: 12px;
     }
-    .action-btn {
+
+    .btn-save,
+    .btn-send {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-save {
+      background: #f9fafb;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+    }
+
+    .btn-save:active {
+      background: #e5e7eb;
+    }
+
+    .btn-send {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-send:active {
+      background: #ff6b9d;
+      transform: scale(0.98);
+    }
+
+    /* 地図画面 */
+    .map-container {
+      width: 100%;
+      height: 300px;
+      background: #e5e7eb;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-placeholder {
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding: 20px 12px;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      text-decoration: none;
-      color: #374151;
-      transition: all 0.2s;
-      min-height: 100px;
+      justify-content: center;
+      color: #6b7280;
     }
-    .action-btn:hover {
-      background: #ffffff;
-      border-color: var(--primary);
-      color: var(--primary);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 103, 156, 0.15);
+
+    .map-placeholder i {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      opacity: 0.5;
     }
-    .action-btn i {
-      font-size: 2rem;
-      color: var(--primary);
-    }
-    .action-btn span {
+
+    .map-placeholder p {
       font-size: 0.875rem;
-      font-weight: 600;
-      text-align: center;
+      margin: 0;
     }
+
+    .map-schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .map-schedule-item {
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .map-schedule-time {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0 0 8px 0;
+    }
+
+    .map-schedule-client {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 4px 0;
+    }
+
+    .map-schedule-store {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0 0 12px 0;
+    }
+
+    .map-schedule-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-map-route {
+      flex: 1;
+      padding: 10px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-map-route:active {
+      background: #ff6b9d;
+    }
+
+    /* 画面下部固定クイックメニュー */
+    .concierge-quick-menu {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+      z-index: 1000;
+      padding: 8px 0;
+    }
+
+    .quick-menu-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px;
+      background: transparent;
+      border: none;
+      color: #6b7280;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-menu-btn i {
+      font-size: 1.5rem;
+    }
+
+    .quick-menu-btn.active {
+      color: var(--primary);
+    }
+
+    .quick-menu-btn:active {
+      transform: scale(0.95);
+    }
+
     .empty-state {
       text-align: center;
       padding: 40px 20px;
       color: #9ca3af;
     }
+
     .empty-state i {
       font-size: 2.5rem;
       margin-bottom: 12px;
       opacity: 0.5;
     }
+
     .empty-state p {
       font-size: 0.95rem;
       margin: 0;
     }
-    @media (max-width: 768px) {
-      .concierge-page {
-        padding: 12px;
+
+    /* PC対応（横並び表示） */
+    @media (min-width: 768px) {
+      .concierge-slider {
+        width: 100vw;
       }
-      .dashboard-section {
-        padding: 16px;
-      }
-      .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .schedule-card {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .schedule-actions {
+
+      .concierge-screen {
         width: 100%;
-        justify-content: flex-end;
       }
-      .inquiry-card {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .estimates-stats {
-        grid-template-columns: 1fr;
-      }
-      .quick-actions {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .action-btn {
-        min-height: 90px;
+
+      .concierge-slider-container {
+        scroll-snap-type: none;
       }
     }
   </style>
 
   <script>
-    // Load and render all data
+    // データ読み込み
     (function() {
       const clientsData = JSON.parse(document.getElementById('clients-data').textContent);
       const scheduleData = JSON.parse(document.getElementById('schedule-data').textContent);
       const inquiriesData = JSON.parse(document.getElementById('inquiries-data').textContent);
       const estimatesData = JSON.parse(document.getElementById('estimates-data').textContent);
+      const serviceItemsData = JSON.parse(document.getElementById('service-items-data').textContent);
       
       const clients = clientsData.clients || [];
       const schedules = scheduleData.schedules || [];
       const inquiries = inquiriesData.inquiries || [];
       const estimates = estimatesData.estimates || [];
-      
-      // Get today's date
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
-      
-      // Filter today's schedules
-      const todaySchedules = schedules.filter(s => s.date === todayStr);
-      
-      // Calculate urgent items
-      const urgentItems = [];
-      
-      // 1. Estimates pending approval (sent more than 3 days ago)
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-      threeDaysAgo.setHours(0, 0, 0, 0);
-      
-      estimates.filter(e => e.status === 'sent' && e.sent_date).forEach(estimate => {
-        try {
-          // Parse date: "2025年3月21日" -> "2025-03-21"
-          const dateStr = estimate.sent_date.replace(/年/g, '-').replace(/月/g, '-').replace(/日/g, '');
-          const parts = dateStr.split('-');
-          if (parts.length === 3) {
-            const year = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10);
-            const day = parseInt(parts[2], 10);
-            const sentDate = new Date(year, month - 1, day);
-            sentDate.setHours(0, 0, 0, 0);
-            
-            if (sentDate < threeDaysAgo) {
-              urgentItems.push({
-                type: 'estimate',
-                priority: 'high',
-                title: `見積もり承認待ち: ${estimate.client_name} ${estimate.store_name}`,
-                description: `${estimate.sent_date}送付済み（${estimate.total}）`,
-                link: `/sales/estimates/${estimate.id}.html`,
-                estimate: estimate
-              });
-            }
+      const serviceItems = serviceItemsData || [];
+
+      // 横スライド機能
+      const slider = document.getElementById('concierge-slider');
+      const screens = document.querySelectorAll('.concierge-screen');
+      const quickMenuBtns = document.querySelectorAll('.quick-menu-btn[data-screen]');
+      let currentScreen = 0;
+      let isScrolling = false;
+
+      // 画面切り替え
+      function switchScreen(index) {
+        if (index < 0 || index >= screens.length) return;
+        currentScreen = index;
+        const screen = screens[index];
+        const screenName = screen.dataset.screen;
+        
+        // スクロール位置を更新
+        slider.scrollTo({
+          left: index * window.innerWidth,
+          behavior: 'smooth'
+        });
+
+        // アクティブ状態を更新
+        screens.forEach(s => s.classList.remove('active'));
+        screen.classList.add('active');
+        
+        quickMenuBtns.forEach(btn => {
+          if (btn.dataset.screen === screenName) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
           }
-        } catch (e) {
-          console.error('Error parsing date:', estimate.sent_date, e);
+        });
+
+        // 画面固有の処理
+        if (screenName === 'client') {
+          renderClientInfo();
+        } else if (screenName === 'services') {
+          renderServices();
+        } else if (screenName === 'map') {
+          renderMap();
         }
-      });
-      
-      // 2. New inquiries (pending)
-      inquiries.filter(i => i.status === 'pending').forEach(inquiry => {
-        urgentItems.push({
-          type: 'inquiry',
-          priority: inquiry.priority || 'medium',
-          title: `新規問い合わせ: ${inquiry.company_name}`,
-          description: `${inquiry.date} ${inquiry.time} - ${inquiry.message}`,
-          link: `/sales/clients/new.html?inquiry=${inquiry.id}`,
-          inquiry: inquiry
+      }
+
+      // クイックメニューボタンクリック
+      quickMenuBtns.forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+          const screenName = btn.dataset.screen;
+          const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+          if (screenIndex !== -1) {
+            switchScreen(screenIndex);
+          }
         });
       });
-      
-      // Render urgent items
-      function renderUrgentItems() {
-        const urgentListEl = document.getElementById('urgent-list');
-        const urgentCountEl = document.getElementById('urgent-count');
-        
-        if (!urgentListEl) return;
-        
-        urgentCountEl.textContent = urgentItems.length;
-        
-        if (urgentItems.length === 0) {
-          urgentListEl.innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-check-circle"></i>
-              <p>緊急対応が必要な項目はありません</p>
-            </div>
-          `;
-          return;
+
+      // スワイプ検出
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      slider.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      slider.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }, { passive: true });
+
+      function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+
+        if (Math.abs(diff) > swipeThreshold) {
+          if (diff > 0) {
+            // 左スワイプ（次の画面）
+            switchScreen(currentScreen + 1);
+          } else {
+            // 右スワイプ（前の画面）
+            switchScreen(currentScreen - 1);
+          }
         }
-        
-        urgentListEl.innerHTML = urgentItems.map(item => {
-          const priorityClass = item.priority === 'high' ? 'urgent-priority' : 'urgent-priority';
-          const priorityText = item.priority === 'high' ? '高' : '中';
+      }
+
+      // スクロール位置の監視
+      slider.addEventListener('scroll', () => {
+        if (isScrolling) return;
+        const scrollLeft = slider.scrollLeft;
+        const screenIndex = Math.round(scrollLeft / window.innerWidth);
+        if (screenIndex !== currentScreen && screenIndex >= 0 && screenIndex < screens.length) {
+          currentScreen = screenIndex;
+          const screen = screens[screenIndex];
+          const screenName = screen.dataset.screen;
           
-          return `
-            <div class="urgent-item" onclick="window.location.href='${item.link}'">
-              <div class="urgent-info">
-                <div class="urgent-title">${item.title}</div>
-                <div class="urgent-description">${item.description}</div>
-              </div>
-              <span class="${priorityClass}">優先度: ${priorityText}</span>
-            </div>
-          `;
-        }).join('');
-      }
-      
-      // Render today's schedules
-      function renderSchedules() {
-        const scheduleListEl = document.getElementById('schedule-list');
-        
-        if (!scheduleListEl) return;
-        
-        if (todaySchedules.length === 0) {
-          scheduleListEl.innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-calendar-times"></i>
-              <p>本日の予定はありません</p>
-            </div>
-          `;
-          return;
-        }
-        
-        scheduleListEl.innerHTML = todaySchedules.map(schedule => {
-          const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(schedule.address)}`;
+          screens.forEach(s => s.classList.remove('active'));
+          screen.classList.add('active');
           
-          return `
-            <div class="schedule-card">
-              <div class="schedule-time">
-                <div class="schedule-time-hour">${schedule.time}</div>
-                <div class="schedule-time-date">${schedule.date}</div>
-              </div>
-              <div class="schedule-content">
-                <div class="schedule-client">${schedule.client_name}</div>
-                <div class="schedule-store">${schedule.store_name}</div>
-                <div class="schedule-purpose">${schedule.purpose}</div>
-                ${schedule.notes ? `<div class="schedule-notes" style="font-size: 0.75rem; color: #6b7280; margin-top: 4px;">${schedule.notes}</div>` : ''}
-              </div>
-              <div class="schedule-actions">
-                ${schedule.phone ? `
-                  <a href="tel:${schedule.phone}" class="schedule-action-btn" onclick="event.stopPropagation()" title="電話">
-                    <i class="fas fa-phone"></i>
-                  </a>
-                ` : ''}
-                ${schedule.email ? `
-                  <a href="mailto:${schedule.email}" class="schedule-action-btn" onclick="event.stopPropagation()" title="メール">
-                    <i class="fas fa-envelope"></i>
-                  </a>
-                ` : ''}
-                <a href="${mapUrl}" target="_blank" class="schedule-action-btn" onclick="event.stopPropagation()" title="地図">
-                  <i class="fas fa-map-marker-alt"></i>
-                </a>
-                <a href="/sales/clients/${schedule.client_id}.html" class="schedule-action-btn" onclick="event.stopPropagation()" title="顧客詳細">
-                  <i class="fas fa-user"></i>
-                </a>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-      
-      // Render inquiries
-      function renderInquiries() {
-        const inquiryListEl = document.getElementById('inquiry-list');
-        const inquiryCountEl = document.getElementById('inquiry-count');
-        
-        if (!inquiryListEl) return;
-        
-        const pendingInquiries = inquiries.filter(i => i.status === 'pending');
-        inquiryCountEl.textContent = pendingInquiries.length;
-        
-        if (pendingInquiries.length === 0) {
-          inquiryListEl.innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-check-circle"></i>
-              <p>新規問い合わせはありません</p>
-            </div>
-          `;
-          return;
+          quickMenuBtns.forEach(btn => {
+            if (btn.dataset.screen === screenName) {
+              btn.classList.add('active');
+            } else {
+              btn.classList.remove('active');
+            }
+          });
         }
-        
-        inquiryListEl.innerHTML = pendingInquiries.slice(0, 5).map(inquiry => {
-          return `
-            <div class="inquiry-card" onclick="window.location.href='/sales/clients/new.html?inquiry=${inquiry.id}'">
-              <div class="inquiry-info">
-                <div class="inquiry-company">${inquiry.company_name}</div>
-                <div class="inquiry-meta">
-                  <span><i class="fas fa-user"></i> ${inquiry.contact_person}</span>
-                  <span><i class="fas fa-calendar"></i> ${inquiry.date} ${inquiry.time}</span>
-                  ${inquiry.phone ? `<span><i class="fas fa-phone"></i> ${inquiry.phone}</span>` : ''}
-                </div>
-                <div class="inquiry-message">${inquiry.message}</div>
-              </div>
-              <a href="/sales/clients/new.html?inquiry=${inquiry.id}" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">
-                対応する
-              </a>
-            </div>
-          `;
-        }).join('');
-      }
-      
-      // Render estimates stats
-      function renderEstimatesStats() {
-        const draftCount = estimates.filter(e => e.status === 'draft').length;
-        const sentCount = estimates.filter(e => e.status === 'sent').length;
-        const approvedCount = estimates.filter(e => e.status === 'approved').length;
-        
-        // Pending approval: sent more than 1 day ago but not approved
-        const oneDayAgo = new Date();
-        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-        oneDayAgo.setHours(0, 0, 0, 0);
-        const pendingApproval = estimates.filter(e => {
-          if (e.status !== 'sent' || !e.sent_date) return false;
+      }, { passive: true });
+
+      // アクティビティ画面のレンダリング
+      function renderActivity() {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const todaySchedules = schedules.filter(s => s.date === todayStr);
+
+        // 緊急対応
+        const urgentItems = [];
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        threeDaysAgo.setHours(0, 0, 0, 0);
+
+        estimates.filter(e => e.status === 'sent' && e.sent_date).forEach(estimate => {
           try {
-            const dateStr = e.sent_date.replace(/年/g, '-').replace(/月/g, '-').replace(/日/g, '');
+            const dateStr = estimate.sent_date.replace(/年/g, '-').replace(/月/g, '-').replace(/日/g, '');
             const parts = dateStr.split('-');
             if (parts.length === 3) {
               const year = parseInt(parts[0], 10);
@@ -765,25 +1081,340 @@
               const day = parseInt(parts[2], 10);
               const sentDate = new Date(year, month - 1, day);
               sentDate.setHours(0, 0, 0, 0);
-              return sentDate < oneDayAgo;
+              
+              if (sentDate < threeDaysAgo) {
+                urgentItems.push({
+                  type: 'estimate',
+                  title: `見積もり承認待ち: ${estimate.client_name} ${estimate.store_name}`,
+                  description: `${estimate.sent_date}送付済み（${estimate.total}）`,
+                  link: `/sales/estimates/${estimate.id}.html`
+                });
+              }
             }
-          } catch (err) {
-            console.error('Error parsing date:', e.sent_date, err);
+          } catch (e) {
+            console.error('Error parsing date:', estimate.sent_date, e);
           }
-          return false;
-        }).length;
-        
-        document.getElementById('draft-count').textContent = draftCount;
-        document.getElementById('sent-count').textContent = sentCount;
-        document.getElementById('approved-count').textContent = approvedCount;
-        document.getElementById('pending-approval-count').textContent = pendingApproval;
+        });
+
+        inquiries.filter(i => i.status === 'pending').forEach(inquiry => {
+          urgentItems.push({
+            type: 'inquiry',
+            title: `新規問い合わせ: ${inquiry.company_name}`,
+            description: `${inquiry.date} ${inquiry.time} - ${inquiry.message}`,
+            link: `/sales/clients/new.html?inquiry=${inquiry.id}`
+          });
+        });
+
+        // 緊急対応レンダリング
+        const urgentListEl = document.getElementById('urgent-list');
+        const urgentCountEl = document.getElementById('urgent-count');
+        if (urgentListEl) {
+          urgentCountEl.textContent = urgentItems.length;
+          if (urgentItems.length === 0) {
+            urgentListEl.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>緊急対応が必要な項目はありません</p></div>';
+          } else {
+            urgentListEl.innerHTML = urgentItems.map(item => `
+              <div class="urgent-item" onclick="window.location.href='${item.link}'">
+                <div class="urgent-title">${item.title}</div>
+                <div class="urgent-description">${item.description}</div>
+              </div>
+            `).join('');
+          }
+        }
+
+        // スケジュールレンダリング
+        const scheduleListEl = document.getElementById('schedule-list');
+        if (scheduleListEl) {
+          if (todaySchedules.length === 0) {
+            scheduleListEl.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>本日の予定はありません</p></div>';
+          } else {
+            scheduleListEl.innerHTML = todaySchedules.map(schedule => {
+              const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(schedule.address)}`;
+              return `
+                <div class="schedule-card">
+                  <div class="schedule-time">
+                    <span class="schedule-time-hour">${schedule.time}</span>
+                  </div>
+                  <div class="schedule-client">${schedule.client_name}</div>
+                  <div class="schedule-store">${schedule.store_name} - ${schedule.purpose}</div>
+                  <div class="schedule-actions">
+                    ${schedule.phone ? `<a href="tel:${schedule.phone}" class="schedule-action-btn"><i class="fas fa-phone"></i> 電話</a>` : ''}
+                    ${schedule.email ? `<a href="mailto:${schedule.email}" class="schedule-action-btn"><i class="fas fa-envelope"></i> メール</a>` : ''}
+                    <a href="${mapUrl}" target="_blank" class="schedule-action-btn"><i class="fas fa-map-marker-alt"></i> 地図</a>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        }
+
+        // 問い合わせレンダリング
+        const inquiryListEl = document.getElementById('inquiry-list');
+        const inquiryCountEl = document.getElementById('inquiry-count');
+        if (inquiryListEl) {
+          const pendingInquiries = inquiries.filter(i => i.status === 'pending');
+          inquiryCountEl.textContent = pendingInquiries.length;
+          if (pendingInquiries.length === 0) {
+            inquiryListEl.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>新規問い合わせはありません</p></div>';
+          } else {
+            inquiryListEl.innerHTML = pendingInquiries.slice(0, 5).map(inquiry => `
+              <div class="inquiry-card" onclick="window.location.href='/sales/clients/new.html?inquiry=${inquiry.id}'">
+                <div class="inquiry-company">${inquiry.company_name}</div>
+                <div class="inquiry-meta">${inquiry.date} ${inquiry.time} - ${inquiry.message}</div>
+              </div>
+            `).join('');
+          }
+        }
       }
-      
-      // Initial render
-      renderUrgentItems();
-      renderSchedules();
-      renderInquiries();
-      renderEstimatesStats();
+
+      // 顧客情報画面のレンダリング
+      function renderClientInfo() {
+        const clientInfoContainer = document.getElementById('client-info-container');
+        if (!clientInfoContainer) return;
+
+        // 本日の最初のスケジュールの顧客を表示
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const todaySchedules = schedules.filter(s => s.date === todayStr);
+        
+        if (todaySchedules.length === 0) {
+          clientInfoContainer.innerHTML = '<div class="empty-state"><i class="fas fa-user"></i><p>本日のスケジュールがありません</p></div>';
+          return;
+        }
+
+        const firstSchedule = todaySchedules[0];
+        const client = clients.find(c => c.id === firstSchedule.client_id);
+
+        if (!client) {
+          clientInfoContainer.innerHTML = '<div class="empty-state"><i class="fas fa-user"></i><p>顧客情報が見つかりません</p></div>';
+          return;
+        }
+
+        const clientEstimates = estimates.filter(e => e.client_id === client.id);
+        const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(client.address || firstSchedule.address)}`;
+
+        clientInfoContainer.innerHTML = `
+          <div class="client-header">
+            <h2 class="client-name">${client.company_name || client.name}</h2>
+            <p class="client-store">${client.store_name || firstSchedule.store_name}</p>
+          </div>
+          <div class="client-contact">
+            ${client.phone ? `<a href="tel:${client.phone}" class="contact-item"><i class="fas fa-phone"></i><span>${client.phone}</span></a>` : ''}
+            ${client.email ? `<a href="mailto:${client.email}" class="contact-item"><i class="fas fa-envelope"></i><span>${client.email}</span></a>` : ''}
+          </div>
+          <div class="client-address">
+            <p class="address-text">${client.address || firstSchedule.address}</p>
+            <a href="${mapUrl}" target="_blank" class="btn-map"><i class="fas fa-map-marker-alt"></i> 地図で開く</a>
+          </div>
+          ${clientEstimates.length > 0 ? `
+            <div class="client-estimates">
+              <h3 class="estimates-title">過去の見積もり</h3>
+              ${clientEstimates.slice(0, 5).map(est => `
+                <div class="estimate-history-item">
+                  <p class="estimate-history-date">${est.created_date || est.sent_date}</p>
+                  <p class="estimate-history-service">${est.service_name || 'サービス'}</p>
+                  <p class="estimate-history-price">${est.total}</p>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        `;
+      }
+
+      // サービス・価格画面のレンダリング
+      function renderServices() {
+        const servicesContainer = document.getElementById('services-container');
+        if (!servicesContainer) return;
+
+        // カテゴリ別にグループ化
+        const servicesByCategory = {};
+        serviceItems.forEach(item => {
+          const category = item.category || 'その他';
+          if (!servicesByCategory[category]) {
+            servicesByCategory[category] = [];
+          }
+          servicesByCategory[category].push(item);
+        });
+
+        servicesContainer.innerHTML = Object.keys(servicesByCategory).map(category => `
+          <div class="service-category">
+            <h3 class="category-title">${category}</h3>
+            ${servicesByCategory[category].map(item => `
+              <div class="service-item">
+                <div class="service-info">
+                  <div class="service-name">${item.title}</div>
+                  <div class="service-price">${item.price}</div>
+                </div>
+                <div class="service-actions">
+                  <button class="btn-service-detail" onclick="window.open('/service/${item.id}.html', '_blank')">詳細</button>
+                  <button class="btn-service-add" onclick="addServiceToEstimate(${item.id}, '${item.title}', '${item.price}')">追加</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `).join('');
+      }
+
+      // 仮見積もりにサービスを追加
+      window.addServiceToEstimate = function(id, name, price) {
+        const selectedServices = document.getElementById('selected-services');
+        const emptyState = selectedServices.querySelector('.empty-state');
+        if (emptyState) {
+          emptyState.remove();
+        }
+
+        const serviceItem = document.createElement('div');
+        serviceItem.className = 'selected-service-item';
+        serviceItem.dataset.serviceId = id;
+        serviceItem.innerHTML = `
+          <div>
+            <p class="selected-service-name">${name}</p>
+            <p class="selected-service-price">${price}</p>
+          </div>
+          <button class="btn-remove-service" onclick="removeServiceFromEstimate(this)">削除</button>
+        `;
+        selectedServices.appendChild(serviceItem);
+        updateEstimateTotal();
+        
+        // 仮見積もり画面に切り替え
+        switchScreen(3);
+      };
+
+      // 仮見積もりからサービスを削除
+      window.removeServiceFromEstimate = function(btn) {
+        btn.closest('.selected-service-item').remove();
+        const selectedServices = document.getElementById('selected-services');
+        if (selectedServices.children.length === 0) {
+          selectedServices.innerHTML = '<div class="empty-state"><i class="fas fa-shopping-cart"></i><p>サービスを選択してください</p></div>';
+        }
+        updateEstimateTotal();
+      };
+
+      // 見積もり合計を更新
+      function updateEstimateTotal() {
+        const selectedItems = document.querySelectorAll('.selected-service-item');
+        let total = 0;
+        selectedItems.forEach(item => {
+          const priceText = item.querySelector('.selected-service-price').textContent;
+          const priceMatch = priceText.match(/¥\s*([\d,]+)/);
+          if (priceMatch) {
+            const price = parseInt(priceMatch[1].replace(/,/g, ''), 10);
+            total += price;
+          }
+        });
+        document.getElementById('estimate-total').textContent = `¥${total.toLocaleString()}`;
+      }
+
+      // 写真撮影機能
+      const cameraInput = document.getElementById('camera-input');
+      const btnCamera = document.getElementById('btn-camera');
+      const photosGrid = document.getElementById('photos-grid');
+
+      btnCamera.addEventListener('click', () => {
+        cameraInput.click();
+      });
+
+      cameraInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+          if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const photoItem = document.createElement('div');
+              photoItem.className = 'photo-item';
+              photoItem.innerHTML = `
+                <img src="${event.target.result}" alt="写真">
+                <button class="btn-remove-photo" onclick="removePhoto(this)"><i class="fas fa-times"></i></button>
+              `;
+              photosGrid.appendChild(photoItem);
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+        e.target.value = ''; // 同じファイルを再度選択できるように
+      });
+
+      window.removePhoto = function(btn) {
+        btn.closest('.photo-item').remove();
+      };
+
+      // 見積もり保存・送信
+      document.getElementById('btn-save-estimate').addEventListener('click', () => {
+        const selectedItems = document.querySelectorAll('.selected-service-item');
+        const photos = Array.from(photosGrid.querySelectorAll('img')).map(img => img.src);
+        const notes = document.getElementById('estimate-notes-input').value;
+        
+        // TODO: 実際の保存処理を実装
+        alert('仮見積もりを保存しました');
+      });
+
+      document.getElementById('btn-send-estimate').addEventListener('click', () => {
+        const selectedItems = document.querySelectorAll('.selected-service-item');
+        if (selectedItems.length === 0) {
+          alert('サービスを選択してください');
+          return;
+        }
+        
+        // TODO: 実際の送信処理を実装
+        alert('仮見積もりを送信しました');
+      });
+
+      // 地図画面のレンダリング
+      function renderMap() {
+        const mapScheduleList = document.getElementById('map-schedule-list');
+        if (!mapScheduleList) return;
+
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const todaySchedules = schedules.filter(s => s.date === todayStr);
+
+        if (todaySchedules.length === 0) {
+          mapScheduleList.innerHTML = '<div class="empty-state"><i class="fas fa-map-marked-alt"></i><p>本日のスケジュールがありません</p></div>';
+          return;
+        }
+
+        mapScheduleList.innerHTML = todaySchedules.map(schedule => {
+          const mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(schedule.address)}`;
+          return `
+            <div class="map-schedule-item">
+              <p class="map-schedule-time">${schedule.time}</p>
+              <p class="map-schedule-client">${schedule.client_name}</p>
+              <p class="map-schedule-store">${schedule.store_name}</p>
+              <div class="map-schedule-actions">
+                <a href="${mapUrl}" target="_blank" class="btn-map-route"><i class="fas fa-route"></i> ルート</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(schedule.address)}" target="_blank" class="btn-map-route"><i class="fas fa-map-marker-alt"></i> 地図</a>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // 地図プレースホルダーにGoogle Mapsを埋め込む（簡易版）
+        const mapPlaceholder = document.getElementById('map-placeholder');
+        if (mapPlaceholder && todaySchedules.length > 0) {
+          const firstSchedule = todaySchedules[0];
+          const mapUrl = `https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(firstSchedule.address)}`;
+          // 実際の実装ではGoogle Maps APIキーが必要
+          mapPlaceholder.innerHTML = `
+            <iframe
+              width="100%"
+              height="100%"
+              style="border:0"
+              loading="lazy"
+              allowfullscreen
+              src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6d-s6U4uYZ9u9k&q=${encodeURIComponent(firstSchedule.address)}">
+            </iframe>
+          `;
+        }
+      }
+
+      // 初期レンダリング
+      renderActivity();
+      renderClientInfo();
+      renderServices();
+      renderMap();
+
+      // 最初の画面をアクティブに
+      switchScreen(0);
     })();
   </script>
 </main>
