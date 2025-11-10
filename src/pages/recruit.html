@@ -3,6 +3,11 @@
 @json('data/meta/recruit_body_class.json', $body_class)
 
 <div class="recruit-page">
+  <!-- Splash Screen -->
+  <div id="recruit-splash" class="recruit-splash">
+    <img src="images/recruitlogo.png" alt="ミセサポ求人" class="recruit-splash-logo" />
+  </div>
+
   <!-- Hero Section -->
   <section class="recruit-hero">
     <div class="recruit-hero-container">
@@ -144,6 +149,46 @@
   </button>
 
   <style>
+    /* Splash Screen */
+    .recruit-splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      opacity: 1;
+      transition: opacity 0.8s ease-out;
+    }
+    .recruit-splash.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .recruit-splash.hidden {
+      display: none;
+    }
+    .recruit-splash-logo {
+      width: auto;
+      height: auto;
+      max-width: 300px;
+      max-height: 300px;
+      animation: fadeInUp 1s ease-out;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .recruit-page {
       background: #ffffff;
       color: #111827;
@@ -497,5 +542,22 @@
       }
     }
   </style>
+
+  <script>
+    (function() {
+      const splash = document.getElementById('recruit-splash');
+      if (!splash) return;
+
+      // フェードインアップはCSSアニメーションで自動実行
+      // 3秒後にフェードアウト開始
+      setTimeout(function() {
+        splash.classList.add('fade-out');
+        // フェードアウト完了後に非表示
+        setTimeout(function() {
+          splash.classList.add('hidden');
+        }, 800); // フェードアウトの時間（0.8s）に合わせる
+      }, 3000); // 3秒表示
+    })();
+  </script>
 </div>
 
