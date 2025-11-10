@@ -153,9 +153,9 @@
       <i class="fas fa-user"></i>
       <span>顧客</span>
     </button>
-    <button class="quick-menu-btn" id="btn-camera" title="写真撮影">
-      <i class="fas fa-camera"></i>
-      <span>写真</span>
+    <button class="quick-menu-btn" data-screen="services" title="サービス一覧">
+      <i class="fas fa-list"></i>
+      <span>サービス</span>
     </button>
     <button class="quick-menu-btn" data-screen="estimate" title="仮見積もり">
         <i class="fas fa-file-invoice"></i>
@@ -165,10 +165,32 @@
       <i class="fas fa-map-marked-alt"></i>
       <span>地図</span>
     </button>
-    </div>
+  </div>
+  
+  <!-- 二段目のメニュー -->
+  <div class="concierge-quick-menu-second" id="quick-menu-second">
+    <a href="/sales/dashboard.html" class="quick-menu-btn-second" title="ダッシュボード">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>ダッシュボード</span>
+    </a>
+    <button class="quick-menu-btn-second" data-screen="map" title="地図">
+      <i class="fas fa-map-marked-alt"></i>
+      <span>地図</span>
+    </button>
+    <button class="quick-menu-btn-second" data-screen="activity" title="アクティビティ">
+      <i class="fas fa-bell"></i>
+      <span>アクティビティ</span>
+    </button>
+    <button class="quick-menu-btn-second" data-screen="client" title="顧客情報">
+      <i class="fas fa-user"></i>
+      <span>顧客</span>
+    </button>
+    <button class="quick-menu-btn-second" data-screen="estimate" title="仮見積もり">
+      <i class="fas fa-file-invoice"></i>
+      <span>見積</span>
+    </button>
+  </div>
 
-  <!-- 隠しカメラ入力 -->
-  <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;" multiple>
 
   <!-- Data Scripts -->
   <script type="application/json" id="clients-data">
@@ -1063,6 +1085,12 @@
       box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
       z-index: 1000;
       padding: 8px 0;
+      transition: transform 0.3s ease-out;
+      will-change: transform;
+    }
+
+    .concierge-quick-menu.slide-up {
+      transform: translateY(-100%);
     }
 
     .quick-menu-btn {
@@ -1078,6 +1106,7 @@
       font-size: 0.75rem;
       cursor: pointer;
       transition: all 0.2s;
+      text-decoration: none;
     }
 
     .quick-menu-btn i {
@@ -1089,6 +1118,55 @@
     }
 
     .quick-menu-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* 二段目のメニュー */
+    .concierge-quick-menu-second {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+      z-index: 999;
+      padding: 8px 0;
+      transform: translateY(100%);
+      transition: transform 0.3s ease-out;
+      will-change: transform;
+    }
+
+    .concierge-quick-menu-second.visible {
+      transform: translateY(0);
+    }
+
+    .quick-menu-btn-second {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px;
+      background: transparent;
+      border: none;
+      color: #6b7280;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .quick-menu-btn-second i {
+      font-size: 1.5rem;
+    }
+
+    .quick-menu-btn-second.active {
+      color: var(--primary);
+    }
+
+    .quick-menu-btn-second:active {
       transform: scale(0.95);
     }
 
@@ -1122,6 +1200,7 @@
         min-height: calc(100vh - 80px);
         overflow-y: auto;
         overflow-x: hidden;
+        padding-bottom: 160px; /* 二段メニュー分の余白を追加 */
       }
 
       .concierge-slider-container {
@@ -1191,7 +1270,18 @@
         screens.forEach(s => s.classList.remove('active'));
         screen.classList.add('active');
         
+        // 一段目のメニューボタンのアクティブ状態を更新
         quickMenuBtns.forEach(btn => {
+          if (btn.dataset.screen === screenName) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+        
+        // 二段目のメニューボタンのアクティブ状態も更新
+        const quickMenuBtnsSecond = document.querySelectorAll('.quick-menu-btn-second[data-screen]');
+        quickMenuBtnsSecond.forEach(btn => {
           if (btn.dataset.screen === screenName) {
             btn.classList.add('active');
           } else {
@@ -1679,16 +1769,89 @@
         document.getElementById('estimate-total').textContent = total > 0 ? `¥${total.toLocaleString()}` : '¥0';
       }
 
-      // 写真撮影機能
-      const cameraInput = document.getElementById('camera-input');
-      const btnCamera = document.getElementById('btn-camera');
+      // 下部メニューのスライド機能
+      const quickMenu = document.querySelector('.concierge-quick-menu');
+      const quickMenuSecond = document.getElementById('quick-menu-second');
+      let menuSlideStartY = 0;
+      let menuSlideCurrentY = 0;
+      let isMenuSliding = false;
+      const menuHeight = quickMenu ? quickMenu.offsetHeight : 0;
+
+      if (quickMenu) {
+        // タッチイベントでスライド検出
+        quickMenu.addEventListener('touchstart', (e) => {
+          menuSlideStartY = e.touches[0].clientY;
+          isMenuSliding = true;
+        }, { passive: true });
+
+        quickMenu.addEventListener('touchmove', (e) => {
+          if (!isMenuSliding) return;
+          menuSlideCurrentY = e.touches[0].clientY;
+          const deltaY = menuSlideStartY - menuSlideCurrentY;
+          
+          // 上にスワイプ（deltaY > 0）の場合のみ処理
+          if (deltaY > 0 && deltaY > 30) {
+            quickMenu.classList.add('slide-up');
+            if (quickMenuSecond) {
+              quickMenuSecond.classList.add('visible');
+            }
+          } else if (deltaY < -30) {
+            // 下にスワイプで閉じる
+            quickMenu.classList.remove('slide-up');
+            if (quickMenuSecond) {
+              quickMenuSecond.classList.remove('visible');
+            }
+          }
+        }, { passive: true });
+
+        quickMenu.addEventListener('touchend', () => {
+          isMenuSliding = false;
+        }, { passive: true });
+
+        // 二段目のメニューも同様にスワイプで閉じられるように
+        if (quickMenuSecond) {
+          quickMenuSecond.addEventListener('touchstart', (e) => {
+            menuSlideStartY = e.touches[0].clientY;
+            isMenuSliding = true;
+          }, { passive: true });
+
+          quickMenuSecond.addEventListener('touchmove', (e) => {
+            if (!isMenuSliding) return;
+            menuSlideCurrentY = e.touches[0].clientY;
+            const deltaY = menuSlideStartY - menuSlideCurrentY;
+            
+            // 下にスワイプ（deltaY < 0）で閉じる
+            if (deltaY < -30) {
+              quickMenu.classList.remove('slide-up');
+              quickMenuSecond.classList.remove('visible');
+            }
+          }, { passive: true });
+
+          quickMenuSecond.addEventListener('touchend', () => {
+            isMenuSliding = false;
+          }, { passive: true });
+        }
+      }
+
+      // 写真撮影機能（削除）
       const photosGrid = document.getElementById('photos-grid');
 
-      btnCamera.addEventListener('click', () => {
-        cameraInput.click();
-      });
+      // 写真追加ボタンのクリックイベント（ファイル選択ダイアログを開く）
+      const btnPhotoAdd = document.getElementById('btn-photo-add');
+      if (btnPhotoAdd) {
+        // 一時的なファイル入力を作成
+        const photoInput = document.createElement('input');
+        photoInput.type = 'file';
+        photoInput.accept = 'image/*';
+        photoInput.multiple = true;
+        photoInput.style.display = 'none';
+        document.body.appendChild(photoInput);
 
-      cameraInput.addEventListener('change', (e) => {
+        btnPhotoAdd.addEventListener('click', () => {
+          photoInput.click();
+        });
+
+        photoInput.addEventListener('change', (e) => {
         const files = Array.from(e.target.files);
         files.forEach(file => {
           if (file.type.startsWith('image/')) {
