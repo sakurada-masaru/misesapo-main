@@ -2070,21 +2070,40 @@
         if (isScrolling) return;
         const scrollLeft = slider.scrollLeft;
         const screenIndex = Math.round(scrollLeft / window.innerWidth);
-        if (screenIndex !== currentScreen && screenIndex >= 0 && screenIndex < screens.length) {
-          currentScreen = screenIndex;
-          const screen = screens[screenIndex];
+        
+        // 表示中の画面のみを対象にする
+        const visibleScreens = currentMenuTier === 'first' ? firstTierScreens : secondTierScreens;
+        const visibleScreenElements = Array.from(screens).filter(s => visibleScreens.includes(s.dataset.screen));
+        
+        if (screenIndex >= 0 && screenIndex < visibleScreenElements.length) {
+          const screen = visibleScreenElements[screenIndex];
           const screenName = screen.dataset.screen;
+          const actualIndex = Array.from(screens).indexOf(screen);
           
-          screens.forEach(s => s.classList.remove('active'));
-          screen.classList.add('active');
-          
-          quickMenuBtns.forEach(btn => {
-            if (btn.dataset.screen === screenName) {
-              btn.classList.add('active');
-            } else {
-              btn.classList.remove('active');
-            }
-          });
+          if (actualIndex !== currentScreen) {
+            currentScreen = actualIndex;
+            
+            screens.forEach(s => s.classList.remove('active'));
+            screen.classList.add('active');
+            
+            quickMenuBtns.forEach(btn => {
+              if (btn.dataset.screen === screenName) {
+                btn.classList.add('active');
+              } else {
+                btn.classList.remove('active');
+              }
+            });
+            
+            // 二段目のメニューボタンのアクティブ状態も更新
+            const quickMenuBtnsSecond = document.querySelectorAll('.quick-menu-btn-second[data-screen]');
+            quickMenuBtnsSecond.forEach(btn => {
+              if (btn.dataset.screen === screenName) {
+                btn.classList.add('active');
+              } else {
+                btn.classList.remove('active');
+              }
+            });
+          }
         }
       }, { passive: true });
 
