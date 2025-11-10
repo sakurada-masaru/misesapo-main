@@ -15,8 +15,12 @@
       <!-- 画面1: アクティビティ画面（デフォルト） -->
       <div class="concierge-screen active" data-screen="activity">
         <div class="screen-header">
+          <a href="/sales/dashboard.html" class="dashboard-link">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>ダッシュボード</span>
+          </a>
           <h1 class="screen-title">アクティビティ</h1>
-  </div>
+        </div>
 
         <!-- 緊急対応が必要な顧客 -->
         <section class="activity-section urgent-section">
@@ -128,7 +132,7 @@
       <div class="concierge-screen" data-screen="map">
         <div class="screen-header">
           <h1 class="screen-title">地図</h1>
-    </div>
+        </div>
         <div class="map-container" id="map-container">
           <div class="map-placeholder" id="map-placeholder">
             <i class="fas fa-map-marked-alt"></i>
@@ -140,14 +144,114 @@
         </div>
       </div>
 
+      <!-- 画面6: スケジュール画面 -->
+      <div class="concierge-screen" data-screen="schedule">
+        <div class="screen-header">
+          <h1 class="screen-title">スケジュール</h1>
+        </div>
+        <div class="schedule-container" id="schedule-container">
+          <!-- Schedule will be rendered by JavaScript -->
+        </div>
+      </div>
+
+      <!-- 画面7: TODOリスト画面 -->
+      <div class="concierge-screen" data-screen="todo">
+        <div class="screen-header">
+          <h1 class="screen-title">TODOリスト</h1>
+        </div>
+        <div class="todo-container" id="todo-container">
+          <div class="todo-input-section">
+            <input type="text" id="todo-input" class="todo-input" placeholder="新しいTODOを追加..." />
+            <button class="btn-todo-add" id="btn-todo-add">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+          <div class="todo-list" id="todo-list">
+            <!-- TODO items will be rendered by JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 画面8: メモ帳画面 -->
+      <div class="concierge-screen" data-screen="notes">
+        <div class="screen-header">
+          <h1 class="screen-title">メモ帳</h1>
+        </div>
+        <div class="notes-container" id="notes-container">
+          <div class="notes-input-section">
+            <textarea id="notes-input" class="notes-textarea" placeholder="メモを入力してください..."></textarea>
+            <button class="btn-notes-save" id="btn-notes-save">
+              <i class="fas fa-save"></i> 保存
+            </button>
+          </div>
+          <div class="notes-list" id="notes-list">
+            <!-- Notes will be rendered by JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 画面9: カメラ画面 -->
+      <div class="concierge-screen" data-screen="camera">
+        <div class="screen-header">
+          <h1 class="screen-title">カメラ</h1>
+        </div>
+        <div class="camera-container" id="camera-container">
+          <div class="camera-preview" id="camera-preview">
+            <video id="camera-video" autoplay playsinline style="display: none;"></video>
+            <canvas id="camera-canvas" style="display: none;"></canvas>
+            <div class="camera-placeholder">
+              <i class="fas fa-camera"></i>
+              <p>カメラを起動してください</p>
+            </div>
+          </div>
+          <div class="camera-controls">
+            <button class="btn-camera-capture" id="btn-camera-capture">
+              <i class="fas fa-circle"></i>
+            </button>
+            <button class="btn-camera-switch" id="btn-camera-switch">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+          <div class="camera-gallery" id="camera-gallery">
+            <!-- Captured photos will be displayed here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 画面10: ログアウト画面 -->
+      <div class="concierge-screen" data-screen="logout">
+        <div class="screen-header">
+          <h1 class="screen-title">ログアウト</h1>
+        </div>
+        <div class="logout-container" id="logout-container">
+          <div class="logout-content">
+            <i class="fas fa-sign-out-alt"></i>
+            <h2>ログアウトしますか？</h2>
+            <p>ログアウトすると、このアプリケーションから退出します。</p>
+            <div class="logout-actions">
+              <button class="btn-logout-cancel" id="btn-logout-cancel">
+                キャンセル
+              </button>
+              <button class="btn-logout-confirm" id="btn-logout-confirm">
+                <i class="fas fa-sign-out-alt"></i> ログアウト
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- 画面下部固定クイックメニュー -->
+  <!-- 画面下部固定クイックメニュー（一段目） -->
   <div class="concierge-quick-menu">
     <button class="quick-menu-btn" data-screen="activity" title="アクティビティ">
       <i class="fas fa-bolt"></i>
       <span>アクティビティ</span>
+    </button>
+    <button class="quick-menu-btn" data-screen="schedule" title="スケジュール">
+      <i class="fas fa-calendar"></i>
+      <span>スケジュール</span>
     </button>
     <button class="quick-menu-btn" data-screen="client" title="顧客情報">
       <i class="fas fa-user"></i>
@@ -158,36 +262,32 @@
       <span>サービス</span>
     </button>
     <button class="quick-menu-btn" data-screen="estimate" title="仮見積もり">
-        <i class="fas fa-file-invoice"></i>
+      <i class="fas fa-file-invoice"></i>
       <span>見積</span>
-    </button>
-    <button class="quick-menu-btn" data-screen="map" title="地図">
-      <i class="fas fa-map-marked-alt"></i>
-      <span>地図</span>
     </button>
   </div>
   
   <!-- 二段目のメニュー -->
   <div class="concierge-quick-menu-second" id="quick-menu-second">
-    <a href="/sales/dashboard.html" class="quick-menu-btn-second" title="ダッシュボード">
-      <i class="fas fa-tachometer-alt"></i>
-      <span>ダッシュボード</span>
-    </a>
+    <button class="quick-menu-btn-second" data-screen="todo" title="TODOリスト">
+      <i class="fas fa-tasks"></i>
+      <span>TODO</span>
+    </button>
+    <button class="quick-menu-btn-second" data-screen="notes" title="メモ帳">
+      <i class="fas fa-sticky-note"></i>
+      <span>メモ帳</span>
+    </button>
+    <button class="quick-menu-btn-second" data-screen="camera" title="カメラ">
+      <i class="fas fa-camera"></i>
+      <span>カメラ</span>
+    </button>
     <button class="quick-menu-btn-second" data-screen="map" title="地図">
       <i class="fas fa-map-marked-alt"></i>
       <span>地図</span>
     </button>
-    <button class="quick-menu-btn-second" data-screen="activity" title="アクティビティ">
-      <i class="fas fa-bell"></i>
-      <span>アクティビティ</span>
-    </button>
-    <button class="quick-menu-btn-second" data-screen="client" title="顧客情報">
-      <i class="fas fa-user"></i>
-      <span>顧客</span>
-    </button>
-    <button class="quick-menu-btn-second" data-screen="estimate" title="仮見積もり">
-      <i class="fas fa-file-invoice"></i>
-      <span>見積</span>
+    <button class="quick-menu-btn-second" data-screen="logout" title="ログアウト">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>ログアウト</span>
     </button>
   </div>
 
@@ -235,7 +335,7 @@
 
     .concierge-slider {
       display: flex;
-      width: 500vw; /* 5画面分 */
+      width: 1000vw; /* 10画面分 */
       height: 100%;
     }
 
@@ -256,6 +356,33 @@
       margin-bottom: 20px;
       padding-bottom: 12px;
       border-bottom: 2px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dashboard-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .dashboard-link:hover {
+      background: #ff6b9d;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(255, 107, 157, 0.3);
+    }
+
+    .dashboard-link i {
+      font-size: 1rem;
     }
 
     .screen-title {
@@ -263,6 +390,7 @@
       font-weight: 700;
       color: #111827;
       margin: 0;
+      flex: 1;
     }
 
     /* アクティビティ画面 */
@@ -1134,9 +1262,28 @@
       padding: 8px 0;
       transition: transform 0.3s ease-out;
       will-change: transform;
+      transform-style: preserve-3d;
+      perspective: 1000px;
     }
 
-    /* 一段目メニューのスライドアップは削除（入れ替えに変更） */
+    /* フリップアニメーション */
+    .concierge-quick-menu.flipping {
+      animation: flipMenu 0.6s ease-in-out;
+    }
+
+    @keyframes flipMenu {
+      0% {
+        transform: rotateY(0deg);
+      }
+      50% {
+        transform: rotateY(90deg) scale(0.95);
+        opacity: 0.7;
+      }
+      100% {
+        transform: rotateY(0deg);
+        opacity: 1;
+      }
+    }
 
     .quick-menu-btn {
       flex: 1;
@@ -1182,6 +1329,27 @@
       transition: transform 0.3s ease-out;
       will-change: transform;
       visibility: hidden;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+
+    /* フリップアニメーション */
+    .concierge-quick-menu-second.flipping {
+      animation: flipMenuSecond 0.6s ease-in-out;
+    }
+
+    @keyframes flipMenuSecond {
+      0% {
+        transform: translateY(100%) rotateY(0deg);
+      }
+      50% {
+        transform: translateY(100%) rotateY(-90deg) scale(0.95);
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateY(100%) rotateY(0deg);
+        opacity: 1;
+      }
     }
 
     @keyframes fadeIn {
@@ -1236,6 +1404,451 @@
     .empty-state p {
       font-size: 0.95rem;
       margin: 0;
+    }
+
+    /* スケジュール画面 */
+    .schedule-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .schedule-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .schedule-time {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .schedule-time-hour {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .schedule-time-date {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .schedule-client {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .schedule-store {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+
+    .schedule-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .schedule-action-btn {
+      padding: 8px 12px;
+      background: #f3f4f6;
+      color: #6b7280;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .schedule-action-btn:hover {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    /* TODOリスト画面 */
+    .todo-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .todo-input-section {
+      display: flex;
+      gap: 8px;
+    }
+
+    .todo-input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.875rem;
+    }
+
+    .btn-todo-add {
+      padding: 12px 20px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-todo-add:hover {
+      background: #ff6b9d;
+    }
+
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .todo-item.completed .todo-text {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+
+    .todo-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .todo-text {
+      flex: 1;
+      font-size: 0.875rem;
+      color: #111827;
+    }
+
+    .btn-todo-delete {
+      padding: 8px;
+      background: #ef4444;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-todo-delete:hover {
+      background: #dc2626;
+    }
+
+    /* メモ帳画面 */
+    .notes-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .notes-input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .notes-textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    .btn-notes-save {
+      padding: 12px 20px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-notes-save:hover {
+      background: #ff6b9d;
+    }
+
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .note-item {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .note-date {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .btn-note-delete {
+      padding: 6px 10px;
+      background: #ef4444;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-note-delete:hover {
+      background: #dc2626;
+    }
+
+    .note-content {
+      font-size: 0.875rem;
+      color: #111827;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    /* カメラ画面 */
+    .camera-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .camera-preview {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #000000;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .camera-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .camera-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+    }
+
+    .camera-placeholder i {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .camera-placeholder p {
+      font-size: 0.875rem;
+      margin: 0;
+    }
+
+    .camera-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .btn-camera-capture {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 4px solid var(--primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-camera-capture:hover {
+      transform: scale(1.1);
+    }
+
+    .btn-camera-capture i {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .btn-camera-switch {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-camera-switch:hover {
+      background: #e5e7eb;
+    }
+
+    .btn-camera-switch i {
+      font-size: 1.25rem;
+      color: #6b7280;
+    }
+
+    .camera-gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .camera-gallery-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .camera-gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .btn-gallery-delete {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: rgba(0,0,0,0.6);
+      color: #ffffff;
+      border: none;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ログアウト画面 */
+    .logout-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+    }
+
+    .logout-content {
+      text-align: center;
+      padding: 40px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .logout-content i {
+      font-size: 3rem;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    .logout-content h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 12px 0;
+    }
+
+    .logout-content p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0 0 24px 0;
+    }
+
+    .logout-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-logout-cancel {
+      flex: 1;
+      padding: 12px;
+      background: #f3f4f6;
+      color: #6b7280;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout-cancel:hover {
+      background: #e5e7eb;
+    }
+
+    .btn-logout-confirm {
+      flex: 1;
+      padding: 12px;
+      background: #ef4444;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-logout-confirm:hover {
+      background: #dc2626;
     }
 
     /* PC対応（縦並び表示） */
@@ -1347,6 +1960,16 @@
           renderServices();
         } else if (screenName === 'map') {
           renderMap();
+        } else if (screenName === 'schedule') {
+          renderSchedule();
+        } else if (screenName === 'todo') {
+          renderTodo();
+        } else if (screenName === 'notes') {
+          renderNotes();
+        } else if (screenName === 'camera') {
+          initCamera();
+        } else if (screenName === 'logout') {
+          // ログアウト画面は静的表示
         }
       }
       
@@ -1865,57 +2488,68 @@
       let isMenuSliding = false;
       let hasSwapped = false; // 入れ替えが実行されたかどうか
 
-      // メニューを入れ替える関数
+      // メニューを入れ替える関数（フリップアニメーション付き）
       function swapMenus() {
         if (!quickMenu || !quickMenuSecond) return;
 
-        // 一段目と二段目のメニュー項目を取得
-        const firstTierItems = Array.from(quickMenu.children);
-        const secondTierItems = Array.from(quickMenuSecond.children);
+        // フリップアニメーションを開始
+        quickMenu.classList.add('flipping');
+        quickMenuSecond.classList.add('flipping');
 
-        // メニュー項目を入れ替え
-        firstTierItems.forEach(item => {
-          // ボタンかリンクかを判定
-          if (item.tagName === 'BUTTON') {
-            // ボタンのクラスを変更
-            item.classList.remove('quick-menu-btn');
-            item.classList.add('quick-menu-btn-second');
-            quickMenuSecond.appendChild(item);
-          } else if (item.tagName === 'A') {
-            // リンクのクラスを変更
-            item.classList.remove('quick-menu-btn');
-            item.classList.add('quick-menu-btn-second');
-            quickMenuSecond.appendChild(item);
+        // アニメーション完了後に実際の入れ替えを実行
+        setTimeout(() => {
+          // 一段目と二段目のメニュー項目を取得
+          const firstTierItems = Array.from(quickMenu.children);
+          const secondTierItems = Array.from(quickMenuSecond.children);
+
+          // メニュー項目を入れ替え
+          firstTierItems.forEach(item => {
+            // ボタンかリンクかを判定
+            if (item.tagName === 'BUTTON') {
+              // ボタンのクラスを変更
+              item.classList.remove('quick-menu-btn');
+              item.classList.add('quick-menu-btn-second');
+              quickMenuSecond.appendChild(item);
+            } else if (item.tagName === 'A') {
+              // リンクのクラスを変更
+              item.classList.remove('quick-menu-btn');
+              item.classList.add('quick-menu-btn-second');
+              quickMenuSecond.appendChild(item);
+            }
+          });
+
+          secondTierItems.forEach(item => {
+            // ボタンかリンクかを判定
+            if (item.tagName === 'BUTTON') {
+              // ボタンのクラスを変更
+              item.classList.remove('quick-menu-btn-second');
+              item.classList.add('quick-menu-btn');
+              quickMenu.appendChild(item);
+            } else if (item.tagName === 'A') {
+              // リンクのクラスを変更
+              item.classList.remove('quick-menu-btn-second');
+              item.classList.add('quick-menu-btn');
+              quickMenu.appendChild(item);
+            }
+          });
+
+          // フリップアニメーションを終了
+          quickMenu.classList.remove('flipping');
+          quickMenuSecond.classList.remove('flipping');
+
+          // イベントリスナーを再設定
+          setupMenuEventListeners();
+
+          // 新しい一段目メニューの最初の項目に対応した画面を表示
+          const newFirstTierFirstItem = quickMenu.querySelector('[data-screen]');
+          if (newFirstTierFirstItem) {
+            const screenName = newFirstTierFirstItem.dataset.screen;
+            const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+            if (screenIndex !== -1) {
+              switchScreen(screenIndex);
+            }
           }
-        });
-
-        secondTierItems.forEach(item => {
-          // ボタンかリンクかを判定
-          if (item.tagName === 'BUTTON') {
-            // ボタンのクラスを変更
-            item.classList.remove('quick-menu-btn-second');
-            item.classList.add('quick-menu-btn');
-            quickMenu.appendChild(item);
-          } else if (item.tagName === 'A') {
-            // リンクのクラスを変更
-            item.classList.remove('quick-menu-btn-second');
-            item.classList.add('quick-menu-btn');
-            quickMenu.appendChild(item);
-          }
-        });
-
-        // イベントリスナーを再設定
-        setupMenuEventListeners();
-
-        // 新しい一段目メニューの最初の項目に対応した画面を表示
-        const newFirstTierFirstItem = quickMenu.querySelector('[data-screen]');
-        if (newFirstTierFirstItem) {
-          const screenName = newFirstTierFirstItem.dataset.screen;
-          const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
-          if (screenIndex !== -1) {
-            switchScreen(screenIndex);
-          }
-        }
+        }, 300); // アニメーション時間（0.6s / 2）
       }
 
       // メニューのイベントリスナーを設定
@@ -2107,6 +2741,9 @@
       renderClientInfo();
       renderServices();
       renderMap();
+      renderSchedule();
+      renderTodo();
+      renderNotes();
 
       // PC版の初期表示設定
       const isMobile = window.innerWidth <= 767.98;
@@ -2116,6 +2753,254 @@
             s.style.display = 'block';
           } else {
             s.style.display = 'none';
+          }
+        });
+      }
+
+      // スケジュール画面のレンダリング
+      function renderSchedule() {
+        const scheduleContainer = document.getElementById('schedule-container');
+        if (!scheduleContainer) return;
+
+        // スケジュールを日付順にソート
+        const sortedSchedules = [...schedules].sort((a, b) => {
+          const dateA = new Date(a.date + ' ' + a.time);
+          const dateB = new Date(b.date + ' ' + b.time);
+          return dateA - dateB;
+        });
+
+        if (sortedSchedules.length === 0) {
+          scheduleContainer.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>スケジュールがありません</p></div>';
+          return;
+        }
+
+        scheduleContainer.innerHTML = sortedSchedules.map(schedule => {
+          const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(schedule.address)}`;
+          return `
+            <div class="schedule-card">
+              <div class="schedule-time">
+                <span class="schedule-time-hour">${schedule.time}</span>
+                <span class="schedule-time-date">${schedule.date}</span>
+              </div>
+              <div class="schedule-client">${schedule.client_name}</div>
+              <div class="schedule-store">${schedule.store_name} - ${schedule.purpose}</div>
+              <div class="schedule-actions">
+                ${schedule.phone ? `<a href="tel:${schedule.phone}" class="schedule-action-btn"><i class="fas fa-phone"></i> 電話</a>` : ''}
+                ${schedule.email ? `<a href="mailto:${schedule.email}" class="schedule-action-btn"><i class="fas fa-envelope"></i> メール</a>` : ''}
+                <a href="${mapUrl}" target="_blank" class="schedule-action-btn"><i class="fas fa-map-marker-alt"></i> 地図</a>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // TODOリスト画面のレンダリング
+      let todos = JSON.parse(localStorage.getItem('concierge-todos') || '[]');
+      
+      function renderTodo() {
+        const todoList = document.getElementById('todo-list');
+        if (!todoList) return;
+
+        if (todos.length === 0) {
+          todoList.innerHTML = '<div class="empty-state"><i class="fas fa-tasks"></i><p>TODOがありません</p></div>';
+          return;
+        }
+
+        todoList.innerHTML = todos.map((todo, index) => `
+          <div class="todo-item ${todo.completed ? 'completed' : ''}">
+            <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${index})" />
+            <span class="todo-text">${todo.text}</span>
+            <button class="btn-todo-delete" onclick="deleteTodo(${index})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+
+      window.toggleTodo = function(index) {
+        todos[index].completed = !todos[index].completed;
+        localStorage.setItem('concierge-todos', JSON.stringify(todos));
+        renderTodo();
+      };
+
+      window.deleteTodo = function(index) {
+        todos.splice(index, 1);
+        localStorage.setItem('concierge-todos', JSON.stringify(todos));
+        renderTodo();
+      };
+
+      // TODO追加ボタン
+      const btnTodoAdd = document.getElementById('btn-todo-add');
+      const todoInput = document.getElementById('todo-input');
+      if (btnTodoAdd && todoInput) {
+        btnTodoAdd.addEventListener('click', () => {
+          const text = todoInput.value.trim();
+          if (text) {
+            todos.push({ text: text, completed: false });
+            localStorage.setItem('concierge-todos', JSON.stringify(todos));
+            todoInput.value = '';
+            renderTodo();
+          }
+        });
+
+        todoInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            btnTodoAdd.click();
+          }
+        });
+      }
+
+      // メモ帳画面のレンダリング
+      let notes = JSON.parse(localStorage.getItem('concierge-notes') || '[]');
+      
+      function renderNotes() {
+        const notesList = document.getElementById('notes-list');
+        if (!notesList) return;
+
+        if (notes.length === 0) {
+          notesList.innerHTML = '<div class="empty-state"><i class="fas fa-sticky-note"></i><p>メモがありません</p></div>';
+          return;
+        }
+
+        notesList.innerHTML = notes.map((note, index) => `
+          <div class="note-item">
+            <div class="note-header">
+              <span class="note-date">${note.date}</span>
+              <button class="btn-note-delete" onclick="deleteNote(${index})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div class="note-content">${note.content}</div>
+          </div>
+        `).join('');
+      }
+
+      window.deleteNote = function(index) {
+        notes.splice(index, 1);
+        localStorage.setItem('concierge-notes', JSON.stringify(notes));
+        renderNotes();
+      };
+
+      // メモ保存ボタン
+      const btnNotesSave = document.getElementById('btn-notes-save');
+      const notesInput = document.getElementById('notes-input');
+      if (btnNotesSave && notesInput) {
+        btnNotesSave.addEventListener('click', () => {
+          const content = notesInput.value.trim();
+          if (content) {
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            notes.unshift({ content: content, date: dateStr });
+            localStorage.setItem('concierge-notes', JSON.stringify(notes));
+            notesInput.value = '';
+            renderNotes();
+          }
+        });
+      }
+
+      // カメラ画面の初期化
+      let cameraStream = null;
+      let currentFacingMode = 'environment'; // 'user' or 'environment'
+
+      function initCamera() {
+        const cameraPreview = document.getElementById('camera-preview');
+        const cameraVideo = document.getElementById('camera-video');
+        const cameraPlaceholder = cameraPreview.querySelector('.camera-placeholder');
+        const btnCameraCapture = document.getElementById('btn-camera-capture');
+        const btnCameraSwitch = document.getElementById('btn-camera-switch');
+        const cameraGallery = document.getElementById('camera-gallery');
+
+        if (!cameraPreview || !cameraVideo) return;
+
+        // カメラを起動
+        navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: currentFacingMode } 
+        }).then(stream => {
+          cameraStream = stream;
+          cameraVideo.srcObject = stream;
+          cameraVideo.style.display = 'block';
+          if (cameraPlaceholder) {
+            cameraPlaceholder.style.display = 'none';
+          }
+        }).catch(err => {
+          console.error('カメラの起動に失敗しました:', err);
+          if (cameraPlaceholder) {
+            cameraPlaceholder.innerHTML = '<i class="fas fa-exclamation-triangle"></i><p>カメラへのアクセスが拒否されました</p>';
+          }
+        });
+
+        // 撮影ボタン
+        if (btnCameraCapture) {
+          btnCameraCapture.addEventListener('click', () => {
+            const canvas = document.getElementById('camera-canvas');
+            if (canvas && cameraVideo) {
+              canvas.width = cameraVideo.videoWidth;
+              canvas.height = cameraVideo.videoHeight;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(cameraVideo, 0, 0);
+              
+              const imageData = canvas.toDataURL('image/jpeg');
+              
+              // ギャラリーに追加
+              if (cameraGallery) {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'camera-gallery-item';
+                photoItem.innerHTML = `
+                  <img src="${imageData}" alt="撮影写真">
+                  <button class="btn-gallery-delete" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                  </button>
+                `;
+                cameraGallery.appendChild(photoItem);
+              }
+            }
+          });
+        }
+
+        // カメラ切り替えボタン
+        if (btnCameraSwitch) {
+          btnCameraSwitch.addEventListener('click', () => {
+            if (cameraStream) {
+              cameraStream.getTracks().forEach(track => track.stop());
+            }
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            initCamera();
+          });
+        }
+      }
+
+      // カメラ画面を離れるときにカメラを停止
+      const cameraScreen = document.querySelector('.concierge-screen[data-screen="camera"]');
+      if (cameraScreen) {
+        const observer = new MutationObserver(() => {
+          if (!cameraScreen.classList.contains('active') && cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+          }
+        });
+        observer.observe(cameraScreen, { attributes: true, attributeFilter: ['class'] });
+      }
+
+      // ログアウト画面の処理
+      const btnLogoutConfirm = document.getElementById('btn-logout-confirm');
+      const btnLogoutCancel = document.getElementById('btn-logout-cancel');
+      
+      if (btnLogoutConfirm) {
+        btnLogoutConfirm.addEventListener('click', () => {
+          if (window.Auth && window.Auth.logout) {
+            window.Auth.logout();
+          } else {
+            window.location.href = '/signin.html';
+          }
+        });
+      }
+
+      if (btnLogoutCancel) {
+        btnLogoutCancel.addEventListener('click', () => {
+          // アクティビティ画面に戻る
+          const activityIndex = Array.from(screens).findIndex(s => s.dataset.screen === 'activity');
+          if (activityIndex !== -1) {
+            switchScreen(activityIndex);
           }
         });
       }
