@@ -15,13 +15,13 @@
           届いた確認メールのリンクをクリックすると、会社情報や店舗情報の登録に進めます。
         </p>
 
-        <form action="/signup2.html" method="get" class="stack lg mt-8">
+        <form id="signup-form" action="#" method="post" class="stack lg mt-8">
           <div>
             <label for="email" class="label">
               メールアドレス
               <span class="pill pill-required" style="margin-left: 8px;">必須</span>
             </label>
-            <input type="email" id="email" name="email" class="input" placeholder="name@example.com" />
+            <input type="email" id="email" name="email" class="input" placeholder="name@example.com" required />
             <p class="small" style="margin-top: 6px;">※メールアドレスがログインIDになります。</p>
           </div>
 
@@ -31,12 +31,12 @@
               <span class="pill pill-required" style="margin-left: 8px;">必須</span>
             </label>
             <div class="field">
-              <input type="password" id="password" name="password" class="input" />
+              <input type="password" id="password" name="password" class="input" minlength="6" required />
               <button type="button" class="toggle-visibility" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password')">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
-            <p class="small" style="margin-top: 6px;">※英数字8文字以上で入力してください。</p>
+            <p class="small" style="margin-top: 6px;">※6文字以上で入力してください。</p>
           </div>
 
           <div>
@@ -45,15 +45,17 @@
               <span class="pill pill-required" style="margin-left: 8px;">必須</span>
             </label>
             <div class="field">
-              <input type="password" id="password-confirm" name="password-confirm" class="input" />
+              <input type="password" id="password-confirm" name="password-confirm" class="input" minlength="6" required />
               <button type="button" class="toggle-visibility" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password-confirm')">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
           </div>
 
+          <div id="signup-error" class="error-message" style="display: none; padding: 12px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #991b1b; margin-bottom: 16px;"></div>
+
           <div>
-            <button type="submit" class="btn btn-primary btn-round btn-full btn-lg fw-700">メール送信</button>
+            <button type="submit" class="btn btn-primary btn-round btn-full btn-lg fw-700">登録する</button>
           </div>
         </form>
 
@@ -83,4 +85,87 @@
           icon.classList.add('fa-eye');
         }
       }
+      
+      // 登録フォーム処理
+      (function() {
+        const signupForm = document.getElementById('signup-form');
+        const errorDiv = document.getElementById('signup-error');
+        
+        if (signupForm) {
+          signupForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('password-confirm').value;
+            
+            // バリデーション
+            if (!email) {
+              errorDiv.textContent = 'メールアドレスを入力してください';
+              errorDiv.style.display = 'block';
+              return;
+            }
+            
+            if (!password) {
+              errorDiv.textContent = 'パスワードを入力してください';
+              errorDiv.style.display = 'block';
+              return;
+            }
+            
+            if (password.length < 6) {
+              errorDiv.textContent = 'パスワードは6文字以上で入力してください';
+              errorDiv.style.display = 'block';
+              return;
+            }
+            
+            if (password !== passwordConfirm) {
+              errorDiv.textContent = 'パスワードが一致しません';
+              errorDiv.style.display = 'block';
+              return;
+            }
+            
+            // 登録ボタンを無効化
+            const submitButton = signupForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+              submitButton.disabled = true;
+              submitButton.textContent = '登録中...';
+            }
+            
+            try {
+              // Firebase Authenticationで登録（customerロールで登録）
+              const result = await window.Auth.register(email, password);
+              
+              if (result.success) {
+                errorDiv.style.display = 'none';
+                
+                // 登録成功後、メール確認の案内を表示
+                const message = '登録が完了しました。\n\n確認メールを送信しました。\nメール内のリンクをクリックしてメールアドレスを確認してください。\n\nメールが届かない場合は、スパムフォルダもご確認ください。';
+                alert(message);
+                window.location.href = '/signin.html';
+              } else {
+                // エラーメッセージを表示
+                const errorMessage = result.message || '登録に失敗しました';
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+                
+                // 登録ボタンを再有効化
+                if (submitButton) {
+                  submitButton.disabled = false;
+                  submitButton.textContent = '登録する';
+                }
+              }
+            } catch (error) {
+              console.error('登録エラー:', error);
+              errorDiv.textContent = '登録処理でエラーが発生しました。ページを再読み込みしてください。';
+              errorDiv.style.display = 'block';
+              
+              // 登録ボタンを再有効化
+              if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = '登録する';
+              }
+            }
+          });
+        }
+      })();
     </script>

@@ -161,68 +161,192 @@
   }
   
   /**
-   * ログイン（APIベース）
+   * Firebaseエラーメッセージを日本語に変換
    */
-  async function login(email, password) {
-    const apiBaseUrl = getApiBaseUrl();
-    if (!apiBaseUrl) {
+  function getFirebaseErrorMessage(error) {
+    const errorMessages = {
+      'auth/user-not-found': 'メールアドレスまたはパスワードが正しくありません',
+      'auth/wrong-password': 'メールアドレスまたはパスワードが正しくありません',
+      'auth/invalid-credential': 'メールアドレスまたはパスワードが正しくありません',
+      'auth/invalid-email': 'メールアドレスの形式が正しくありません',
+      'auth/email-already-in-use': 'このメールアドレスは既に使用されています',
+      'auth/weak-password': 'パスワードが弱すぎます。6文字以上で入力してください',
+      'auth/network-request-failed': 'ネットワークエラーが発生しました。接続を確認してください',
+      'auth/too-many-requests': 'ログイン試行回数が多すぎます。しばらく待ってから再度お試しください',
+      'auth/user-disabled': 'このアカウントは無効化されています',
+      'auth/operation-not-allowed': 'この認証方法は許可されていません。Firebase Consoleでメール/パスワード認証を有効化してください',
+      'auth/invalid-value-(email),-starting-an-object-on-a-scalar-field': 'メールアドレスの形式が正しくありません'
+    };
+    
+    return errorMessages[error.code] || error.message || '認証処理でエラーが発生しました';
+  }
+  
+  /**
+   * Firebase Authenticationを使用したログイン
+   */
+  async function loginWithFirebase(email, password) {
+    try {
+      // Firebase Authのcompat版では、auth()の結果に対して直接メソッドを呼び出す
+      const userCredential = await window.FirebaseAuth.signInWithEmailAndPassword(
+        email,
+        password
+      );
+      
+      const firebaseUser = userCredential.user;
+      
+      // Firebase Custom Claimsからロールを取得
+      let role = 'customer'; // デフォルトロール
+      try {
+        const idTokenResult = await firebaseUser.getIdTokenResult();
+        role = idTokenResult.claims.role || 'customer';
+      } catch (error) {
+        console.warn('[Auth] Could not get custom claims, using default role:', error);
+      }
+      
+      // Custom Claimsにロールがない場合、users.jsからロールを取得
+      if (role === 'customer' && window.Users && window.Users.findUserByEmail) {
+        const userFromUsersJs = window.Users.findUserByEmail(firebaseUser.email);
+        if (userFromUsersJs && userFromUsersJs.role) {
+          role = userFromUsersJs.role;
+          console.log('[Auth] Using role from users.js:', role);
+        }
+      }
+      
+      // ユーザー情報を保存
+      const user = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        role: role,
+        name: firebaseUser.displayName || (window.Users && window.Users.findUserByEmail ? (window.Users.findUserByEmail(firebaseUser.email)?.name || email.split('@')[0]) : email.split('@')[0]),
+        emailVerified: firebaseUser.emailVerified
+      };
+      
+      setAuthData(role, user.email, user);
+      
+      return {
+        success: true,
+        user: user,
+        role: role
+      };
+    } catch (error) {
+      console.error('[Auth] Firebase login error:', error);
       return {
         success: false,
-        message: 'APIサーバーに接続できません。ローカル開発サーバーを起動してください。'
+        message: getFirebaseErrorMessage(error)
+      };
+    }
+  }
+  
+  /**
+   * ログイン（Firebase → API → クライアントサイド認証の順で試行）
+   */
+  async function login(email, password) {
+    // 1. Firebase Authenticationが利用可能な場合はFirebaseを使用（最優先）
+    if (window.FirebaseAuth) {
+      return await loginWithFirebase(email, password);
+    }
+    
+    const apiBaseUrl = getApiBaseUrl();
+    
+    // 2. APIサーバーが利用可能な場合はAPIを使用
+    if (apiBaseUrl) {
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password
+          })
+        });
+        
+        // Content-Typeを確認
+        const contentType = response.headers.get('Content-Type') || '';
+        if (!contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('[Auth] Invalid response type:', contentType, text.substring(0, 200));
+          // APIエラーの場合はクライアントサイド認証にフォールバック
+        } else {
+          const result = await response.json();
+          
+          if (result.success && result.user) {
+            // 認証情報を保存
+            const role = result.user.role;
+            if (typeof role !== 'string') {
+              console.error('[Auth] Invalid role in response:', result.user);
+              return {
+                success: false,
+                message: 'サーバーからの応答が正しくありません。'
+              };
+            }
+            
+            setAuthData(role, result.user.email, result.user);
+            
+            return {
+              success: true,
+              user: result.user,
+              role: role
+            };
+          } else {
+            return {
+              success: false,
+              message: result.message || 'ログインに失敗しました'
+            };
+          }
+        }
+      } catch (error) {
+        console.error('[Auth] API login error:', error);
+        // APIエラーの場合はクライアントサイド認証にフォールバック
+      }
+    }
+    
+    // APIが使えない場合（GitHub Pagesなど）はクライアントサイド認証を使用
+    if (!window.Users || !window.Users.findUserByEmailAndPassword) {
+      return {
+        success: false,
+        message: '認証システムが利用できません。users.jsが読み込まれているか確認してください。'
       };
     }
     
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password
-        })
-      });
+      const user = await window.Users.findUserByEmailAndPassword(email, password);
       
-      // Content-Typeを確認
-      const contentType = response.headers.get('Content-Type') || '';
-      if (!contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('[Auth] Invalid response type:', contentType, text.substring(0, 200));
+      if (!user) {
         return {
           success: false,
-          message: 'サーバーからの応答が正しくありません。ページを再読み込みしてください。'
+          message: 'メールアドレスまたはパスワードが正しくありません'
         };
       }
       
-      const result = await response.json();
-      
-      if (result.success && result.user) {
-        // 認証情報を保存
-        const role = result.user.role;
-        if (typeof role !== 'string') {
-          console.error('[Auth] Invalid role in response:', result.user);
-          return {
-            success: false,
-            message: 'サーバーからの応答が正しくありません。'
-          };
-        }
-        
-        setAuthData(role, result.user.email, result.user);
-        
-        return {
-          success: true,
-          user: result.user,
-          role: role
-        };
-      } else {
+      // ステータスチェック
+      if (user.status !== 'active') {
         return {
           success: false,
-          message: result.message || 'ログインに失敗しました'
+          message: 'このアカウントは無効化されています'
         };
       }
+      
+      // 認証情報を保存
+      const role = user.role;
+      if (typeof role !== 'string') {
+        console.error('[Auth] Invalid role in user data:', user);
+        return {
+          success: false,
+          message: 'ユーザーデータが正しくありません。'
+        };
+      }
+      
+      setAuthData(role, user.email, user);
+      
+      return {
+        success: true,
+        user: user,
+        role: role
+      };
     } catch (error) {
-      console.error('[Auth] Login error:', error);
+      console.error('[Auth] Client-side login error:', error);
       return {
         success: false,
         message: 'ログイン処理でエラーが発生しました。ページを再読み込みしてください。'
@@ -234,6 +358,17 @@
    * ログアウト
    */
   async function logout() {
+    // Firebase Authenticationからログアウト
+    if (window.FirebaseAuth) {
+      try {
+        // Firebase Authのcompat版では、auth()の結果に対して直接メソッドを呼び出す
+        await window.FirebaseAuth.signOut();
+      } catch (error) {
+        console.error('[Auth] Firebase logout error:', error);
+        // エラーが発生しても続行
+      }
+    }
+    
     const apiBaseUrl = getApiBaseUrl();
     
     // APIサーバーにログアウトリクエストを送信（オプション）
@@ -260,9 +395,107 @@
   }
   
   /**
+   * Firebase Authenticationを使用したユーザー登録
+   * 注意: signup.htmlから呼び出される場合は、customerロールで登録されます
+   */
+  async function registerWithFirebase(email, password, name = null, role = 'customer') {
+    try {
+      // Firebase Authのcompat版では、auth()の結果に対して直接メソッドを呼び出す
+      const userCredential = await window.FirebaseAuth.createUserWithEmailAndPassword(
+        email,
+        password
+      );
+      
+      const firebaseUser = userCredential.user;
+      
+      // 表示名を設定
+      if (name) {
+        await firebaseUser.updateProfile({
+          displayName: name
+        });
+      }
+      
+      // メール確認を送信
+      try {
+        await firebaseUser.sendEmailVerification();
+        console.log('[Auth] Email verification sent to:', firebaseUser.email);
+      } catch (error) {
+        console.error('[Auth] Could not send email verification:', error);
+        // メール確認の送信に失敗しても登録は成功する
+        // ユーザーには後でメール確認の再送信を促す
+      }
+      
+      // ロールを設定（Custom Claimsを使用する場合はCloud Functionsが必要）
+      // 現時点では、デフォルトでcustomerロールを使用
+      // 将来的に、Cloud FunctionsでCustom Claimsを設定する必要がある
+      
+      // 認証情報を保存（customerロールで登録）
+      setAuthData(role, firebaseUser.email, {
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        role: role,
+        name: name || email.split('@')[0],
+        emailVerified: false
+      });
+      
+      return {
+        success: true,
+        user: {
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          role: role,
+          name: name || email.split('@')[0],
+          emailVerified: false
+        }
+      };
+    } catch (error) {
+      console.error('[Auth] Firebase registration error:', error);
+      return {
+        success: false,
+        message: getFirebaseErrorMessage(error)
+      };
+    }
+  }
+  
+  /**
+   * ユーザー登録（Firebase優先）
+   * 注意: signup.htmlから呼び出される場合は、customerロールで登録されます
+   * 他のロール（staff, concierge, adminなど）は管理者が登録する必要があります
+   */
+  async function register(email, password, name = null, role = 'customer') {
+    // Firebase Authenticationが利用可能な場合はFirebaseを使用
+    if (window.FirebaseAuth) {
+      return await registerWithFirebase(email, password, name, role);
+    }
+    
+    // フォールバック: クライアントサイド登録（localStorageなど）
+    // 将来的に実装可能
+    return {
+      success: false,
+      message: 'ユーザー登録機能は現在利用できません。Firebase Authenticationを設定してください。'
+    };
+  }
+  
+  /**
    * 認証チェック
    */
   function checkAuth() {
+    // Firebase Authenticationの認証状態をチェック
+    if (window.FirebaseAuth) {
+      const currentUser = window.FirebaseAuth.currentUser;
+      if (currentUser) {
+        // Firebase認証済みの場合、sessionStorageにも保存されているか確認
+        const authData = getAuthData();
+        if (authData) {
+          return true;
+        }
+        // sessionStorageにない場合は、Firebaseから情報を取得して保存
+        // これは非同期処理なので、ここでは簡易的にtrueを返す
+        return true;
+      }
+    }
+    
+    // フォールバック: sessionStorageをチェック
     return getAuthData() !== null;
   }
   
@@ -330,9 +563,45 @@
     return true;
   }
   
+  /**
+   * メール確認の再送信
+   */
+  async function resendEmailVerification() {
+    if (!window.FirebaseAuth) {
+      return {
+        success: false,
+        message: 'Firebase Authenticationが利用できません。'
+      };
+    }
+    
+    const currentUser = window.FirebaseAuth.currentUser;
+    if (!currentUser) {
+      return {
+        success: false,
+        message: 'ログインしていません。'
+      };
+    }
+    
+    try {
+      await currentUser.sendEmailVerification();
+      console.log('[Auth] Email verification resent to:', currentUser.email);
+      return {
+        success: true,
+        message: '確認メールを再送信しました。メールボックスをご確認ください。'
+      };
+    } catch (error) {
+      console.error('[Auth] Could not resend email verification:', error);
+      return {
+        success: false,
+        message: getFirebaseErrorMessage(error)
+      };
+    }
+  }
+  
   // グローバルに公開
   window.Auth = {
     login: login,
+    register: register,
     logout: logout,
     checkAuth: checkAuth,
     getCurrentRole: getCurrentRole,
@@ -340,7 +609,8 @@
     checkCurrentPageAccess: checkCurrentPageAccess,
     getDefaultPageForRole: getDefaultPageForRole,
     getAuthData: getAuthData,
-    setAuthData: setAuthData
+    setAuthData: setAuthData,
+    resendEmailVerification: resendEmailVerification
   };
   
   // getDefaultPageForRoleを直接使用可能にする（後方互換性のため）
