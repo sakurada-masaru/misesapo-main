@@ -1136,9 +1136,7 @@
       will-change: transform;
     }
 
-    .concierge-quick-menu.slide-up {
-      transform: translateY(-100%);
-    }
+    /* 一段目メニューのスライドアップは削除（入れ替えに変更） */
 
     .quick-menu-btn {
       flex: 1;
@@ -1168,7 +1166,7 @@
       transform: scale(0.95);
     }
 
-    /* 二段目のメニュー */
+    /* 二段目のメニュー（非表示） */
     .concierge-quick-menu-second {
       position: fixed;
       bottom: 0;
@@ -1183,34 +1181,7 @@
       transform: translateY(100%);
       transition: transform 0.3s ease-out;
       will-change: transform;
-    }
-
-    .concierge-quick-menu-second.visible {
-      transform: translateY(0);
-      /* 視覚的効果：ハイライト状態で表示 */
-      background: #ffffff;
-      border-top: 3px solid var(--primary);
-      box-shadow: 0 -4px 20px rgba(255, 107, 157, 0.4), 0 0 0 1px rgba(255, 107, 157, 0.1);
-      /* 明るく強調 */
-      filter: brightness(1.05);
-    }
-
-    /* メニュー展開中の視覚的効果 */
-    body.menu-expanded {
-      position: relative;
-    }
-
-    body.menu-expanded::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.3);
-      z-index: 1000;
-      pointer-events: none;
-      animation: fadeIn 0.3s ease-out;
+      visibility: hidden;
     }
 
     @keyframes fadeIn {
@@ -1404,42 +1375,7 @@
       });
 
       // クイックメニューボタンクリック（一段目）
-      quickMenuBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const screenName = btn.dataset.screen;
-          if (screenName) {
-            const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
-            if (screenIndex !== -1) {
-              switchScreen(screenIndex);
-            }
-          }
-        });
-      });
-
-      // クイックメニューボタンクリック（二段目）
-      const quickMenuBtnsSecond = document.querySelectorAll('.quick-menu-btn-second[data-screen]');
-      quickMenuBtnsSecond.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const screenName = btn.dataset.screen;
-          if (screenName) {
-            const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
-            if (screenIndex !== -1) {
-              switchScreen(screenIndex);
-              // 画面切り替え後、メニューを閉じる
-              if (quickMenu) {
-                quickMenu.classList.remove('slide-up');
-              }
-              if (quickMenuSecond) {
-                quickMenuSecond.classList.remove('visible');
-                // ページスクロールを再有効化
-                document.body.style.overflow = '';
-                // 視覚的効果を削除
-                document.body.classList.remove('menu-expanded');
-              }
-            }
-          }
-        });
-      });
+      // このイベントリスナーは setupMenuEventListeners で動的に設定されるため、ここでは削除
 
       // スワイプ検出
       let touchStartX = 0;
@@ -1921,19 +1857,119 @@
         document.getElementById('estimate-total').textContent = total > 0 ? `¥${total.toLocaleString()}` : '¥0';
       }
 
-      // 下部メニューのスライド機能
+      // 下部メニューの入れ替え機能
       const quickMenu = document.querySelector('.concierge-quick-menu');
       const quickMenuSecond = document.getElementById('quick-menu-second');
       let menuSlideStartY = 0;
       let menuSlideCurrentY = 0;
       let isMenuSliding = false;
-      const menuHeight = quickMenu ? quickMenu.offsetHeight : 0;
+      let hasSwapped = false; // 入れ替えが実行されたかどうか
+
+      // メニューを入れ替える関数
+      function swapMenus() {
+        if (!quickMenu || !quickMenuSecond) return;
+
+        // 一段目と二段目のメニュー項目を取得
+        const firstTierItems = Array.from(quickMenu.children);
+        const secondTierItems = Array.from(quickMenuSecond.children);
+
+        // メニュー項目を入れ替え
+        firstTierItems.forEach(item => {
+          // ボタンかリンクかを判定
+          if (item.tagName === 'BUTTON') {
+            // ボタンのクラスを変更
+            item.classList.remove('quick-menu-btn');
+            item.classList.add('quick-menu-btn-second');
+            quickMenuSecond.appendChild(item);
+          } else if (item.tagName === 'A') {
+            // リンクのクラスを変更
+            item.classList.remove('quick-menu-btn');
+            item.classList.add('quick-menu-btn-second');
+            quickMenuSecond.appendChild(item);
+          }
+        });
+
+        secondTierItems.forEach(item => {
+          // ボタンかリンクかを判定
+          if (item.tagName === 'BUTTON') {
+            // ボタンのクラスを変更
+            item.classList.remove('quick-menu-btn-second');
+            item.classList.add('quick-menu-btn');
+            quickMenu.appendChild(item);
+          } else if (item.tagName === 'A') {
+            // リンクのクラスを変更
+            item.classList.remove('quick-menu-btn-second');
+            item.classList.add('quick-menu-btn');
+            quickMenu.appendChild(item);
+          }
+        });
+
+        // イベントリスナーを再設定
+        setupMenuEventListeners();
+
+        // 新しい一段目メニューの最初の項目に対応した画面を表示
+        const newFirstTierFirstItem = quickMenu.querySelector('[data-screen]');
+        if (newFirstTierFirstItem) {
+          const screenName = newFirstTierFirstItem.dataset.screen;
+          const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+          if (screenIndex !== -1) {
+            switchScreen(screenIndex);
+          }
+        }
+      }
+
+      // メニューのイベントリスナーを設定
+      function setupMenuEventListeners() {
+        // 一段目のメニューボタンのクリックイベント
+        const firstTierBtns = quickMenu.querySelectorAll('.quick-menu-btn[data-screen]');
+        firstTierBtns.forEach(btn => {
+          // 既存のイベントリスナーを削除（重複防止）
+          const newBtn = btn.cloneNode(true);
+          btn.parentNode.replaceChild(newBtn, btn);
+          
+          newBtn.addEventListener('click', () => {
+            const screenName = newBtn.dataset.screen;
+            const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+            if (screenIndex !== -1) {
+              switchScreen(screenIndex);
+            }
+          });
+        });
+
+        // 二段目のメニューボタンのクリックイベント
+        const secondTierBtns = quickMenuSecond.querySelectorAll('.quick-menu-btn-second[data-screen]');
+        secondTierBtns.forEach(btn => {
+          // 既存のイベントリスナーを削除（重複防止）
+          const newBtn = btn.cloneNode(true);
+          btn.parentNode.replaceChild(newBtn, btn);
+          
+          newBtn.addEventListener('click', () => {
+            const screenName = newBtn.dataset.screen;
+            const screenIndex = Array.from(screens).findIndex(s => s.dataset.screen === screenName);
+            if (screenIndex !== -1) {
+              switchScreen(screenIndex);
+              // 画面切り替え後、メニューを閉じる
+              if (quickMenu) {
+                quickMenu.classList.remove('slide-up');
+              }
+              if (quickMenuSecond) {
+                quickMenuSecond.classList.remove('visible');
+                // ページスクロールを再有効化
+                document.body.style.overflow = '';
+                // 視覚的効果を削除
+                document.body.classList.remove('menu-expanded');
+              }
+            }
+          });
+        });
+      }
 
       if (quickMenu) {
         // タッチイベントでスライド検出
         quickMenu.addEventListener('touchstart', (e) => {
           menuSlideStartY = e.touches[0].clientY;
           isMenuSliding = true;
+          hasSwapped = false;
         }, { passive: true });
 
         quickMenu.addEventListener('touchmove', (e) => {
@@ -1941,61 +1977,21 @@
           menuSlideCurrentY = e.touches[0].clientY;
           const deltaY = menuSlideStartY - menuSlideCurrentY;
           
-          // 上にスワイプ（deltaY > 0）の場合のみ処理
-          if (deltaY > 0 && deltaY > 30) {
-            quickMenu.classList.add('slide-up');
-            if (quickMenuSecond) {
-              quickMenuSecond.classList.add('visible');
-              // ページスクロールを無効化
-              document.body.style.overflow = 'hidden';
-              // 視覚的効果を追加
-              document.body.classList.add('menu-expanded');
-            }
-          } else if (deltaY < -30) {
-            // 下にスワイプで閉じる
-            quickMenu.classList.remove('slide-up');
-            if (quickMenuSecond) {
-              quickMenuSecond.classList.remove('visible');
-              // ページスクロールを再有効化
-              document.body.style.overflow = '';
-              // 視覚的効果を削除
-              document.body.classList.remove('menu-expanded');
-            }
+          // 上にスワイプ（deltaY > 0）で入れ替え
+          if (deltaY > 0 && deltaY > 30 && !hasSwapped) {
+            hasSwapped = true;
+            swapMenus();
           }
         }, { passive: true });
 
         quickMenu.addEventListener('touchend', () => {
           isMenuSliding = false;
+          hasSwapped = false;
         }, { passive: true });
-
-        // 二段目のメニューも同様にスワイプで閉じられるように
-        if (quickMenuSecond) {
-          quickMenuSecond.addEventListener('touchstart', (e) => {
-            menuSlideStartY = e.touches[0].clientY;
-            isMenuSliding = true;
-          }, { passive: true });
-
-          quickMenuSecond.addEventListener('touchmove', (e) => {
-            if (!isMenuSliding) return;
-            menuSlideCurrentY = e.touches[0].clientY;
-            const deltaY = menuSlideStartY - menuSlideCurrentY;
-            
-            // 下にスワイプ（deltaY < 0）で閉じる
-            if (deltaY < -30) {
-              quickMenu.classList.remove('slide-up');
-              quickMenuSecond.classList.remove('visible');
-              // ページスクロールを再有効化
-              document.body.style.overflow = '';
-              // 視覚的効果を削除
-              document.body.classList.remove('menu-expanded');
-            }
-          }, { passive: true });
-
-          quickMenuSecond.addEventListener('touchend', () => {
-            isMenuSliding = false;
-          }, { passive: true });
-        }
       }
+
+      // 初期設定
+      setupMenuEventListeners();
 
       // 写真撮影機能（削除）
       const photosGrid = document.getElementById('photos-grid');
