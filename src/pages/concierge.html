@@ -128,13 +128,13 @@
             <textarea id="estimate-notes-input" class="notes-input" placeholder="メモを入力してください"></textarea>
     </div>
           <div class="estimate-actions">
-            <button class="btn-save" id="btn-save-estimate">
-              <i class="fas fa-save"></i> 保存
-            </button>
             <button class="btn-create" id="btn-create-estimate">
               <i class="fas fa-file-invoice"></i> 作成
             </button>
-    </div>
+            <button class="btn-send" id="btn-send-estimate">
+              <i class="fas fa-paper-plane"></i> 送信
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2962,16 +2962,6 @@
         });
       }
 
-      // 見積もり保存
-      document.getElementById('btn-save-estimate').addEventListener('click', () => {
-        const selectedItems = document.querySelectorAll('.selected-service-item');
-        const photos = Array.from(photosGrid.querySelectorAll('img')).map(img => img.src);
-        const notes = document.getElementById('estimate-notes-input').value;
-        
-        // TODO: 実際の保存処理を実装
-        alert('仮見積もりを保存しました');
-      });
-
       // 見積もり作成（概算画面を表示）
       document.getElementById('btn-create-estimate').addEventListener('click', () => {
         const selectedItems = document.querySelectorAll('.selected-service-item');
@@ -2990,6 +2980,58 @@
           if (previewIndex !== -1) {
             switchScreen(previewIndex);
           }
+        }
+      });
+
+      // 見積もり送信（作成画面から直接送信）
+      document.getElementById('btn-send-estimate').addEventListener('click', () => {
+        const selectedItems = document.querySelectorAll('.selected-service-item');
+        if (selectedItems.length === 0) {
+          alert('サービスを選択してください');
+          return;
+        }
+
+        // 選択されたサービス一覧を取得
+        const photosGrid = document.getElementById('photos-grid');
+        const photos = photosGrid ? Array.from(photosGrid.querySelectorAll('img')).map(img => img.src) : [];
+        const notesInput = document.getElementById('estimate-notes-input');
+        const notes = notesInput ? notesInput.value : '';
+        const totalEl = document.getElementById('estimate-total');
+        const total = totalEl ? totalEl.textContent : '¥0';
+
+        // サービス一覧を整形
+        const services = Array.from(selectedItems).map(item => {
+          const nameEl = item.querySelector('.selected-service-name');
+          const priceEl = item.querySelector('.selected-service-price');
+          const memoInput = item.querySelector('.service-memo-input');
+          const name = nameEl ? nameEl.textContent : '';
+          const price = priceEl ? priceEl.textContent : '';
+          const multiplier = item.dataset.multiplier || '1';
+          const memo = memoInput ? memoInput.value : '';
+          const basePrice = parseInt(price.replace(/[¥,\s〜]/g, ''), 10) || 0;
+          const finalPrice = basePrice * parseFloat(multiplier);
+          return { name, price, multiplier, memo, finalPrice };
+        });
+
+        // 現在の日時を取得
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        // 送信データを準備
+        const estimateData = {
+          date: dateStr,
+          services: services,
+          photos: photos,
+          notes: notes,
+          total: total
+        };
+
+        // TODO: メール送信処理を実装（メールアドレスは今後変更の可能性があるため保留）
+        // 現在は確認ダイアログのみ表示
+        if (confirm('仮見積もりを送信しますか？')) {
+          // ここにメール送信処理を実装予定
+          console.log('送信データ:', estimateData);
+          alert('仮見積もりを送信しました（送信機能は実装中です）');
         }
       });
 
