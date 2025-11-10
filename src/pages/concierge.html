@@ -497,7 +497,7 @@
     .services-container {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 24px;
     }
 
     .service-category {
@@ -511,70 +511,81 @@
       font-size: 1.125rem;
       font-weight: 700;
       color: #111827;
-      margin: 0 0 12px 0;
+      margin: 0 0 16px 0;
       padding-bottom: 8px;
       border-bottom: 2px solid #e5e7eb;
     }
 
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
     .service-item {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 16px;
+      padding: 12px;
       background: #f9fafb;
       border-radius: 8px;
-      margin-bottom: 8px;
+      border: 2px solid transparent;
       transition: all 0.2s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
     }
 
     .service-item:active {
       background: #e5e7eb;
+      border-color: var(--primary);
       transform: scale(0.98);
     }
 
-    .service-info {
-      flex: 1;
+    .service-item-image {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: #ffffff;
     }
 
-    .service-name {
-      font-size: 1rem;
+    .service-item-name {
+      font-size: 0.8125rem;
       font-weight: 600;
       color: #111827;
       margin: 0 0 4px 0;
+      text-align: center;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
-    .service-price {
-      font-size: 1.5rem;
+    .service-item-price {
+      font-size: 1rem;
       font-weight: 700;
       color: var(--primary);
       margin: 0;
+      text-align: center;
     }
 
-    .service-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-service-detail,
-    .btn-service-add {
-      padding: 8px 16px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: #ffffff;
-      color: #111827;
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-service-add {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
-    }
-
-    .btn-service-add:active {
-      background: #ff6b9d;
+    @media (max-width: 767.98px) {
+      .service-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+      .service-item {
+        padding: 8px;
+      }
+      .service-item-name {
+        font-size: 0.75rem;
+      }
+      .service-item-price {
+        font-size: 0.875rem;
+      }
     }
 
     /* 仮見積もり作成画面 */
@@ -1236,23 +1247,32 @@
           servicesByCategory[category].push(item);
         });
 
-        servicesContainer.innerHTML = Object.keys(servicesByCategory).map(category => `
-          <div class="service-category">
-            <h3 class="category-title">${category}</h3>
-            ${servicesByCategory[category].map(item => `
-              <div class="service-item">
-                <div class="service-info">
-                  <div class="service-name">${item.title}</div>
-                  <div class="service-price">${item.price}</div>
-                </div>
-                <div class="service-actions">
-                  <button class="btn-service-detail" onclick="window.open('/service/${item.id}.html', '_blank')">詳細</button>
-                  <button class="btn-service-add" onclick="addServiceToEstimate(${item.id}, '${item.title}', '${item.price}')">追加</button>
-                </div>
+        servicesContainer.innerHTML = Object.keys(servicesByCategory).map(category => {
+          const categoryServices = servicesByCategory[category];
+          // 4x4グリッド用に16個ずつに分割
+          const chunks = [];
+          for (let i = 0; i < categoryServices.length; i += 16) {
+            chunks.push(categoryServices.slice(i, i + 16));
+          }
+          
+          return chunks.map((chunk, chunkIndex) => `
+            <div class="service-category">
+              <h3 class="category-title">${category}${chunks.length > 1 ? ` (${chunkIndex + 1})` : ''}</h3>
+              <div class="service-grid">
+                ${chunk.map(item => {
+                  const imagePath = item.image || item['detail-image'] || 'images/placeholder.png';
+                  return `
+                    <div class="service-item" onclick="addServiceToEstimate(${item.id}, '${item.title.replace(/'/g, "\\'")}', '${item.price}')">
+                      <img src="${imagePath}" alt="${item.title}" class="service-item-image" onerror="this.src='images/placeholder.png'" />
+                      <div class="service-item-name">${item.title}</div>
+                      <div class="service-item-price">${item.price}</div>
+                    </div>
+                  `;
+                }).join('')}
               </div>
-            `).join('')}
-          </div>
-        `).join('');
+            </div>
+          `).join('');
+        }).join('');
       }
 
       // 仮見積もりにサービスを追加
@@ -1263,9 +1283,14 @@
           emptyState.remove();
         }
 
+        // 価格から数値を抽出（¥ 21,000〜 → 21000）
+        const priceMatch = price.match(/¥\s*([\d,]+)/);
+        const priceValue = priceMatch ? parseInt(priceMatch[1].replace(/,/g, ''), 10) : 0;
+
         const serviceItem = document.createElement('div');
         serviceItem.className = 'selected-service-item';
         serviceItem.dataset.serviceId = id;
+        serviceItem.dataset.priceValue = priceValue;
         serviceItem.innerHTML = `
           <div>
             <p class="selected-service-name">${name}</p>
@@ -1295,14 +1320,10 @@
         const selectedItems = document.querySelectorAll('.selected-service-item');
         let total = 0;
         selectedItems.forEach(item => {
-          const priceText = item.querySelector('.selected-service-price').textContent;
-          const priceMatch = priceText.match(/¥\s*([\d,]+)/);
-          if (priceMatch) {
-            const price = parseInt(priceMatch[1].replace(/,/g, ''), 10);
-            total += price;
-          }
+          const priceValue = parseInt(item.dataset.priceValue || '0', 10);
+          total += priceValue;
         });
-        document.getElementById('estimate-total').textContent = `¥${total.toLocaleString()}`;
+        document.getElementById('estimate-total').textContent = total > 0 ? `¥${total.toLocaleString()}` : '¥0';
       }
 
       // 写真撮影機能
