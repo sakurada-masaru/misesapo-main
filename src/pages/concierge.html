@@ -1266,21 +1266,22 @@
       perspective: 1000px;
     }
 
-    /* フリップアニメーション */
-    .concierge-quick-menu.flipping {
-      animation: flipMenu 0.6s ease-in-out;
+    /* スライド＆フェードアニメーション */
+    .concierge-quick-menu.sliding-fade {
+      animation: slideFadeMenu 0.5s ease-in-out;
     }
 
-    @keyframes flipMenu {
+    @keyframes slideFadeMenu {
       0% {
-        transform: rotateY(0deg);
+        transform: translateY(0);
+        opacity: 1;
       }
       50% {
-        transform: rotateY(90deg) scale(0.95);
-        opacity: 0.7;
+        transform: translateY(-20px);
+        opacity: 0.3;
       }
       100% {
-        transform: rotateY(0deg);
+        transform: translateY(0);
         opacity: 1;
       }
     }
@@ -1333,21 +1334,22 @@
       perspective: 1000px;
     }
 
-    /* フリップアニメーション */
-    .concierge-quick-menu-second.flipping {
-      animation: flipMenuSecond 0.6s ease-in-out;
+    /* スライド＆フェードアニメーション */
+    .concierge-quick-menu-second.sliding-fade {
+      animation: slideFadeMenuSecond 0.5s ease-in-out;
     }
 
-    @keyframes flipMenuSecond {
+    @keyframes slideFadeMenuSecond {
       0% {
-        transform: translateY(100%) rotateY(0deg);
+        transform: translateY(100%);
+        opacity: 0;
       }
       50% {
-        transform: translateY(100%) rotateY(-90deg) scale(0.95);
-        opacity: 0.7;
+        transform: translateY(calc(100% - 10px));
+        opacity: 0.5;
       }
       100% {
-        transform: translateY(100%) rotateY(0deg);
+        transform: translateY(100%);
         opacity: 1;
       }
     }
@@ -2571,13 +2573,13 @@
         }
       }
 
-      // メニューを入れ替える関数（フリップアニメーション付き）
+      // メニューを入れ替える関数（スライド＆フェードアニメーション付き）
       function swapMenus() {
         if (!quickMenu || !quickMenuSecond) return;
 
-        // フリップアニメーションを開始
-        quickMenu.classList.add('flipping');
-        quickMenuSecond.classList.add('flipping');
+        // スライド＆フェードアニメーションを開始
+        quickMenu.classList.add('sliding-fade');
+        quickMenuSecond.classList.add('sliding-fade');
 
         // アニメーション完了後に実際の入れ替えを実行
         setTimeout(() => {
@@ -2622,9 +2624,9 @@
           // 表示する画面を更新
           updateVisibleScreens();
 
-          // フリップアニメーションを終了
-          quickMenu.classList.remove('flipping');
-          quickMenuSecond.classList.remove('flipping');
+          // スライド＆フェードアニメーションを終了
+          quickMenu.classList.remove('sliding-fade');
+          quickMenuSecond.classList.remove('sliding-fade');
 
           // イベントリスナーを再設定
           setupMenuEventListeners();
@@ -2643,7 +2645,7 @@
               }
             }
           }
-        }, 300); // アニメーション時間（0.6s / 2）
+        }, 500); // アニメーション時間（0.5s）
       }
 
       // メニューのイベントリスナーを設定
