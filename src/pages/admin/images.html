@@ -67,7 +67,12 @@
       // 画像一覧を取得
       async function loadImages() {
         try {
-          const response = await fetch('/api/images');
+          // Try to load from static JSON file first (GitHub Pages compatible)
+          let response = await fetch('/data/images.json');
+          if (!response.ok) {
+            // Fallback to API endpoint (for local development)
+            response = await fetch('/api/images');
+          }
           const data = await response.ok ? await response.json() : { images: [] };
           
           if (data.images && data.images.length > 0) {

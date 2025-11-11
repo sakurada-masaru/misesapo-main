@@ -492,6 +492,41 @@ def copy_data_files(outputs: List[str]) -> None:
         outputs.append(str(dst_path))
 
 
+def generate_images_list(outputs: List[str]) -> None:
+    """Generate images list JSON file for client-side access (GitHub Pages compatible)"""
+    images_dir = PUBLIC / "images"
+    if not images_dir.exists():
+        # Create empty images list if images directory doesn't exist
+        images_data = {"images": []}
+    else:
+        # Scan images directory recursively
+        image_extensions = {'.png', '.jpg', '.jpeg', '.svg', '.gif', '.webp'}
+        images = []
+        
+        for img_path in images_dir.rglob('*'):
+            if img_path.is_file() and img_path.suffix.lower() in image_extensions:
+                # Get relative path from public/
+                rel_path = img_path.relative_to(PUBLIC)
+                # Convert to /images/... format
+                image_path = '/' + str(rel_path).replace('\\', '/')
+                images.append({
+                    'path': image_path,
+                    'name': img_path.name,
+                    'size': img_path.stat().st_size,
+                    'extension': img_path.suffix.lower()
+                })
+        
+        # Sort by path
+        images.sort(key=lambda x: x['path'])
+        images_data = {"images": images}
+    
+    # Write to public/data/images.json
+    images_json_path = PUBLIC / "data" / "images.json"
+    ensure_dir(images_json_path)
+    images_json_path.write_text(json.dumps(images_data, ensure_ascii=False, indent=2), encoding="utf-8")
+    outputs.append(str(images_json_path))
+
+
 def _build_client_detail_pages(template: Path, outputs: List[str]) -> None:
     """Generate pages/sales/clients/{id}.html from clients.json and the template [id].html."""
     data_path = SRC / "data" / "clients.json"
@@ -872,6 +907,8 @@ def build_all() -> List[str]:
     copy_assets(outputs)
     # copy data files for client-side access
     copy_data_files(outputs)
+    # generate images list JSON for client-side access
+    generate_images_list(outputs)
     return outputs
 
 
