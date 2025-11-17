@@ -5,49 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MISESAPO 清掃基準マニュアル</title>
     <script>
-        // baseタグを条件付きで設定（ローカル開発環境では設定しない）
+        // baseタグは使用しない（すべてのパスを絶対URLで解決する）
+        // baseタグがあると、絶対URLも相対パスとして解釈される可能性があるため
         (function() {
             const hostname = window.location.hostname;
             const isLocalDev = hostname === 'localhost' || 
                               hostname === '127.0.0.1' ||
                               hostname === '';
             
-            console.log('[CleaningManual] Environment check:', {
-                hostname: hostname,
-                isLocalDev: isLocalDev,
-                href: window.location.href
-            });
-            
-            if (!isLocalDev) {
-                // GitHub Pagesなどの本番環境でのみbaseタグを設定
-                const baseTag = document.createElement('base');
-                baseTag.id = 'base-tag';
-                baseTag.href = '/misesapo/';
-                document.head.insertBefore(baseTag, document.head.firstChild);
-                console.log('[CleaningManual] Base tag set to /misesapo/ for production');
-            } else {
-                console.log('[CleaningManual] Local development environment detected, base tag not set');
-            }
-            
             // ヘッダーロゴのパスを即座に設定（DOMContentLoadedを待たない）
             // これにより、HTMLパース時に正しいパスが設定される
-            const logoPath = isLocalDev ? '/images/header-logo.jpg' : '/misesapo/images/header-logo.jpg';
-            // DOMが利用可能になったら設定
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                    const logoImg = document.getElementById('header-logo-img');
-                    if (logoImg) {
-                        logoImg.src = logoPath;
-                        console.log('[CleaningManual] Header logo path set immediately:', logoPath);
-                    }
-                });
-            } else {
-                // DOMが既に読み込まれている場合
+            function setHeaderLogoPath() {
                 const logoImg = document.getElementById('header-logo-img');
                 if (logoImg) {
-                    logoImg.src = logoPath;
-                    console.log('[CleaningManual] Header logo path set immediately (DOM ready):', logoPath);
+                    if (isLocalDev) {
+                        logoImg.src = '/images/header-logo.jpg';
+                    } else {
+                        logoImg.src = window.location.origin + '/misesapo/images/header-logo.jpg';
+                    }
                 }
+            }
+            
+            // DOMが利用可能になったら設定
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setHeaderLogoPath);
+            } else {
+                setHeaderLogoPath();
             }
         })();
     </script>
