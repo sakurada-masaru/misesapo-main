@@ -7,9 +7,16 @@
     <script>
         // baseタグを条件付きで設定（ローカル開発環境では設定しない）
         (function() {
-            const isLocalDev = window.location.hostname === 'localhost' || 
-                              window.location.hostname === '127.0.0.1' ||
-                              window.location.hostname === '';
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' || 
+                              hostname === '127.0.0.1' ||
+                              hostname === '';
+            
+            console.log('[CleaningManual] Environment check:', {
+                hostname: hostname,
+                isLocalDev: isLocalDev,
+                href: window.location.href
+            });
             
             if (!isLocalDev) {
                 // GitHub Pagesなどの本番環境でのみbaseタグを設定
@@ -489,9 +496,16 @@
                 
                 // まずAPIエンドポイントを試す（開発環境）
                 let response = null;
-                const isLocalDev = window.location.hostname === 'localhost' || 
-                                  window.location.hostname === '127.0.0.1' ||
-                                  window.location.hostname === '';
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                console.log('[CleaningManual] Fetch environment check:', {
+                    hostname: hostname,
+                    isLocalDev: isLocalDev,
+                    href: window.location.href
+                });
                 
                 // ローカル開発環境では直接パスを使用、本番環境ではresolvePathを使用
                 let apiUrl = isLocalDev ? '/api/cleaning-manual' : resolvePath('/api/cleaning-manual');
