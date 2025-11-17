@@ -408,45 +408,6 @@
     </div>
 
     <script>
-        // ベースパスを取得（GitHub Pages対応）
-        function getBasePath() {
-            // ローカル開発環境ではbaseタグを無視
-            const hostname = window.location.hostname;
-            const isLocalDev = hostname === 'localhost' || 
-                              hostname === '127.0.0.1' ||
-                              hostname === '';
-            
-            if (isLocalDev) {
-                console.log('[CleaningManualAdmin] Local development environment detected, using root path');
-                return '/';
-            }
-            
-            // GitHub Pagesなどの本番環境ではbaseタグを使用
-            const base = document.querySelector('base');
-            if (base && base.href) {
-                try {
-                    const url = new URL(base.href);
-                    const pathname = url.pathname;
-                    console.log('[CleaningManualAdmin] Using base tag path:', pathname);
-                    return pathname;
-                } catch (e) {
-                    const href = base.getAttribute('href') || '/';
-                    console.log('[CleaningManualAdmin] Using base tag href:', href);
-                    return href;
-                }
-            }
-            
-            // baseタグがない場合は、現在のパスから推測
-            const path = window.location.pathname;
-            if (path.includes('/misesapo/')) {
-                console.log('[CleaningManualAdmin] Detected /misesapo/ in path, using /misesapo/');
-                return '/misesapo/';
-            }
-            
-            console.log('[CleaningManualAdmin] No base tag found, using root path');
-            return '/';
-        }
-        
         // パスを解決（GitHub Pages対応）
         // baseタグを使用しないため、常に絶対URLを返す
         function resolvePath(path) {
