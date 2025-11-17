@@ -985,9 +985,15 @@
         function setHeaderLogoPath() {
             const logoImg = document.getElementById('header-logo-img');
             if (logoImg) {
-                const logoPath = resolvePath('/images/header-logo.jpg');
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                // ローカル開発環境では直接パスを使用、本番環境ではresolvePathを使用
+                const logoPath = isLocalDev ? '/images/header-logo.jpg' : resolvePath('/images/header-logo.jpg');
                 logoImg.src = logoPath;
-                console.log('[CleaningManual] Header logo path set to:', logoPath);
+                console.log('[CleaningManual] Header logo path set to:', logoPath, '(isLocalDev:', isLocalDev, ')');
             }
         }
         
