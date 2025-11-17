@@ -16,6 +16,40 @@ from urllib.parse import urlparse, parse_qs
 from io import BytesIO
 import threading
 
+# AWS S3設定（オプション）
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+    AWS_S3_BUCKET_NAME = os.getenv('AWS_S3_BUCKET_NAME')
+    AWS_S3_REGION = os.getenv('AWS_S3_REGION', 'ap-northeast-1')
+    
+    # boto3が利用可能で、環境変数が設定されている場合のみS3を使用
+    if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_S3_BUCKET_NAME:
+        try:
+            import boto3
+            s3_client = boto3.client(
+                's3',
+                aws_access_key_id=AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                region_name=AWS_S3_REGION
+            )
+            USE_S3 = True
+            print(f"[DevServer] AWS S3 configured: bucket={AWS_S3_BUCKET_NAME}, region={AWS_S3_REGION}")
+        except ImportError:
+            print("[DevServer] boto3 not installed. Install with: pip3 install boto3 python-dotenv")
+            USE_S3 = False
+            s3_client = None
+    else:
+        USE_S3 = False
+        s3_client = None
+        print("[DevServer] AWS S3 not configured. Using local storage.")
+except ImportError:
+    USE_S3 = False
+    s3_client = None
+    print("[DevServer] python-dotenv not installed. Install with: pip3 install python-dotenv")
+
 # プロジェクトのルートディレクトリ
 ROOT = Path(__file__).parent.parent
 SRC = ROOT / "src"
@@ -1117,16 +1151,45 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             # ファイル名を安全にする
             safe_filename = re.sub(r'[^a-zA-Z0-9._-]', '_', filename)
             
-            # 画像ディレクトリを作成
-            IMAGES_SERVICE_DIR.mkdir(parents=True, exist_ok=True)
+            # タイムスタンプ付きファイル名を生成
+            timestamp = int(datetime.datetime.now().timestamp() * 1000)
+            timestamped_filename = f"{timestamp}_{safe_filename}"
             
-            # ファイルを保存
-            file_path = IMAGES_SERVICE_DIR / safe_filename
+            # S3が利用可能な場合はS3にアップロード、そうでなければローカルに保存
+            if USE_S3 and s3_client:
+                try:
+                    # S3にアップロード
+                    s3_key = f"cleaning-manual-images/{timestamped_filename}"
+                    s3_client.put_object(
+                        Bucket=AWS_S3_BUCKET_NAME,
+                        Key=s3_key,
+                        Body=file_data,
+                        ContentType=file.type if hasattr(file, 'type') else 'image/png',
+                        ACL='public-read'  # パブリック読み取りを許可
+                    )
+                    
+                    # S3の公開URLを生成
+                    s3_url = f"https://{AWS_S3_BUCKET_NAME}.s3.{AWS_S3_REGION}.amazonaws.com/{s3_key}"
+                    
+                    self.send_json_response({
+                        'status': 'success',
+                        'message': '画像をS3にアップロードしました',
+                        'path': s3_url,
+                        'url': s3_url
+                    })
+                    return
+                except Exception as e:
+                    print(f"[DevServer] S3 upload failed: {e}", file=sys.stderr)
+                    # S3アップロードに失敗した場合はローカルにフォールバック
+            
+            # ローカルに保存（S3が利用できない場合、またはS3アップロードに失敗した場合）
+            IMAGES_SERVICE_DIR.mkdir(parents=True, exist_ok=True)
+            file_path = IMAGES_SERVICE_DIR / timestamped_filename
             with open(file_path, 'wb') as f:
                 f.write(file_data)
             
             # 相対パスを返す（public/からの相対パス）
-            relative_path = f"images-service/{safe_filename}"
+            relative_path = f"images-service/{timestamped_filename}"
             
             self.send_json_response({
                 'status': 'success',
