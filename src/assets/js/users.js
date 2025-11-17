@@ -100,6 +100,39 @@
       status: 'active',
       created_at: '2024-07-29T00:00:00Z',
       last_login_at: null
+    },
+    {
+      id: 8,
+      email: 'misesapolemuel@gmail.com',
+      passwordHash: 'c843ff42604c4693e4609a1820f50cd132c5128ab0bfcd27361452caac50b0c8', // SHA-256ハッシュ (Misesapo123)
+      role: 'staff',
+      name: '清掃員（レミュエル）',
+      employee_id: 'STF002',
+      status: 'active',
+      created_at: '2025-01-20T00:00:00Z',
+      last_login_at: null
+    },
+    {
+      id: 9,
+      email: 'misesapogabi@yahoo.com',
+      passwordHash: 'c843ff42604c4693e4609a1820f50cd132c5128ab0bfcd27361452caac50b0c8', // SHA-256ハッシュ (Misesapo123)
+      role: 'staff',
+      name: '清掃員（ガビ）',
+      employee_id: 'STF003',
+      status: 'active',
+      created_at: '2025-01-20T00:00:00Z',
+      last_login_at: null
+    },
+    {
+      id: 10,
+      email: 'misesapomatsuoka@yahoo.com',
+      passwordHash: 'c843ff42604c4693e4609a1820f50cd132c5128ab0bfcd27361452caac50b0c8', // SHA-256ハッシュ (Misesapo123)
+      role: 'staff',
+      name: '清掃員（松岡）',
+      employee_id: 'STF004',
+      status: 'active',
+      created_at: '2025-01-20T00:00:00Z',
+      last_login_at: null
     }
   ];
   
