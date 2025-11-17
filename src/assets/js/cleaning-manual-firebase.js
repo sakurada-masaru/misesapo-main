@@ -18,70 +18,67 @@
      * 認証チェック
      */
     async function checkAuth() {
-        return new Promise((resolve) => {
-            if (!window.FirebaseAuth) {
-                console.log('[CleaningManualFirebase] FirebaseAuth not available');
-                resolve({ authenticated: false, user: null, role: null });
-                return;
-            }
-            
-            // 現在のユーザーを直接取得
-            const currentUser = window.FirebaseAuth.currentUser;
-            
-            // onAuthStateChangedを使用して、認証状態の変更を監視
-            const unsubscribe = window.FirebaseAuth.onAuthStateChanged(async (user) => {
-                unsubscribe(); // 一度だけ実行するために解除
-                
-                if (!user) {
-                    console.log('[CleaningManualFirebase] No user authenticated');
-                    resolve({ authenticated: false, user: null, role: null });
-                    return;
-                }
-                
-                // ロールを取得
-                let role = 'customer';
-                try {
-                    const idTokenResult = await user.getIdTokenResult(true); // forceRefresh: true
-                    role = idTokenResult.claims.role || 'customer';
-                    console.log('[CleaningManualFirebase] Role from Custom Claims:', role);
-                } catch (error) {
-                    console.warn('[CleaningManualFirebase] Could not get custom claims:', error);
-                }
-                
-                // Custom Claimsにロールがない場合、または'customer'の場合、users.jsからロールを取得
-                if (role === 'customer' && window.Users && window.Users.findUserByEmail) {
-                    const userFromUsersJs = window.Users.findUserByEmail(user.email);
-                    if (userFromUsersJs && userFromUsersJs.role) {
-                        role = userFromUsersJs.role;
-                        console.log('[CleaningManualFirebase] Role from users.js:', role);
-                    }
-                }
-                
-                const isAuthenticated = ALLOWED_ROLES.includes(role);
-                console.log('[CleaningManualFirebase] Auth check result:', {
-                    email: user.email,
-                    role: role,
-                    authenticated: isAuthenticated,
-                    allowedRoles: ALLOWED_ROLES
+        if (!window.FirebaseAuth) {
+            console.log('[CleaningManualFirebase] FirebaseAuth not available');
+            return { authenticated: false, user: null, role: null };
+        }
+        
+        // 現在のユーザーを取得（既にログイン済みの場合）
+        let user = window.FirebaseAuth.currentUser;
+        
+        // ユーザーが取得できない場合、onAuthStateChangedを待つ
+        if (!user) {
+            user = await new Promise((resolve) => {
+                const unsubscribe = window.FirebaseAuth.onAuthStateChanged((authUser) => {
+                    unsubscribe();
+                    resolve(authUser);
                 });
                 
-                resolve({
-                    authenticated: isAuthenticated,
-                    user: user,
-                    role: role
-                });
-            });
-            
-            // 既にログイン済みの場合、すぐにチェック
-            if (currentUser) {
-                // onAuthStateChangedは非同期で呼ばれるため、少し待つ
+                // タイムアウト（3秒）
                 setTimeout(() => {
-                    if (currentUser === window.FirebaseAuth.currentUser) {
-                        // まだ解決されていない場合のみ処理
-                    }
-                }, 100);
+                    unsubscribe();
+                    resolve(null);
+                }, 3000);
+            });
+        }
+        
+        if (!user) {
+            console.log('[CleaningManualFirebase] No user authenticated');
+            return { authenticated: false, user: null, role: null };
+        }
+        
+        // ロールを取得
+        let role = 'customer';
+        try {
+            const idTokenResult = await user.getIdTokenResult(true); // forceRefresh: true
+            role = idTokenResult.claims.role || 'customer';
+            console.log('[CleaningManualFirebase] Role from Custom Claims:', role);
+        } catch (error) {
+            console.warn('[CleaningManualFirebase] Could not get custom claims:', error);
+        }
+        
+        // Custom Claimsにロールがない場合、または'customer'の場合、users.jsからロールを取得
+        if (role === 'customer' && window.Users && window.Users.findUserByEmail) {
+            const userFromUsersJs = window.Users.findUserByEmail(user.email);
+            if (userFromUsersJs && userFromUsersJs.role) {
+                role = userFromUsersJs.role;
+                console.log('[CleaningManualFirebase] Role from users.js:', role, 'for email:', user.email);
             }
+        }
+        
+        const isAuthenticated = ALLOWED_ROLES.includes(role);
+        console.log('[CleaningManualFirebase] Auth check result:', {
+            email: user.email,
+            role: role,
+            authenticated: isAuthenticated,
+            allowedRoles: ALLOWED_ROLES
         });
+        
+        return {
+            authenticated: isAuthenticated,
+            user: user,
+            role: role
+        };
     }
     
     /**
