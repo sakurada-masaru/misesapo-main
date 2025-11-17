@@ -725,6 +725,8 @@
 
         // 編集モーダルを開く
         function openEditModal(category, index) {
+            console.log('[CleaningManualAdmin] openEditModal called:', { category, index });
+            
             // カテゴリが'all'の場合は'kitchen'に変更
             if (category === 'all') {
                 category = 'kitchen';
@@ -732,7 +734,23 @@
 
             // 新規追加の場合（index === -1）
             const isNew = index === -1;
-            const item = isNew ? null : (manualData[category] && manualData[category][index]);
+            
+            // データ構造を確認
+            console.log('[CleaningManualAdmin] manualData:', manualData);
+            console.log('[CleaningManualAdmin] manualData[category]:', manualData[category]);
+            
+            // 既存項目を取得
+            let item = null;
+            if (!isNew) {
+                if (manualData[category] && Array.isArray(manualData[category]) && manualData[category][index]) {
+                    item = manualData[category][index];
+                    console.log('[CleaningManualAdmin] Found item:', item);
+                } else {
+                    console.warn('[CleaningManualAdmin] Item not found:', { category, index, arrayLength: manualData[category]?.length });
+                    showMessage('項目が見つかりませんでした', 'error');
+                    return;
+                }
+            }
 
             document.getElementById('edit-category').value = category;
             document.getElementById('edit-index').value = index;
