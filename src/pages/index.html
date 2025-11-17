@@ -1907,6 +1907,11 @@
                     return path.startsWith('/') ? path : '/' + path;
                 }
                 
+                // 既に/misesapo/で始まるパスはそのまま返す（二重適用を防ぐ）
+                if (path.startsWith('/misesapo/')) {
+                    return path;
+                }
+                
                 const basePath = getBasePath();
                 if (path.startsWith('/')) {
                     return basePath === '/' ? path : basePath.slice(0, -1) + path;
@@ -2029,7 +2034,8 @@
                 link.setAttribute('data-service-id', item.id);
                 
                 const img = document.createElement('img');
-                img.src = item.image ? resolvePath(item.image) : resolvePath('/images/service-300x200.svg');
+                // item.imageは既にloadServiceItemsでresolvePathが適用されているので、そのまま使用
+                img.src = item.image || resolvePath('/images/service-300x200.svg');
                 img.alt = item.title || '';
                 img.loading = 'lazy';
                 img.decoding = 'async';
@@ -2040,7 +2046,7 @@
                 img.style.display = 'block';
                 
                 img.onerror = function() {
-                    this.src = '/images/service-300x200.svg';
+                    this.src = resolvePath('/images/service-300x200.svg');
                     this.onerror = null; // 無限ループを防ぐ
                 };
                 
