@@ -5,21 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>ミセサポ</title>
         <script>
-            // baseタグを条件付きで設定（ローカル開発環境では設定しない）
-            (function() {
-                const hostname = window.location.hostname;
-                const isLocalDev = hostname === 'localhost' || 
-                                  hostname === '127.0.0.1' ||
-                                  hostname === '';
-                
-                if (!isLocalDev) {
-                    // GitHub Pagesなどの本番環境でのみbaseタグを設定
-                    const baseTag = document.createElement('base');
-                    baseTag.id = 'base-tag';
-                    baseTag.href = '/misesapo/';
-                    document.head.insertBefore(baseTag, document.head.firstChild);
-                }
-            })();
+            // baseタグは使用しない（すべてのパスを絶対URLで解決する）
+            // baseタグがあると、絶対URLも相対パスとして解釈される可能性があるため
         </script>
         <!--GoogleFonts(Noto Sans JP)-->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1437,18 +1424,16 @@
                     return path.startsWith('/') ? path : '/' + path;
                 }
                 
-                // 既に/misesapo/で始まるパスはそのまま絶対URLに変換
-                if (path.startsWith('/misesapo/')) {
-                    return window.location.origin + path;
-                }
-                
-                // GitHub Pagesでは/misesapo/を追加して絶対URLを返す
+                // GitHub Pagesでは/misesapo/を追加
                 let resolvedPath;
-                if (path.startsWith('/')) {
+                if (path.startsWith('/misesapo/')) {
+                    resolvedPath = path;
+                } else if (path.startsWith('/')) {
                     resolvedPath = '/misesapo' + path;
                 } else {
                     resolvedPath = '/misesapo/' + path;
                 }
+                
                 return window.location.origin + resolvedPath;
             };
             
@@ -1903,36 +1888,8 @@
         (function() {
             'use strict';
             
-            // ベースパスを取得（GitHub Pages対応）
-            function getBasePath() {
-                const hostname = window.location.hostname;
-                const isLocalDev = hostname === 'localhost' || 
-                                  hostname === '127.0.0.1' ||
-                                  hostname === '';
-                
-                if (isLocalDev) {
-                    return '/';
-                }
-                
-                const base = document.querySelector('base');
-                if (base && base.href) {
-                    try {
-                        const url = new URL(base.href);
-                        return url.pathname;
-                    } catch (e) {
-                        return base.getAttribute('href') || '/';
-                    }
-                }
-                
-                const path = window.location.pathname;
-                if (path.includes('/misesapo/')) {
-                    return '/misesapo/';
-                }
-                return '/';
-            }
-            
-            // パスを解決（ベースパス付き）
-            // baseタグの影響を受けないように常に絶対URLを返す
+            // パスを解決（GitHub Pages対応）
+            // baseタグを使用しないため、常に絶対URLを返す
             function resolvePath(path) {
                 if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
                     return path;
@@ -1947,20 +1904,20 @@
                     return path.startsWith('/') ? path : '/' + path;
                 }
                 
-                // 既に/misesapo/で始まるパスはそのまま絶対URLに変換
-                if (path.startsWith('/misesapo/')) {
-                    return window.location.origin + path;
-                }
-                
-                const basePath = getBasePath();
+                // GitHub Pagesでは/misesapo/を追加
                 let resolvedPath;
-                if (path.startsWith('/')) {
-                    resolvedPath = basePath === '/' ? path : basePath.slice(0, -1) + path;
+                if (path.startsWith('/misesapo/')) {
+                    // 既に/misesapo/で始まる場合はそのまま使用
+                    resolvedPath = path;
+                } else if (path.startsWith('/')) {
+                    // /で始まる場合は/misesapo/を追加
+                    resolvedPath = '/misesapo' + path;
                 } else {
-                    resolvedPath = basePath === '/' ? '/' + path : basePath + path;
+                    // 相対パスの場合は/misesapo/を追加
+                    resolvedPath = '/misesapo/' + path;
                 }
                 
-                // 常に絶対URLを返す（baseタグの影響を受けないようにする）
+                // 常に絶対URLを返す
                 return window.location.origin + resolvedPath;
             }
             
