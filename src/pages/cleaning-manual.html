@@ -462,39 +462,54 @@
                         total: manualData.length
                     });
                     
+                    // データが空の場合はエラー
+                    if (manualData.length === 0) {
+                        throw new Error('JSONファイルにデータがありません');
+                    }
+                    
                     // データ読み込み後に初期化
                     initializeManual();
                 } else {
-                    console.error('[CleaningManual] データの読み込みに失敗しました');
-                    // エラーメッセージを表示
-                    const contentDiv = document.getElementById('content');
-                    if (contentDiv) {
-                        contentDiv.innerHTML = `
-                            <div style="text-align: center; padding: 40px;">
-                                <h2>データの読み込みに失敗しました</h2>
-                                <p>Firestoreにデータが登録されていない可能性があります。</p>
-                                <p style="margin-top: 20px;">
-                                    <a href="cleaning-manual-admin.html" style="color: #ff008c; text-decoration: underline;">
-                                        管理画面で初期データをインポートしてください
-                                    </a>
-                                </p>
-                            </div>
-                        `;
-                    }
+                    const status = response ? response.status : 'no response';
+                    const statusText = response ? response.statusText : 'no response';
+                    const url = response ? response.url : 'unknown';
+                    console.error('[CleaningManual] データの読み込みに失敗しました:', {
+                        status,
+                        statusText,
+                        url
+                    });
+                    throw new Error(`データの読み込みに失敗しました (Status: ${status}, URL: ${url})`);
                 }
             } catch (error) {
                 console.error('[CleaningManual] データの読み込みエラー:', error);
+                console.error('[CleaningManual] Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
+                
                 // エラーメッセージを表示
                 const contentDiv = document.getElementById('content');
                 if (contentDiv) {
+                    const errorMessage = error.message || '不明なエラーが発生しました';
                     contentDiv.innerHTML = `
-                        <div style="text-align: center; padding: 40px;">
-                            <h2>データの読み込みエラー</h2>
-                            <p>${error.message}</p>
-                            <p style="margin-top: 20px;">
-                                <a href="cleaning-manual-admin.html" style="color: #ff008c; text-decoration: underline;">
-                                    管理画面で初期データをインポートしてください
-                                </a>
+                        <div style="text-align: center; padding: 40px; max-width: 600px; margin: 0 auto;">
+                            <h2 style="color: #ff008c;">データの読み込みエラー</h2>
+                            <p style="margin: 20px 0; color: #666;">${errorMessage}</p>
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: left;">
+                                <h3 style="font-size: 16px; margin-top: 0;">対処方法:</h3>
+                                <ol style="margin: 0; padding-left: 20px;">
+                                    <li style="margin: 10px 0;">
+                                        <a href="cleaning-manual-admin.html" style="color: #ff008c; text-decoration: underline; font-weight: bold;">
+                                            管理画面で初期データをインポートしてください
+                                        </a>
+                                    </li>
+                                    <li style="margin: 10px 0;">ブラウザのコンソール（F12）でエラーの詳細を確認してください</li>
+                                    <li style="margin: 10px 0;">Firebaseが正しく設定されているか確認してください</li>
+                                </ol>
+                            </div>
+                            <p style="margin-top: 20px; font-size: 14px; color: #999;">
+                                エラー詳細: ${errorMessage}
                             </p>
                         </div>
                     `;
