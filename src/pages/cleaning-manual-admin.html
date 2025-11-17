@@ -3,8 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <base href="/misesapo/" />
     <title>清掃マニュアル管理画面 - MISESAPO</title>
+    <script>
+        // baseタグを条件付きで設定（ローカル開発環境では設定しない）
+        (function() {
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' || 
+                              hostname === '127.0.0.1' ||
+                              hostname === '';
+            
+            console.log('[CleaningManualAdmin] Environment check:', {
+                hostname: hostname,
+                isLocalDev: isLocalDev,
+                href: window.location.href
+            });
+            
+            if (!isLocalDev) {
+                // GitHub Pagesなどの本番環境でのみbaseタグを設定
+                const baseTag = document.createElement('base');
+                baseTag.id = 'base-tag';
+                baseTag.href = '/misesapo/';
+                document.head.insertBefore(baseTag, document.head.firstChild);
+                console.log('[CleaningManualAdmin] Base tag set to /misesapo/ for production');
+            } else {
+                console.log('[CleaningManualAdmin] Local development environment detected, base tag not set');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase SDK -->
@@ -407,19 +432,40 @@
     <script>
         // ベースパスを取得（GitHub Pages対応）
         function getBasePath() {
+            // ローカル開発環境ではbaseタグを無視
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' || 
+                              hostname === '127.0.0.1' ||
+                              hostname === '';
+            
+            if (isLocalDev) {
+                console.log('[CleaningManualAdmin] Local development environment detected, using root path');
+                return '/';
+            }
+            
+            // GitHub Pagesなどの本番環境ではbaseタグを使用
             const base = document.querySelector('base');
             if (base && base.href) {
                 try {
                     const url = new URL(base.href);
-                    return url.pathname;
+                    const pathname = url.pathname;
+                    console.log('[CleaningManualAdmin] Using base tag path:', pathname);
+                    return pathname;
                 } catch (e) {
-                    return base.getAttribute('href') || '/';
+                    const href = base.getAttribute('href') || '/';
+                    console.log('[CleaningManualAdmin] Using base tag href:', href);
+                    return href;
                 }
             }
+            
+            // baseタグがない場合は、現在のパスから推測
             const path = window.location.pathname;
             if (path.includes('/misesapo/')) {
+                console.log('[CleaningManualAdmin] Detected /misesapo/ in path, using /misesapo/');
                 return '/misesapo/';
             }
+            
+            console.log('[CleaningManualAdmin] No base tag found, using root path');
             return '/';
         }
         
@@ -428,11 +474,39 @@
             if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
                 return path;
             }
-            const basePath = getBasePath();
-            if (path.startsWith('/')) {
-                return basePath === '/' ? path : basePath.slice(0, -1) + path;
+            
+            // ローカル開発環境ではbaseタグを無視
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' || 
+                              hostname === '127.0.0.1' ||
+                              hostname === '';
+            
+            if (isLocalDev) {
+                // ローカル開発環境では絶対パスをそのまま返す
+                if (path.startsWith('/')) {
+                    console.log('[CleaningManualAdmin] resolvePath (local):', path);
+                    return path;
+                }
+                // 相対パスの場合は/を付ける
+                const resolved = '/' + path;
+                console.log('[CleaningManualAdmin] resolvePath (local, relative):', resolved);
+                return resolved;
             }
-            return basePath === '/' ? '/' + path : basePath + path;
+            
+            // GitHub Pagesなどの本番環境ではbaseタグを使用
+            const basePath = getBasePath();
+            console.log('[CleaningManualAdmin] resolvePath:', { path, basePath });
+            
+            if (path.startsWith('/')) {
+                // 絶対パスの場合
+                const resolved = basePath === '/' ? path : basePath.slice(0, -1) + path;
+                console.log('[CleaningManualAdmin] resolved absolute path:', resolved);
+                return resolved;
+            }
+            // 相対パスの場合
+            const resolved = basePath === '/' ? '/' + path : basePath + path;
+            console.log('[CleaningManualAdmin] resolved relative path:', resolved);
+            return resolved;
         }
         
         let manualData = {
