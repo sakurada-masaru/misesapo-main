@@ -7,8 +7,13 @@
     <title>MISESAPO 清掃基準マニュアル</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
+    <script src="/js/role_config.js"></script>
+    <script src="/js/users.js"></script>
+    <script src="/js/auth.js"></script>
     <script src="/js/cleaning-manual-firebase.js"></script>
     <!--GoogleFonts(Noto Sans JP)-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -491,6 +496,11 @@
                                 <p><span class="qa-question">${data.qa2q}</span></p>
                                 <p class="qa-answer">${data.qa2a}</p>
                             </div>
+                            <div class="edit-button-container" data-category-key="${getCategoryKey(data.category)}" data-index="${index}" style="display: none; margin-top: 30px; text-align: center; padding: 20px; border-top: 2px solid #eee;">
+                                <button onclick="openEditModalInline('${getCategoryKey(data.category)}', ${index})" class="edit-button" style="background: #ff008c; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold;">
+                                    <i class="fas fa-edit"></i> 編集
+                                </button>
+                            </div>
                         </div>
                     `;
 
@@ -714,6 +724,71 @@
             // 初期化
             createManualPages();
             showIndex();
+            
+            // 認証チェックして編集ボタンを表示
+            checkAuthAndShowEditButtons();
+        }
+        
+        // 認証チェックして編集ボタンを表示
+        async function checkAuthAndShowEditButtons() {
+            if (!window.CleaningManualFirebase || !window.FirebaseAuth) {
+                return;
+            }
+            
+            try {
+                const authResult = await window.CleaningManualFirebase.checkAuth();
+                if (authResult.authenticated) {
+                    // 認証済みユーザーのみ編集ボタンを表示
+                    document.querySelectorAll('.edit-button-container').forEach(container => {
+                        container.style.display = 'block';
+                    });
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+        }
+        
+        // インライン編集モーダルを開く
+        async function openEditModalInline(categoryKey, index) {
+            // 認証チェック
+            if (!window.CleaningManualFirebase || !window.FirebaseAuth) {
+                alert('Firebaseが利用できません。管理画面から編集してください。');
+                return;
+            }
+            
+            const authResult = await window.CleaningManualFirebase.checkAuth();
+            if (!authResult.authenticated) {
+                alert('編集するにはログインが必要です。');
+                window.location.href = 'signin.html';
+                return;
+            }
+            
+            // カテゴリ名を取得
+            const categoryMap = {
+                'kitchen': '厨房設備',
+                'aircon': '空調設備',
+                'floor': 'フロア',
+                'other': 'その他'
+            };
+            const categoryName = categoryMap[categoryKey] || 'その他';
+            
+            // データを取得
+            const categoryData = {
+                'kitchen': kitchenData,
+                'aircon': airconData,
+                'floor': floorData,
+                'other': otherData
+            }[categoryKey] || [];
+            
+            const item = categoryData[index];
+            if (!item) {
+                alert('項目が見つかりませんでした。');
+                return;
+            }
+            
+            // 編集モーダルを開く（管理画面と同じ機能を使用）
+            // 一時的に管理画面の編集機能を呼び出すか、同じモーダルを実装
+            window.location.href = `cleaning-manual-admin.html?category=${categoryKey}&index=${index}`;
         }
         
         // ページ読み込み時にデータを読み込む
