@@ -1076,9 +1076,18 @@
 
             try {
                 // JSONファイルから初期データを読み込む
-                const response = await fetch(resolvePath('/data/cleaning-manual.json'));
+                // ローカル開発環境では直接パスを使用、本番環境ではresolvePathを使用
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                const jsonUrl = isLocalDev ? '/data/cleaning-manual.json' : resolvePath('/data/cleaning-manual.json');
+                console.log('[CleaningManualAdmin] Importing initial data from:', jsonUrl, '(isLocalDev:', isLocalDev, ')');
+                
+                const response = await fetch(jsonUrl);
                 if (!response.ok) {
-                    throw new Error('初期データファイルが見つかりません');
+                    throw new Error(`初期データファイルが見つかりません (Status: ${response.status}, URL: ${response.url})`);
                 }
 
                 const initialData = await response.json();
