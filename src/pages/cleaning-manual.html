@@ -3,21 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <base id="base-tag" href="/misesapo/" />
     <title>MISESAPO 清掃基準マニュアル</title>
     <script>
-        // baseタグをローカル開発環境で無効化（即座に実行）
+        // baseタグを条件付きで設定（ローカル開発環境では設定しない）
         (function() {
             const isLocalDev = window.location.hostname === 'localhost' || 
                               window.location.hostname === '127.0.0.1' ||
                               window.location.hostname === '';
             
-            if (isLocalDev) {
-                const baseTag = document.getElementById('base-tag');
-                if (baseTag) {
-                    baseTag.href = '/';
-                    console.log('[CleaningManual] Base tag set to / for local development (immediate)');
-                }
+            if (!isLocalDev) {
+                // GitHub Pagesなどの本番環境でのみbaseタグを設定
+                const baseTag = document.createElement('base');
+                baseTag.id = 'base-tag';
+                baseTag.href = '/misesapo/';
+                document.head.insertBefore(baseTag, document.head.firstChild);
+                console.log('[CleaningManual] Base tag set to /misesapo/ for production');
+            } else {
+                console.log('[CleaningManual] Local development environment detected, base tag not set');
             }
         })();
     </script>
@@ -487,8 +489,13 @@
                 
                 // まずAPIエンドポイントを試す（開発環境）
                 let response = null;
-                let apiUrl = resolvePath('/api/cleaning-manual');
-                console.log('[CleaningManual] Trying API endpoint:', apiUrl);
+                const isLocalDev = window.location.hostname === 'localhost' || 
+                                  window.location.hostname === '127.0.0.1' ||
+                                  window.location.hostname === '';
+                
+                // ローカル開発環境では直接パスを使用、本番環境ではresolvePathを使用
+                let apiUrl = isLocalDev ? '/api/cleaning-manual' : resolvePath('/api/cleaning-manual');
+                console.log('[CleaningManual] Trying API endpoint:', apiUrl, '(isLocalDev:', isLocalDev, ')');
                 
                 try {
                     response = await fetch(apiUrl);
@@ -504,8 +511,8 @@
                 
                 if (!response || !response.ok) {
                     // APIが利用できない場合（GitHub Pagesなど）、静的ファイルを読み込む
-                    const jsonUrl = resolvePath('/data/cleaning-manual.json');
-                    console.log('[CleaningManual] Trying JSON file:', jsonUrl);
+                    const jsonUrl = isLocalDev ? '/data/cleaning-manual.json' : resolvePath('/data/cleaning-manual.json');
+                    console.log('[CleaningManual] Trying JSON file:', jsonUrl, '(isLocalDev:', isLocalDev, ')');
                     try {
                         response = await fetch(jsonUrl);
                         console.log('[CleaningManual] JSON response:', {
