@@ -631,6 +631,27 @@
             const container = document.getElementById('items-list');
             let items = [];
 
+            // データ構造を確認
+            console.log('[CleaningManualAdmin] manualData:', manualData);
+            console.log('[CleaningManualAdmin] currentCategory:', currentCategory);
+
+            // manualDataが正しい構造でない場合、初期化
+            if (!manualData || typeof manualData !== 'object') {
+                console.warn('[CleaningManualAdmin] manualData is invalid, initializing...');
+                manualData = {
+                    kitchen: [],
+                    aircon: [],
+                    floor: [],
+                    other: []
+                };
+            }
+
+            // 各カテゴリが配列でない場合、初期化
+            if (!Array.isArray(manualData.kitchen)) manualData.kitchen = [];
+            if (!Array.isArray(manualData.aircon)) manualData.aircon = [];
+            if (!Array.isArray(manualData.floor)) manualData.floor = [];
+            if (!Array.isArray(manualData.other)) manualData.other = [];
+
             if (currentCategory === 'all') {
                 items = [
                     ...manualData.kitchen.map((item, idx) => ({ ...item, category: 'kitchen', index: idx })),
@@ -639,28 +660,47 @@
                     ...manualData.other.map((item, idx) => ({ ...item, category: 'other', index: idx }))
                 ];
             } else {
-                items = manualData[currentCategory].map((item, idx) => ({
+                items = (manualData[currentCategory] || []).map((item, idx) => ({
                     ...item,
                     category: currentCategory,
                     index: idx
                 }));
             }
 
+            console.log('[CleaningManualAdmin] Total items:', items.length);
+
             if (items.length === 0) {
-                container.innerHTML = '<div class="loading">項目がありません</div>';
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <p style="font-size: 18px; color: #666; margin-bottom: 20px;">項目がありません</p>
+                        <button onclick="openEditModal('${currentCategory === 'all' ? 'kitchen' : currentCategory}', -1)" class="btn btn-primary" style="padding: 12px 24px; font-size: 16px;">
+                            <i class="fas fa-plus"></i> 新規項目を追加
+                        </button>
+                        <p style="margin-top: 20px; font-size: 14px; color: #999;">
+                            または、<a href="#" onclick="importInitialData(); return false;" style="color: #ff008c; text-decoration: underline;">初期データをインポート</a>
+                        </p>
+                    </div>
+                `;
                 return;
             }
 
-            container.innerHTML = items.map(item => `
-                <div class="item-card" onclick="openEditModal('${item.category}', ${item.index})">
-                    <h3>${item.title}</h3>
-                    <div class="item-preview">
-                        <strong>カテゴリ:</strong> ${getCategoryName(item.category)}<br>
-                        <strong>リスク:</strong> ${item.risk}<br>
-                        <strong>ダメな例:</strong> ${item.bad.substring(0, 50)}...
-                    </div>
+            container.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <button onclick="openEditModal('${currentCategory === 'all' ? 'kitchen' : currentCategory}', -1)" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> 新規項目を追加
+                    </button>
                 </div>
-            `).join('');
+                ${items.map(item => `
+                    <div class="item-card" onclick="openEditModal('${item.category}', ${item.index})">
+                        <h3>${item.title || 'タイトルなし'}</h3>
+                        <div class="item-preview">
+                            <strong>カテゴリ:</strong> ${getCategoryName(item.category)}<br>
+                            <strong>リスク:</strong> ${item.risk || '未設定'}<br>
+                            <strong>ダメな例:</strong> ${item.bad ? item.bad.substring(0, 50) + '...' : '未設定'}
+                        </div>
+                    </div>
+                `).join('')}
+            `;
         }
 
         function getCategoryName(category) {
@@ -685,24 +725,38 @@
 
         // 編集モーダルを開く
         function openEditModal(category, index) {
-            const item = manualData[category][index];
-            if (!item) return;
+            // カテゴリが'all'の場合は'kitchen'に変更
+            if (category === 'all') {
+                category = 'kitchen';
+            }
+
+            // 新規追加の場合（index === -1）
+            const isNew = index === -1;
+            const item = isNew ? null : (manualData[category] && manualData[category][index]);
 
             document.getElementById('edit-category').value = category;
             document.getElementById('edit-index').value = index;
-            document.getElementById('edit-title').value = item.title || '';
-            document.getElementById('edit-risk').value = item.risk || '';
-            document.getElementById('edit-bad').value = item.bad || '';
-            document.getElementById('edit-badImage').value = item.badImage || '';
-            document.getElementById('edit-good').value = item.good || '';
-            document.getElementById('edit-goodImage').value = item.goodImage || '';
-            document.getElementById('edit-qa1q').value = item.qa1q || '';
-            document.getElementById('edit-qa1a').value = item.qa1a || '';
-            document.getElementById('edit-qa2q').value = item.qa2q || '';
-            document.getElementById('edit-qa2a').value = item.qa2a || '';
+            
+            // モーダルのタイトルを変更
+            const modalTitle = document.querySelector('#edit-modal h2');
+            if (modalTitle) {
+                modalTitle.textContent = isNew ? '新規項目を追加' : '項目を編集';
+            }
 
-            updateImagePreview('badImage', item.badImage);
-            updateImagePreview('goodImage', item.goodImage);
+            // 既存項目の場合は値を設定、新規の場合は空
+            document.getElementById('edit-title').value = item ? (item.title || '') : '';
+            document.getElementById('edit-risk').value = item ? (item.risk || '') : '';
+            document.getElementById('edit-bad').value = item ? (item.bad || '') : '';
+            document.getElementById('edit-badImage').value = item ? (item.badImage || '') : '';
+            document.getElementById('edit-good').value = item ? (item.good || '') : '';
+            document.getElementById('edit-goodImage').value = item ? (item.goodImage || '') : '';
+            document.getElementById('edit-qa1q').value = item ? (item.qa1q || '') : '';
+            document.getElementById('edit-qa1a').value = item ? (item.qa1a || '') : '';
+            document.getElementById('edit-qa2q').value = item ? (item.qa2q || '') : '';
+            document.getElementById('edit-qa2a').value = item ? (item.qa2a || '') : '';
+
+            updateImagePreview('badImage', item ? item.badImage : '');
+            updateImagePreview('goodImage', item ? item.goodImage : '');
 
             document.getElementById('edit-modal').classList.add('active');
         }
@@ -787,6 +841,7 @@
             
             const category = document.getElementById('edit-category').value;
             const index = parseInt(document.getElementById('edit-index').value);
+            const isNew = index === -1;
 
             const updatedItem = {
                 title: document.getElementById('edit-title').value,
@@ -802,7 +857,17 @@
                 qa2a: document.getElementById('edit-qa2a').value
             };
 
-            manualData[category][index] = updatedItem;
+            // カテゴリが存在しない場合は初期化
+            if (!manualData[category]) {
+                manualData[category] = [];
+            }
+
+            // 新規追加の場合はpush、既存の場合は更新
+            if (isNew) {
+                manualData[category].push(updatedItem);
+            } else {
+                manualData[category][index] = updatedItem;
+            }
 
             try {
                 await window.CleaningManualFirebase.saveDataToFirestore(manualData, true);
@@ -821,6 +886,7 @@
 
             const category = document.getElementById('edit-category').value;
             const index = parseInt(document.getElementById('edit-index').value);
+            const isNew = index === -1;
 
             const updatedItem = {
                 title: document.getElementById('edit-title').value,
@@ -836,7 +902,17 @@
                 qa2a: document.getElementById('edit-qa2a').value
             };
 
-            manualData[category][index] = updatedItem;
+            // カテゴリが存在しない場合は初期化
+            if (!manualData[category]) {
+                manualData[category] = [];
+            }
+
+            // 新規追加の場合はpush、既存の場合は更新
+            if (isNew) {
+                manualData[category].push(updatedItem);
+            } else {
+                manualData[category][index] = updatedItem;
+            }
 
             try {
                 // Firebaseが利用可能な場合はFirestoreに保存
@@ -887,6 +963,54 @@
         window.applyDraft = applyDraft;
         window.discardDraft = discardDraft;
         
+        // 初期データをインポート
+        async function importInitialData() {
+            if (!confirm('初期データをインポートしますか？既存のデータは上書きされます。')) {
+                return;
+            }
+
+            try {
+                // JSONファイルから初期データを読み込む
+                const response = await fetch(resolvePath('/data/cleaning-manual.json'));
+                if (!response.ok) {
+                    throw new Error('初期データファイルが見つかりません');
+                }
+
+                const initialData = await response.json();
+                
+                // Firebaseが利用可能な場合はFirestoreに保存
+                if (isFirebaseAvailable()) {
+                    await window.CleaningManualFirebase.saveDataToFirestore(initialData, false);
+                    showMessage('初期データをインポートしました（確定保存）', 'success');
+                } else if (isDevelopmentServer()) {
+                    // 開発サーバーの場合はAPI経由で保存
+                    const saveResponse = await fetch(resolvePath('/api/cleaning-manual'), {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(initialData)
+                    });
+
+                    if (saveResponse.ok) {
+                        showMessage('初期データをインポートしました', 'success');
+                    } else {
+                        throw new Error('保存に失敗しました');
+                    }
+                } else {
+                    showMessage('⚠️ インポートにはFirebaseまたは開発サーバーが必要です。', 'error');
+                    return;
+                }
+
+                // データを再読み込み
+                manualData = initialData;
+                renderItems();
+            } catch (error) {
+                console.error('Import error:', error);
+                showMessage('初期データのインポートエラー: ' + error.message, 'error');
+            }
+        }
+
         // 初期化
         (async function() {
             const authOk = await initAuth();
