@@ -2202,6 +2202,26 @@
                 }
             }
             
+            // 画像パスを設定（GitHub Pages対応）
+            function setImagePaths() {
+                const normalHeaderLogo = document.getElementById('normal-header-logo-img');
+                const cosmeticLogo = document.getElementById('cosmetic-logo-img');
+                
+                if (normalHeaderLogo) {
+                    normalHeaderLogo.src = resolvePath('/images-material/logo_144x144.png');
+                    normalHeaderLogo.onerror = function() {
+                        this.style.display = 'none';
+                    };
+                }
+                
+                if (cosmeticLogo) {
+                    cosmeticLogo.src = resolvePath('/images-material/logo_ver1-pk.png');
+                    cosmeticLogo.onerror = function() {
+                        this.style.display = 'none';
+                    };
+                }
+            }
+            
             function init() {
                 // カテゴリボタンのイベントリスナー
                 wrapper.querySelectorAll('.misesapo-category-btn').forEach(btn => {
@@ -2209,6 +2229,9 @@
                         switchCategory(btn.dataset.category);
                     });
                 });
+                
+                // 画像パスを設定
+                setImagePaths();
                 
                 // データを読み込んで初期表示
                 loadServiceItems().then(() => {
