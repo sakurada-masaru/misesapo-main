@@ -394,86 +394,37 @@
     </footer>
 
     <script>
-        // ベースパスを取得（GitHub Pages対応）
-        function getBasePath() {
-            // ローカル開発環境ではbaseタグを無視
-            const isLocalDev = window.location.hostname === 'localhost' || 
-                              window.location.hostname === '127.0.0.1' ||
-                              window.location.hostname === '';
-            
-            if (isLocalDev) {
-                console.log('[CleaningManual] Local development environment detected, using root path');
-                return '/';
-            }
-            
-            // GitHub Pagesなどの本番環境ではbaseタグを使用
-            const base = document.querySelector('base');
-            if (base && base.href) {
-                try {
-                    const url = new URL(base.href);
-                    const pathname = url.pathname;
-                    console.log('[CleaningManual] Using base tag path:', pathname);
-                    return pathname;
-                } catch (e) {
-                    const href = base.getAttribute('href') || '/';
-                    console.log('[CleaningManual] Using base tag href:', href);
-                    return href;
-                }
-            }
-            
-            // baseタグがない場合は、現在のパスから推測
-            const path = window.location.pathname;
-            if (path.includes('/misesapo/')) {
-                console.log('[CleaningManual] Detected /misesapo/ in path, using /misesapo/');
-                return '/misesapo/';
-            }
-            
-            console.log('[CleaningManual] No base tag found, using root path');
-            return '/';
-        }
-        
-        // パスを解決（ベースパス付き）
+        // パスを解決（GitHub Pages対応）
+        // baseタグを使用しないため、常に絶対URLを返す
         function resolvePath(path) {
             if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
                 return path;
             }
             
-            // ローカル開発環境ではbaseタグを無視
-            const isLocalDev = window.location.hostname === 'localhost' || 
-                              window.location.hostname === '127.0.0.1' ||
-                              window.location.hostname === '';
+            const hostname = window.location.hostname;
+            const isLocalDev = hostname === 'localhost' || 
+                              hostname === '127.0.0.1' ||
+                              hostname === '';
             
             if (isLocalDev) {
-                // ローカル開発環境では絶対パスをそのまま返す
-                if (path.startsWith('/')) {
-                    console.log('[CleaningManual] resolvePath (local):', path);
-                    return path;
-                }
-                // 相対パスの場合は/を付ける
-                const resolved = '/' + path;
-                console.log('[CleaningManual] resolvePath (local, relative):', resolved);
-                return resolved;
+                return path.startsWith('/') ? path : '/' + path;
             }
             
-            // 既に/misesapo/で始まるパスはそのまま返す（二重適用を防ぐ）
+            // GitHub Pagesでは/misesapo/を追加
+            let resolvedPath;
             if (path.startsWith('/misesapo/')) {
-                return path;
+                // 既に/misesapo/で始まる場合はそのまま使用
+                resolvedPath = path;
+            } else if (path.startsWith('/')) {
+                // /で始まる場合は/misesapo/を追加
+                resolvedPath = '/misesapo' + path;
+            } else {
+                // 相対パスの場合は/misesapo/を追加
+                resolvedPath = '/misesapo/' + path;
             }
             
-            // GitHub Pagesなどの本番環境ではbaseタグを使用
-            const basePath = getBasePath();
-            console.log('[CleaningManual] resolvePath:', { path, basePath });
-            
-            if (path.startsWith('/')) {
-                // 絶対パスの場合
-                const resolved = basePath === '/' ? path : basePath.slice(0, -1) + path;
-                console.log('[CleaningManual] resolved absolute path:', resolved);
-                return resolved;
-            }
-            // 相対パスの場合
-            const resolved = basePath === '/' ? '/' + path : basePath + path;
-            console.log('[CleaningManual] resolved relative path:', resolved);
-            return resolved;
+            // 常に絶対URLを返す
+            return window.location.origin + resolvedPath;
         }
         
         // データをJSONファイルから読み込む（GitHub Pages対応）
@@ -701,11 +652,7 @@
                                     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
                                         return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" /></div>`;
                                     }
-                                    // 既に/misesapo/で始まる場合はそのまま使用（二重適用を防ぐ）
-                                    if (imagePath.startsWith('/misesapo/')) {
-                                        return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" /></div>`;
-                                    }
-                                    // 既に/で始まる場合はresolvePathを使用
+                                    // 絶対URLを返す（baseタグの影響を受けないようにする）
                                     if (imagePath.startsWith('/')) {
                                         imagePath = resolvePath(imagePath);
                                     } else {
