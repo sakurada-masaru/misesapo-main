@@ -274,7 +274,7 @@
     <header>
         <div class="header-flex wrapper">
             <h1 class="header-logo">
-                <a href="staff/dashboard.html"><img src="/images/header-logo.jpg" alt="ミセサポ"></a>
+                <a href="staff/dashboard.html"><img id="header-logo-img" src="" alt="ミセサポ"></a>
             </h1>
             <button class="btn"><span></span><span></span><span></span></button>
             <nav id="g-nav">
@@ -944,8 +944,19 @@
             window.location.href = `cleaning-manual-admin.html?category=${categoryKey}&index=${index}`;
         }
         
+        // ヘッダーロゴのパスを設定
+        function setHeaderLogoPath() {
+            const logoImg = document.getElementById('header-logo-img');
+            if (logoImg) {
+                const logoPath = resolvePath('/images/header-logo.jpg');
+                logoImg.src = logoPath;
+                console.log('[CleaningManual] Header logo path set to:', logoPath);
+            }
+        }
+        
         // ページ読み込み時にデータを読み込む
         document.addEventListener('DOMContentLoaded', () => {
+            setHeaderLogoPath();
             loadManualData();
         });
         
