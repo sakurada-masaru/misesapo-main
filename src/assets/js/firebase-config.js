@@ -32,6 +32,10 @@
       window.FirebaseAuth = firebase.auth();
       window.FirebaseFirestore = firebase.firestore();
       window.FirebaseStorage = firebase.storage();
+      // FieldValueもグローバルに公開（compat版ではfirebase.firestore.FieldValueから直接取得）
+      if (firebase.firestore && firebase.firestore.FieldValue) {
+        window.FirebaseFieldValue = firebase.firestore.FieldValue;
+      }
       console.log('[Firebase] Initialized successfully');
     } catch (error) {
       console.error('[Firebase] Initialization error:', error);

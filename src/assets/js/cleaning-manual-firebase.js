@@ -114,13 +114,27 @@
             throw new Error('Firestore is not initialized');
         }
         
+        // FieldValueを取得（Firebase compat版ではfirebase.firestore.FieldValueから直接取得）
+        let FieldValue;
+        if (window.FirebaseFieldValue) {
+            FieldValue = window.FirebaseFieldValue;
+        } else if (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue) {
+            FieldValue = firebase.firestore.FieldValue;
+        } else {
+            // フォールバック: 現在の日時を使用
+            console.warn('[CleaningManualFirebase] FieldValue not available, using Date.now()');
+            FieldValue = {
+                serverTimestamp: () => new Date()
+            };
+        }
+        
         const db = window.FirebaseFirestore;
         const collection = isDraft ? FIRESTORE_DRAFT_COLLECTION : FIRESTORE_COLLECTION;
         const docRef = db.collection(collection).doc('data');
         
         const saveData = {
             ...data,
-            updatedAt: window.FirebaseFirestore.FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
             updatedBy: window.FirebaseAuth.currentUser?.email || 'unknown'
         };
         
