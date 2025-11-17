@@ -73,40 +73,44 @@ const ROLE_CONFIG = {
     '/service/': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     '/recruit.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     '/recruit/': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/signin.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/signup.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/signup2.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/signup3.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/reset-password.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/contact.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/concierge.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/signin.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/signup.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/signup2.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/signup3.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/reset-password.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/contact.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/concierge.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     
     // 顧客向けページ（ユーザーと清掃員がアクセス可能、コンシェルジュと管理者も可）
-    '/mypage.html': ['customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/mypage/': ['customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/cart.html': ['customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/checkout.html': ['customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/order/': ['customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/order-complete.html': ['customer', 'staff', 'concierge', 'admin', 'developer'],
-    '/order-confirm.html': ['customer', 'staff', 'concierge', 'admin', 'developer'],
+    '/mypage.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/mypage/': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/cart.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/checkout.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/order/': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/order-complete.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/order-confirm.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     
     // 清掃員向けページ（清掃員とユーザーがアクセス可能、コンシェルジュと管理者も可）
-    '/staff/': ['staff', 'customer', 'concierge', 'admin', 'developer'],
-    '/schedule.html': ['staff', 'customer', 'concierge', 'admin', 'developer'],
-    '/report.html': ['staff', 'customer', 'concierge', 'admin', 'developer'],
-    '/reports/': ['staff', 'customer', 'concierge', 'admin', 'developer'],
+    '/staff/': ['staff', 'customer', 'concierge', 'admin', 'developer', 'master'],
+    '/schedule.html': ['staff', 'customer', 'concierge', 'admin', 'developer', 'master'],
+    '/report.html': ['staff', 'customer', 'concierge', 'admin', 'developer', 'master'],
+    '/reports/': ['staff', 'customer', 'concierge', 'admin', 'developer', 'master'],
     
     // コンシェルジュ向けページ（コンシェルジュと管理者のみ）
-    '/sales/': ['concierge', 'admin', 'developer'],
+    '/sales/': ['concierge', 'admin', 'developer', 'master'],
     
     // 管理者向けページ（管理者と開発者のみ）
-    '/admin/': ['admin', 'developer'],
-    '/admin/partners.html': ['admin', 'developer'],
-    '/admin/partners/': ['admin', 'developer'],
-    '/admin/partners/new.html': ['admin', 'developer'],
+    '/admin/': ['admin', 'developer', 'master'],
+    '/admin/partners.html': ['admin', 'developer', 'master'],
+    '/admin/partners/': ['admin', 'developer', 'master'],
+    '/admin/partners/new.html': ['admin', 'developer', 'master'],
     
     // 開発者向けページ（開発者のみ）
-    '/admin/services/review.html': ['developer']
+    '/admin/services/review.html': ['developer', 'master'],
+    
+    // 清掃マニュアル管理画面（管理者・清掃員・コンシェルジュ・開発者・マスター）
+    '/cleaning-manual-admin.html': ['admin', 'staff', 'concierge', 'developer', 'master'],
+    '/cleaning-manual.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master']
   },
   
   // ロールごとのナビゲーション項目（推奨ナビゲーション）
