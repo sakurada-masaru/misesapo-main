@@ -883,8 +883,17 @@
             // 新規追加の場合はpush、既存の場合は更新
             if (isNew) {
                 manualData[category].push(updatedItem);
+                console.log('[CleaningManualAdmin] Added new item to category:', category);
             } else {
-                manualData[category][index] = updatedItem;
+                // 既存項目の更新
+                if (manualData[category] && Array.isArray(manualData[category]) && manualData[category][index]) {
+                    manualData[category][index] = updatedItem;
+                    console.log('[CleaningManualAdmin] Updated item at index:', index, 'in category:', category);
+                } else {
+                    console.error('[CleaningManualAdmin] Cannot update item - not found:', { category, index });
+                    showMessage('項目の更新に失敗しました。項目が見つかりません。', 'error');
+                    return;
+                }
             }
 
             try {
@@ -928,8 +937,17 @@
             // 新規追加の場合はpush、既存の場合は更新
             if (isNew) {
                 manualData[category].push(updatedItem);
+                console.log('[CleaningManualAdmin] Added new item to category:', category);
             } else {
-                manualData[category][index] = updatedItem;
+                // 既存項目の更新
+                if (manualData[category] && Array.isArray(manualData[category]) && manualData[category][index]) {
+                    manualData[category][index] = updatedItem;
+                    console.log('[CleaningManualAdmin] Updated item at index:', index, 'in category:', category);
+                } else {
+                    console.error('[CleaningManualAdmin] Cannot update item - not found:', { category, index });
+                    showMessage('項目の更新に失敗しました。項目が見つかりません。', 'error');
+                    return;
+                }
             }
 
             try {
