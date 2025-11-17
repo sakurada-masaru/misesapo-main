@@ -168,6 +168,19 @@
             throw new Error('Firebase Storage is not initialized');
         }
         
+        // 認証チェック
+        if (!window.FirebaseAuth || !window.FirebaseAuth.currentUser) {
+            throw new Error('認証が必要です。ログインしてください。');
+        }
+        
+        // 認証トークンを取得（リフレッシュ）
+        const user = window.FirebaseAuth.currentUser;
+        try {
+            await user.getIdToken(true); // 強制的にトークンをリフレッシュ
+        } catch (error) {
+            console.warn('[CleaningManualFirebase] Token refresh failed:', error);
+        }
+        
         const storage = window.FirebaseStorage;
         const storageRef = storage.ref();
         
@@ -177,8 +190,17 @@
         const fileName = `${timestamp}_${fieldName}_${safeFileName}`;
         const imageRef = storageRef.child(`${STORAGE_PATH}/${fileName}`);
         
-        // アップロード
-        const snapshot = await imageRef.put(file);
+        // メタデータを設定（contentTypeを明示的に指定）
+        const metadata = {
+            contentType: file.type || 'image/png',
+            customMetadata: {
+                uploadedBy: user.email || 'unknown',
+                fieldName: fieldName
+            }
+        };
+        
+        // アップロード（メタデータ付き）
+        const snapshot = await imageRef.put(file, metadata);
         const downloadURL = await snapshot.ref.getDownloadURL();
         
         return {
