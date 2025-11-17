@@ -695,14 +695,30 @@
                             <div class="example-box bad-example">
                                 <strong>リスクを残す行為</strong>
                                 ${data.bad}
-                                ${data.badImage ? `<div class="example-image-container"><img src="${data.badImage.startsWith('http://') || data.badImage.startsWith('https://') ? data.badImage : resolvePath('/' + data.badImage)}" alt="ダメな例" class="example-image" onclick="return false;" /></div>` : ''}
+                                ${data.badImage ? (() => {
+                                    let imagePath = data.badImage;
+                                    if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://')) {
+                                        // 既に/で始まる場合はそのまま、そうでなければ/を追加
+                                        imagePath = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+                                        imagePath = resolvePath(imagePath);
+                                    }
+                                    return `<div class="example-image-container"><img src="${imagePath}" alt="ダメな例" class="example-image" onclick="return false;" /></div>`;
+                                })() : ''}
                             </div>
                             
                             <div class="section-title good-example-title">✅ 模範例（リスク対策行為：MISESAPO基準）</div>
                             <div class="example-box good-example">
                                 <strong>リスクを排除し価値を提供する行為</strong>
                                 ${data.good}
-                                ${data.goodImage ? `<div class="example-image-container"><img src="${data.goodImage.startsWith('http://') || data.goodImage.startsWith('https://') ? data.goodImage : resolvePath('/' + data.goodImage)}" alt="模範例" class="example-image" onclick="return false;" /></div>` : ''}
+                                ${data.goodImage ? (() => {
+                                    let imagePath = data.goodImage;
+                                    if (!imagePath.startsWith('http://') && !imagePath.startsWith('https://')) {
+                                        // 既に/で始まる場合はそのまま、そうでなければ/を追加
+                                        imagePath = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+                                        imagePath = resolvePath(imagePath);
+                                    }
+                                    return `<div class="example-image-container"><img src="${imagePath}" alt="模範例" class="example-image" onclick="return false;" /></div>`;
+                                })() : ''}
                             </div>
 
                             <div class="qa-section">
