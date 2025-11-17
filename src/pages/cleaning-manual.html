@@ -1065,9 +1065,27 @@
             }
         }
         
+        // リンクのパスを設定（GitHub Pages対応）
+        function setAdminLinks() {
+            const adminLink = document.getElementById('admin-link');
+            const navAdminLink = document.getElementById('nav-admin-link');
+            const importLink = document.getElementById('import-link');
+            
+            if (adminLink) {
+                adminLink.href = resolvePath('cleaning-manual-admin.html');
+            }
+            if (navAdminLink) {
+                navAdminLink.href = resolvePath('cleaning-manual-admin.html');
+            }
+            if (importLink) {
+                importLink.href = resolvePath('cleaning-manual-admin.html');
+            }
+        }
+        
         // ページ読み込み時にデータを読み込む
         document.addEventListener('DOMContentLoaded', () => {
             setHeaderLogoPath();
+            setAdminLinks();
             loadManualData();
         });
         
