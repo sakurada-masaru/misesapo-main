@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/misesapo/" />
     <title>清掃マニュアル管理画面 - MISESAPO</title>
     <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -238,7 +239,7 @@
 <body>
     <div class="container">
         <div class="page-header">
-            <a href="/cleaning-manual.html" class="back-link">
+            <a href="cleaning-manual.html" class="back-link">
                 <i class="fas fa-arrow-left"></i> 清掃マニュアルに戻る
             </a>
             <h1><i class="fas fa-edit"></i> 清掃マニュアル管理画面</h1>
@@ -343,6 +344,36 @@
     </div>
 
     <script>
+        // ベースパスを取得（GitHub Pages対応）
+        function getBasePath() {
+            const base = document.querySelector('base');
+            if (base && base.href) {
+                try {
+                    const url = new URL(base.href);
+                    return url.pathname;
+                } catch (e) {
+                    return base.getAttribute('href') || '/';
+                }
+            }
+            const path = window.location.pathname;
+            if (path.includes('/misesapo/')) {
+                return '/misesapo/';
+            }
+            return '/';
+        }
+        
+        // パスを解決（ベースパス付き）
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
+            }
+            const basePath = getBasePath();
+            if (path.startsWith('/')) {
+                return basePath === '/' ? path : basePath.slice(0, -1) + path;
+            }
+            return basePath === '/' ? '/' + path : basePath + path;
+        }
+        
         let manualData = {
             kitchen: [],
             aircon: [],
@@ -354,9 +385,9 @@
         // データ読み込み
         async function loadData() {
             try {
-                let response = await fetch('/api/cleaning-manual');
+                let response = await fetch(resolvePath('/api/cleaning-manual'));
                 if (!response.ok) {
-                    response = await fetch('/data/cleaning-manual.json');
+                    response = await fetch(resolvePath('/data/cleaning-manual.json'));
                 }
                 if (response.ok) {
                     manualData = await response.json();
@@ -460,7 +491,7 @@
         function updateImagePreview(field, path) {
             const preview = document.getElementById(`preview-${field}`);
             if (path) {
-                preview.innerHTML = `<img src="/${path}" alt="プレビュー" onerror="this.style.display='none'" />`;
+                preview.innerHTML = `<img src="${resolvePath('/' + path)}" alt="プレビュー" onerror="this.style.display='none'" />`;
             } else {
                 preview.innerHTML = '';
             }
@@ -479,7 +510,7 @@
                 formData.append('image', file);
 
                 try {
-                    const response = await fetch('/api/cleaning-manual/upload-image', {
+                    const response = await fetch(resolvePath('/api/cleaning-manual/upload-image'), {
                         method: 'POST',
                         body: formData
                     });
@@ -524,7 +555,7 @@
             manualData[category][index] = updatedItem;
 
             try {
-                const response = await fetch('/api/cleaning-manual', {
+                const response = await fetch(resolvePath('/api/cleaning-manual'), {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'

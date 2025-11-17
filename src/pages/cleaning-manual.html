@@ -338,6 +338,37 @@
     </footer>
 
     <script>
+        // ベースパスを取得（GitHub Pages対応）
+        function getBasePath() {
+            const base = document.querySelector('base');
+            if (base && base.href) {
+                try {
+                    const url = new URL(base.href);
+                    return url.pathname;
+                } catch (e) {
+                    return base.getAttribute('href') || '/';
+                }
+            }
+            // baseタグがない場合は、現在のパスから推測
+            const path = window.location.pathname;
+            if (path.includes('/misesapo/')) {
+                return '/misesapo/';
+            }
+            return '/';
+        }
+        
+        // パスを解決（ベースパス付き）
+        function resolvePath(path) {
+            if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                return path;
+            }
+            const basePath = getBasePath();
+            if (path.startsWith('/')) {
+                return basePath === '/' ? path : basePath.slice(0, -1) + path;
+            }
+            return basePath === '/' ? '/' + path : basePath + path;
+        }
+        
         // データをJSONファイルから読み込む（GitHub Pages対応）
         let kitchenData = [];
         let airconData = [];
@@ -349,10 +380,10 @@
         async function loadManualData() {
             try {
                 // まずAPIエンドポイントを試す（開発環境）
-                let response = await fetch('/api/cleaning-manual');
+                let response = await fetch(resolvePath('/api/cleaning-manual'));
                 if (!response.ok) {
                     // APIが利用できない場合（GitHub Pagesなど）、静的ファイルを読み込む
-                    response = await fetch('/data/cleaning-manual.json');
+                    response = await fetch(resolvePath('/data/cleaning-manual.json'));
                 }
                 
                 if (response.ok) {
@@ -421,14 +452,14 @@
                             <div class="example-box bad-example">
                                 <strong>リスクを残す行為</strong>
                                 ${data.bad}
-                                ${data.badImage ? `<div class="example-image-container"><img src="${data.badImage}" alt="ダメな例" class="example-image" onclick="return false;" /></div>` : ''}
+                                ${data.badImage ? `<div class="example-image-container"><img src="${resolvePath('/' + data.badImage)}" alt="ダメな例" class="example-image" onclick="return false;" /></div>` : ''}
                             </div>
                             
                             <div class="section-title good-example-title">✅ 模範例（リスク対策行為：MISESAPO基準）</div>
                             <div class="example-box good-example">
                                 <strong>リスクを排除し価値を提供する行為</strong>
                                 ${data.good}
-                                ${data.goodImage ? `<div class="example-image-container"><img src="${data.goodImage}" alt="模範例" class="example-image" onclick="return false;" /></div>` : ''}
+                                ${data.goodImage ? `<div class="example-image-container"><img src="${resolvePath('/' + data.goodImage)}" alt="模範例" class="example-image" onclick="return false;" /></div>` : ''}
                             </div>
 
                             <div class="qa-section">
