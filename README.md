@@ -3,6 +3,17 @@
 ## 目的
 本リポジトリは、デザインモックアップ（静的な HTML/CSS/JS）をローカルまたはコンテナで動かしながら作り進める最小環境です。将来的には別プロジェクトで Laravel / Rails などの MVC 実装へ移行しますが、その前段として「部分テンプレート対応の簡易テンプレート生成（ビルド）」を整えます。
 
+## ドキュメント
+
+プロジェクトのドキュメントは `docs/` ディレクトリにあります。93個のドキュメントをカテゴリ別に整理したインデックスは以下を参照してください：
+
+📚 **[ドキュメントインデックス](docs/DOCUMENTATION_INDEX.md)** - すべてのドキュメントをカテゴリ別に整理
+
+### よく使うドキュメント
+- **AWS設定**: [AWS Lambda + API Gateway セットアップ](docs/AWS_LAMBDA_API_GATEWAY_SETUP.md)
+- **GitHub認証**: [GitHub PAT セットアップ](docs/GITHUB_PAT_SETUP.md)
+- **プッシュ前確認**: [GitHub アップロードチェックリスト](docs/GITHUB_UPLOAD_CHECKLIST.md)
+
 ## 現状のディレクトリ構成
 ```
 public/            # 生成物（配信対象・Git 追跡しない）
