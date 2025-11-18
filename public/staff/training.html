@@ -485,34 +485,74 @@
       
       if (!categoriesEl) return;
       
-      // AWS APIからデータを取得（利用可能な場合）、フォールバックは静的JSON
+      // まず埋め込まれたJSONを確認（最優先）
       let trainingData = null;
-      if (window.AWSTrainingVideosAPI) {
+      const trainingDataEl = document.getElementById('training-data');
+      console.log('[TrainingVideos] Checking embedded JSON:', {
+        elementExists: !!trainingDataEl,
+        hasContent: trainingDataEl ? !!trainingDataEl.textContent.trim() : false,
+        contentLength: trainingDataEl ? trainingDataEl.textContent.trim().length : 0
+      });
+      
+      if (trainingDataEl && trainingDataEl.textContent.trim()) {
+        try {
+          trainingData = JSON.parse(trainingDataEl.textContent);
+          console.log('[TrainingVideos] Loaded from embedded JSON:', trainingData);
+        } catch (parseError) {
+          console.error('[TrainingVideos] Failed to parse embedded JSON:', parseError);
+          console.error('[TrainingVideos] JSON content:', trainingDataEl.textContent.substring(0, 200));
+        }
+      } else {
+        console.warn('[TrainingVideos] Embedded JSON not found or empty');
+      }
+      
+      // 埋め込まれたJSONがない場合、AWS APIから取得を試みる
+      if (!trainingData && window.AWSTrainingVideosAPI) {
         try {
           trainingData = await window.AWSTrainingVideosAPI.loadData();
+          console.log('[TrainingVideos] Loaded from AWS API');
         } catch (error) {
           console.error('[TrainingVideos] Failed to load from AWS API:', error);
         }
       }
       
-      // AWS APIから取得できなかった場合は、静的JSONから読み込む
+      // それでも取得できなかった場合は空のデータ
       if (!trainingData) {
-        const trainingDataEl = document.getElementById('training-data');
-        if (trainingDataEl) {
-          trainingData = JSON.parse(trainingDataEl.textContent);
-        } else {
-          trainingData = { categories: [] };
-        }
+        console.warn('[TrainingVideos] No data available, using empty data');
+        trainingData = { categories: [] };
       }
       
       const categories = trainingData.categories || [];
+      
+      // デバッグ: データを確認
+      console.log('[TrainingVideos] Loaded data:', trainingData);
+      console.log('[TrainingVideos] Categories:', categories);
+      categories.forEach(cat => {
+        console.log(`[TrainingVideos] Category: ${cat.name}, Videos: ${cat.videos?.length || 0}`);
+      });
       
       let filteredCategories = [...categories];
       
       // Render categories
       function renderCategories() {
-        categoriesEl.innerHTML = filteredCategories.map(category => {
+        console.log('[TrainingVideos] Rendering categories:', filteredCategories);
+        
+        // データが空の場合は空のメッセージを表示
+        if (filteredCategories.length === 0 || filteredCategories.every(cat => !cat.videos || cat.videos.length === 0)) {
+          categoriesEl.innerHTML = `
+            <div class="category-section">
+              <h2 class="category-title">動画が見つかりません</h2>
+              <p style="padding: 20px; text-align: center; color: #6b7280;">
+                動画データが読み込まれていません。しばらく待ってからページをリロードしてください。
+              </p>
+            </div>
+          `;
+          return;
+        }
+        
+        const html = filteredCategories.map(category => {
           const videos = category.videos || [];
+          console.log(`[TrainingVideos] Rendering category: ${category.name}, Videos: ${videos.length}`);
           if (videos.length === 0) return '';
           
           const videoCards = videos.map(video => {
@@ -571,6 +611,9 @@
             </div>
           `;
         }).join('');
+        
+        console.log('[TrainingVideos] Generated HTML length:', html.length);
+        categoriesEl.innerHTML = html;
         
         // Attach click handlers
         attachVideoHandlers();

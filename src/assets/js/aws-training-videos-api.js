@@ -55,17 +55,58 @@
         } catch (error) {
             console.error('[AWSTrainingVideosAPI] Load error:', error);
             
-            // フォールバック: 静的JSONファイルを読み込む
-            console.log('[AWSTrainingVideosAPI] Trying fallback to static JSON file...');
-            try {
-                const fallbackResponse = await fetch('/data/training_videos.json');
-                if (fallbackResponse.ok) {
-                    const fallbackData = await fallbackResponse.json();
-                    console.log('[AWSTrainingVideosAPI] Fallback data loaded');
-                    return fallbackData;
+            // フォールバック: 埋め込まれたJSONを確認（最優先）
+            const embeddedDataEl = document.getElementById('training-data');
+            if (embeddedDataEl && embeddedDataEl.textContent.trim()) {
+                try {
+                    const embeddedData = JSON.parse(embeddedDataEl.textContent);
+                    console.log('[AWSTrainingVideosAPI] Fallback: Loaded from embedded JSON');
+                    return embeddedData;
+                } catch (parseError) {
+                    console.warn('[AWSTrainingVideosAPI] Failed to parse embedded JSON:', parseError);
                 }
-            } catch (fallbackError) {
-                console.error('[AWSTrainingVideosAPI] Fallback also failed:', fallbackError);
+            }
+            
+            // 埋め込まれたJSONがない場合、静的JSONファイルを読み込む
+            console.log('[AWSTrainingVideosAPI] Trying fallback to static JSON file...');
+            
+            // ベースパスを取得（GitHub Pages対応）
+            function getBasePath() {
+                const base = document.querySelector('base');
+                if (base && base.href) {
+                    try {
+                        const url = new URL(base.href);
+                        return url.pathname;
+                    } catch (e) {
+                        return base.getAttribute('href') || '/';
+                    }
+                }
+                const path = window.location.pathname;
+                if (path.includes('/misesapo/')) {
+                    return '/misesapo/';
+                }
+                return '/';
+            }
+            
+            const basePath = getBasePath();
+            const fallbackPaths = [
+                `${basePath}data/training_videos.json`,
+                '/data/training_videos.json',
+                '/misesapo/data/training_videos.json'
+            ];
+            
+            for (const fallbackPath of fallbackPaths) {
+                try {
+                    console.log(`[AWSTrainingVideosAPI] Trying fallback path: ${fallbackPath}`);
+                    const fallbackResponse = await fetch(fallbackPath);
+                    if (fallbackResponse.ok) {
+                        const fallbackData = await fallbackResponse.json();
+                        console.log('[AWSTrainingVideosAPI] Fallback data loaded from:', fallbackPath);
+                        return fallbackData;
+                    }
+                } catch (fallbackError) {
+                    console.warn(`[AWSTrainingVideosAPI] Fallback path failed: ${fallbackPath}`, fallbackError);
+                }
             }
             
             // それでも失敗した場合は空のデータを返す
