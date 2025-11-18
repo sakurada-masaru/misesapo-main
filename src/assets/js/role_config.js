@@ -152,7 +152,8 @@ const ROLE_CONFIG = {
       { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
       { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
       { href: '/admin/users.html', label: 'ユーザーID管理', icon: 'fa-user-shield' },
-      { href: '/admin/partners.html', label: 'パートナー企業一覧', icon: 'fa-handshake' }
+      { href: '/admin/partners.html', label: 'パートナー企業一覧', icon: 'fa-handshake' },
+      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' }
     ],
     developer: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
@@ -219,6 +220,7 @@ const ROLE_CONFIG = {
       { href: '/admin/users/sales.html', label: 'コンシェルジュ一覧', icon: 'fa-user-tie' },
       { href: '/admin/users/staff.html', label: '清掃員一覧', icon: 'fa-user-cog' },
       { href: '/admin/partners.html', label: 'パートナー企業一覧', icon: 'fa-handshake' },
+      { href: '/cleaning-manual-admin.html', label: '清掃マニュアル', icon: 'fa-book' },
       { href: '/admin/sitemap.html', label: 'サイトマップ', icon: 'fa-sitemap' }
     ],
     '開発者': [
