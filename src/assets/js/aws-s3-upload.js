@@ -14,7 +14,7 @@
     // API GatewayのエンドポイントURL
     // このURLは、API Gatewayのデプロイ時に取得した「呼び出しURL」に置き換えてください
     // 例: 'https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/prod'
-    let API_GATEWAY_ENDPOINT = null; // TODO: API GatewayのエンドポイントURLを設定してください
+    let API_GATEWAY_ENDPOINT = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
     
     /**
      * APIエンドポイントを取得
