@@ -16,3 +16,7 @@ scripts/firebase-service-account.json
 
 # Environment variables (機密情報を含む)
 .env
+
+# Video files (stored in S3, not in Git)
+src/assets/movie/*.mp4
+public/movie/*.mp4
