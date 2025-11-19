@@ -1354,6 +1354,46 @@
       font-weight: 700;
       border: 1px solid #fca5a5;
     }
+    .sitemap-tree {
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    @media (max-width: 768px) {
+      .sitemap-container {
+        padding: 0 16px 32px;
+      }
+      .legend-items {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .sitemap-section-title {
+        font-size: 1rem;
+      }
+      .sitemap-tree {
+        padding-left: 0;
+        border-left: none;
+      }
+      .sitemap-node {
+        margin-left: 0;
+        padding-left: 0;
+      }
+      .sitemap-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .sitemap-item-name {
+        font-size: 0.95rem;
+      }
+      .sitemap-item-path {
+        font-size: 0.75rem;
+      }
+      .sitemap-item-badges {
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+    }
     .new-badge {
       display: inline-flex;
       align-items: center;
