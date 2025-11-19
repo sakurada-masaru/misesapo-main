@@ -115,20 +115,26 @@
             padding: 0;
         }
         /* 言語切り替えタブと編集ボタンのコンテナ */
+        :root {
+            --manual-header-height: 6.4rem;
+            --manual-title-height: calc(1.8rem + 24px);
+            --manual-lang-tabs-height: 48px;
+            --manual-category-tabs-height: 50px;
+        }
         .language-tabs-container {
             position: fixed;
-            top: calc(6.4rem + 1.8rem + 24px); /* 標準ヘッダーの高さ（6.4rem）+ タイトルの高さ */
+            top: calc(var(--manual-header-height) + var(--manual-title-height)); /* 標準ヘッダーの高さ + タイトルの高さ */
             left: 0;
             width: 100%;
-            background-color: #ffffff;
-            border-bottom: 1px solid #e0e0e0;
+            background-color: #f8f8f8;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
             z-index: 999;
-            padding: 12px 20px;
+            padding: 6px 20px;
             box-sizing: border-box;
+            min-height: var(--manual-lang-tabs-height);
         }
         /* 言語切り替えタブ */
         .language-tabs {
@@ -179,7 +185,7 @@
         /* カテゴリタブ */
         .category-tabs {
             position: fixed;
-            top: calc(6.4rem + 1.8rem + 24px + 60px); /* 標準ヘッダーの高さ（6.4rem）+ タイトルの高さ + 言語タブコンテナ（約60px） */
+            top: calc(var(--manual-header-height) + var(--manual-title-height) + var(--manual-lang-tabs-height)); /* 標準ヘッダー + タイトル + 言語タブ */
             left: 0;
             width: 100%;
             background-color: white;
@@ -213,7 +219,7 @@
         }
         /* メインコンテンツエリア */
         #content {
-            padding: calc(6.4rem + 1.8rem + 24px + 60px + 50px) 0 80px 0; /* ヘッダー（6.4rem）+ タイトル（1.8rem + 24px）+ 言語タブコンテナ（約60px）+ カテゴリタブ（約50px）+ フッター（80px）の高さ分を確保 */
+            padding: calc(var(--manual-header-height) + var(--manual-title-height) + var(--manual-lang-tabs-height) + var(--manual-category-tabs-height)) 0 80px 0; /* ヘッダー + タイトル + 言語タブ + カテゴリタブ + フッター（80px）の高さ分を確保 */
         }
         /* 各マニュアルページ */
         .manual-page {
