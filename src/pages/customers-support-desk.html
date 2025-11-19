@@ -1,0 +1,325 @@
+@layout('layouts.base')
+@json('data/meta/customers_support_desk_title.json', $title)
+@json('data/meta/customers_support_desk_body_class.json', $body_class)
+
+<main id="main" class="container customers-support-desk">
+  <section class="support-hero" aria-label="カスタマーサポートのイメージ">
+    <img src="/images-admin/customer%20support1.jpeg" alt="ヘッドセットとPCのサポートデスク" class="support-hero__image">
+    <div class="support-hero__overlay">
+      <div class="support-hero__text">
+        <p class="support-hero__eyebrow">CUSTOMERS SUPPORT DESK</p>
+        <h1>いつでも頼れるサポート体制</h1>
+        <p>ミセサポのサポートチームが、お問い合わせから緊急連絡まで一括で対応します。</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="page-header">
+    <a href="/" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+      ホームへ戻る
+    </a>
+    <h2 class="page-title">カスタマーズサポートデスク</h2>
+    <p class="page-subtitle">ミセサポのサポート情報とお問い合わせチャネルをまとめたハブページです。</p>
+  </div>
+
+  <section class="coming-soon">
+    <div class="coming-soon__badge">準備中</div>
+    <h2>ヘルプセンターを順次公開予定です</h2>
+    <p>
+      現在、ヘルプセンター・FAQ・お問い合わせチャネルを統合したカスタマーズサポートデスクを構築しています。
+      次のステップでコンテンツを拡充し、ガイドや緊急連絡先の詳細を掲載する予定です。
+    </p>
+    <div class="coming-soon__links">
+      <a href="/mypage/support/faq.html" class="btn-link">
+        <i class="fas fa-question-circle"></i>
+        FAQを見る
+      </a>
+      <a href="/mypage/support/inquiry/new.html" class="btn-link">
+        <i class="fas fa-envelope"></i>
+        お問い合わせを送る
+      </a>
+    </div>
+  </section>
+
+  <section class="support-channels">
+    <div class="section-heading">
+      <p class="section-eyebrow">Support Channels</p>
+      <h3>ご相談窓口</h3>
+      <p>利用者・清掃スタッフ・パートナー企業、それぞれに専任の相談窓口を用意します。今後の正式公開に向けて準備を進めています。</p>
+    </div>
+    <div class="channel-grid">
+      <article class="channel-card">
+        <div class="channel-icon">
+          <i class="fas fa-user-friends"></i>
+        </div>
+        <h4>お客様相談窓口</h4>
+        <p>発注・請求・サービス品質など、ご利用者様からのお問い合わせに専任チームが対応します。</p>
+        <button class="channel-action" disabled>近日公開</button>
+      </article>
+      <article class="channel-card">
+        <div class="channel-icon">
+          <i class="fas fa-broom"></i>
+        </div>
+        <h4>ワーカー相談窓口</h4>
+        <p>現場スタッフの勤怠・研修・安全に関する相談窓口です。匿名相談にも対応予定です。</p>
+        <button class="channel-action" disabled>近日公開</button>
+      </article>
+      <article class="channel-card">
+        <div class="channel-icon">
+          <i class="fas fa-handshake"></i>
+        </div>
+        <h4>パートナーズ相談窓口</h4>
+        <p>協力会社・外部パートナー専用のサポートライン。契約・案件共有・請求フローをサポートします。</p>
+        <button class="channel-action" disabled>近日公開</button>
+      </article>
+    </div>
+  </section>
+</main>
+
+<style>
+  .customers-support-desk {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 16px 64px;
+    min-height: 100vh;
+  }
+  .support-hero {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    margin-bottom: 40px;
+    min-height: 280px;
+  }
+  .support-hero__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    min-height: 280px;
+    filter: brightness(0.75);
+  }
+  .support-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(15,23,42,0.75) 0%, rgba(38,38,38,0.35) 60%, rgba(255,255,255,0) 100%);
+    display: flex;
+    align-items: center;
+    padding: 48px;
+  }
+  .support-hero__text {
+    color: #ffffff;
+    max-width: 520px;
+  }
+  .support-hero__eyebrow {
+    letter-spacing: 0.2em;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: rgba(255,255,255,0.8);
+  }
+  .support-hero__text h1 {
+    font-size: 2.5rem;
+    margin: 0 0 12px;
+    line-height: 1.2;
+  }
+  .support-hero__text p {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.85);
+  }
+  .page-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-decoration: none;
+  }
+  .page-title {
+    font-size: 2rem;
+    margin: 0 0 12px;
+    color: #111827;
+  }
+  .page-subtitle {
+    color: #6b7280;
+    font-size: 1rem;
+    margin: 0;
+  }
+  .coming-soon {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  }
+  .coming-soon__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+  }
+  .coming-soon h2 {
+    font-size: 1.5rem;
+    margin: 0 0 16px;
+    color: #111827;
+  }
+  .coming-soon p {
+    color: #4b5563;
+    line-height: 1.8;
+    margin: 0 auto 24px;
+    max-width: 640px;
+  }
+  .coming-soon__links {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .btn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    color: #374151;
+    font-weight: 600;
+    transition: all 0.2s;
+    background: #f9fafb;
+  }
+  .btn-link:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 10px 20px rgba(255, 103, 156, 0.15);
+  }
+  .btn-link i {
+    color: var(--primary);
+  }
+  .support-channels {
+    margin-top: 48px;
+    padding: 32px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  }
+  .section-heading {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .section-eyebrow {
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 8px;
+  }
+  .section-heading h3 {
+    font-size: 1.75rem;
+    margin: 0 0 12px;
+    color: #111827;
+  }
+  .section-heading p {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.7;
+  }
+  .channel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .channel-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .channel-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: #fef2f8;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+  .channel-card h4 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #111827;
+  }
+  .channel-card p {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.6;
+    flex: 1;
+  }
+  .channel-action {
+    border: none;
+    border-radius: 999px;
+    padding: 10px 16px;
+    background: #e5e7eb;
+    color: #6b7280;
+    font-weight: 600;
+    cursor: not-allowed;
+  }
+  @media (max-width: 640px) {
+    .support-hero {
+      margin-left: -16px;
+      margin-right: -16px;
+      border-radius: 0;
+    }
+    .support-hero__overlay {
+      padding: 24px;
+      justify-content: flex-start;
+    }
+    .support-hero__text h1 {
+      font-size: 1.75rem;
+    }
+    .support-hero__text p {
+      font-size: 0.95rem;
+    }
+    .support-channels {
+      padding: 24px 20px;
+    }
+    .channel-grid {
+      grid-template-columns: 1fr;
+    }
+    .page-title {
+      font-size: 1.75rem;
+    }
+    .coming-soon {
+      padding: 32px 20px;
+    }
+    .coming-soon__links {
+      flex-direction: column;
+    }
+    .btn-link {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+
