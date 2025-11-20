@@ -406,6 +406,27 @@
             padding-left: 16px;
         }
 
+        .sp-menu-item-login {
+            margin-top: 16px;
+            border-top: 2px solid #e5e5e5;
+            border-bottom: none;
+        }
+
+        .sp-menu-link-login {
+            background-color: #FF679C;
+            color: #fff !important;
+            padding: 14px 20px;
+            border-radius: 8px;
+            justify-content: center;
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .sp-menu-link-login:hover {
+            background-color: #E35687;
+            color: #fff !important;
+        }
+
         .sp-menu-submenu-item {
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
@@ -2008,7 +2029,7 @@
         </div>
         </div>
         <!-- お知らせセクション -->
-        <div class="news-section-wrapper">
+        <div class="news-section-wrapper" id="news">
             <div class="news-section">
                 <h3 class="news-section__title">ミセサポからのお知らせ</h3>
                 <ul class="news-section__list">
@@ -2222,8 +2243,8 @@
                 <nav class="cosmetic-nav misesapo-mega-menu ishikawa-style">
                     <ul class="mega-menu-list">
                         <li class="mega-menu-item">
-                            <a href="/lp.html#about" class="mega-menu-link">
-                                <span class="mega-menu-text">ミセサポとは？</span>
+                            <a href="/lp.html" class="mega-menu-link">
+                                <span class="mega-menu-text">TOP</span>
                             </a>
                         </li>
                         <li class="mega-menu-item mega-menu-has-submenu">
@@ -2320,8 +2341,8 @@
                                             <li><a href="/privacy-policy.html"><span>個人情報保護方針</span></a></li>
                                             <li><a href="javascript:void(0);"><span>特定商取引法に基づく表記</span></a></li>
                                             <li><a href="javascript:void(0);"><span>職場環境改善に向けた方針</span></a></li>
-                                            <li><a href="javascript:void(0);"><span>情報セキュリティ基本方針</span></a></li>
-                                            <li><a href="javascript:void(0);"><span>反社会的勢力排除宣言</span></a></li>
+                                            <li><a href="/security-policy.html"><span>情報セキュリティ基本方針</span></a></li>
+                                            <li><a href="/antisocial-declaration.html"><span>反社会的勢力排除宣言</span></a></li>
                                             <li><a href="javascript:void(0);"><span>サービス利用規約</span></a></li>
                                             <li><a href="javascript:void(0);"><span>ウェブサイト・アプリ利用規約</span></a></li>
                                         </ul>
@@ -2373,6 +2394,7 @@
                         <span class="cosmetic-action-badge" id="cosmetic-notification-badge">3</span>
                     </button>
                                     </div>
+                <a href="/signin.html" class="cosmetic-login-btn">ログイン</a>
                 <div class="cosmetic-user-menu">
                     <div class="cosmetic-user-dropdown" id="cosmetic-user-dropdown" style="display: none;">
                         <a href="/mypage.html" class="cosmetic-user-menu-item">
@@ -2421,13 +2443,16 @@
                 </a>
                     </div>
             <nav class="normal-header-nav">
-                <a href="/lp.html#about">ミセサポとは？</a>
+                <a href="/">TOP</a>
                 <a href="/service.html">対応可能サービス</a>
                 <a href="/lp.html#voice">お客様の声</a>
-                <a href="/contact.html">カスタマーサポート</a>
-                <a href="/recruit.html">求人情報</a>
-                <a href="/recruit/privacy.html">採用における個人情報の取り扱いについて</a>
+                <a href="/customers-support-desk.html">カスタマーズサポート</a>
+                <a href="/index.html#news">お知らせ</a>
+                <a href="/privacy-policy.html">規約＆ポリシー</a>
             </nav>
+            <div class="normal-header-actions">
+                <a href="/signin.html" class="normal-header-login">ログイン</a>
+            </div>
                 </div>
     </header>
 
@@ -2464,7 +2489,7 @@
     <div class="sp-menu-panel" id="sp-menu-panel">
         <ul class="sp-menu-list">
             <li class="sp-menu-item">
-                <a href="/lp.html#about" class="sp-menu-link">ミセサポとは？</a>
+                <a href="/lp.html" class="sp-menu-link">TOP</a>
             </li>
             <li class="sp-menu-item sp-menu-item-has-submenu">
                 <a href="javascript:void(0);" class="sp-menu-link">
@@ -2505,7 +2530,16 @@
                 </div>
             </li>
             <li class="sp-menu-item">
-                <a href="/contact.html" class="sp-menu-link">カスタマーサポート</a>
+                <a href="/customers-support-desk.html" class="sp-menu-link">カスタマーズサポート</a>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/index.html#news" class="sp-menu-link">お知らせ</a>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/privacy-policy.html" class="sp-menu-link">規約＆ポリシー</a>
+            </li>
+            <li class="sp-menu-item sp-menu-item-login">
+                <a href="/signin.html" class="sp-menu-link sp-menu-link-login">ログイン</a>
             </li>
             <li class="sp-menu-item sp-menu-item-has-submenu">
                 <a href="javascript:void(0);" class="sp-menu-link">

@@ -432,6 +432,14 @@
     background-color: rgba(255, 103, 156, 0.08);
 }
 
+.normal-header-actions {
+    position: absolute;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .normal-header-login {
     padding: 10px 24px;
     background-color: #FF679C;
@@ -467,6 +475,15 @@
 }
 
 @media (max-width: 768px) {
+    .normal-header-actions {
+        right: 15px;
+    }
+
+    .normal-header-login {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+
     .cosmetic-header-inner {
         padding: 15px 20px;
         gap: 15px;

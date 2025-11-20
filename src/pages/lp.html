@@ -14,36 +14,67 @@
         <link rel="stylesheet" href="https://unpkg.com/ress@4.0.0/dist/ress.min.css">
         <link rel="stylesheet" href="/css/swiper-bundle.min.css">
         <link rel="stylesheet" href="/css/style.css">
+        <link rel="stylesheet" href="/css/header.css">
+        <style>
+            .breadcrumb {
+                max-width: 1000px;
+                margin: 0 auto;
+                padding: 20px 20px 0;
+                font-size: 14px;
+                color: #666;
+            }
+
+            .breadcrumb-inner {
+                display: inline-block;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #e5e5e5;
+            }
+
+            .breadcrumb a {
+                color: #666;
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+
+            .breadcrumb a:hover {
+                color: #FF679C;
+            }
+
+            .breadcrumb span {
+                margin: 0 8px;
+                color: #999;
+            }
+
+            .breadcrumb .current {
+                color: #333;
+                font-weight: 500;
+            }
+
+            @media (max-width: 768px) {
+                .breadcrumb {
+                    padding: 15px 15px 0;
+                    font-size: 12px;
+                }
+            }
+        </style>
     </head>
 
     <body>
-        <header>
-            <div class="header-flex">
-                <h1 class="header-logo">
-                    <a href="/"><img src="/images/header-logo.jpg" alt="ミセサポ"></a>
-                </h1>
-                <a class="header-order-button" href="/service.html">発注はこちら</a>
-                <button class="btn"><span></span><span></span><span></span></button>
-                <nav id="g-nav">
-                    <div id="g-nav-list">
-                        <ul>
-                            <li><a href="#about">ミセサポとは</a></li>
-                            <li><a href="#service">対応可能サービス</a></li>
-                            <li><a href="#reason">選ばれる理由</a></li>
-                            <li><a href="#use">ご利用イメージ</a></li>
-                            <li><a href="#customer">既存顧客一覧</a></li>
-                            <li><a href="#voice">お客様の声</a></li>
-                            <li><a href="/contact.html">お問い合わせ</a></li>
-                            <li><a href="/signin.html" class="login-button">ログイン</a></li>
-                            <li><a href="/signup.html" class="signup-button">新規登録</a></li>
-
-                            <li class="g-nav-orderBox wrapper">
-                                <div class="g-nav-orderBox-title">＼まずは無料で相談してみませんか？／</div>
-                                <a class="gradient-link tel-link" href="tel:070-3332-3939"><span class="tel-icon"></span>070-3332-3939</a>
-                                <a class="gradient-link web-link" href="#order-form">Webでのお申し込みはこちら</a>
-                            </li>
-                        </ul>
-                    </div>
+        <!-- 通常ヘッダー -->
+        <header class="normal-header visible">
+            <div class="normal-header-inner">
+                <div class="normal-header-logo">
+                    <a href="/">
+                        <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+                    </a>
+                </div>
+                <nav class="normal-header-nav">
+                    <a href="/">TOP</a>
+                    <a href="/service.html">対応可能サービス</a>
+                    <a href="/lp.html#voice">お客様の声</a>
+                    <a href="/customers-support-desk.html">カスタマーズサポート</a>
+                    <a href="/index.html#news">お知らせ</a>
+                    <a href="/privacy-policy.html">規約＆ポリシー</a>
                 </nav>
             </div>
         </header>
@@ -69,6 +100,15 @@
   </div>
 </div>
             <!--キービジュアル end-->
+
+            <!-- パンくずリスト -->
+            <div class="breadcrumb">
+                <div class="breadcrumb-inner">
+                    <a href="/">TOP</a>
+                    <span>></span>
+                    <span class="current">ミセサポとは</span>
+                </div>
+            </div>
 
             <!--こんなお悩みありませんか-->
             <article id="problem" class="problem-bg section-box">
@@ -912,51 +952,68 @@
             </section>
             <!--発注フォーム end-->
         </main>
-
-        <footer id="footer" class="order-box-view">
-            <section class="footer-flex section-box wrapper">
-                <img src="/images/footer-logo.jpg" alt="ミセサポ">
-                <table class="footer-info">
-                    <tr>
-                        <th>運営会社</th>
-                        <td>株式会社ミセサポ</td>
-                    </tr>
-                     <tr>
-                        <th>代表取締役</th>
-                        <td>正田和輝</td>
-                    </tr>
-                     <tr>
-                        <th>住所</th>
-                        <td>〒103-0025 東京都中央区日本橋茅場町1-8-1　茅場町一丁目平和ビル7F</td>
-                    </tr>
-                     <tr>
-                        <th>電話番号</th>
-                        <td><a class="footer-tel-link" href="tel:070-3332-3939">070-3332-3939</a></td>
-                    </tr>
-                </table>
-            </section>
-            <div class="footer-bottom">&#169;2025 ミセサポ</div>
-        </footer>
-
-        <!--お問い合わせBOX-->
-        <div class="order-bottom-box">
-            <div class="order-bottom-box-inner">
-                <a class="bottom-box-link tel-link" href="tel:070-3332-3939"><span class="tel-icon"></span>070-3332-3939</a>
-                <a class="bottom-box-link web-link" href="#order-form">Webでのお申し込みはこちら</a>
-            </div>
-</div>
-        <!--お問い合わせBOX end-->
-        <div class="pagetop"><a href="#"><img src="/images/topbtn.png" alt="TOPへ戻る"></a></div>
-        
-        <!-- Service Modals -->
-        @include('partials.service_item_modal')
-        @include('partials.details_modal')
-        @include('partials.order_modal')
-        @include('partials.cart_added_modal')
-        
-        <script src="/modal_manager.js"></script>
-        <script src="/app.js"></script>
         <script src="/js/swiper-bundle.min.js"></script>
         <script src="/js/script.js"></script>
+        <script>
+            // パスを解決（GitHub Pages対応）
+            function resolvePath(path) {
+                if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+                    return path;
+                }
+                
+                const hostname = window.location.hostname;
+                const isLocalDev = hostname === 'localhost' || 
+                                  hostname === '127.0.0.1' ||
+                                  hostname === '';
+                
+                if (isLocalDev) {
+                    return path.startsWith('/') ? path : '/' + path;
+                }
+                
+                // GitHub Pagesでは/misesapo/を追加
+                let resolvedPath;
+                if (path.startsWith('/misesapo/')) {
+                    resolvedPath = path;
+                } else if (path.startsWith('/')) {
+                    resolvedPath = '/misesapo' + path;
+                } else {
+                    resolvedPath = '/misesapo/' + path;
+                }
+                
+                return window.location.origin + resolvedPath;
+            }
+            
+            // LPページでは通常ヘッダーを常時表示
+            document.addEventListener('DOMContentLoaded', function() {
+                const normalHeader = document.querySelector('.normal-header');
+                if (normalHeader) {
+                    normalHeader.classList.add('visible');
+                    // スクロールイベントでクラスを削除しないようにする
+                    const originalRemove = normalHeader.classList.remove;
+                    normalHeader.classList.remove = function(...args) {
+                        if (args[0] !== 'visible') {
+                            originalRemove.apply(this, args);
+                        }
+                    };
+                }
+                
+                // リンクを解決
+                document.querySelectorAll('a[href^="/"]').forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+                        link.href = resolvePath(href);
+                    }
+                });
+                
+                // 画像を解決
+                document.querySelectorAll('img[src^="/"]').forEach(img => {
+                    const src = img.getAttribute('src');
+                    if (src && !src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+                        img.src = resolvePath(src);
+                    }
+                });
+            });
+        </script>
+        <script src="/js/header.js"></script>
     </body>
 </html>

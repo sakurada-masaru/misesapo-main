@@ -11,6 +11,10 @@
     <div id="default-header-wrapper">
     @include('partials.header')
     </div>
+    <!-- 通常ヘッダー（ログイン画面用） -->
+    <div id="normal-header-wrapper" style="display: none;">
+    @include('partials.normal-header')
+    </div>
     <!-- リリース前チェックボックス（清掃員関連ページでは非表示） -->
     <div id="release-check-section" class="release-check-section" data-hide-for-staff>
       <div class="release-check-container">
@@ -37,7 +41,7 @@
     @include('partials.footer')
     <!-- フィードバックボタン（清掃員関連ページでは非表示） -->
     <div data-hide-for-staff>
-      @include('partials.feedback-button')
+    @include('partials.feedback-button')
     </div>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -50,13 +54,32 @@
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
     <script>
-      // 清掃員関連ページではリリース前チェックとフィードバックボタンを非表示
+      // 清掃員関連ページとログイン画面ではリリース前チェックとフィードバックボタンを非表示
+      // ログイン画面では通常ヘッダーを表示
       (function() {
         const bodyClass = document.body.className || '';
         const path = window.location.pathname || '';
         const isStaffPage = bodyClass.includes('staff') || path.includes('/staff/');
+        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
         
-        if (isStaffPage) {
+        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
+        if (isSigninPage) {
+          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
+          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
+          if (defaultHeaderWrapper) {
+            defaultHeaderWrapper.style.display = 'none';
+          }
+          if (normalHeaderWrapper) {
+            normalHeaderWrapper.style.display = 'block';
+            // ログイン画面では通常ヘッダーを常に表示
+            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
+            if (normalHeader) {
+              normalHeader.classList.add('visible');
+            }
+          }
+        }
+        
+        if (isStaffPage || isSigninPage) {
           // リリース前チェックセクションを非表示
           const releaseCheckSection = document.getElementById('release-check-section');
           if (releaseCheckSection) {
