@@ -2174,26 +2174,8 @@
         <div class="news-section-wrapper" id="news">
             <div class="news-section">
                 <h3 class="news-section__title">ミセサポからのお知らせ</h3>
-                <ul class="news-section__list">
-                    <li class="news-section__item">
-                        <span class="news-section__date">2024.12.20</span>
-                        <span class="news-section__text">
-                            年末年始の営業時間について
-                            <span class="news-section__new">NEW</span>
-                        </span>
-                    </li>
-                    <li class="news-section__item">
-                        <span class="news-section__date">2024.12.15</span>
-                        <span class="news-section__text">
-                            新サービス「定期メンテナンスプラン」のご案内
-                        </span>
-                    </li>
-                    <li class="news-section__item">
-                        <span class="news-section__date">2024.12.10</span>
-                        <span class="news-section__text">
-                            システムメンテナンスのお知らせ
-                        </span>
-                    </li>
+                <ul class="news-section__list" id="news-list">
+                    <!-- お知らせはJavaScriptで動的に追加されます -->
                 </ul>
         </div>
     </div>
@@ -2482,7 +2464,7 @@
                                         <ul class="mega-menu-column-list">
                                             <li><a href="/privacy-policy.html"><span>個人情報保護方針</span></a></li>
                                             <li><a href="javascript:void(0);"><span>特定商取引法に基づく表記</span></a></li>
-                                            <li><a href="javascript:void(0);"><span>職場環境改善に向けた方針</span></a></li>
+                                            <li><a href="/workplace-policy.html"><span>職場環境改善に向けた方針</span></a></li>
                                             <li><a href="/security-policy.html"><span>情報セキュリティ基本方針</span></a></li>
                                             <li><a href="/antisocial-declaration.html"><span>反社会的勢力排除宣言</span></a></li>
                                             <li><a href="/service-terms.html"><span>サービス利用規約</span></a></li>
@@ -2589,7 +2571,7 @@
                 <a href="/service.html">対応可能サービス</a>
                 <a href="/lp.html#voice">お客様の声</a>
                 <a href="/customers-support-desk.html">カスタマーズサポート</a>
-                <a href="/index.html#news">お知らせ</a>
+                <a href="/announcements.html">お知らせ</a>
                 <a href="/privacy-policy.html">規約＆ポリシー</a>
             </nav>
             <div class="normal-header-actions">
@@ -2675,7 +2657,7 @@
                 <a href="/customers-support-desk.html" class="sp-menu-link">カスタマーズサポート</a>
             </li>
             <li class="sp-menu-item">
-                <a href="/index.html#news" class="sp-menu-link">お知らせ</a>
+                <a href="/announcements.html" class="sp-menu-link">お知らせ</a>
             </li>
             <li class="sp-menu-item">
                 <a href="/privacy-policy.html" class="sp-menu-link">規約＆ポリシー</a>
@@ -2705,7 +2687,7 @@
                     <ul class="sp-menu-submenu-list">
                         <li class="sp-menu-submenu-item"><a href="/privacy-policy.html" class="sp-menu-submenu-link">個人情報保護方針</a></li>
                         <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">特定商取引法に基づく表記</a></li>
-                        <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">職場環境改善に向けた方針</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/workplace-policy.html" class="sp-menu-submenu-link">職場環境改善に向けた方針</a></li>
                         <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">情報セキュリティ基本方針</a></li>
                         <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">反社会的勢力排除宣言</a></li>
                         <li class="sp-menu-submenu-item"><a href="/service-terms.html" class="sp-menu-submenu-link">サービス利用規約</a></li>
@@ -3464,6 +3446,136 @@
                     e.preventDefault();
                     window.location.href = '/service.html';
                 });
+            })();
+        </script>
+        <script>
+            // お知らせの取得と表示
+            (function() {
+                'use strict';
+                
+                const API_ENDPOINT = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod/announcements';
+                const newsList = document.getElementById('news-list');
+                
+                if (!newsList) return;
+                
+                // 日付フォーマット変換（ISO形式 → YYYY.MM.DD）
+                function formatDate(isoString) {
+                    try {
+                        const date = new Date(isoString);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        return `${year}.${month}.${day}`;
+                    } catch (e) {
+                        console.warn('日付フォーマットエラー:', e);
+                        return '';
+                    }
+                }
+                
+                // お知らせが新しいかどうか判定（7日以内）
+                function isNew(publishedAt) {
+                    try {
+                        const published = new Date(publishedAt);
+                        const now = new Date();
+                        const diffTime = now - published;
+                        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                        return diffDays <= 7;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+                
+                // お知らせアイテムを生成
+                function createNewsItem(announcement) {
+                    const li = document.createElement('li');
+                    li.className = 'news-section__item';
+                    
+                    const date = formatDate(announcement.published_at || announcement.created_at);
+                    const dateSpan = document.createElement('span');
+                    dateSpan.className = 'news-section__date';
+                    dateSpan.textContent = date;
+                    
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'news-section__text';
+                    
+                    // リンクがある場合はaタグで囲む
+                    if (announcement.link) {
+                        const link = document.createElement('a');
+                        link.href = announcement.link;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        link.textContent = announcement.title || 'お知らせ';
+                        link.style.textDecoration = 'none';
+                        link.style.color = 'inherit';
+                        textSpan.appendChild(link);
+                    } else {
+                        textSpan.textContent = announcement.title || 'お知らせ';
+                    }
+                    
+                    // 新しいお知らせにはNEWバッジを追加
+                    if (isNew(announcement.published_at || announcement.created_at)) {
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'news-section__new';
+                        newBadge.textContent = 'NEW';
+                        textSpan.appendChild(newBadge);
+                    }
+                    
+                    li.appendChild(dateSpan);
+                    li.appendChild(textSpan);
+                    
+                    return li;
+                }
+                
+                // お知らせを取得して表示
+                async function loadAnnouncements() {
+                    try {
+                        const response = await fetch(API_ENDPOINT);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        const announcements = await response.json();
+                        
+                        // 「お知らせページのみ」のお知らせを除外
+                        const filteredAnnouncements = announcements.filter(announcement => 
+                            announcement.target !== 'announcements-page'
+                        );
+                        
+                        // 最新3件のみ表示
+                        const latestAnnouncements = filteredAnnouncements.slice(0, 3);
+                        
+                        // 既存のリストをクリア
+                        newsList.innerHTML = '';
+                        
+                        if (latestAnnouncements.length === 0) {
+                            // お知らせがない場合
+                            const li = document.createElement('li');
+                            li.className = 'news-section__item';
+                            li.textContent = '現在お知らせはありません';
+                            li.style.color = '#999';
+                            newsList.appendChild(li);
+                        } else {
+                            // お知らせを追加
+                            latestAnnouncements.forEach((announcement, index) => {
+                                const item = createNewsItem(announcement);
+                                // アニメーション遅延を設定
+                                item.style.animationDelay = `${(index + 1) * 0.1}s`;
+                                newsList.appendChild(item);
+                            });
+                        }
+                    } catch (error) {
+                        console.error('[Announcements] お知らせの取得に失敗しました:', error);
+                        // エラー時はフォールバックメッセージを表示
+                        newsList.innerHTML = '<li class="news-section__item" style="color: #999;">お知らせの読み込みに失敗しました</li>';
+                    }
+                }
+                
+                // ページ読み込み時に実行
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', loadAnnouncements);
+                } else {
+                    loadAnnouncements();
+                }
             })();
         </script>
         <script>

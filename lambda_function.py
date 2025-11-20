@@ -2,10 +2,16 @@ import json
 import boto3
 import base64
 import os
+import uuid
 from datetime import datetime
+from boto3.dynamodb.conditions import Key
 
 # S3クライアントの初期化
 s3_client = boto3.client('s3')
+
+# DynamoDBリソースの初期化
+dynamodb = boto3.resource('dynamodb')
+ANNOUNCEMENTS_TABLE = dynamodb.Table('announcements')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -78,6 +84,12 @@ def lambda_handler(event, context):
                 return get_training_videos_data(headers)
             elif method == 'PUT' or method == 'POST':
                 return save_training_videos_data(event, headers)
+        elif normalized_path == '/announcements':
+            # お知らせデータの読み書き
+            if method == 'GET':
+                return get_announcements(headers)
+            elif method == 'POST' or method == 'PUT':
+                return create_announcement(event, headers)
         else:
             # デバッグ: パスが一致しなかった場合
             print(f"DEBUG: Path not matched. normalized_path={normalized_path}, original_path={path}")
@@ -339,4 +351,120 @@ def save_training_videos_data(event, headers):
     except Exception as e:
         print(f"Error saving to S3: {str(e)}")
         raise
+
+def create_announcement(event, headers):
+    """
+    お知らせを作成してDynamoDBに保存
+    """
+    try:
+        print(f"[DEBUG] create_announcement called. event keys: {list(event.keys())}")
+        print(f"[DEBUG] event body type: {type(event.get('body'))}")
+        print(f"[DEBUG] event body: {str(event.get('body'))[:200]}")
+        
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        print(f"[DEBUG] body after decode: {str(body)[:200]}")
+        
+        # JSONをパース
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        print(f"[DEBUG] body_json: {body_json}")
+        
+        # 現在時刻を取得
+        now = datetime.utcnow().isoformat() + 'Z'
+        announcement_id = str(uuid.uuid4())
+        
+        # DynamoDBに保存するアイテムを作成
+        item = {
+            'announcement_id': announcement_id,
+            'published_at': now,
+            'title': body_json.get('title', ''),
+            'body': body_json.get('body', ''),
+            'target': body_json.get('target', 'all'),  # all, customers, staff, partners
+            'priority': body_json.get('priority', 'normal'),  # normal, high, critical
+            'link': body_json.get('link', ''),
+            'status': 'published',  # published, draft, archived
+            'created_at': now,
+            'updated_at': now,
+        }
+        
+        print(f"[DEBUG] Item to save: {item}")
+        print(f"[DEBUG] Table name: {ANNOUNCEMENTS_TABLE.table_name}")
+        
+        # DynamoDBに保存
+        ANNOUNCEMENTS_TABLE.put_item(Item=item)
+        
+        print(f"[DEBUG] Successfully saved to DynamoDB")
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'お知らせを投稿しました',
+                'id': announcement_id
+            }, ensure_ascii=False)
+        }
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] JSON decode error: {str(e)}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'Invalid JSON',
+                'message': str(e)
+            })
+        }
+    except Exception as e:
+        print(f"[ERROR] Error creating announcement: {str(e)}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'お知らせの投稿に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_announcements(headers):
+    """
+    お知らせ一覧を取得（最新10件）
+    """
+    try:
+        # GSIを使用して公開済みのお知らせを取得
+        response = ANNOUNCEMENTS_TABLE.query(
+            IndexName='status-published_at-index',
+            KeyConditionExpression=Key('status').eq('published'),
+            ScanIndexForward=False,  # 降順（新しい順）
+            Limit=10
+        )
+        
+        # DynamoDBのアイテムをJSONに変換
+        items = response.get('Items', [])
+        
+        # 日付文字列をそのまま返す（フロントエンドで処理）
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(items, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting announcements: {str(e)}")
+        # エラー時は空配列を返す
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps([], ensure_ascii=False)
+        }
 

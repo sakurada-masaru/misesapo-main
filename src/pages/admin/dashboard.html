@@ -10,6 +10,36 @@
     </div>
   </div>
 
+  <!-- Quick Links -->
+  <section class="dashboard-section quick-links-section">
+    <h2 class="section-title">
+      <i class="fas fa-link"></i>
+      クイックリンク
+    </h2>
+    <div class="quick-links">
+      <button type="button" class="quick-link" id="open-notice-modal">
+        <i class="fas fa-bullhorn"></i>
+        <span>お知らせ</span>
+      </button>
+      <a href="/admin/users.html" class="quick-link">
+        <i class="fas fa-users"></i>
+        <span>ユーザーID管理</span>
+      </a>
+      <a href="/admin/orders.html" class="quick-link">
+        <i class="fas fa-shopping-cart"></i>
+        <span>発注管理</span>
+      </a>
+      <a href="/admin/services.html" class="quick-link">
+        <i class="fas fa-tools"></i>
+        <span>サービス管理</span>
+      </a>
+      <a href="/admin/reports.html" class="quick-link">
+        <i class="fas fa-file-alt"></i>
+        <span>レポート管理</span>
+      </a>
+    </div>
+  </section>
+
   <!-- Summary Stats -->
   <div class="stats-grid">
     <div class="stat-card">
@@ -122,35 +152,181 @@
     </section>
   </div>
 
-  <!-- Quick Links -->
-  <section class="dashboard-section">
-    <h2 class="section-title">クイックリンク</h2>
-    <div class="quick-links">
-      <a href="/admin/users.html" class="quick-link">
-        <i class="fas fa-users"></i>
-        <span>ユーザーID管理</span>
-      </a>
-      <a href="/admin/orders.html" class="quick-link">
-        <i class="fas fa-shopping-cart"></i>
-        <span>発注管理</span>
-      </a>
-      <a href="/admin/services.html" class="quick-link">
-        <i class="fas fa-tools"></i>
-        <span>サービス管理</span>
-      </a>
-      <a href="/admin/reports.html" class="quick-link">
-        <i class="fas fa-file-alt"></i>
-        <span>レポート管理</span>
-      </a>
+  <!-- Notice Modal -->
+  <div class="notice-modal-backdrop" id="notice-modal-backdrop">
+    <div class="notice-modal" role="dialog" aria-modal="true" aria-labelledby="notice-modal-title">
+      <button type="button" class="notice-modal-close" id="close-notice-modal" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3 id="notice-modal-title">お知らせを投稿</h3>
+      <p class="modal-description">
+        管理者から対象ユーザーへお知らせを配信します。投稿すると通知と共にTOPページのお知らせカードに反映されます。
+      </p>
+      <form id="notice-form">
+        <div class="notice-field">
+          <label for="notice-title">タイトル</label>
+          <input type="text" id="notice-title" name="title" placeholder="例：メンテナンス作業のお知らせ" required>
+        </div>
+        <div class="notice-field">
+          <label for="notice-target">配信対象</label>
+          <select id="notice-target" name="target">
+            <option value="all">全ユーザー</option>
+            <option value="customers">顧客</option>
+            <option value="staff">清掃スタッフ</option>
+            <option value="partners">パートナー企業</option>
+            <option value="announcements-page">お知らせページのみ</option>
+          </select>
+        </div>
+        <div class="notice-field">
+          <label for="notice-priority">重要度</label>
+          <div class="priority-group">
+            <select id="notice-priority" name="priority">
+              <option value="normal">通常</option>
+              <option value="high">高</option>
+              <option value="critical">緊急</option>
+            </select>
+          </div>
+        </div>
+        <div class="notice-field">
+          <label for="notice-body">本文</label>
+          <textarea id="notice-body" name="body" placeholder="お知らせの内容を記入してください" required></textarea>
+        </div>
+        <div class="notice-field">
+          <label for="notice-link">関連リンク（任意）</label>
+          <input type="url" id="notice-link" name="link" placeholder="例：https://example.com/news/123">
+        </div>
+        <div class="notice-status" id="notice-status" aria-live="polite"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancel-notice">キャンセル</button>
+          <button type="submit" class="btn-submit">投稿する</button>
+        </div>
+      </form>
     </div>
-  </section>
+  </div>
 
   <style>
+    .notice-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .notice-modal-backdrop.active {
+      display: flex;
+    }
+    .notice-modal {
+      background: #fff;
+      border-radius: 20px;
+      width: min(720px, 92vw);
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .notice-modal h3 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+    .notice-modal p.modal-description {
+      margin-bottom: 24px;
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+    .notice-modal form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .notice-field label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #111827;
+      margin-bottom: 6px;
+      display: inline-block;
+    }
+    .notice-field input,
+    .notice-field select,
+    .notice-field textarea {
+      width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      transition: border 0.2s, box-shadow 0.2s;
+      background: #fff;
+    }
+    .notice-field textarea {
+      min-height: 160px;
+      resize: vertical;
+    }
+    .notice-field input:focus,
+    .notice-field select:focus,
+    .notice-field textarea:focus {
+      outline: none;
+      border-color: #ff679c;
+      box-shadow: 0 0 0 3px rgba(255,103,156,0.2);
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .modal-actions button {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 22px;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .btn-cancel {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .btn-submit {
+      background: #ff679c;
+      color: #fff;
+    }
+    .notice-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: #6b7280;
+    }
+    body.page-admin-dashboard {
+      background: #f4f5f7;
+    }
+    body.page-admin-dashboard #release-check-section,
+    body.page-admin-dashboard #feedback-button {
+      display: none !important;
+    }
+    body.page-admin-dashboard main {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+    }
+    body.page-admin-dashboard .container {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+    }
     .admin-dashboard.container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 24px;
-      background: #f9fafb;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 0 24px 64px;
+      background: transparent;
     }
     .dashboard-header {
       margin-bottom: 32px;
@@ -174,8 +350,9 @@
     }
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 20px;
+      width: 100%;
       margin-bottom: 32px;
     }
     .stat-card {
@@ -212,8 +389,9 @@
     }
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 24px;
+      width: 100%;
       margin-bottom: 32px;
     }
     .dashboard-section {
@@ -308,10 +486,14 @@
       font-size: 0.875rem;
       color: #6b7280;
     }
+    .quick-links-section {
+      margin-bottom: 32px;
+    }
     .quick-links {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 16px;
+      width: 100%;
     }
     .quick-link {
       display: flex;
@@ -325,6 +507,125 @@
       text-decoration: none;
       color: #374151;
       transition: all 0.2s;
+    }
+    .notice-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .notice-modal-backdrop.active {
+      display: flex;
+    }
+    .notice-modal {
+      background: #fff;
+      border-radius: 20px;
+      width: min(720px, 92vw);
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalFade 0.2s ease;
+    }
+    .notice-status {
+      min-height: 24px;
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+    .notice-status.success {
+      color: #059669;
+    }
+    .notice-status.error {
+      color: #dc2626;
+    }
+    .notice-status.loading {
+      color: #4b5563;
+    }
+    .notice-modal h3 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+    .notice-modal p.modal-description {
+      margin-bottom: 24px;
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+    .notice-field {
+      display: flex;
+      flex-direction: column;
+    }
+    .notice-field label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+    .notice-field input,
+    .notice-field select,
+    .notice-field textarea {
+      width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      transition: border 0.2s, box-shadow 0.2s;
+      background: #fff;
+    }
+    .notice-field textarea {
+      min-height: 160px;
+      resize: vertical;
+    }
+    .notice-field input:focus,
+    .notice-field select:focus,
+    .notice-field textarea:focus {
+      outline: none;
+      border-color: #ff679c;
+      box-shadow: 0 0 0 3px rgba(255,103,156,0.2);
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .modal-actions button {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 22px;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .btn-cancel {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .btn-submit {
+      background: #ff679c;
+      color: #fff;
+    }
+    .notice-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: #6b7280;
+    }
+    @keyframes modalFade {
+      from {
+        transform: translateY(12px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
     .quick-link:hover {
       background: #ffffff;
@@ -342,19 +643,22 @@
       font-weight: 500;
     }
     @media (max-width: 1200px) {
+      .admin-dashboard.container {
+        padding: 0 16px 48px;
+      }
       .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .dashboard-grid {
         grid-template-columns: 1fr;
       }
       .quick-links {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
     @media (max-width: 768px) {
-      .admin-dashboard {
-        padding: 16px;
+      .admin-dashboard.container {
+        padding: 0 16px 40px;
       }
       .stats-grid {
         grid-template-columns: 1fr;
@@ -369,3 +673,113 @@
   </style>
 </main>
 
+<script>
+  (function() {
+    const noticeModalBackdrop = document.getElementById('notice-modal-backdrop');
+    const openNoticeBtn = document.getElementById('open-notice-modal');
+    const closeNoticeBtn = document.getElementById('close-notice-modal');
+    const cancelNoticeBtn = document.getElementById('cancel-notice');
+    const noticeForm = document.getElementById('notice-form');
+    const noticeStatus = document.getElementById('notice-status');
+    const submitButton = noticeForm ? noticeForm.querySelector('.btn-submit') : null;
+
+    const ANNOUNCEMENTS_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod/announcements';
+
+    function openNoticeModal() {
+      noticeModalBackdrop.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeNoticeModal() {
+      noticeModalBackdrop.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    if (openNoticeBtn) {
+      openNoticeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openNoticeModal();
+      });
+    }
+    if (closeNoticeBtn) {
+      closeNoticeBtn.addEventListener('click', closeNoticeModal);
+    }
+    if (cancelNoticeBtn) {
+      cancelNoticeBtn.addEventListener('click', closeNoticeModal);
+    }
+    if (noticeModalBackdrop) {
+      noticeModalBackdrop.addEventListener('click', function(e) {
+        if (e.target === noticeModalBackdrop) {
+          closeNoticeModal();
+        }
+      });
+    }
+    if (noticeForm) {
+      noticeForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(noticeForm);
+        const payload = {
+          title: formData.get('title').trim(),
+          body: formData.get('body').trim(),
+          target: formData.get('target') || 'all',
+          priority: formData.get('priority') || 'normal',
+          link: formData.get('link')?.trim() || ''
+        };
+
+        if (!payload.title || !payload.body) {
+          setNoticeStatus('タイトルと本文を入力してください。', 'error');
+          return;
+        }
+
+        try {
+          setNoticeStatus('送信中です...', 'loading');
+          toggleSubmitDisabled(true);
+
+          const response = await fetch(ANNOUNCEMENTS_API, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}));
+            throw new Error(errorBody?.message || `HTTP ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log('[Notice] Posted:', result);
+          setNoticeStatus('お知らせを投稿しました。', 'success');
+          noticeForm.reset();
+
+          setTimeout(() => {
+            setNoticeStatus('', '');
+            closeNoticeModal();
+          }, 1000);
+        } catch (error) {
+          console.error('[Notice] Failed to post:', error);
+          setNoticeStatus(`送信に失敗しました: ${error.message}`, 'error');
+        } finally {
+          toggleSubmitDisabled(false);
+        }
+      });
+    }
+
+    function setNoticeStatus(message, status) {
+      if (!noticeStatus) return;
+      noticeStatus.textContent = message || '';
+      noticeStatus.classList.remove('success', 'error', 'loading');
+      if (status) {
+        noticeStatus.classList.add(status);
+      }
+    }
+
+    function toggleSubmitDisabled(disabled) {
+      if (!submitButton) return;
+      submitButton.disabled = disabled;
+      submitButton.textContent = disabled ? '送信中...' : '投稿する';
+    }
+  })();
+</script>
