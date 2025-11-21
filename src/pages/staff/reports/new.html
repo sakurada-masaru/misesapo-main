@@ -66,19 +66,36 @@
 
     <!-- Photos -->
     <div class="form-section">
-      <h2 class="section-title">写真アップロード</h2>
+      <h2 class="section-title">
+        写真アップロード
+        <span class="required-badge">必須</span>
+      </h2>
       <div class="photo-upload">
-        <div class="photo-grid">
-          <div class="photo-item">
-            <label class="photo-upload-btn">
-              <input type="file" accept="image/*" capture="environment" />
-              <i class="fas fa-camera"></i>
-              <span>写真を追加</span>
-            </label>
+        <div class="photo-category">
+          <h3 class="photo-category-title">作業前</h3>
+          <div class="photo-grid" data-category="before">
+            <div class="photo-item">
+              <label class="photo-upload-btn">
+                <input type="file" accept="image/*" capture="environment" data-category="before" />
+                <i class="fas fa-camera"></i>
+                <span>写真を追加</span>
+              </label>
+            </div>
           </div>
-          <!-- Placeholder for uploaded photos -->
         </div>
-        <p class="form-note">作業前・作業後の写真を撮影してください</p>
+        <div class="photo-category">
+          <h3 class="photo-category-title">作業後</h3>
+          <div class="photo-grid" data-category="after">
+            <div class="photo-item">
+              <label class="photo-upload-btn">
+                <input type="file" accept="image/*" capture="environment" data-category="after" />
+                <i class="fas fa-camera"></i>
+                <span>写真を追加</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <p class="form-note">作業前・作業後の写真をそれぞれ撮影してください（最低1枚ずつ）</p>
       </div>
     </div>
 
@@ -105,10 +122,29 @@
       </div>
     </div>
 
+    <!-- Progress Indicator -->
+    <div class="form-progress">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+      </div>
+      <p class="progress-text" id="progress-text">進捗: 0%</p>
+    </div>
+
     <!-- Actions -->
     <div class="form-actions">
-      <button type="button" class="btn btn-outline btn-block" onclick="window.location.href='/staff/dashboard.html'">キャンセル</button>
-      <button type="submit" class="btn btn-primary btn-block">作業完了を報告</button>
+      <button type="button" class="btn btn-outline btn-block btn-large" onclick="window.location.href='/staff/dashboard.html'">キャンセル</button>
+      <button type="submit" class="btn btn-primary btn-block btn-large" id="submit-btn">
+        <i class="fas fa-check-circle"></i>
+        作業完了を報告
+      </button>
+    </div>
+
+    <!-- オフラインインジケーター -->
+    <div class="offline-indicator-report" id="offline-indicator-report" style="display: none;">
+      <div class="offline-content">
+        <i class="fas fa-wifi-slash"></i>
+        <span>オフライン（保存済み）</span>
+      </div>
     </div>
   </form>
 
@@ -206,6 +242,17 @@
       font-weight: 600;
       color: #111827;
       margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .required-badge {
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
     }
     .info-card {
       display: flex;
@@ -273,6 +320,20 @@
     }
     .photo-upload {
       margin-top: 12px;
+    }
+    .photo-category {
+      margin-bottom: 24px;
+    }
+    .photo-category:last-child {
+      margin-bottom: 0;
+    }
+    .photo-category-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 12px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
     }
     .photo-grid {
       display: grid;
@@ -362,6 +423,61 @@
     .form-actions .btn {
       flex: 1;
     }
+    .btn-large {
+      padding: 16px 24px;
+      font-size: 1.125rem;
+      font-weight: 700;
+      min-height: 56px;
+    }
+    .btn-large i {
+      margin-right: 8px;
+    }
+    .form-progress {
+      margin: 24px 0;
+      padding: 0 16px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FF6BA6 0%, #FF8CC8 100%);
+      transition: width 0.3s ease;
+    }
+    .progress-text {
+      font-size: 0.875rem;
+      color: #6b7280;
+      text-align: center;
+      margin: 0;
+    }
+    .offline-indicator-report {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #fef3c7;
+      border-bottom: 2px solid #f59e0b;
+      padding: 12px 16px;
+      z-index: 1000001;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .offline-indicator-report .offline-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #92400e;
+    }
+    .offline-indicator-report i {
+      font-size: 1rem;
+    }
     @media (max-width: 768px) {
       .staff-report-new {
         padding: 12px;
@@ -379,6 +495,72 @@
     }
   </style>
   <script>
+    // フォームデータの保存（オフライン対応）
+    function saveFormData() {
+      const formData = {
+        workContent: Array.from(document.querySelectorAll('input[name="work-content"]:checked')).map(cb => cb.value),
+        workMemo: document.querySelector('textarea[name="work-memo"]').value,
+        photos: {
+          before: [],
+          after: []
+        },
+        location: null,
+        timestamp: new Date().toISOString()
+      };
+
+      // 写真データを保存
+      document.querySelectorAll('.photo-item img').forEach(img => {
+        const category = img.closest('.photo-grid').dataset.category;
+        formData.photos[category].push(img.src);
+      });
+
+      localStorage.setItem('staff-report-draft', JSON.stringify(formData));
+    }
+
+    // フォームデータの読み込み
+    function loadFormData() {
+      const saved = localStorage.getItem('staff-report-draft');
+      if (saved) {
+        const formData = JSON.parse(saved);
+        // フォームデータを復元
+        document.querySelectorAll('input[name="work-content"]').forEach(cb => {
+          cb.checked = formData.workContent.includes(cb.value);
+        });
+        document.querySelector('textarea[name="work-memo"]').value = formData.workMemo || '';
+      }
+    }
+
+    // 進捗の計算
+    function updateProgress() {
+      const form = document.getElementById('report-form');
+      const totalFields = 4; // 作業内容、写真（前）、写真（後）、メモ
+      let completed = 0;
+
+      // 作業内容
+      if (document.querySelectorAll('input[name="work-content"]:checked').length > 0) {
+        completed++;
+      }
+
+      // 写真（前）
+      if (document.querySelectorAll('[data-category="before"] .photo-item img').length > 0) {
+        completed++;
+      }
+
+      // 写真（後）
+      if (document.querySelectorAll('[data-category="after"] .photo-item img').length > 0) {
+        completed++;
+      }
+
+      // メモ（任意）
+      if (document.querySelector('textarea[name="work-memo"]').value.trim()) {
+        completed++;
+      }
+
+      const progress = (completed / totalFields) * 100;
+      document.getElementById('progress-fill').style.width = progress + '%';
+      document.getElementById('progress-text').textContent = `進捗: ${Math.round(progress)}%`;
+    }
+
     // Photo upload preview
     (function() {
       const photoUploadBtns = document.querySelectorAll('.photo-upload-btn input[type="file"]');
@@ -389,13 +571,27 @@
           if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = function(e) {
+              const photoGrid = input.closest('.photo-grid');
               const photoItem = input.closest('.photo-item');
-              photoItem.innerHTML = `
+              const category = photoGrid.dataset.category;
+              
+              // 新しい写真アイテムを作成
+              const newPhotoItem = document.createElement('div');
+              newPhotoItem.className = 'photo-item';
+              newPhotoItem.style.position = 'relative';
+              newPhotoItem.innerHTML = `
                 <img src="${e.target.result}" alt="Uploaded photo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
-                <button type="button" class="photo-remove" onclick="this.closest('.photo-item').remove()" style="position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;">
+                <button type="button" class="photo-remove" onclick="this.closest('.photo-item').remove(); updateProgress(); saveFormData();" style="position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,0.2);">
                   <i class="fas fa-times"></i>
                 </button>
               `;
+              
+              // 既存のアップロードボタンの前に追加
+              photoItem.parentNode.insertBefore(newPhotoItem, photoItem);
+              
+              // 進捗を更新
+              updateProgress();
+              saveFormData();
             };
             reader.readAsDataURL(file);
           }
@@ -403,22 +599,77 @@
       });
     })();
 
+    // フォーム入力の監視
+    document.querySelectorAll('input[name="work-content"]').forEach(cb => {
+      cb.addEventListener('change', function() {
+        updateProgress();
+        saveFormData();
+      });
+    });
+
+    document.querySelector('textarea[name="work-memo"]').addEventListener('input', function() {
+      updateProgress();
+      saveFormData();
+    });
+
     // Location get
     document.getElementById('get-location').addEventListener('click', function() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
           document.getElementById('location-display').style.display = 'block';
+          saveFormData();
         });
       }
     });
 
+    // オフライン対応
+    (function() {
+      const offlineIndicator = document.getElementById('offline-indicator-report');
+      
+      function updateOnlineStatus() {
+        if (!navigator.onLine) {
+          offlineIndicator.style.display = 'block';
+        } else {
+          offlineIndicator.style.display = 'none';
+        }
+      }
+
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+      updateOnlineStatus();
+    })();
+
     // Form submit
     document.getElementById('report-form').addEventListener('submit', function(e) {
       e.preventDefault();
+      
+      // 必須項目のチェック
+      const beforePhotos = document.querySelectorAll('[data-category="before"] .photo-item img').length;
+      const afterPhotos = document.querySelectorAll('[data-category="after"] .photo-item img').length;
+      
+      if (beforePhotos === 0 || afterPhotos === 0) {
+        alert('作業前・作業後の写真をそれぞれ最低1枚ずつアップロードしてください。');
+        return;
+      }
+
+      // オフラインの場合はローカルストレージに保存
+      if (!navigator.onLine) {
+        alert('オフラインのため、データを保存しました。オンラインになったら自動的に送信されます。');
+        localStorage.setItem('staff-report-pending', 'true');
+        window.location.href = '/staff/dashboard.html';
+        return;
+      }
+
       // TODO: Backend integration
       alert('作業完了を報告しました。');
+      localStorage.removeItem('staff-report-draft');
+      localStorage.removeItem('staff-report-pending');
       window.location.href = '/staff/dashboard.html';
     });
+
+    // 初期化
+    loadFormData();
+    updateProgress();
   </script>
 </main>
 

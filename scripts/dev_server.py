@@ -71,13 +71,83 @@ class DevServerHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(PUBLIC), **kwargs)
     
+    def translate_path(self, path):
+        """パスを変換（動的ルーティング対応）"""
+        # クエリパラメータを除去
+        path = path.split('?')[0]
+        
+        # 動的ルーティング: /admin/reports/{report_id}/edit.html を /admin/reports/[id]/edit.html にマッピング
+        if path.startswith('/admin/reports/') and path.endswith('/edit.html'):
+            edit_template = PUBLIC / "admin" / "reports" / "[id]" / "edit.html"
+            if edit_template.exists():
+                # [id]/edit.html テンプレートのパスを返す
+                return str(edit_template)
+        
+        # 動的ルーティング: /reports/{report_id}.html を /reports/[id].html にマッピング
+        if path.startswith('/reports/') and path.endswith('.html'):
+            report_id_template = PUBLIC / "reports" / "[id].html"
+            if report_id_template.exists():
+                return str(report_id_template)
+        
+        # 通常のパス変換
+        return super().translate_path(path)
+    
     def do_GET(self):
         """GETリクエスト: 静的ファイル配信またはAPI"""
         if self.path.startswith('/api/'):
             self.handle_api_get()
         else:
-            # .html拡張子なしのリクエストを処理
+            # 動的ルーティング処理
             path = self.path.split('?')[0]
+            print(f"[DEBUG] Processing path: {path}")
+            
+            # 動的ルーティング: /reports/{report_id}.html を /reports/[id].html にマッピング
+            if path.startswith('/reports/') and path.endswith('.html'):
+                # /reports/{report_id}.html の形式
+                report_id_template = PUBLIC / "reports" / "[id].html"
+                if report_id_template.exists():
+                    # ファイルを直接読み込んで返す
+                    try:
+                        with open(report_id_template, 'rb') as f:
+                            content = f.read()
+                        self.send_response(200)
+                        self.send_header('Content-type', 'text/html; charset=utf-8')
+                        self.send_header('Content-length', str(len(content)))
+                        self.end_headers()
+                        self.wfile.write(content)
+                        return
+                    except Exception as e:
+                        print(f"Error serving report template: {e}")
+                        self.send_error(500, f"Internal Server Error: {e}")
+                        return
+            
+            # 動的ルーティング: /admin/reports/{report_id}/edit.html を /admin/reports/[id]/edit.html にマッピング
+            if path.startswith('/admin/reports/') and path.endswith('/edit.html'):
+                # /admin/reports/{report_id}/edit.html の形式
+                edit_template = PUBLIC / "admin" / "reports" / "[id]" / "edit.html"
+                print(f"[DEBUG] Admin edit route matched: path={path}, template={edit_template}, exists={edit_template.exists()}")
+                if edit_template.exists() and edit_template.is_file():
+                    # ファイルを直接読み込んで返す
+                    try:
+                        with open(edit_template, 'rb') as f:
+                            content = f.read()
+                        self.send_response(200)
+                        self.send_header('Content-type', 'text/html; charset=utf-8')
+                        self.send_header('Content-length', str(len(content)))
+                        self.end_headers()
+                        self.wfile.write(content)
+                        print(f"[DEBUG] Successfully served edit template: {edit_template}")
+                        return
+                    except Exception as e:
+                        print(f"[ERROR] Error serving edit template: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        self.send_error(500, f"Internal Server Error: {e}")
+                        return
+                else:
+                    print(f"[ERROR] Edit template not found: {edit_template}")
+            
+            # .html拡張子なしのリクエストを処理
             if not path.endswith('.html') and not path.endswith('/') and '.' not in os.path.basename(path):
                 # 拡張子がない場合、.htmlを追加して試す
                 html_path = path + '.html'
@@ -705,50 +775,50 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             self.handle_training_videos_put()
         elif path.startswith('/api/services/'):
             # サービス更新（既存の処理）
-        path_parts = self.path.split('/')
-        if len(path_parts) == 4 and path_parts[1] == 'api' and path_parts[2] == 'services':
-            service_id = int(path_parts[3])
-            try:
-                # リクエストボディを読み込む
-                content_length = int(self.headers.get('Content-Length', 0))
-                body = self.rfile.read(content_length)
-                service_data = json.loads(body.decode('utf-8'))
-                
-                # 既存のサービスを読み込む
-                with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
-                    services = json.load(f)
-                
-                # サービスを更新
-                updated = False
-                for i, service in enumerate(services):
-                    if service.get('id') == service_id:
-                        service_data['id'] = service_id
-                        services[i] = service_data
-                        updated = True
-                        break
-                
-                if not updated:
-                    self.send_error(404, f"Service {service_id} not found")
-                    return
-                
-                # JSONファイルを保存
-                with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
-                    json.dump(services, f, ensure_ascii=False, indent=2)
-                
-                # ブラウザ経由の変更をログに記録
-                self.log_browser_change(service_id, 'modified', service_data)
-                
-                # ビルドを実行（非同期）
-                self.run_build_async()
-                
-                # 成功レスポンス
-                self.send_json_response({
-                    'status': 'success',
-                    'id': service_id,
-                    'message': 'サービスを更新しました'
-                })
-            except Exception as e:
-                self.send_error(500, f"Failed to update service: {e}")
+            path_parts = self.path.split('/')
+            if len(path_parts) == 4 and path_parts[1] == 'api' and path_parts[2] == 'services':
+                service_id = int(path_parts[3])
+                try:
+                    # リクエストボディを読み込む
+                    content_length = int(self.headers.get('Content-Length', 0))
+                    body = self.rfile.read(content_length)
+                    service_data = json.loads(body.decode('utf-8'))
+                    
+                    # 既存のサービスを読み込む
+                    with open(SERVICE_ITEMS_JSON, 'r', encoding='utf-8') as f:
+                        services = json.load(f)
+                    
+                    # サービスを更新
+                    updated = False
+                    for i, service in enumerate(services):
+                        if service.get('id') == service_id:
+                            service_data['id'] = service_id
+                            services[i] = service_data
+                            updated = True
+                            break
+                    
+                    if not updated:
+                        self.send_error(404, f"Service {service_id} not found")
+                        return
+                    
+                    # JSONファイルを保存
+                    with open(SERVICE_ITEMS_JSON, 'w', encoding='utf-8') as f:
+                        json.dump(services, f, ensure_ascii=False, indent=2)
+                    
+                    # ブラウザ経由の変更をログに記録
+                    self.log_browser_change(service_id, 'modified', service_data)
+                    
+                    # ビルドを実行（非同期）
+                    self.run_build_async()
+                    
+                    # 成功レスポンス
+                    self.send_json_response({
+                        'status': 'success',
+                        'id': service_id,
+                        'message': 'サービスを更新しました'
+                    })
+                except Exception as e:
+                    self.send_error(500, f"Failed to update service: {e}")
             else:
                 self.send_error(404, "API endpoint not found")
         else:

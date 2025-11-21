@@ -877,9 +877,11 @@ def build_all() -> List[str]:
     for page in PAGES_DIR.rglob("*.html"):
         rel = page.relative_to(PAGES_DIR)
         # Special: generate detail pages from reports/[id].html
-        if str(rel).startswith("reports/") and rel.name == "[id].html":
-            _build_report_detail_pages(page, outputs)
-            continue
+        # Note: reports/[id].html is now a dynamic page that fetches data from API
+        # So we just copy the template as-is, not generate static pages
+        # if str(rel).startswith("reports/") and rel.name == "[id].html":
+        #     _build_report_detail_pages(page, outputs)
+        #     continue
         # Special: generate detail pages from sales/clients/[id].html
         if str(rel).startswith("sales/clients/") and rel.name == "[id].html":
             _build_client_detail_pages(page, outputs)

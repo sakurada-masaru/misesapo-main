@@ -4,7 +4,7 @@ import base64
 import os
 import uuid
 from datetime import datetime
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 
 # S3クライアントの初期化
 s3_client = boto3.client('s3')
@@ -12,6 +12,7 @@ s3_client = boto3.client('s3')
 # DynamoDBリソースの初期化
 dynamodb = boto3.resource('dynamodb')
 ANNOUNCEMENTS_TABLE = dynamodb.Table('announcements')
+REPORTS_TABLE = dynamodb.Table('staff-reports')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -59,7 +60,17 @@ def lambda_handler(event, context):
     print(f"DEBUG: event={json.dumps(event, default=str)[:500]}")  # 最初の500文字のみ
     
     # パスを正規化（末尾のスラッシュを削除、先頭のスラッシュを保持）
+    # ステージパス（/prod, /dev など）を除去
     normalized_path = path.rstrip('/') if path else ''
+    if normalized_path.startswith('/prod/'):
+        normalized_path = normalized_path[6:]  # '/prod/' を除去
+    elif normalized_path.startswith('/dev/'):
+        normalized_path = normalized_path[5:]  # '/dev/' を除去
+    elif normalized_path.startswith('/stage/'):
+        normalized_path = normalized_path[7:]  # '/stage/' を除去
+    # 先頭にスラッシュがない場合は追加
+    if normalized_path and not normalized_path.startswith('/'):
+        normalized_path = '/' + normalized_path
     
     try:
         # パスに応じて処理を分岐
@@ -90,6 +101,21 @@ def lambda_handler(event, context):
                 return get_announcements(headers)
             elif method == 'POST' or method == 'PUT':
                 return create_announcement(event, headers)
+        elif normalized_path == '/staff/reports':
+            # レポートデータの読み書き
+            if method == 'GET':
+                return get_reports(event, headers)
+            elif method == 'POST':
+                return create_report(event, headers)
+            elif method == 'PUT':
+                return update_report(event, headers)
+        elif normalized_path.startswith('/staff/reports/'):
+            # レポート詳細の取得・削除
+            report_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_report_detail(report_id, event, headers)
+            elif method == 'DELETE':
+                return delete_report(report_id, event, headers)
         else:
             # デバッグ: パスが一致しなかった場合
             print(f"DEBUG: Path not matched. normalized_path={normalized_path}, original_path={path}")
@@ -466,5 +492,596 @@ def get_announcements(headers):
             'statusCode': 200,
             'headers': headers,
             'body': json.dumps([], ensure_ascii=False)
+        }
+
+# ============================================================================
+# レポート機能
+# ============================================================================
+
+def verify_firebase_token(id_token):
+    """
+    Firebase ID Tokenを検証（簡易版）
+    注意: 本番環境では、Firebase Admin SDKを使用して検証することを推奨
+    """
+    # TODO: Firebase Admin SDKを使用した検証を実装
+    # 現状は簡易的にトークンの存在のみをチェック
+    if not id_token:
+        return {'verified': False, 'error': 'No token provided'}
+    
+    # 簡易検証（本番ではFirebase Admin SDKを使用）
+    # ここでは、トークンが存在することを確認するだけ
+    return {
+        'verified': True,
+        'uid': 'admin-uid',  # 実際にはトークンから取得
+        'email': 'admin@example.com',
+        'role': 'admin'  # 実際にはCustom Claimsから取得
+    }
+
+def check_admin_permission(user_info):
+    """
+    管理者権限をチェック
+    """
+    return user_info.get('role') == 'admin'
+
+def upload_photo_to_s3(base64_image, s3_key):
+    """
+    Base64エンコードされた画像をS3にアップロード
+    """
+    try:
+        # Base64をデコード（data:image/jpeg;base64, のプレフィックスを除去）
+        if ',' in base64_image:
+            base64_image = base64_image.split(',')[-1]
+        image_data = base64.b64decode(base64_image)
+        
+        # S3にアップロード
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=s3_key,
+            Body=image_data,
+            ContentType='image/jpeg',
+            ACL='public-read'  # 公開読み取り可能
+        )
+        
+        # 公開URLを生成
+        photo_url = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
+        return photo_url
+    except Exception as e:
+        print(f"Error uploading photo to S3: {str(e)}")
+        raise
+
+def create_report(event, headers):
+    """
+    レポートを作成
+    """
+    try:
+        # Firebase ID Tokenを取得
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        
+        # トークンを検証
+        user_info = verify_firebase_token(id_token)
+        if not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        # 管理者権限をチェック
+        if not check_admin_permission(user_info):
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
+            }
+        
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # レポートIDを生成
+        report_id = str(uuid.uuid4())
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # 写真をS3にアップロード
+        photo_urls = {}
+        for item in body_json.get('work_items', []):
+            item_id = item['item_id']
+            photo_urls[item_id] = {
+                'before': [],
+                'after': []
+            }
+            
+            # 作業前の写真
+            for idx, base64_image in enumerate(item.get('photos', {}).get('before', [])):
+                if base64_image:
+                    photo_key = f"reports/{report_id}/{item_id}-before-{idx+1}.jpg"
+                    try:
+                        photo_url = upload_photo_to_s3(base64_image, photo_key)
+                        photo_urls[item_id]['before'].append(photo_url)
+                    except Exception as e:
+                        print(f"Error uploading before photo: {str(e)}")
+            
+            # 作業後の写真
+            for idx, base64_image in enumerate(item.get('photos', {}).get('after', [])):
+                if base64_image:
+                    photo_key = f"reports/{report_id}/{item_id}-after-{idx+1}.jpg"
+                    try:
+                        photo_url = upload_photo_to_s3(base64_image, photo_key)
+                        photo_urls[item_id]['after'].append(photo_url)
+                    except Exception as e:
+                        print(f"Error uploading after photo: {str(e)}")
+        
+        # staff_idが指定されていない場合は、created_byを使用
+        staff_id = body_json.get('staff_id') or user_info.get('uid', 'admin-uid')
+        
+        # DynamoDBに保存するアイテムを作成
+        report_item = {
+            'report_id': report_id,
+            'created_at': now,
+            'updated_at': now,
+            'created_by': user_info.get('uid'),
+            'created_by_name': body_json.get('created_by_name', ''),
+            'created_by_email': user_info.get('email', ''),
+            'staff_id': staff_id,
+            'staff_name': body_json.get('staff_name', ''),
+            'staff_email': body_json.get('staff_email', ''),
+            'store_id': body_json['store_id'],
+            'store_name': body_json['store_name'],
+            'cleaning_date': body_json['cleaning_date'],
+            'cleaning_start_time': body_json.get('cleaning_start_time'),
+            'cleaning_end_time': body_json.get('cleaning_end_time'),
+            'status': 'published',
+            'work_items': body_json['work_items'],
+            'location': body_json.get('location'),
+            'satisfaction': {
+                'rating': None,
+                'comment': None,
+                'commented_at': None,
+                'commented_by': None
+            },
+            'ttl': int((datetime.utcnow().timestamp() + (365 * 5 * 24 * 60 * 60)))  # 5年後
+        }
+        
+        # 写真URLをwork_itemsに反映
+        for item in report_item['work_items']:
+            item_id = item['item_id']
+            if item_id in photo_urls:
+                item['photos'] = photo_urls[item_id]
+        
+        # DynamoDBに保存
+        REPORTS_TABLE.put_item(Item=report_item)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'レポートを作成しました',
+                'report_id': report_id
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error creating report: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'レポートの作成に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_reports(event, headers):
+    """
+    レポート一覧を取得
+    """
+    try:
+        # Firebase ID Tokenを取得
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        
+        # トークンを検証
+        user_info = verify_firebase_token(id_token)
+        if not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        # クエリパラメータを取得
+        query_params = event.get('queryStringParameters') or {}
+        limit = int(query_params.get('limit', 20))
+        
+        # 管理者は全レポートを取得、その他は暫定で全レポート閲覧可能
+        # TODO: 店舗とユーザーの関連テーブルができたら、ユーザーは自分の店舗のみ閲覧可能にする
+        
+        # 全レポートをスキャン（効率化のため、将来はGSIを使用）
+        response = REPORTS_TABLE.scan(Limit=limit)
+        
+        items = response.get('Items', [])
+        
+        # 日付でソート（降順）
+        items.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'items': items,
+                'last_key': response.get('LastEvaluatedKey'),
+                'count': len(items)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting reports: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'レポートの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_report_detail(report_id, event, headers):
+    """
+    レポート詳細を取得
+    """
+    try:
+        # Firebase ID Tokenを取得
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        
+        # トークンを検証
+        user_info = verify_firebase_token(id_token)
+        if not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        # DynamoDBからレポートを取得（スキャンを使用）
+        # 注意: テーブルにソートキー（created_at）がある場合、スキャンを使用
+        # または、テーブルスキーマを変更してreport_idのみをパーティションキーにする
+        # スキャン操作ではFilterExpressionにAttrを使用
+        print(f"DEBUG: Getting report with ID: {report_id}")
+        try:
+            # ページネーションに対応してスキャンを実行
+            items = []
+            last_evaluated_key = None
+            
+            while True:
+                scan_kwargs = {
+                    'FilterExpression': Attr('report_id').eq(report_id),
+                    'Limit': 10
+                }
+                if last_evaluated_key:
+                    scan_kwargs['ExclusiveStartKey'] = last_evaluated_key
+                
+                response = REPORTS_TABLE.scan(**scan_kwargs)
+                print(f"DEBUG: Scan response: Items={len(response.get('Items', []))}, ScannedCount={response.get('ScannedCount', 0)}")
+                
+                items.extend(response.get('Items', []))
+                
+                # 見つかったら終了
+                if items:
+                    break
+                
+                # ページネーションが続くか確認
+                last_evaluated_key = response.get('LastEvaluatedKey')
+                if not last_evaluated_key:
+                    break
+            
+            print(f"DEBUG: Total items found: {len(items)}")
+        except Exception as e:
+            print(f"DEBUG: Scan error: {str(e)}")
+            import traceback
+            print(f"DEBUG: Traceback: {traceback.format_exc()}")
+            raise
+        
+        if not items:
+            print(f"DEBUG: No items found for report_id: {report_id}")
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'Report not found'}, ensure_ascii=False)
+            }
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(items[0], ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting report detail: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'レポートの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_report(event, headers):
+    """
+    レポートを更新（管理者のみ）
+    """
+    try:
+        # Firebase ID Tokenを取得
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        
+        # トークンを検証
+        user_info = verify_firebase_token(id_token)
+        if not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        # 管理者権限をチェック
+        if not check_admin_permission(user_info):
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
+            }
+        
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        report_id = body_json.get('report_id')
+        if not report_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'report_id is required'}, ensure_ascii=False)
+            }
+        
+        # 既存のレポートを取得（スキャンを使用、ページネーションに対応）
+        items = []
+        last_evaluated_key = None
+        
+        while True:
+            scan_kwargs = {
+                'FilterExpression': Attr('report_id').eq(report_id),
+                'Limit': 10
+            }
+            if last_evaluated_key:
+                scan_kwargs['ExclusiveStartKey'] = last_evaluated_key
+            
+            existing_response = REPORTS_TABLE.scan(**scan_kwargs)
+            items.extend(existing_response.get('Items', []))
+            
+            # 見つかったら終了
+            if items:
+                break
+            
+            # ページネーションが続くか確認
+            last_evaluated_key = existing_response.get('LastEvaluatedKey')
+            if not last_evaluated_key:
+                break
+        
+        if not items:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'Report not found'}, ensure_ascii=False)
+            }
+        
+        existing_item = items[0]
+        
+        # 写真をS3にアップロード（新しいBase64画像がある場合）
+        photo_urls = {}
+        for item in body_json.get('work_items', []):
+            item_id = item['item_id']
+            photo_urls[item_id] = {
+                'before': [],
+                'after': []
+            }
+            
+            # 既存の写真URLを保持（Base64でないもの）
+            existing_photos = item.get('photos', {})
+            for photo_url in existing_photos.get('before', []):
+                if not photo_url.startswith('data:image'):
+                    photo_urls[item_id]['before'].append(photo_url)
+            
+            for photo_url in existing_photos.get('after', []):
+                if not photo_url.startswith('data:image'):
+                    photo_urls[item_id]['after'].append(photo_url)
+            
+            # 新しいBase64画像をアップロード
+            for idx, photo_data in enumerate(item.get('photos', {}).get('before', [])):
+                if isinstance(photo_data, str) and photo_data.startswith('data:image'):
+                    photo_key = f"reports/{report_id}/{item_id}-before-{len(photo_urls[item_id]['before'])+1}.jpg"
+                    try:
+                        photo_url = upload_photo_to_s3(photo_data, photo_key)
+                        photo_urls[item_id]['before'].append(photo_url)
+                    except Exception as e:
+                        print(f"Error uploading before photo: {str(e)}")
+            
+            for idx, photo_data in enumerate(item.get('photos', {}).get('after', [])):
+                if isinstance(photo_data, str) and photo_data.startswith('data:image'):
+                    photo_key = f"reports/{report_id}/{item_id}-after-{len(photo_urls[item_id]['after'])+1}.jpg"
+                    try:
+                        photo_url = upload_photo_to_s3(photo_data, photo_key)
+                        photo_urls[item_id]['after'].append(photo_url)
+                    except Exception as e:
+                        print(f"Error uploading after photo: {str(e)}")
+        
+        # レポートを更新
+        updated_item = {
+            'report_id': report_id,
+            'created_at': existing_item['created_at'],
+            'updated_at': datetime.utcnow().isoformat() + 'Z',
+            'created_by': existing_item.get('created_by'),
+            'created_by_name': body_json.get('created_by_name', existing_item.get('created_by_name', '')),
+            'created_by_email': existing_item.get('created_by_email'),
+            'staff_id': body_json.get('staff_id', existing_item.get('staff_id')),
+            'staff_name': body_json.get('staff_name', existing_item.get('staff_name')),
+            'staff_email': body_json.get('staff_email', existing_item.get('staff_email')),
+            'store_id': body_json.get('store_id', existing_item['store_id']),
+            'store_name': body_json.get('store_name', existing_item['store_name']),
+            'cleaning_date': body_json.get('cleaning_date', existing_item['cleaning_date']),
+            'cleaning_start_time': body_json.get('cleaning_start_time', existing_item.get('cleaning_start_time')),
+            'cleaning_end_time': body_json.get('cleaning_end_time', existing_item.get('cleaning_end_time')),
+            'status': body_json.get('status', existing_item.get('status', 'published')),
+            'work_items': body_json.get('work_items', existing_item['work_items']),
+            'location': body_json.get('location', existing_item.get('location')),
+            'satisfaction': body_json.get('satisfaction', existing_item.get('satisfaction', {})),
+            'ttl': existing_item.get('ttl')
+        }
+        
+        # 写真URLをwork_itemsに反映
+        for item in updated_item['work_items']:
+            item_id = item['item_id']
+            if item_id in photo_urls:
+                item['photos'] = photo_urls[item_id]
+        
+        # DynamoDBに保存
+        REPORTS_TABLE.put_item(Item=updated_item)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'レポートを更新しました',
+                'report_id': report_id
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating report: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'レポートの更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_report(report_id, event, headers):
+    """
+    レポートを削除（管理者のみ）
+    """
+    try:
+        # Firebase ID Tokenを取得
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        
+        # トークンを検証
+        user_info = verify_firebase_token(id_token)
+        if not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        # 管理者権限をチェック
+        if not check_admin_permission(user_info):
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
+            }
+        
+        # DynamoDBから削除
+        # 注意: テーブルにソートキー（created_at）がある場合、まずアイテムを取得してから削除
+        # または、テーブルスキーマを変更してreport_idのみをパーティションキーにする
+        # まず、レポートを取得してcreated_atを取得（ページネーションに対応）
+        items = []
+        last_evaluated_key = None
+        
+        while True:
+            scan_kwargs = {
+                'FilterExpression': Attr('report_id').eq(report_id),
+                'Limit': 10
+            }
+            if last_evaluated_key:
+                scan_kwargs['ExclusiveStartKey'] = last_evaluated_key
+            
+            response = REPORTS_TABLE.scan(**scan_kwargs)
+            items.extend(response.get('Items', []))
+            
+            # 見つかったら終了
+            if items:
+                break
+            
+            # ページネーションが続くか確認
+            last_evaluated_key = response.get('LastEvaluatedKey')
+            if not last_evaluated_key:
+                break
+        
+        if not items:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'Report not found'}, ensure_ascii=False)
+            }
+        
+        item = items[0]
+        # ソートキーがある場合、パーティションキーとソートキーの両方を指定
+        if 'created_at' in item:
+            REPORTS_TABLE.delete_item(
+                Key={
+                    'report_id': report_id,
+                    'created_at': item['created_at']
+                }
+            )
+        else:
+            # ソートキーがない場合
+            REPORTS_TABLE.delete_item(Key={'report_id': report_id})
+        
+        # TODO: S3の写真も削除する（オプション）
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'レポートを削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting report: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'レポートの削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
         }
 
