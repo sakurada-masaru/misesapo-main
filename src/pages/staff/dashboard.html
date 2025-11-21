@@ -145,9 +145,67 @@
         <a href="/announcements.html" class="sp-menu-link">お知らせ</a>
       </li>
       <li class="sp-menu-item">
+        <a href="javascript:void(0);" class="sp-menu-link" id="settings-menu-link">
+          <span>設定</span>
+          <span class="sp-menu-arrow">▶</span>
+        </a>
+      </li>
+      <li class="sp-menu-item">
         <a href="/signin.html" class="sp-menu-link sp-menu-link-login">ログアウト</a>
       </li>
     </ul>
+  </div>
+
+  <!-- SP版：設定パネルオーバーレイ -->
+  <div class="settings-panel-overlay" id="settings-panel-overlay"></div>
+
+  <!-- SP版：設定パネル -->
+  <div class="settings-panel" id="settings-panel">
+    <div class="settings-panel-header">
+      <button class="settings-panel-back" id="settings-panel-back">
+        <span>←</span>
+      </button>
+      <h2 class="settings-panel-title">設定</h2>
+    </div>
+    <div class="settings-panel-content">
+      <div class="settings-section">
+        <h3 class="settings-section-title">メニューボタン配置切り替え</h3>
+        <div class="settings-option">
+          <label class="settings-radio-group">
+            <input type="radio" name="menu-button-position" value="left" id="menu-position-left" checked>
+            <span class="settings-radio-label">左下</span>
+          </label>
+          <label class="settings-radio-group">
+            <input type="radio" name="menu-button-position" value="right" id="menu-position-right">
+            <span class="settings-radio-label">右下</span>
+          </label>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-section-title">レイアウト変更</h3>
+        <div class="settings-option">
+          <p class="settings-placeholder">準備中</p>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-section-title">通知の設定</h3>
+        <div class="settings-option">
+          <p class="settings-placeholder">準備中</p>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-section-title">モード切り替え</h3>
+        <div class="settings-option">
+          <p class="settings-placeholder">準備中</p>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3 class="settings-section-title">言語切り替え</h3>
+        <div class="settings-option">
+          <p class="settings-placeholder">準備中</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <style>
@@ -158,7 +216,7 @@
       background: #f9fafb;
     }
 
-    /* SP版：左下メニューボタン */
+    /* SP版：メニューボタン（左下/右下切り替え対応） */
     .fixed-menu-button {
       display: block;
       position: fixed;
@@ -168,10 +226,15 @@
       height: 80px;
       z-index: 999998;
       cursor: pointer;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, left 0.3s ease, right 0.3s ease;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
+    }
+
+    .fixed-menu-button.position-right {
+      left: auto;
+      right: 30px;
     }
 
     .fixed-menu-button:hover {
@@ -409,12 +472,159 @@
       border: 2px solid #FF679C;
     }
 
+    .sp-menu-arrow {
+      font-size: 12px;
+      transition: transform 0.3s ease;
+    }
+
+    /* SP版：設定パネル */
+    .settings-panel {
+      display: none;
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 85vw;
+      max-width: 400px;
+      height: 100vh;
+      background: #ffffff;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+      z-index: 999999;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      overflow-y: auto;
+    }
+
+    .settings-panel.open {
+      display: block;
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .settings-panel.closing {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+
+    .settings-panel-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 999998;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .settings-panel-overlay.open {
+      display: block;
+      opacity: 1;
+    }
+
+    .settings-panel-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 24px;
+      background: #FF6BA6;
+      color: #ffffff;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .settings-panel-back {
+      background: none;
+      border: none;
+      color: #ffffff;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+
+    .settings-panel-back:hover {
+      opacity: 0.8;
+    }
+
+    .settings-panel-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+      color: #ffffff;
+    }
+
+    .settings-panel-content {
+      padding: 24px;
+    }
+
+    .settings-section {
+      margin-bottom: 32px;
+    }
+
+    .settings-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .settings-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+    }
+
+    .settings-option {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .settings-radio-group {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      cursor: pointer;
+    }
+
+    .settings-radio-group:not(:last-child) {
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .settings-radio-group input[type="radio"] {
+      margin-right: 12px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .settings-radio-label {
+      font-size: 0.95rem;
+      color: #374151;
+      cursor: pointer;
+    }
+
+    .settings-placeholder {
+      font-size: 0.875rem;
+      color: #9ca3af;
+      margin: 0;
+      padding: 8px 0;
+    }
+
     @media (min-width: 769px) {
       .fixed-menu-button {
         bottom: 50px;
         left: 50px;
         width: 150px;
         height: 150px;
+      }
+
+      .fixed-menu-button.position-right {
+        left: auto;
+        right: 50px;
       }
 
       .fixed-menu-button__text {
@@ -698,6 +908,97 @@
           }
         });
       });
+    })();
+
+    // 設定パネルの制御
+    (function() {
+      const settingsPanel = document.getElementById('settings-panel');
+      const settingsOverlay = document.getElementById('settings-panel-overlay');
+      const settingsBack = document.getElementById('settings-panel-back');
+      const settingsMenuLink = document.getElementById('settings-menu-link');
+      
+      if (!settingsPanel || !settingsOverlay || !settingsBack) return;
+
+      // グローバルスコープで設定パネルを開く関数を定義
+      window.openSettingsPanel = function() {
+        // メニューパネルを閉じる
+        const menuPanel = document.getElementById('sp-menu-panel');
+        const menuOverlay = document.getElementById('sp-menu-panel-overlay');
+        if (menuPanel && menuOverlay) {
+          menuPanel.classList.remove('open');
+          menuPanel.classList.add('closing');
+          menuOverlay.classList.remove('open');
+        }
+        
+        // 設定パネルを開く
+        setTimeout(() => {
+          settingsPanel.classList.add('open');
+          settingsOverlay.classList.add('open');
+          document.body.style.overflow = 'hidden';
+        }, 300);
+      };
+
+      function closeSettingsPanel() {
+        settingsPanel.classList.remove('open');
+        settingsPanel.classList.add('closing');
+        settingsOverlay.classList.remove('open');
+        
+        setTimeout(() => {
+          settingsPanel.classList.remove('closing');
+        }, 300);
+        document.body.style.overflow = '';
+      }
+
+      // 設定メニューリンクのクリックイベント
+      if (settingsMenuLink) {
+        settingsMenuLink.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.openSettingsPanel();
+        });
+      }
+
+      // 戻るボタンのクリックイベント
+      settingsBack.addEventListener('click', closeSettingsPanel);
+      
+      // オーバーレイのクリックイベント
+      settingsOverlay.addEventListener('click', closeSettingsPanel);
+
+      // メニューボタン配置切り替え
+      const menuPositionLeft = document.getElementById('menu-position-left');
+      const menuPositionRight = document.getElementById('menu-position-right');
+      const menuButton = document.getElementById('fixed-menu-button');
+
+      // 保存された設定を読み込む
+      const savedPosition = localStorage.getItem('staff-menu-button-position') || 'left';
+      if (savedPosition === 'right') {
+        if (menuPositionRight) menuPositionRight.checked = true;
+        if (menuButton) {
+          menuButton.classList.add('position-right');
+        }
+      } else {
+        if (menuPositionLeft) menuPositionLeft.checked = true;
+        if (menuButton) {
+          menuButton.classList.remove('position-right');
+        }
+      }
+
+      // ラジオボタンの変更イベント
+      if (menuPositionLeft && menuPositionRight && menuButton) {
+        menuPositionLeft.addEventListener('change', function() {
+          if (this.checked) {
+            menuButton.classList.remove('position-right');
+            localStorage.setItem('staff-menu-button-position', 'left');
+          }
+        });
+
+        menuPositionRight.addEventListener('change', function() {
+          if (this.checked) {
+            menuButton.classList.add('position-right');
+            localStorage.setItem('staff-menu-button-position', 'right');
+          }
+        });
+      }
     })();
   </script>
 </main>
