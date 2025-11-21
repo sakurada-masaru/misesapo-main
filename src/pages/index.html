@@ -2015,75 +2015,6 @@
             }
         }
 
-        /* デバッグ用グリッド（最上層に表示） */
-        .debug-grid {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 99999;
-            opacity: 0.3;
-        }
-
-        .debug-grid::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                /* 50px間隔の細い線（縦） */
-                repeating-linear-gradient(
-                    to right,
-                    transparent 0,
-                    transparent 49px,
-                    rgba(255, 103, 156, 0.2) 49px,
-                    rgba(255, 103, 156, 0.2) 50px
-                ),
-                /* 100px間隔の太い線（縦） */
-                repeating-linear-gradient(
-                    to right,
-                    transparent 0,
-                    transparent 99px,
-                    rgba(255, 103, 156, 0.4) 99px,
-                    rgba(255, 103, 156, 0.4) 100px
-                ),
-                /* 中央のさらに太い線（縦） */
-                linear-gradient(
-                    to right,
-                    transparent calc(50% - 1.5px),
-                    rgba(255, 103, 156, 0.6) calc(50% - 1.5px),
-                    rgba(255, 103, 156, 0.6) calc(50% + 1.5px),
-                    transparent calc(50% + 1.5px)
-                ),
-                /* 50px間隔の細い線（横） */
-                repeating-linear-gradient(
-                    to bottom,
-                    transparent 0,
-                    transparent 49px,
-                    rgba(255, 103, 156, 0.2) 49px,
-                    rgba(255, 103, 156, 0.2) 50px
-                ),
-                /* 100px間隔の太い線（横） */
-                repeating-linear-gradient(
-                    to bottom,
-                    transparent 0,
-                    transparent 99px,
-                    rgba(255, 103, 156, 0.4) 99px,
-                    rgba(255, 103, 156, 0.4) 100px
-                ),
-                /* 中央のさらに太い線（横） */
-                linear-gradient(
-                    to bottom,
-                    transparent calc(50% - 1.5px),
-                    rgba(255, 103, 156, 0.6) calc(50% - 1.5px),
-                    rgba(255, 103, 156, 0.6) calc(50% + 1.5px),
-                    transparent calc(50% + 1.5px)
-                );
-        }
     </style>
 </head>
     <body>
@@ -2145,8 +2076,6 @@
         })();
     </script>
     
-    <!-- デバッグ用グリッド -->
-    <div class="debug-grid"></div>
 
     <!-- フルスクリーン画像セクション（ヒーローセクション） -->
     <section class="fullscreen-image-section">
