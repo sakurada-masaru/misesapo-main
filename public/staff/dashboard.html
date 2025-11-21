@@ -285,9 +285,6 @@
   <!-- SP版：設定パネル -->
   <div class="settings-panel" id="settings-panel">
     <div class="settings-panel-header">
-      <button class="settings-panel-back" id="settings-panel-back">
-        <span>←</span>
-      </button>
       <h2 class="settings-panel-title">設定</h2>
     </div>
     <div class="settings-panel-content">
@@ -327,6 +324,11 @@
         <div class="settings-option">
           <p class="settings-placeholder">準備中</p>
         </div>
+      </div>
+      <div class="settings-panel-footer">
+        <button class="settings-panel-back" id="settings-panel-back">
+          <span>← 戻る</span>
+        </button>
       </div>
     </div>
   </div>
@@ -650,28 +652,11 @@
     .settings-panel-header {
       display: flex;
       align-items: center;
+      justify-content: center;
       padding: 16px 24px;
       background: #FF6BA6;
       color: #ffffff;
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .settings-panel-back {
-      background: none;
-      border: none;
-      color: #ffffff;
-      font-size: 20px;
-      cursor: pointer;
-      padding: 8px;
-      margin-right: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.2s;
-    }
-
-    .settings-panel-back:hover {
-      opacity: 0.8;
     }
 
     .settings-panel-title {
@@ -683,14 +668,41 @@
 
     .settings-panel-content {
       padding: 24px;
+      padding-bottom: 100px;
+      min-height: calc(100vh - 60px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .settings-panel-footer {
+      margin-top: auto;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .settings-panel-back {
+      width: 100%;
+      background: #FF6BA6;
+      border: none;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 14px 20px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s, background 0.2s;
+    }
+
+    .settings-panel-back:hover {
+      opacity: 0.9;
+      background: #FF5A9A;
     }
 
     .settings-section {
       margin-bottom: 32px;
-    }
-
-    .settings-section:last-child {
-      margin-bottom: 0;
     }
 
     .settings-section-title {
