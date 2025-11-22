@@ -1851,7 +1851,8 @@
         /* フルスクリーン画像セクション（ヒーローセクション） */
         .fullscreen-image-section {
             width: 100vw;
-            height: auto;
+            height: 100vh;
+            min-height: 600px;
             position: relative;
             overflow: hidden;
             margin: 0 0 -130px 0;
@@ -2993,14 +2994,25 @@
             const heroSection = document.querySelector('.fullscreen-image-section');
             const imageWrapper = document.querySelector('.fullscreen-image-wrapper');
             
-            if (maskImage && heroSection && imageWrapper) {
-                // マスク画像の高さを取得
-                const maskHeight = maskImage.offsetHeight;
-                
-                // ヒーローセクションの高さをマスク画像の高さ-5pxに設定（画像のはみ出し対策）
-                heroSection.style.height = (maskHeight - 5) + 'px';
-                // 画像ラッパーの高さはマスク画像の高さに設定
-                imageWrapper.style.height = maskHeight + 'px';
+            // PC版の場合
+            if (window.innerWidth > 768) {
+                if (heroSection && imageWrapper) {
+                    // PC版ではビューポートの高さを使用
+                    const viewportHeight = window.innerHeight;
+                    heroSection.style.height = viewportHeight + 'px';
+                    imageWrapper.style.height = viewportHeight + 'px';
+                }
+            } else {
+                // SP版の場合：マスク画像の高さを使用
+                if (maskImage && heroSection && imageWrapper) {
+                    // マスク画像の高さを取得
+                    const maskHeight = maskImage.offsetHeight;
+                    
+                    // ヒーローセクションの高さをマスク画像の高さ-5pxに設定（画像のはみ出し対策）
+                    heroSection.style.height = (maskHeight - 5) + 'px';
+                    // 画像ラッパーの高さはマスク画像の高さに設定
+                    imageWrapper.style.height = maskHeight + 'px';
+                }
             }
         }
 
