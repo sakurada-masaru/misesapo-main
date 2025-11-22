@@ -913,6 +913,17 @@
                 height: auto;
             }
 
+            /* SP版：ヒーローセクション下部装飾画像 */
+            .hero-union-image {
+                height: auto;
+            }
+
+            .hero-union-image .union-image {
+                width: 100%;
+                height: auto;
+                max-height: 163px;
+            }
+
             /* SP版：発注ボタンのサイズを80pxに */
             .fixed-order-button {
                 width: 80px;
@@ -1295,7 +1306,226 @@
             font-weight: 700;
             color: #333;
             margin-bottom: 60px;
-            padding: 0 20px;
+        }
+
+        /* サービススライダー（グローバル設定に基づく） */
+        .service-sections .container {
+            background: transparent; /* キャンバス上にあるコンテナの背景はなし */
+            width: 100%;
+            max-width: 100%;
+            min-width: 100%;
+            margin: 0;
+            padding: 0 24px; /* PC版: 左右24px（グローバル設定に基づく） */
+            box-sizing: border-box;
+        }
+
+        /* スライダー（コンテナ内で完結） */
+        .service-sections .slider-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .service-sections .slider-wrapper {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            width: 100%;
+        }
+
+        /* セクション（スライド）はコンテナ内に1つ表示、コンテナを飛び越えない */
+        .service-sections .slider-slide.section {
+            min-width: 100%;
+            max-width: 100%;
+            width: 100%;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            gap: 24px;
+            align-items: center;
+            padding: 16px; /* セクション内パディング16px（グローバル設定） */
+            margin: 0;
+            background: #f5f5f5; /* 薄いグレーの背景 */
+        }
+
+        /* 代表者挨拶セクション（スライドなし） */
+        .service-sections .greeting-section {
+            width: 100%;
+            max-width: 100%;
+            min-width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row-reverse; /* 右に画像、左にテキスト */
+            gap: 24px;
+            align-items: center;
+            padding: 16px; /* セクション内パディング16px（グローバル設定） */
+            margin: 0;
+            background: #f5f5f5; /* 薄いグレーの背景 */
+        }
+
+        /* セクション内の画像（左側） */
+        .service-sections .section-content-image {
+            flex: 0 0 calc(50% - 12px); /* gapの半分を引く: 50% - (24px / 2) */
+            max-width: calc(50% - 12px);
+            width: calc(50% - 12px);
+            height: auto;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        /* セクション内のテキスト（右側） */
+        .service-sections .section-content-text {
+            flex: 0 0 calc(50% - 12px); /* gapの半分を引く: 50% - (24px / 2) */
+            max-width: calc(50% - 12px);
+            width: calc(50% - 12px);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .service-sections .section-content-text h2 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+            text-align: left;
+        }
+
+        .service-sections .section-content-text p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #666;
+            margin: 0;
+            text-align: left;
+        }
+
+        .service-slide-link {
+            display: inline-block;
+            padding: 14px 40px;
+            background: #FF679C;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            align-self: flex-start;
+            margin-top: 8px;
+        }
+
+        .service-slide-link:hover {
+            background: #E53888;
+        }
+
+        .service-sections .slider-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .service-sections .slider-btn {
+            background: var(--primary, #FF679C);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .service-sections .slider-btn:hover {
+            background: var(--primary-600, #E53888);
+        }
+
+        .service-sections .slider-btn:disabled {
+            background: var(--muted, #d1d5db);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .service-sections .slider-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .service-sections .slider-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border, #d1d5db);
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            transition: background 0.3s ease;
+        }
+
+        .service-sections .slider-indicator.active {
+            background: var(--primary, #FF679C);
+        }
+
+        @media (max-width: 768px) {
+            .service-sections .container {
+                padding: 0 16px; /* SP版: 左右16px（グローバル設定に基づく） */
+            }
+
+            .service-sections .slider-slide.section {
+                flex-direction: column;
+                padding: 16px; /* SP版: セクション内パディング16px */
+            }
+
+            .service-sections .section-content-image {
+                flex: 0 0 100%;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .service-sections .section-content-text {
+                flex: 0 0 100%;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .service-sections .section-content-text h2 {
+                font-size: 28px;
+                text-align: center;
+            }
+
+            .service-sections .section-content-text p {
+                font-size: 14px;
+                text-align: center;
+            }
+
+            .service-slide-link {
+                align-self: center;
+            }
+
+            .service-sections .greeting-section {
+                flex-direction: column;
+            }
+
+            .service-sections .use-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ご利用イメージセクション */
+        .service-sections .use-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 24px;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .service-sections .use-article {
+            width: 100%;
+            max-width: 100%;
         }
 
         .service-section-item {
@@ -1629,6 +1859,25 @@
             z-index: 1;
         }
 
+        /* ヒーローセクション下部装飾画像 */
+        .hero-union-image {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 163px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hero-union-image .union-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center bottom;
+            display: block;
+        }
+
 
 
         /* スクロールヒント（左側、縦書き） */
@@ -1788,6 +2037,7 @@
             height: auto;
             z-index: 50;
             pointer-events: none;
+            display: none; /* PC版では非表示 */
         }
 
         .hero-mask-image {
@@ -2149,6 +2399,10 @@
                 <div class="scroll-circle"></div>
                         </div>
                 </div>
+        <!-- ヒーローセクション下部装飾画像 -->
+        <div class="hero-union-image">
+            <img src="/images-admin/unionimage.png" alt="" class="union-image">
+        </div>
 </section>
 
     <!-- 対応サービス一覧タイトル -->
@@ -2185,102 +2439,206 @@
                     </div>
                     </div>
 
-    <!-- サービスセクション -->
-    <section class="service-sections">
-        <h2 class="service-sections-title">ミセサポのサービス</h2>
+    <!-- キャンペーンセクション -->
+    <section class="service-sections campaign-sections">
+        <h2 class="service-sections-title">キャンペーン</h2>
         
-        <!-- 定期清掃プラン -->
-        <div class="service-section-item">
-            <div class="service-section-item__content">
-                <h3 class="service-section-item__title">定期清掃</h3>
-                <p class="service-section-item__description">
-                    店舗の清潔を保つ為の定期清掃サービス。<br>
-                    定期的なメンテナンスで常に清潔な環境を維持します。
-                </p>
-                <div class="plan-cards-grid">
-                    <div class="plan-card">
-                        <div class="plan-card__period">毎月</div>
-                        <div class="plan-card__period-label">月1回</div>
-                        <div class="plan-card__description">
-                            定期的な清掃で常に清潔な環境を維持
-                    </div>
-                    </div>
-                    <div class="plan-card">
-                        <div class="plan-card__period">2ヶ月毎</div>
-                        <div class="plan-card__period-label">2ヶ月に1回</div>
-                        <div class="plan-card__description">
-                            適切な間隔で清掃を実施
-                    </div>
-                    </div>
-                    <div class="plan-card">
-                        <div class="plan-card__period">3ヶ月毎</div>
-                        <div class="plan-card__period-label">3ヶ月に1回</div>
-                        <div class="plan-card__description">
-                            季節ごとの徹底清掃
-                    </div>
-                    </div>
-                    <div class="plan-card">
-                        <div class="plan-card__period">半年毎</div>
-                        <div class="plan-card__period-label">6ヶ月に1回</div>
-                        <div class="plan-card__description">
-                            年2回の定期メンテナンス
-                    </div>
-                    </div>
-                    <div class="plan-card">
-                        <div class="plan-card__period">一年毎</div>
-                        <div class="plan-card__period-label">1年に1回</div>
-                        <div class="plan-card__description">
-                            年次大規模清掃
-                    </div>
-                    </div>
-                    </div>
-                <a href="/teikiseisou.html" class="service-section-item__link">詳細を見る</a>
-                    </div>
-            <div class="service-section-item__image">
-                <img src="/images-admin/teikiseisounaramisesapo.png" alt="定期清掃プラン">
-                    </div>
-                    </div>
-
-        <!-- ハウスクリーニング -->
-        <div class="service-section-item">
-            <div class="service-section-item__content">
-                <h3 class="service-section-item__title">ハウスクリーニング</h3>
-                <p class="service-section-item__description">
-                    厨房・空調・床・窓など、専門的な清掃サービス。プロの技術で徹底的に清潔にします。
-                </p>
-                <ul class="service-section-item__features">
-                    <li>厨房設備の徹底清掃</li>
-                    <li>空調設備のメンテナンス</li>
-                    <li>床・窓の専門清掃</li>
-                    <li>グリストラップ清掃</li>
-                </ul>
-                <a href="/service.html" class="service-section-item__link">詳細を見る</a>
-                    </div>
-            <div class="service-section-item__image">
-                <img src="/images-admin/teikiseisou.png" alt="ハウスクリーニング">
-                    </div>
-                    </div>
-
-        <!-- 害虫・ネズミ駆除 -->
-        <div class="service-section-item">
-            <div class="service-section-item__content">
-                <h3 class="service-section-item__title">害虫・ネズミ駆除</h3>
-                <p class="service-section-item__description">
-                    専門業者との連携による外注サービス。ネズミ駆除など、清掃以外の業務もサポートします。
-                </p>
-                <ul class="service-section-item__features">
-                    <li>ネズミ駆除サービス</li>
-                    <li>各種外注業務の手配</li>
-                    <li>専門業者との連携</li>
-                    <li>ワンストップサービス</li>
-                </ul>
-                <a href="/service.html" class="service-section-item__link">詳細を見る</a>
+        <!-- サービススライダーコンテナ -->
+        <div class="container">
+            <!-- スライダー（コンテナ内で完結） -->
+            <div class="slider-container">
+                <div class="slider-wrapper" id="serviceSliderWrapper">
+                    <!-- スライド1: 定期清掃（セクション） -->
+                    <section class="slider-slide section">
+                        <img src="/images-admin/teikiseisounaramisesapo.png" alt="定期清掃" class="section-content-image">
+                        <div class="section-content-text">
+                            <h2 class="service-slide-title">定期清掃</h2>
+                            <p class="service-slide-description">
+                                店舗の清潔を保つ為の定期清掃サービス。<br>
+                                定期的なメンテナンスで常に清潔な環境を維持します。
+                            </p>
+                            <a href="/teikiseisou.html" class="service-slide-link">詳細を見る</a>
                         </div>
-            <div class="service-section-item__image">
-                <img src="/images-admin/gaichukujonara.png" alt="害虫・ネズミ駆除">
+                    </section>
+                    
+                    <!-- スライド2: 害虫・害獣駆除（セクション） -->
+                    <section class="slider-slide section">
+                        <img src="/images-admin/gaichukujonara.png" alt="害虫・害獣駆除" class="section-content-image">
+                        <div class="section-content-text">
+                            <h2 class="service-slide-title">害虫・害獣駆除</h2>
+                            <p class="service-slide-description">
+                                専門業者との連携による外注サービス。<br>
+                                ネズミや害虫の駆除など、清掃以外の業務もサポートします。
+                            </p>
+                            <a href="/service.html" class="service-slide-link">詳細を見る</a>
                         </div>
-  </div>
-</section>
+                    </section>
+                    
+                    <!-- スライド3: エアコン分解掃除（セクション） -->
+                    <section class="slider-slide section">
+                        <img src="/images-admin/teikiseisounaramisesapo.png" alt="エアコン分解掃除" class="section-content-image">
+                        <div class="section-content-text">
+                            <h2 class="service-slide-title">エアコン分解掃除</h2>
+                            <p class="service-slide-description">
+                                エアコンの内部まで徹底的に清掃する専門サービス。<br>
+                                分解洗浄により、エアコンの性能を最大限に引き出します。
+                            </p>
+                            <a href="/service.html" class="service-slide-link">詳細を見る</a>
+                        </div>
+                    </section>
+                </div>
+                
+                <!-- スライダーコントロール -->
+                <div class="slider-controls">
+                    <button class="slider-btn" id="servicePrevBtn">← 前へ</button>
+                    <button class="slider-btn" id="serviceNextBtn">次へ →</button>
+                </div>
+                
+                <!-- スライダーインジケーター -->
+                <div class="slider-indicators" id="serviceSliderIndicators">
+                    <button class="slider-indicator active" data-slide="0"></button>
+                    <button class="slider-indicator" data-slide="1"></button>
+                    <button class="slider-indicator" data-slide="2"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- イベントセクション -->
+    <section class="service-sections event-sections">
+        <h2 class="service-sections-title">イベント</h2>
+        
+        <!-- イベントスライダーコンテナ -->
+        <div class="container">
+            <!-- スライダー（コンテナ内で完結） -->
+            <div class="slider-container">
+                <div class="slider-wrapper" id="eventSliderWrapper">
+                    <!-- スライド1: イベント1（セクション） -->
+                    <section class="slider-slide section">
+                        <img src="/images-admin/hero-image001.png" alt="イベント1" class="section-content-image">
+                        <div class="section-content-text">
+                            <h2 class="service-slide-title">春の清掃キャンペーン</h2>
+                            <p class="service-slide-description">
+                                新年度を迎えるこの時期、店舗の大掃除はいかがでしょうか。<br>
+                                春の清掃キャンペーン実施中！お得な料金で徹底清掃を提供します。
+                            </p>
+                            <a href="/service.html" class="service-slide-link">詳細を見る</a>
+                        </div>
+                    </section>
+                    
+                    <!-- スライド2: イベント2（セクション） -->
+                    <section class="slider-slide section">
+                        <img src="/images-admin/hero-image002.png" alt="イベント2" class="section-content-image">
+                        <div class="section-content-text">
+                            <h2 class="service-slide-title">定期契約キャンペーン</h2>
+                            <p class="service-slide-description">
+                                定期契約でさらにお得に！初回契約特典として<br>
+                                通常料金から20%OFFでご提供いたします。
+                            </p>
+                            <a href="/service.html" class="service-slide-link">詳細を見る</a>
+                        </div>
+                    </section>
+                    
+                    <!-- スライド3: イベント3（セクション） -->
+                    <section class="slider-slide section">
+                        <img src="/images-admin/hero-image003.png" alt="イベント3" class="section-content-image">
+                        <div class="section-content-text">
+                            <h2 class="service-slide-title">新規開店応援キャンペーン</h2>
+                            <p class="service-slide-description">
+                                新規開店をサポート！開店前の徹底清掃を<br>
+                                特別価格でご提供。お気軽にお問い合わせください。
+                            </p>
+                            <a href="/service.html" class="service-slide-link">詳細を見る</a>
+                        </div>
+                    </section>
+                </div>
+                
+                <!-- スライダーコントロール -->
+                <div class="slider-controls">
+                    <button class="slider-btn" id="eventPrevBtn">← 前へ</button>
+                    <button class="slider-btn" id="eventNextBtn">次へ →</button>
+                </div>
+                
+                <!-- スライダーインジケーター -->
+                <div class="slider-indicators" id="eventSliderIndicators">
+                    <button class="slider-indicator active" data-slide="0"></button>
+                    <button class="slider-indicator" data-slide="1"></button>
+                    <button class="slider-indicator" data-slide="2"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 代表者挨拶セクション -->
+    <section class="service-sections greeting-sections">
+        <h2 class="service-sections-title">代表者挨拶</h2>
+        
+        <!-- 代表者挨拶コンテナ -->
+        <div class="container">
+            <section class="section greeting-section">
+                <div class="section-content-text">
+                    <h2 class="service-slide-title">代表取締役 山田太郎</h2>
+                    <p class="service-slide-description">
+                        ミセサポは、店舗の清掃・メンテナンスを通じて、お客様のビジネスをサポートすることを使命としております。<br>
+                        プロフェッショナルな技術と丁寧なサービスで、常に清潔で快適な環境を提供いたします。<br>
+                        お客様の成功が私たちの喜びです。今後ともよろしくお願いいたします。
+                    </p>
+                    <a href="/greeting.html" class="service-slide-link">代表あいさつを見る</a>
+                </div>
+                <img src="/images-admin/hero-image001.png" alt="代表者" class="section-content-image">
+            </section>
+        </div>
+    </section>
+
+    <!-- ご利用イメージ -->
+    <section id="use" class="service-sections use-sections">
+        <h2 class="service-sections-title">ご利用イメージ</h2>
+        <div class="container">
+            <div class="use-grid">
+            <article class="use-article opacityIn">
+                <div class="step-number">STEP<span>01</span></div>
+                <h3 class="use-title">お問い合わせ・現地調査</h3>
+                <div class="use-box">
+                    <div class="use-image-box"><img src="/images/use01.jpg" alt="お問い合わせ・現地調査"></div>
+                    <p>お問い合わせ内容をヒアリング後、専門スタッフが店舗を訪問します。店舗設備や清掃頻度等をチェックし、最適な清掃プランをご提案致します。</p>
+                </div>
+            </article>
+            <article class="use-article opacityIn">
+                <div class="step-number">STEP<span>02</span></div>
+                <h3 class="use-title">お見積・ご契約</h3>
+                <div class="use-box">
+                    <div class="use-image-box"><img src="/images/use02.jpg" alt="お見積・ご契約"></div>
+                    <p>清掃プランに合意後、契約書を締結します。作業レポート用IDや鍵の管理方法（預かり・キーボックス等）も、この段階で決定致します。</p>
+                </div>
+            </article>
+            <article class="use-article opacityIn">
+                <div class="step-number">STEP<span>03</span></div>
+                <h3 class="use-title">プロによる清掃実施</h3>
+                <div class="use-box">
+                    <div class="use-image-box"><img src="/images/use03.jpg" alt="プロによる清掃実施"></div>
+                    <p>弊社が依頼した専門スタッフが来店し、事前に合意した清掃プランに基づいて、清掃作業を行います。</p>
+                </div>
+            </article>
+            <article class="use-article opacityIn">
+                <div class="step-number">STEP<span>04</span></div>
+                <h3 class="use-title">レポートで安心管理</h3>
+                <div class="use-box">
+                    <div class="use-image-box"><img src="/images/use04.jpeg" alt="レポートで安心管理"></div>
+                    <p>清掃後は、専門スタッフが作業内容一覧や写真等のレポートを、弊社システムで送信します。清掃前と清掃後の違いを明確に識別することができます。</p>
+                </div>
+            </article>
+            <article class="use-article opacityIn">
+                <div class="step-number">STEP<span>05</span></div>
+                <h3 class="use-title">毎月の清掃や、設備管理を一元サポート</h3>
+                <div class="use-box">
+                    <div class="use-image-box"><img src="/images/use05.jpeg" alt="毎月の清掃や、設備管理を一元サポート"></div>
+                    <p>翌月以降も、弊社から最適な清掃提案が届くため、継続的に衛生環境を維持できます。</p>
+                </div>
+            </article>
+            </div>
+        </div>
+    </section>
+    <!-- ご利用イメージ end -->
 
     <!-- 化粧ヘッダー -->
     <header class="cosmetic-header">
@@ -2340,7 +2698,7 @@
                     </div>
                             </li>
                         <li class="mega-menu-item mega-menu-has-submenu">
-                            <a href="/lp.html#voice" class="mega-menu-link">
+                            <a href="/voice.html" class="mega-menu-link">
                                 <span class="mega-menu-text">お客様の声</span>
                                 <span class="mega-menu-arrow">▼</span>
                             </a>
@@ -2349,22 +2707,28 @@
                                     <div class="mega-menu-column">
                                         <h3 class="mega-menu-column-title">お客様の声</h3>
                                         <ul class="mega-menu-column-list">
-                                            <li><a href="/lp.html#voice"><span>すべてのお客様の声</span></a></li>
-                                            <li><a href="/lp.html#voice-restaurant"><span>レストラン・飲食店</span></a></li>
-                                            <li><a href="/lp.html#voice-bar"><span>バー・居酒屋</span></a></li>
-                                            <li><a href="/lp.html#voice-cafe"><span>カフェ・喫茶店</span></a></li>
+                                            <li><a href="/voice.html"><span>すべてのお客様の声</span></a></li>
+                                            <li><a href="/voice.html#restaurant"><span>レストラン・飲食店</span></a></li>
+                                            <li><a href="/voice.html#bar"><span>バー・居酒屋</span></a></li>
+                                            <li><a href="/voice.html#cafe"><span>カフェ・喫茶店</span></a></li>
+                                            <li><a href="/voice.html#reason"><span>ミセサポが選ばれる理由</span></a></li>
                         </ul>
                     </div>
                                     <div class="mega-menu-column">
                                         <h3 class="mega-menu-column-title">導入実績</h3>
                                         <ul class="mega-menu-column-list">
-                                            <li><a href="/lp.html#customers"><span>導入店舗一覧</span></a></li>
+                                            <li><a href="/customers.html"><span>導入店舗一覧</span></a></li>
                                             <li><a href="/lp.html#case-study"><span>導入事例</span></a></li>
                         </ul>
                     </div>
                             </div>
                             </div>
                             </li>
+                        <li class="mega-menu-item">
+                            <a href="/customers-support-desk.html" class="mega-menu-link">
+                                <span class="mega-menu-text">カスタマーズサポート</span>
+                            </a>
+                        </li>
                         <li class="mega-menu-item mega-menu-has-submenu">
                             <a href="/about.html" class="mega-menu-link">
                                 <span class="mega-menu-text">企業情報</span>
@@ -2376,10 +2740,29 @@
                                         <h3 class="mega-menu-column-title">企業情報</h3>
                                         <ul class="mega-menu-column-list">
                                             <li><a href="/about.html"><span>会社概要</span></a></li>
+                                            <li><a href="/greeting.html"><span>代表あいさつ</span></a></li>
+                                            <li><a href="/about.html#philosophy"><span>企業理念</span></a></li>
+                                            <li><a href="/about.html#partnership"><span>パートナーシップ</span></a></li>
                                         </ul>
                             </div>
+                                    <div class="mega-menu-column">
+                                        <h3 class="mega-menu-column-title">求人情報</h3>
+                                        <ul class="mega-menu-column-list">
+                                            <li><a href="/recruit.html"><span>採用トップ</span></a></li>
+                                            <li><a href="/recruit/apply/cleaning.html"><span>清掃スタッフ</span></a></li>
+                                            <li><a href="/recruit/apply/equipment.html"><span>設備メンテナンススタッフ</span></a></li>
+                                            <li><a href="/recruit/apply/inside-sales.html"><span>インサイドセールス</span></a></li>
+                                            <li><a href="/recruit/apply/field-sales.html"><span>フィールドセールス</span></a></li>
+                                            <li><a href="/recruit/privacy.html"><span>採用における個人情報の取り扱いについて</span></a></li>
+                                        </ul>
+                                    </div>
                         </div>
                     </div>
+                        </li>
+                        <li class="mega-menu-item">
+                            <a href="/announcements.html" class="mega-menu-link">
+                                <span class="mega-menu-text">お知らせ</span>
+                            </a>
                         </li>
                         <li class="mega-menu-item mega-menu-has-submenu">
                             <a href="javascript:void(0);" class="mega-menu-link">
@@ -2402,31 +2785,6 @@
                 </div>
                                     </div>
                             </div>
-                        <li class="mega-menu-item mega-menu-has-submenu">
-                            <a href="/recruit.html" class="mega-menu-link">
-                                <span class="mega-menu-text">求人情報</span>
-                                <span class="mega-menu-arrow">▼</span>
-                            </a>
-                            <div class="mega-menu-submenu">
-                                <div class="mega-menu-submenu-inner">
-                                    <div class="mega-menu-column">
-                                        <h3 class="mega-menu-column-title">求人情報</h3>
-                                        <ul class="mega-menu-column-list">
-                                            <li><a href="/recruit.html"><span>採用トップ</span></a></li>
-                                            <li><a href="/recruit/apply/cleaning.html"><span>清掃スタッフ</span></a></li>
-                                            <li><a href="/recruit/apply/equipment.html"><span>設備メンテナンススタッフ</span></a></li>
-                                            <li><a href="/recruit/apply/inside-sales.html"><span>インサイドセールス</span></a></li>
-                                            <li><a href="/recruit/apply/field-sales.html"><span>フィールドセールス</span></a></li>
-                        </ul>
-                                            </div>
-                                    <div class="mega-menu-column">
-                                        <h3 class="mega-menu-column-title">その他</h3>
-                                        <ul class="mega-menu-column-list">
-                                            <li><a href="/recruit/privacy.html"><span>採用における個人情報の取り扱いについて</span></a></li>
-                                    </ul>
-                                    </div>
-                                            </div>
-                                    </div>
                         </li>
                     </ul>
                 </nav>
@@ -2498,8 +2856,9 @@
             <nav class="normal-header-nav">
                 <a href="/">TOP</a>
                 <a href="/service.html">対応可能サービス</a>
-                <a href="/lp.html#voice">お客様の声</a>
+                <a href="/voice.html">お客様の声</a>
                 <a href="/customers-support-desk.html">カスタマーズサポート</a>
+                <a href="/about.html">企業情報</a>
                 <a href="/announcements.html">お知らせ</a>
                 <a href="/privacy-policy.html">規約＆ポリシー</a>
             </nav>
@@ -2573,11 +2932,12 @@
                 </a>
                 <div class="sp-menu-submenu">
                     <ul class="sp-menu-submenu-list">
-                        <li class="sp-menu-submenu-item"><a href="/lp.html#voice" class="sp-menu-submenu-link">すべてのお客様の声</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/lp.html#voice-restaurant" class="sp-menu-submenu-link">レストラン・飲食店</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/lp.html#voice-bar" class="sp-menu-submenu-link">バー・居酒屋</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/lp.html#voice-cafe" class="sp-menu-submenu-link">カフェ・喫茶店</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/lp.html#customers" class="sp-menu-submenu-link">導入店舗一覧</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/voice.html" class="sp-menu-submenu-link">すべてのお客様の声</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/voice.html#restaurant" class="sp-menu-submenu-link">レストラン・飲食店</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/voice.html#bar" class="sp-menu-submenu-link">バー・居酒屋</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/voice.html#cafe" class="sp-menu-submenu-link">カフェ・喫茶店</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/voice.html#reason" class="sp-menu-submenu-link">ミセサポが選ばれる理由</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/customers.html" class="sp-menu-submenu-link">導入店舗一覧</a></li>
                         <li class="sp-menu-submenu-item"><a href="/lp.html#case-study" class="sp-menu-submenu-link">導入事例</a></li>
                     </ul>
                 </div>
@@ -2585,27 +2945,23 @@
             <li class="sp-menu-item">
                 <a href="/customers-support-desk.html" class="sp-menu-link">カスタマーズサポート</a>
             </li>
-            <li class="sp-menu-item">
-                <a href="/announcements.html" class="sp-menu-link">お知らせ</a>
-            </li>
-            <li class="sp-menu-item">
-                <a href="/privacy-policy.html" class="sp-menu-link">規約＆ポリシー</a>
-            </li>
             <li class="sp-menu-item sp-menu-item-has-submenu">
                 <a href="javascript:void(0);" class="sp-menu-link">
-                    <span>求人情報</span>
+                    <span>企業情報</span>
                     <span class="sp-menu-arrow">▼</span>
                 </a>
                 <div class="sp-menu-submenu">
                     <ul class="sp-menu-submenu-list">
-                        <li class="sp-menu-submenu-item"><a href="/recruit.html" class="sp-menu-submenu-link">すべての求人</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/recruit/apply/cleaning.html" class="sp-menu-submenu-link">清掃スタッフ</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/recruit/apply/equipment.html" class="sp-menu-submenu-link">設備メンテナンススタッフ</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/recruit/apply/inside-sales.html" class="sp-menu-submenu-link">インサイドセールス</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/recruit/apply/field-sales.html" class="sp-menu-submenu-link">フィールドセールス</a></li>
-                        <li class="sp-menu-submenu-item"><a href="/recruit/privacy.html" class="sp-menu-submenu-link">採用における個人情報の取り扱いについて</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/about.html" class="sp-menu-submenu-link">会社概要</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/greeting.html" class="sp-menu-submenu-link">代表あいさつ</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/about.html#philosophy" class="sp-menu-submenu-link">企業理念</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/about.html#partnership" class="sp-menu-submenu-link">パートナーシップ</a></li>
+                        <li class="sp-menu-submenu-item"><a href="/recruit.html" class="sp-menu-submenu-link">求人情報</a></li>
                     </ul>
                 </div>
+            </li>
+            <li class="sp-menu-item">
+                <a href="/announcements.html" class="sp-menu-link">お知らせ</a>
             </li>
             <li class="sp-menu-item sp-menu-item-has-submenu">
                 <a href="javascript:void(0);" class="sp-menu-link">
@@ -2623,9 +2979,6 @@
                         <li class="sp-menu-submenu-item"><a href="javascript:void(0);" class="sp-menu-submenu-link">ウェブサイト・アプリ利用規約</a></li>
                     </ul>
                 </div>
-            </li>
-            <li class="sp-menu-item">
-                <a href="/about.html" class="sp-menu-link">企業情報</a>
             </li>
             <li class="sp-menu-item sp-menu-item-login">
                 <a href="/signin.html" class="sp-menu-link sp-menu-link-login">ログイン</a>
@@ -3552,6 +3905,114 @@
                 } else {
                     initSplash();
                 }
+            })();
+        </script>
+
+        <!-- キャンペーンスライダーJavaScript -->
+        <script>
+            // スライダー機能（コンテナ内で完結）
+            (function() {
+                const sliderWrapper = document.getElementById('serviceSliderWrapper');
+                const prevBtn = document.getElementById('servicePrevBtn');
+                const nextBtn = document.getElementById('serviceNextBtn');
+                const indicators = document.querySelectorAll('#serviceSliderIndicators .slider-indicator');
+                
+                if (!sliderWrapper || !prevBtn || !nextBtn) return;
+                
+                let currentSlide = 0;
+                const totalSlides = 3;
+                
+                // スライドを移動
+                function goToSlide(index) {
+                    if (index < 0) index = totalSlides - 1;
+                    if (index >= totalSlides) index = 0;
+                    
+                    currentSlide = index;
+                    sliderWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+                    
+                    // インジケーターを更新
+                    indicators.forEach((indicator, i) => {
+                        indicator.classList.toggle('active', i === currentSlide);
+                    });
+                    
+                    // ボタンの状態を更新
+                    prevBtn.disabled = false;
+                    nextBtn.disabled = false;
+                }
+                
+                // 前のスライドへ
+                prevBtn.addEventListener('click', () => {
+                    goToSlide(currentSlide - 1);
+                });
+                
+                // 次のスライドへ
+                nextBtn.addEventListener('click', () => {
+                    goToSlide(currentSlide + 1);
+                });
+                
+                // インジケーターをクリック
+                indicators.forEach((indicator, index) => {
+                    indicator.addEventListener('click', () => {
+                        goToSlide(index);
+                    });
+                });
+                
+                // 初期化
+                goToSlide(0);
+            })();
+        </script>
+
+        <!-- イベントスライダーJavaScript -->
+        <script>
+            // スライダー機能（コンテナ内で完結）
+            (function() {
+                const sliderWrapper = document.getElementById('eventSliderWrapper');
+                const prevBtn = document.getElementById('eventPrevBtn');
+                const nextBtn = document.getElementById('eventNextBtn');
+                const indicators = document.querySelectorAll('#eventSliderIndicators .slider-indicator');
+                
+                if (!sliderWrapper || !prevBtn || !nextBtn) return;
+                
+                let currentSlide = 0;
+                const totalSlides = 3;
+                
+                // スライドを移動
+                function goToSlide(index) {
+                    if (index < 0) index = totalSlides - 1;
+                    if (index >= totalSlides) index = 0;
+                    
+                    currentSlide = index;
+                    sliderWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
+                    
+                    // インジケーターを更新
+                    indicators.forEach((indicator, i) => {
+                        indicator.classList.toggle('active', i === currentSlide);
+                    });
+                    
+                    // ボタンの状態を更新
+                    prevBtn.disabled = false;
+                    nextBtn.disabled = false;
+                }
+                
+                // 前のスライドへ
+                prevBtn.addEventListener('click', () => {
+                    goToSlide(currentSlide - 1);
+                });
+                
+                // 次のスライドへ
+                nextBtn.addEventListener('click', () => {
+                    goToSlide(currentSlide + 1);
+                });
+                
+                // インジケーターをクリック
+                indicators.forEach((indicator, index) => {
+                    indicator.addEventListener('click', () => {
+                        goToSlide(index);
+                    });
+                });
+                
+                // 初期化
+                goToSlide(0);
             })();
         </script>
     </body>

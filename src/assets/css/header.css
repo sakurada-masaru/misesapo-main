@@ -4,8 +4,12 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 200px;
-    background: transparent;
+    height: 281px;
+    background-color: transparent;
+    background-image: url('/images-admin/cosmetic-header.png');
+    background-size: 100% 281px;
+    background-position: center top;
+    background-repeat: no-repeat;
     box-shadow: none;
     z-index: 10000;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease-out;
@@ -26,9 +30,10 @@
     height: 100%;
     width: 100%;
     padding: 20px 40px;
-    transform: translateY(-40px);
+    transform: translateY(-90px);
     gap: 0;
     position: relative;
+    background-color: transparent;
 }
 
 .cosmetic-header-logo {
@@ -84,6 +89,48 @@
     position: relative;
     margin: 0;
     height: 100%;
+    opacity: 0;
+    transform: translateX(-30px);
+    animation: navSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(6) {
+    animation-delay: 0.6s;
+}
+
+.misesapo-mega-menu.ishikawa-style .mega-menu-item:nth-child(7) {
+    animation-delay: 0.7s;
+}
+
+@keyframes navSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .misesapo-mega-menu.ishikawa-style .mega-menu-link {
