@@ -186,3 +186,5 @@ function animateRotation(targetAngle) {
    - タッチイベントの対応状況
 
 
+
+

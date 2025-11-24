@@ -79,7 +79,7 @@
               </animateMotion>
             </circle>
           </svg>
-        </div>
+      </div>
       </div>
     </div>
 
@@ -2348,12 +2348,12 @@
           if (svg && !isDragging) {
             const component = svg.closest('.circular-component');
             if (component) {
-              e.preventDefault();
+          e.preventDefault();
               const viewBox = svg.getAttribute('viewBox');
               const centerX = 100;
               const centerY = 100;
               const segmentCount = parseInt(svg.dataset.segmentCount) || 31;
-              handleDragStart(e, svg, centerX, centerY, segmentCount);
+          handleDragStart(e, svg, centerX, centerY, segmentCount);
             }
           }
         }, { passive: false });
