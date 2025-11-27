@@ -402,19 +402,19 @@
       document.getElementById('sales_rep').value = '正田和輝';
 
       form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(form);
+          e.preventDefault();
+          
+          const formData = new FormData(form);
         const leadData = {
           name: formData.get('store_name'),
-          company_name: formData.get('company_name'),
-          contact_person: formData.get('contact_person'),
+            company_name: formData.get('company_name'),
+            contact_person: formData.get('contact_person'),
           phone: formData.get('phone'),
-          email: formData.get('email'),
+            email: formData.get('email'),
           lead_status: formData.get('lead_status'),
           probability: formData.get('probability'),
           notes: formData.get('notes'),
-          sales_rep: formData.get('sales_rep'),
+            sales_rep: formData.get('sales_rep'),
           registration_type: 'sales_lead',
           status: 'pending_customer_info', // お客様情報入力待ち
           created_at: new Date().toISOString()
@@ -434,7 +434,7 @@
             const inviteLink = `${window.location.origin}/registration/customer-complete.html?token=${result.id}`;
             
             alert(`リードを登録しました！\n\n招待リンク:\n${inviteLink}\n\n（このリンクをお客様にお送りください）`);
-            window.location.href = '/sales/clients.html';
+          window.location.href = '/sales/clients.html';
           } else {
             throw new Error('登録に失敗しました');
           }

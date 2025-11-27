@@ -851,7 +851,7 @@
       document.getElementById('get-location').addEventListener('click', getLocation);
 
       // フォーム入力監視
-      document.querySelectorAll('input[name="work-content"]').forEach(cb => {
+        document.querySelectorAll('input[name="work-content"]').forEach(cb => {
         cb.addEventListener('change', updateProgress);
       });
       document.getElementById('work-memo').addEventListener('input', updateProgress);
@@ -943,7 +943,7 @@
     }
 
     // オンライン状態更新
-    function updateOnlineStatus() {
+      function updateOnlineStatus() {
       const indicator = document.getElementById('offline-indicator-report');
       indicator.style.display = navigator.onLine ? 'none' : 'block';
     }
@@ -951,7 +951,7 @@
     // フォーム送信
     async function handleSubmit(e) {
       e.preventDefault();
-
+      
       // バリデーション
       if (photoData.before.length === 0 || photoData.after.length === 0) {
         alert('作業前・作業後の写真をそれぞれ最低1枚ずつアップロードしてください');
@@ -1024,7 +1024,7 @@
         });
 
         alert('レポートを送信しました！');
-        window.location.href = '/staff/dashboard.html';
+      window.location.href = '/staff/dashboard.html';
 
       } catch (error) {
         console.error('Submit error:', error);

@@ -116,13 +116,13 @@
       <!-- 画面1: アクティビティ -->
       <section class="swipe-screen" data-screen="activity">
         <header class="screen-header gradient-header">
-          <div class="header-content">
+    <div class="header-content">
             <div class="greeting">こんにちは</div>
             <div class="user-name" id="user-name">営業担当</div>
           </div>
           <a href="/index.html" class="header-action">
             <i class="fas fa-sign-out-alt"></i>
-          </a>
+      </a>
         </header>
         
         <!-- 今日のサマリー -->
@@ -131,43 +131,43 @@
             <div class="summary-icon"><i class="fas fa-calendar-check"></i></div>
             <div class="summary-num" id="today-count">0</div>
             <div class="summary-label">本日の予定</div>
-          </div>
+    </div>
           <div class="summary-card" onclick="switchScreen('reserve')">
             <div class="summary-icon"><i class="fas fa-clock"></i></div>
             <div class="summary-num" id="draft-count">0</div>
             <div class="summary-label">仮押さえ申請中</div>
-          </div>
-        </div>
-        
+    </div>
+  </div>
+
         <!-- 仮押さえ状況 -->
         <div class="section" id="draft-status-section">
           <div class="section-header">
             <h2><i class="fas fa-clock"></i> 仮押さえ状況</h2>
-          </div>
+      </div>
           <div class="draft-status-list" id="draft-status-list">
             <div class="loading">読み込み中...</div>
-          </div>
-        </div>
+      </div>
+    </div>
 
         <!-- 緊急対応 -->
         <div class="section urgent-section" id="urgent-section" style="display: none;">
           <div class="section-header">
             <h2><i class="fas fa-exclamation-triangle"></i> 緊急対応</h2>
             <span class="badge urgent" id="urgent-count">0</span>
-          </div>
+      </div>
           <div class="urgent-list" id="urgent-list"></div>
-        </div>
+      </div>
 
         <!-- 今週のスケジュール -->
         <div class="section">
           <div class="section-header">
             <h2><i class="fas fa-calendar"></i> 今週の予定</h2>
             <a href="/sales/schedule.html" class="see-all">すべて見る</a>
-          </div>
+    </div>
           <div class="schedule-list" id="schedule-list">
             <div class="loading">読み込み中...</div>
-          </div>
-        </div>
+      </div>
+      </div>
       </section>
 
       <!-- 画面2: 顧客登録 -->
@@ -180,20 +180,20 @@
           <div class="form-group">
             <label>企業名 / 個人名 <span class="req">*</span></label>
             <input type="text" id="client-company" placeholder="例: 株式会社ABC" />
-          </div>
+    </div>
           <div class="form-group">
             <label>ブランド名 / 屋号</label>
             <input type="text" id="client-brand" placeholder="例: カフェXYZ" />
-          </div>
+      </div>
           <div class="form-group">
             <label>店舗名 <span class="req">*</span></label>
             <input type="text" id="client-store" placeholder="例: 渋谷店" />
-          </div>
+      </div>
           <div class="form-row">
             <div class="form-group half">
               <label>郵便番号</label>
               <input type="text" id="client-postcode" placeholder="123-4567" />
-            </div>
+    </div>
             <div class="form-group half">
               <label>都道府県</label>
               <select id="client-pref">
@@ -203,33 +203,33 @@
                 <option value="埼玉県">埼玉県</option>
                 <option value="千葉県">千葉県</option>
               </select>
-            </div>
-          </div>
+  </div>
+      </div>
           <div class="form-group">
             <label>住所</label>
             <input type="text" id="client-address" placeholder="市区町村・番地" />
-          </div>
+        </div>
           <div class="form-group">
             <label>電話番号</label>
             <input type="tel" id="client-phone" placeholder="03-1234-5678" />
-          </div>
+        </div>
           <div class="form-group">
             <label>担当者名</label>
             <input type="text" id="client-contact" placeholder="山田太郎" />
-          </div>
+        </div>
           <div class="form-group">
             <label>メールアドレス</label>
             <input type="email" id="client-email" placeholder="info@example.com" />
-          </div>
+        </div>
           <div class="form-group">
             <label>備考</label>
             <textarea id="client-notes" rows="3" placeholder="特記事項があれば入力"></textarea>
-          </div>
+      </div>
           <button class="btn-primary" onclick="submitClient()">
             <i class="fas fa-save"></i> 登録する
           </button>
-        </div>
-      </section>
+      </div>
+    </section>
 
       <!-- 画面3: 仮見積もり -->
       <section class="swipe-screen estimate-screen" data-screen="estimate">
@@ -238,12 +238,12 @@
           <div class="estimate-total-bar">
             <span class="total-label">合計</span>
             <span class="total-value" id="estimate-total">¥0</span>
-          </div>
+      </div>
           <div class="estimate-customer">
             <select id="estimate-store">
               <option value="">顧客を選択</option>
             </select>
-          </div>
+        </div>
         </div>
         
         <!-- スクロール可能なコンテンツ -->
@@ -255,23 +255,23 @@
               <div class="empty-hint">
                 <i class="fas fa-hand-pointer"></i>
                 <span>下からサービスを選択</span>
-              </div>
-            </div>
-          </div>
+        </div>
+      </div>
+        </div>
 
           <!-- サービス一覧 -->
           <div class="estimate-section">
             <div class="section-label"><i class="fas fa-list"></i> サービス一覧</div>
             <div class="service-list" id="service-list">
               <div class="loading">読み込み中...</div>
-            </div>
-          </div>
+        </div>
+  </div>
 
           <!-- メモ -->
           <div class="estimate-section">
             <div class="section-label"><i class="fas fa-sticky-note"></i> メモ</div>
             <textarea id="estimate-notes" rows="2" placeholder="補足事項があれば入力"></textarea>
-          </div>
+    </div>
         </div>
 
         <!-- 固定フッター: 送信ボタン -->
@@ -292,24 +292,24 @@
           <div class="info-banner">
             <i class="fas fa-info-circle"></i>
             <span>仮押さえ後、管理者が確認して清掃員をアサインします</span>
-          </div>
+      </div>
 
           <div class="form-group">
             <label>顧客（店舗） <span class="req">*</span></label>
             <select id="schedule-store" required>
               <option value="">選択してください</option>
             </select>
-          </div>
+        </div>
           <div class="form-row">
             <div class="form-group half">
               <label>希望日 <span class="req">*</span></label>
               <input type="date" id="schedule-date" required />
-            </div>
+        </div>
             <div class="form-group half">
               <label>希望時間 <span class="req">*</span></label>
               <input type="time" id="schedule-time" required />
-            </div>
-          </div>
+      </div>
+        </div>
           <div class="form-group">
             <label>作業時間</label>
             <select id="schedule-duration">
@@ -318,19 +318,19 @@
               <option value="120">120分</option>
               <option value="180">180分</option>
             </select>
-          </div>
+        </div>
           <div class="form-group">
             <label>作業内容・要望</label>
             <textarea id="schedule-notes" rows="3" placeholder="清掃内容や注意事項など"></textarea>
-          </div>
+      </div>
           <button class="btn-primary" onclick="submitSchedule()">
             <i class="fas fa-calendar-plus"></i> 仮押さえする
           </button>
-        </div>
-      </section>
+    </div>
+  </section>
 
     </div>
-  </div>
+    </div>
 
   <!-- 下部タブバー -->
   <nav class="bottom-tabs">
@@ -339,15 +339,15 @@
       <span>アクティビティ</span>
     </button>
     <button class="tab" data-screen="client">
-      <i class="fas fa-user-plus"></i>
+        <i class="fas fa-user-plus"></i>
       <span>顧客登録</span>
     </button>
     <button class="tab" data-screen="estimate">
-      <i class="fas fa-file-invoice"></i>
+        <i class="fas fa-file-invoice"></i>
       <span>仮見積</span>
     </button>
     <button class="tab" data-screen="schedule">
-      <i class="fas fa-calendar-plus"></i>
+        <i class="fas fa-calendar-plus"></i>
       <span>仮押さえ</span>
     </button>
   </nav>
@@ -909,12 +909,12 @@
       border-radius: 10px;
       border: 1px solid #eee;
       cursor: pointer;
-    }
+      }
     .service-item:active { background: #f9f9f9; }
     .service-item.selected {
       border-color: var(--primary, #ff679c);
       background: rgba(255, 103, 156, 0.05);
-    }
+      }
     .service-name { font-size: 0.85rem; color: #111; }
     .service-price { font-weight: 600; color: #666; font-size: 0.85rem; }
 
@@ -930,11 +930,11 @@
       border-top: 1px solid #eee;
       z-index: 100;
       padding-bottom: env(safe-area-inset-bottom);
-    }
+      }
     .tab {
       flex: 1;
       display: flex;
-      flex-direction: column;
+        flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 4px;
@@ -1177,7 +1177,7 @@
         allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
       const scheduleOptions = '<option value="">選択してください</option>' +
         allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
-      
+        
       document.getElementById('estimate-store').innerHTML = estimateOptions;
       document.getElementById('schedule-store').innerHTML = scheduleOptions;
     }
@@ -1185,7 +1185,8 @@
     async function loadServiceItems() {
       try {
         // 静的JSONファイルから読み込み
-        const res = await fetch('/data/service_items.json');
+        const basePath = document.querySelector('base')?.getAttribute('href') || '/';
+        const res = await fetch(`${basePath}data/service_items.json`);
         if (res.ok) {
           const data = await res.json();
           // 見積もり用にシンプルな形式に変換
@@ -1259,16 +1260,16 @@
       const container = document.getElementById('selected-services');
       if (selectedServices.length === 0) {
         container.innerHTML = '<div class="empty-hint"><i class="fas fa-hand-pointer"></i><span>下からサービスを選択</span></div>';
-        return;
-      }
-
+          return;
+        }
+        
       const multipliers = [1, 1.5, 2, 3];
 
       container.innerHTML = selectedServices.map(item => {
         const currentMultiplier = item.multiplier || 1;
         const calculatedPrice = Math.round(item.price * currentMultiplier);
         
-        return `
+          return `
           <div class="selected-item">
             <div class="selected-item-main">
               <div class="selected-item-info">
@@ -1288,12 +1289,12 @@
                   ${m === 1 ? '1x' : m + 'x'}
                 </button>
               `).join('')}
+              </div>
             </div>
-          </div>
-        `;
-      }).join('');
-    }
-
+          `;
+        }).join('');
+      }
+      
     function removeService(id) {
       selectedServices = selectedServices.filter(s => s.id !== id);
       renderSelectedServices();
