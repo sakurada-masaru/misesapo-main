@@ -1,0 +1,803 @@
+@layout('layouts.base')
+@json('data/meta/admin_users_title.json', $title)
+@json('data/meta/admin_users_body_class.json', $body_class)
+
+<main id="main" class="admin-users">
+  <div class="page-header">
+    <div class="header-left">
+      <a href="/admin/dashboard.html" class="back-link"><i class="fas fa-arrow-left"></i></a>
+      <h1 class="page-title">ユーザー管理</h1>
+    </div>
+    <button class="btn btn-primary" id="add-user-btn">
+      <i class="fas fa-plus"></i> 新規ユーザー登録
+    </button>
+  </div>
+
+  <!-- 統計カード -->
+  <div class="stats-row">
+    <div class="stat-mini">
+      <div class="stat-mini-icon blue"><i class="fas fa-users"></i></div>
+      <div class="stat-mini-body">
+        <div class="stat-mini-value" id="stat-total">-</div>
+        <div class="stat-mini-label">総ユーザー</div>
+      </div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-icon orange"><i class="fas fa-hard-hat"></i></div>
+      <div class="stat-mini-body">
+        <div class="stat-mini-value" id="stat-staff">-</div>
+        <div class="stat-mini-label">清掃員</div>
+      </div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-icon green"><i class="fas fa-user-tie"></i></div>
+      <div class="stat-mini-body">
+        <div class="stat-mini-value" id="stat-sales">-</div>
+        <div class="stat-mini-label">営業</div>
+      </div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-icon purple"><i class="fas fa-user-shield"></i></div>
+      <div class="stat-mini-body">
+        <div class="stat-mini-value" id="stat-admin">-</div>
+        <div class="stat-mini-label">管理者</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- フィルター -->
+  <div class="filter-bar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="search-input" placeholder="名前、メールで検索..." class="search-input" />
+    </div>
+    <div class="filter-options">
+      <select class="filter-select" id="role-filter">
+        <option value="">すべてのロール</option>
+        <option value="staff">清掃員</option>
+        <option value="sales">営業</option>
+        <option value="admin">管理者</option>
+        <option value="other">その他</option>
+      </select>
+      <select class="filter-select" id="status-filter">
+        <option value="">すべてのステータス</option>
+        <option value="active">有効</option>
+        <option value="inactive">無効</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" id="reset-filters">
+        <i class="fas fa-undo"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- テーブル -->
+  <div class="table-container">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>名前</th>
+          <th>メール</th>
+          <th>電話番号</th>
+          <th>ロール</th>
+          <th>部署</th>
+          <th>ステータス</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody">
+        <tr>
+          <td colspan="8" class="loading-cell">
+            <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ページネーション -->
+  <div class="pagination" id="pagination"></div>
+
+  <!-- 新規/編集モーダル -->
+  <dialog id="user-dialog" class="user-dialog">
+    <div class="dialog-content">
+      <button type="button" class="dialog-close" onclick="document.getElementById('user-dialog').close()">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3 id="dialog-title">新規ユーザー登録</h3>
+      <form id="user-form" method="dialog">
+        <input type="hidden" id="user-id" name="id">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="user-name">名前 <span class="required">*</span></label>
+            <input type="text" id="user-name" name="name" required placeholder="例: 山田太郎">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field half">
+            <label for="user-email">メールアドレス <span class="required">*</span></label>
+            <input type="email" id="user-email" name="email" required placeholder="example@mail.com">
+          </div>
+          <div class="form-field half">
+            <label for="user-phone">電話番号</label>
+            <input type="tel" id="user-phone" name="phone" placeholder="090-1234-5678">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field half">
+            <label for="user-role">ロール <span class="required">*</span></label>
+            <select id="user-role" name="role" required>
+              <option value="">選択してください</option>
+              <option value="staff">清掃員</option>
+              <option value="sales">営業</option>
+              <option value="admin">管理者</option>
+              <option value="other">その他</option>
+            </select>
+          </div>
+          <div class="form-field half">
+            <label for="user-department">部署</label>
+            <input type="text" id="user-department" name="department" placeholder="例: 清掃員、FS営業、経理">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="user-status">ステータス</label>
+            <select id="user-status" name="status">
+              <option value="active">有効</option>
+              <option value="inactive">無効</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" id="password-row">
+          <div class="form-field">
+            <label for="user-password">パスワード <span class="required" id="password-required">*</span></label>
+            <input type="password" id="user-password" name="password" placeholder="8文字以上">
+            <p class="form-hint">編集時は空欄で変更なし</p>
+          </div>
+        </div>
+        <div class="form-status" id="form-status"></div>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('user-dialog').close()">キャンセル</button>
+          <button type="submit" class="btn btn-primary" id="submit-btn">保存</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- 削除確認 -->
+  <dialog id="delete-dialog" class="delete-dialog">
+    <div class="dialog-content dialog-sm">
+      <h3>削除確認</h3>
+      <p>このユーザーを削除しますか？<br>この操作は取り消せません。</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('delete-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete">削除</button>
+      </div>
+    </div>
+  </dialog>
+
+  <style>
+    .admin-users {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f8fafc;
+      min-height: 100vh;
+    }
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .back-link {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      color: #64748b;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    /* 統計 */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-mini {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .stat-mini-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.125rem;
+    }
+    .stat-mini-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-mini-icon.orange { background: #ffedd5; color: #ea580c; }
+    .stat-mini-icon.green { background: #dcfce7; color: #16a34a; }
+    .stat-mini-icon.purple { background: #f3e8ff; color: #9333ea; }
+    .stat-mini-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .stat-mini-label {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    /* フィルター */
+    .filter-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+    .search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 12px 12px 42px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .filter-options {
+      display: flex;
+      gap: 10px;
+    }
+    .filter-select {
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      background: #fff;
+      min-width: 140px;
+    }
+
+    /* テーブル */
+    .table-container {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .users-table th {
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #64748b;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .users-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.9rem;
+      color: #1e293b;
+    }
+    .users-table tbody tr:hover {
+      background: #f8fafc;
+    }
+    .loading-cell {
+      text-align: center;
+      padding: 48px !important;
+      color: #94a3b8;
+    }
+    .user-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .role-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .role-staff { background: #ffedd5; color: #c2410c; }
+    .role-sales { background: #dcfce7; color: #15803d; }
+    .role-admin { background: #fce7f3; color: #be185d; }
+    .role-other { background: #e2e8f0; color: #475569; }
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-active { background: #dcfce7; color: #15803d; }
+    .status-inactive { background: #fee2e2; color: #b91c1c; }
+    .action-btns {
+      display: flex;
+      gap: 6px;
+    }
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .action-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .action-btn.delete:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    /* ページネーション */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .pagination button {
+      padding: 8px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .pagination button.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ダイアログ */
+    .user-dialog, .delete-dialog {
+      border: none;
+      border-radius: 16px;
+      padding: 0;
+      max-width: 500px;
+      width: 90vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .user-dialog::backdrop, .delete-dialog::backdrop {
+      background: rgba(0,0,0,0.5);
+    }
+    .dialog-content {
+      padding: 28px;
+      position: relative;
+    }
+    .dialog-content.dialog-sm {
+      text-align: center;
+    }
+    .dialog-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #94a3b8;
+      cursor: pointer;
+    }
+    .dialog-content h3 {
+      font-size: 1.25rem;
+      margin: 0 0 24px;
+      color: #1e293b;
+    }
+    .form-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-field {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-field.half {
+      flex: 0 0 calc(50% - 8px);
+    }
+    .form-field label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+    }
+    .required { color: #ef4444; }
+    .form-field input,
+    .form-field select {
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .form-field input:focus,
+    .form-field select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .form-hint {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin: 4px 0 0;
+    }
+    .form-status {
+      margin: 12px 0;
+      font-size: 0.875rem;
+    }
+    .form-status.error { color: #ef4444; }
+    .form-status.success { color: #16a34a; }
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .admin-users { padding: 16px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .filter-bar { flex-direction: column; }
+      .filter-options { flex-wrap: wrap; }
+      .form-row { flex-direction: column; }
+      .form-field.half { flex: 1; }
+    }
+  </style>
+</main>
+
+<script>
+(function() {
+  const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  
+  let allUsers = [];
+  let filteredUsers = [];
+  let currentPage = 1;
+  const perPage = 15;
+  let deleteTargetId = null;
+
+  const tbody = document.getElementById('users-tbody');
+  const userDialog = document.getElementById('user-dialog');
+  const deleteDialog = document.getElementById('delete-dialog');
+  const userForm = document.getElementById('user-form');
+
+  // 初期化
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadUsers();
+    setupEventListeners();
+  });
+
+  // ユーザー読み込み
+  async function loadUsers() {
+    try {
+      const response = await fetch(`${API_BASE}/workers`);
+      const workers = await response.json();
+      
+      // 新しいデータ構造に対応
+      allUsers = workers.map(w => ({
+        id: w.id,
+        name: w.name || `ユーザー${w.id}`,
+        email: w.email || '-',
+        phone: w.phone || '-',
+        role: w.role || 'staff',
+        department: w.department || '-',
+        team: w.team || '-',
+        status: w.status || 'active',
+        created_at: w.created_at
+      }));
+      
+      console.log('Users loaded:', allUsers.length);
+      
+      updateStats();
+      filterAndRender();
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">読み込みに失敗しました</td></tr>';
+    }
+  }
+
+  function getRoleFromCode(code) {
+    if (code === '99' || code === 99) return 'staff';
+    if (code === '1' || code === 1) return 'admin';
+    if (code === '2' || code === 2) return 'sales';
+    return 'staff';
+  }
+
+  function updateStats() {
+    document.getElementById('stat-total').textContent = allUsers.length;
+    document.getElementById('stat-staff').textContent = allUsers.filter(u => u.role === 'staff').length;
+    document.getElementById('stat-sales').textContent = allUsers.filter(u => u.role === 'sales').length;
+    document.getElementById('stat-admin').textContent = allUsers.filter(u => u.role === 'admin' || u.role === 'other').length;
+  }
+
+  function filterAndRender() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const roleFilter = document.getElementById('role-filter').value;
+    const statusFilter = document.getElementById('status-filter').value;
+
+    filteredUsers = allUsers.filter(u => {
+      const matchSearch = !search || 
+        (u.name && u.name.toLowerCase().includes(search)) ||
+        (u.email && u.email.toLowerCase().includes(search));
+      const matchRole = !roleFilter || u.role === roleFilter;
+      const matchStatus = !statusFilter || u.status === statusFilter;
+      return matchSearch && matchRole && matchStatus;
+    });
+
+    currentPage = 1;
+    renderTable();
+    renderPagination();
+  }
+
+  function renderTable() {
+    const start = (currentPage - 1) * perPage;
+    const pageUsers = filteredUsers.slice(start, start + perPage);
+
+    if (pageUsers.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">該当するユーザーがいません</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = pageUsers.map(u => `
+      <tr>
+        <td>${escapeHtml(u.id)}</td>
+        <td>
+          <div class="user-name-cell">
+            <span class="user-avatar">${(u.name || '?')[0]}</span>
+            <span>${escapeHtml(u.name || '-')}</span>
+          </div>
+        </td>
+        <td>${escapeHtml(u.email || '-')}</td>
+        <td>${escapeHtml(u.phone || '-')}</td>
+        <td><span class="role-badge role-${u.role}">${getRoleLabel(u.role)}</span></td>
+        <td>${escapeHtml(u.department || '-')}</td>
+        <td><span class="status-badge status-${u.status || 'active'}">${u.status === 'inactive' ? '無効' : '有効'}</span></td>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn" title="編集" onclick="editUser('${u.id}')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn delete" title="削除" onclick="confirmDelete('${u.id}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function getRoleLabel(role) {
+    const labels = { staff: '清掃員', sales: '営業', admin: '管理者', other: 'その他' };
+    return labels[role] || role;
+  }
+
+  function renderPagination() {
+    const totalPages = Math.ceil(filteredUsers.length / perPage);
+    const pagination = document.getElementById('pagination');
+    
+    if (totalPages <= 1) {
+      pagination.innerHTML = '';
+      return;
+    }
+
+    let html = `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">前</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+        html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+      } else if (i === currentPage - 3 || i === currentPage + 3) {
+        html += `<span style="padding:8px">...</span>`;
+      }
+    }
+    html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">次</button>`;
+    pagination.innerHTML = html;
+  }
+
+  window.goToPage = function(page) {
+    currentPage = page;
+    renderTable();
+    renderPagination();
+  };
+
+  function setupEventListeners() {
+    document.getElementById('search-input').addEventListener('input', filterAndRender);
+    document.getElementById('role-filter').addEventListener('change', filterAndRender);
+    document.getElementById('status-filter').addEventListener('change', filterAndRender);
+    document.getElementById('reset-filters').addEventListener('click', () => {
+      document.getElementById('search-input').value = '';
+      document.getElementById('role-filter').value = '';
+      document.getElementById('status-filter').value = '';
+      filterAndRender();
+    });
+
+    // 新規追加
+    document.getElementById('add-user-btn').addEventListener('click', () => {
+      document.getElementById('dialog-title').textContent = '新規ユーザー登録';
+      userForm.reset();
+      document.getElementById('user-id').value = '';
+      document.getElementById('password-required').style.display = 'inline';
+      document.getElementById('user-password').required = true;
+      document.getElementById('form-status').textContent = '';
+      userDialog.showModal();
+    });
+
+    // フォーム送信
+    userForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('user-id').value;
+      const isNew = !id;
+      
+      const data = {
+        name: document.getElementById('user-name').value,
+        email: document.getElementById('user-email').value,
+        phone: document.getElementById('user-phone').value,
+        role: document.getElementById('user-role').value,
+        department: document.getElementById('user-department').value,
+        status: document.getElementById('user-status').value
+      };
+
+      const password = document.getElementById('user-password').value;
+      if (password) {
+        data.password = password;
+      }
+
+      if (isNew) {
+        data.id = 'W' + Date.now();
+        data.created_at = new Date().toISOString();
+      } else {
+        data.id = id;
+      }
+      data.updated_at = new Date().toISOString();
+
+      try {
+        document.getElementById('form-status').textContent = '保存中...';
+        
+        // workersテーブルに保存
+        const response = await fetch(`${API_BASE}/workers${isNew ? '' : '/' + id}`, {
+          method: isNew ? 'POST' : 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          document.getElementById('form-status').textContent = '保存しました';
+          document.getElementById('form-status').className = 'form-status success';
+          setTimeout(() => {
+            userDialog.close();
+            loadUsers();
+          }, 500);
+        } else {
+          throw new Error('保存に失敗しました');
+        }
+      } catch (error) {
+        document.getElementById('form-status').textContent = error.message;
+        document.getElementById('form-status').className = 'form-status error';
+      }
+    });
+
+    // 削除確認
+    document.getElementById('confirm-delete').addEventListener('click', async () => {
+      if (!deleteTargetId) return;
+      
+      try {
+        const response = await fetch(`${API_BASE}/workers/${deleteTargetId}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          deleteDialog.close();
+          loadUsers();
+        } else {
+          alert('削除に失敗しました');
+        }
+      } catch (error) {
+        alert('削除に失敗しました');
+      }
+    });
+  }
+
+  // 編集
+  window.editUser = function(id) {
+    const user = allUsers.find(u => u.id === id);
+    if (!user) return;
+
+    document.getElementById('dialog-title').textContent = 'ユーザー編集';
+    document.getElementById('user-id').value = user.id;
+    document.getElementById('user-name').value = user.name || '';
+    document.getElementById('user-email').value = user.email || '';
+    document.getElementById('user-phone').value = user.phone || '';
+    document.getElementById('user-role').value = user.role || 'staff';
+    document.getElementById('user-department').value = user.department || '';
+    document.getElementById('user-status').value = user.status || 'active';
+    document.getElementById('user-password').value = '';
+    document.getElementById('password-required').style.display = 'none';
+    document.getElementById('user-password').required = false;
+    document.getElementById('form-status').textContent = '';
+    userDialog.showModal();
+  };
+
+  // 削除確認
+  window.confirmDelete = function(id) {
+    deleteTargetId = id;
+    deleteDialog.showModal();
+  };
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+})();
+</script>

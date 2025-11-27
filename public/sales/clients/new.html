@@ -111,11 +111,20 @@
     <a href="/sales/clients.html" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
-    <h1 class="page-title">新規顧客登録</h1>
+    <h1 class="page-title">リード登録（営業向け）</h1>
+    <span class="page-badge">簡易登録</span>
+  </div>
+
+  <div class="info-banner">
+    <i class="fas fa-info-circle"></i>
+    <div>
+      <strong>商談中の仮登録用フォームです</strong>
+      <p>最低限の情報を入力して登録後、お客様に招待リンクを送信すると詳細情報を入力いただけます。</p>
+    </div>
   </div>
 
   <form id="client-form" class="client-form">
-    <!-- 基本情報 -->
+    <!-- 基本情報（必須のみ） -->
     <div class="form-section">
       <h2 class="section-title">
         <i class="fas fa-building"></i>
@@ -123,110 +132,74 @@
       </h2>
       <div class="form-grid">
         <div class="form-group full-width">
-          <label class="form-label">会社名 <span class="required">必須</span></label>
+          <label class="form-label">会社名・屋号 <span class="required">必須</span></label>
           <input type="text" class="form-input" name="company_name" placeholder="例: 株式会社 Dart Ace" required />
-          <p class="form-hint">会社名を入力してください</p>
-        </div>
-        <div class="form-group">
-          <label class="form-label">会社名カナ</label>
-          <input type="text" class="form-input" name="company_name_kana" placeholder="例: カブシキガイシャ ダート エース" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">ブランド名</label>
-          <input type="text" class="form-input" name="brand_name" placeholder="例: A's ダーツバー(Darts Bar A's )" />
         </div>
         <div class="form-group full-width">
           <label class="form-label">店舗名 <span class="required">必須</span></label>
           <input type="text" class="form-input" name="store_name" placeholder="例: 日本橋茅場町店" required />
-          <p class="form-hint">店舗名を入力してください</p>
-        </div>
-        <div class="form-group">
-          <label class="form-label">店舗数</label>
-          <input type="number" class="form-input" name="store_count" placeholder="例: 3" min="0" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">ステータス <span class="required">必須</span></label>
-          <select class="form-select" name="status" required>
-            <option value="">選択してください</option>
-            <option value="稼働中" selected>稼働中</option>
-            <option value="休止">休止</option>
-            <option value="契約終了">契約終了</option>
-          </select>
         </div>
       </div>
     </div>
 
-    <!-- 担当者情報 -->
+    <!-- 連絡先（必須のみ） -->
     <div class="form-section">
       <h2 class="section-title">
-        <i class="fas fa-user"></i>
-        担当者情報
+        <i class="fas fa-phone"></i>
+        連絡先
       </h2>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">担当者名</label>
-          <input type="text" class="form-input" name="contact_person" placeholder="例: 永井研行" />
+          <input type="text" class="form-input" name="contact_person" placeholder="例: 山田太郎" />
         </div>
         <div class="form-group">
+          <label class="form-label">電話番号 <span class="required">必須</span></label>
+          <input type="tel" class="form-input" name="phone" placeholder="例: 03-1234-5678" required />
+        </div>
+        <div class="form-group full-width">
           <label class="form-label">メールアドレス <span class="required">必須</span></label>
-          <input type="email" class="form-input" name="email" placeholder="例: info@dart-ace.com" required />
-          <p class="form-hint">連絡先メールアドレスを入力してください</p>
-        </div>
-        <div class="form-group">
-          <label class="form-label">営業担当</label>
-          <input type="text" class="form-input" name="sales_rep" placeholder="例: 正田和輝" readonly />
-          <p class="form-hint">現在ログイン中の営業担当が自動設定されます</p>
+          <input type="email" class="form-input" name="email" placeholder="例: info@example.com" required />
+          <p class="form-hint">招待リンクの送信先になります</p>
         </div>
       </div>
     </div>
 
-    <!-- 清掃情報 -->
+    <!-- 商談メモ -->
     <div class="form-section">
       <h2 class="section-title">
-        <i class="fas fa-calendar-alt"></i>
-        清掃情報
+        <i class="fas fa-sticky-note"></i>
+        商談メモ
       </h2>
       <div class="form-grid">
         <div class="form-group">
-          <label class="form-label">次回清掃日時</label>
-          <input type="datetime-local" class="form-input" name="next_date" />
-          <p class="form-hint">次回の清掃予定日時を入力してください</p>
-        </div>
-        <div class="form-group">
-          <label class="form-label">清掃頻度</label>
-          <select class="form-select" name="cleaning_frequency">
-            <option value="">選択してください</option>
-            <option value="毎日清掃">毎日清掃</option>
-            <option value="毎週清掃">毎週清掃</option>
-            <option value="毎月清掃">毎月清掃</option>
-            <option value="隔月清掃">隔月清掃</option>
-            <option value="四半期清掃">四半期清掃</option>
-            <option value="年1回清掃">年1回清掃</option>
-            <option value="その他">その他</option>
+          <label class="form-label">商談ステータス</label>
+          <select class="form-select" name="lead_status">
+            <option value="initial">初回接触</option>
+            <option value="negotiating" selected>商談中</option>
+            <option value="proposal">提案済み</option>
+            <option value="pending">検討中</option>
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label">見込み度</label>
+          <select class="form-select" name="probability">
+            <option value="">選択してください</option>
+            <option value="high">高（80%以上）</option>
+            <option value="medium">中（50%程度）</option>
+            <option value="low">低（30%以下）</option>
+          </select>
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">メモ・ヒアリング内容</label>
+          <textarea class="form-textarea" name="notes" rows="4" placeholder="商談内容、要望、注意事項などを記録"></textarea>
+        </div>
       </div>
     </div>
 
-    <!-- その他情報 -->
-    <div class="form-section">
-      <h2 class="section-title">
-        <i class="fas fa-link"></i>
-        その他情報
-      </h2>
-      <div class="form-grid">
-        <div class="form-group full-width">
-          <label class="form-label">URL</label>
-          <input type="url" class="form-input" name="url" placeholder="例: https://x.gd/AkFdE" />
-          <p class="form-hint">関連するURLがあれば入力してください</p>
-        </div>
-        <div class="form-group full-width">
-          <label class="form-label">メモ</label>
-          <textarea class="form-textarea" name="notes" rows="4" placeholder="顧客に関するメモや注意事項を入力してください"></textarea>
-          <p class="form-hint">顧客に関する特記事項やメモを入力してください</p>
-        </div>
-      </div>
-    </div>
+    <!-- 営業担当（自動） -->
+    <input type="hidden" name="sales_rep" id="sales_rep" />
+    <input type="hidden" name="registration_type" value="sales_lead" />
 
     <!-- フォームアクション -->
     <div class="form-actions">
@@ -236,14 +209,14 @@
       </button>
       <button type="submit" class="btn btn-primary">
         <i class="fas fa-save"></i>
-        登録する
+        登録して招待リンクを送信
       </button>
     </div>
   </form>
 
   <style>
     .sales-clients-new {
-      max-width: 900px;
+      max-width: 800px;
       margin: 0 auto;
       padding: 24px;
       background: #f9fafb;
@@ -253,7 +226,7 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
       padding-bottom: 16px;
       border-bottom: 2px solid #e5e7eb;
     }
@@ -276,10 +249,44 @@
       color: var(--primary);
     }
     .page-title {
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: #111827;
       margin: 0;
+    }
+    .page-badge {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .info-banner {
+      display: flex;
+      gap: 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .info-banner i {
+      color: #3b82f6;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .info-banner strong {
+      color: #1e40af;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .info-banner p {
+      color: #1e40af;
+      font-size: 0.875rem;
+      margin: 0;
+      opacity: 0.8;
     }
     .client-form {
       background: #ffffff;
@@ -288,8 +295,8 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .form-section {
-      margin-bottom: 32px;
-      padding-bottom: 32px;
+      margin-bottom: 28px;
+      padding-bottom: 28px;
       border-bottom: 1px solid #f3f4f6;
     }
     .form-section:last-of-type {
@@ -301,10 +308,10 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 1.25rem;
+      font-size: 1.125rem;
       font-weight: 600;
       color: #111827;
-      margin: 0 0 24px 0;
+      margin: 0 0 20px 0;
     }
     .section-title i {
       color: var(--primary);
@@ -312,12 +319,12 @@
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
+      gap: 16px;
     }
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
     .form-group.full-width {
       grid-column: 1 / -1;
@@ -336,7 +343,7 @@
     .form-select,
     .form-textarea {
       width: 100%;
-      padding: 12px;
+      padding: 10px 12px;
       border: 1px solid #e5e7eb;
       border-radius: 8px;
       font-size: 0.95rem;
@@ -350,13 +357,9 @@
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
     }
-    .form-input[readonly] {
-      background: #f9fafb;
-      cursor: not-allowed;
-    }
     .form-textarea {
       resize: vertical;
-      min-height: 100px;
+      min-height: 80px;
     }
     .form-hint {
       font-size: 0.75rem;
@@ -367,19 +370,16 @@
       display: flex;
       justify-content: flex-end;
       gap: 12px;
-      margin-top: 32px;
-      padding-top: 32px;
+      margin-top: 28px;
+      padding-top: 28px;
       border-top: 1px solid #f3f4f6;
-    }
-    .form-actions .btn {
-      min-width: 140px;
     }
     @media (max-width: 768px) {
       .sales-clients-new {
         padding: 16px;
       }
       .client-form {
-        padding: 24px;
+        padding: 20px;
       }
       .form-grid {
         grid-template-columns: 1fr;
@@ -394,64 +394,58 @@
   </style>
 
   <script>
-    // Form submission functionality
     (function() {
       const form = document.getElementById('client-form');
-      if (form) {
-        // Set current sales rep (mock - in real app, get from session/auth)
-        const salesRepInput = form.querySelector('input[name="sales_rep"]');
-        if (salesRepInput) {
-          // TODO: Get from actual session/auth
-          salesRepInput.value = '正田和輝';
+      const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+      
+      // 営業担当を自動設定（実際はセッションから取得）
+      document.getElementById('sales_rep').value = '正田和輝';
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const leadData = {
+          name: formData.get('store_name'),
+          company_name: formData.get('company_name'),
+          contact_person: formData.get('contact_person'),
+          phone: formData.get('phone'),
+          email: formData.get('email'),
+          lead_status: formData.get('lead_status'),
+          probability: formData.get('probability'),
+          notes: formData.get('notes'),
+          sales_rep: formData.get('sales_rep'),
+          registration_type: 'sales_lead',
+          status: 'pending_customer_info', // お客様情報入力待ち
+          created_at: new Date().toISOString()
+        };
+        
+        try {
+          // APIに送信
+          const response = await fetch(`${API_BASE}/stores`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(leadData)
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            // 招待リンク生成（実際はバックエンドで生成）
+            const inviteLink = `${window.location.origin}/registration/customer-complete.html?token=${result.id}`;
+            
+            alert(`リードを登録しました！\n\n招待リンク:\n${inviteLink}\n\n（このリンクをお客様にお送りください）`);
+            window.location.href = '/sales/clients.html';
+          } else {
+            throw new Error('登録に失敗しました');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('登録に失敗しました。もう一度お試しください。');
         }
-
-        form.addEventListener('submit', function(e) {
-          e.preventDefault();
-          
-          // Get form data
-          const formData = new FormData(form);
-          const clientData = {
-            company_name: formData.get('company_name'),
-            company_name_kana: formData.get('company_name_kana'),
-            brand_name: formData.get('brand_name'),
-            store_name: formData.get('store_name'),
-            contact_person: formData.get('contact_person'),
-            email: formData.get('email'),
-            sales_rep: formData.get('sales_rep'),
-            store_count: formData.get('store_count') || '',
-            status: formData.get('status'),
-            next_date: formData.get('next_date') ? formatDateForDisplay(formData.get('next_date')) : '',
-            cleaning_frequency: formData.get('cleaning_frequency') || '',
-            url: formData.get('url') || '',
-            notes: formData.get('notes') || ''
-          };
-          
-          // TODO: Implement actual submission to backend
-          console.log('Client data:', clientData);
-          
-          // Show success message
-          alert('顧客を登録しました。\n（現在はモックです。実際のバックエンド連携は実装予定です。）');
-          
-          // Redirect to clients list
-          window.location.href = '/sales/clients.html';
-        });
-      }
-
-      // Helper function to format datetime-local to display format
-      function formatDateForDisplay(dateTimeString) {
-        if (!dateTimeString) return '';
-        const date = new Date(dateTimeString);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}年${month}月${day}日 ${hours}:${minutes}`;
-      }
+      });
     })();
   </script>
 </main>
-
 
     </main>
     <footer class="site-footer">

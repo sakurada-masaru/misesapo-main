@@ -105,6 +105,8 @@
 
 
 
+<script src="/js/data_utils.js"></script>
+
 <main id="main" class="container staff-report-new">
   <!-- パンくずリスト -->
   <nav class="breadcrumb" aria-label="パンくずリスト">
@@ -121,38 +123,53 @@
     <h1 class="page-title">レポート作成</h1>
   </div>
 
-  <form id="report-form" class="report-form">
-    <!-- Assignment Info -->
+  <!-- スケジュール選択（未選択時） -->
+  <div id="schedule-selector" class="form-section">
+    <h2 class="section-title">スケジュールを選択</h2>
+    <p class="section-desc">レポートを作成するスケジュールを選択してください</p>
+    <div id="schedule-list" class="schedule-list">
+      <div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+    </div>
+  </div>
+
+  <form id="report-form" class="report-form" style="display: none;">
+    <!-- 作業情報（スケジュールから自動取得） -->
     <div class="form-section">
       <h2 class="section-title">作業情報</h2>
       <div class="info-card">
         <div class="info-item">
           <span class="info-label">店舗</span>
-          <span class="info-value">神楽坂店</span>
+          <span class="info-value" id="info-store">-</span>
         </div>
         <div class="info-item">
           <span class="info-label">作業日時</span>
-          <span class="info-value">2025年3月28日 10:30</span>
+          <span class="info-value" id="info-datetime">-</span>
         </div>
         <div class="info-item">
-          <span class="info-label">作業内容</span>
-          <span class="info-value">レンジフード洗浄、グリストラップ清掃</span>
+          <span class="info-label">予定作業</span>
+          <span class="info-value" id="info-notes">-</span>
         </div>
+        <input type="hidden" id="schedule-id" name="schedule_id">
+        <input type="hidden" id="store-id" name="store_id">
+        <input type="hidden" id="store-name" name="store_name">
       </div>
+      <button type="button" class="btn btn-outline btn-sm" id="change-schedule">
+        <i class="fas fa-exchange-alt"></i> スケジュールを変更
+      </button>
     </div>
 
-    <!-- Work Content -->
+    <!-- 作業内容 -->
     <div class="form-section">
       <h2 class="section-title">作業内容</h2>
       <div class="form-group">
-        <label class="form-label">作業内容を選択</label>
-        <div class="checkbox-group">
+        <label class="form-label">実施した作業を選択</label>
+        <div class="checkbox-group" id="work-items-container">
           <label class="checkbox-item">
-            <input type="checkbox" name="work-content" value="レンジフード洗浄" checked />
+            <input type="checkbox" name="work-content" value="レンジフード洗浄" />
             <span>レンジフード洗浄</span>
           </label>
           <label class="checkbox-item">
-            <input type="checkbox" name="work-content" value="グリストラップ清掃" checked />
+            <input type="checkbox" name="work-content" value="グリストラップ清掃" />
             <span>グリストラップ清掃</span>
           </label>
           <label class="checkbox-item">
@@ -163,11 +180,42 @@
             <input type="checkbox" name="work-content" value="エアコン分解洗浄" />
             <span>エアコン分解洗浄</span>
           </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="work-content" value="床清掃" />
+            <span>床清掃</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="work-content" value="窓清掃" />
+            <span>窓清掃</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="work-content" value="トイレ清掃" />
+            <span>トイレ清掃</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="work-content" value="その他" />
+            <span>その他</span>
+          </label>
         </div>
       </div>
     </div>
 
-    <!-- Photos -->
+    <!-- 作業時間 -->
+    <div class="form-section">
+      <h2 class="section-title">実際の作業時間</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">開始時刻</label>
+          <input type="time" name="start_time" id="start-time" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">終了時刻</label>
+          <input type="time" name="end_time" id="end-time" class="form-input">
+        </div>
+      </div>
+    </div>
+
+    <!-- 写真 -->
     <div class="form-section">
       <h2 class="section-title">
         写真アップロード
@@ -177,7 +225,7 @@
         <div class="photo-category">
           <h3 class="photo-category-title">作業前</h3>
           <div class="photo-grid" data-category="before">
-            <div class="photo-item">
+            <div class="photo-item photo-add">
               <label class="photo-upload-btn">
                 <input type="file" accept="image/*" capture="environment" data-category="before" />
                 <i class="fas fa-camera"></i>
@@ -189,7 +237,7 @@
         <div class="photo-category">
           <h3 class="photo-category-title">作業後</h3>
           <div class="photo-grid" data-category="after">
-            <div class="photo-item">
+            <div class="photo-item photo-add">
               <label class="photo-upload-btn">
                 <input type="file" accept="image/*" capture="environment" data-category="after" />
                 <i class="fas fa-camera"></i>
@@ -202,16 +250,16 @@
       </div>
     </div>
 
-    <!-- Work Memo -->
+    <!-- 作業メモ -->
     <div class="form-section">
       <h2 class="section-title">作業メモ</h2>
       <div class="form-group">
         <label class="form-label">特記事項</label>
-        <textarea class="form-textarea" name="work-memo" rows="4" placeholder="作業時の注意点や特記事項を入力してください"></textarea>
+        <textarea class="form-textarea" name="work-memo" id="work-memo" rows="4" placeholder="作業時の注意点や特記事項を入力してください"></textarea>
       </div>
     </div>
 
-    <!-- Location -->
+    <!-- 位置情報 -->
     <div class="form-section">
       <h2 class="section-title">位置情報</h2>
       <div class="location-info">
@@ -220,12 +268,15 @@
           現在位置を取得
         </button>
         <div id="location-display" class="location-display" style="display: none;">
-          <span class="location-text">取得済み</span>
+          <i class="fas fa-check-circle"></i>
+          <span class="location-text">位置情報を取得しました</span>
         </div>
+        <input type="hidden" name="latitude" id="latitude">
+        <input type="hidden" name="longitude" id="longitude">
       </div>
     </div>
 
-    <!-- Progress Indicator -->
+    <!-- 進捗 -->
     <div class="form-progress">
       <div class="progress-bar">
         <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
@@ -233,7 +284,7 @@
       <p class="progress-text" id="progress-text">進捗: 0%</p>
     </div>
 
-    <!-- Actions -->
+    <!-- 送信ボタン -->
     <div class="form-actions">
       <button type="button" class="btn btn-outline btn-block btn-large" onclick="window.location.href='/staff/dashboard.html'">キャンセル</button>
       <button type="submit" class="btn btn-primary btn-block btn-large" id="submit-btn">
@@ -252,58 +303,41 @@
   </form>
 
   <style>
-    /* パンくずリスト */
+    .staff-report-new {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 16px;
+      padding-bottom: 120px;
+    }
     .breadcrumb {
       margin-bottom: 16px;
-      padding: 12px 0;
     }
     .breadcrumb-list {
       display: flex;
-      align-items: center;
       gap: 8px;
       list-style: none;
-      margin: 0;
       padding: 0;
-      flex-wrap: wrap;
-    }
-    .breadcrumb-item {
-      display: flex;
-      align-items: center;
+      margin: 0;
       font-size: 0.875rem;
       color: #6b7280;
     }
-    .breadcrumb-item:not(:last-child)::after {
-      content: '›';
-      margin-left: 8px;
-      color: #9ca3af;
-    }
     .breadcrumb-item a {
-      color: #6b7280;
+      color: var(--primary, #FF6BA6);
       text-decoration: none;
-      transition: color 0.2s;
     }
-    .breadcrumb-item a:hover {
-      color: var(--primary);
+    .breadcrumb-item::after {
+      content: '/';
+      margin-left: 8px;
+      color: #d1d5db;
     }
-    .breadcrumb-item[aria-current="page"] {
-      color: #111827;
-      font-weight: 500;
-    }
-    
-    .staff-report-new {
-      max-width: 100%;
-      margin: 0;
-      padding: 16px;
-      background: #f9fafb;
-      padding-bottom: 100px;
+    .breadcrumb-item:last-child::after {
+      display: none;
     }
     .page-header {
       display: flex;
       align-items: center;
       gap: 12px;
       margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #e5e7eb;
     }
     .back-btn {
       display: flex;
@@ -311,17 +345,10 @@
       justify-content: center;
       width: 40px;
       height: 40px;
-      border-radius: 50%;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
+      background: #f3f4f6;
+      border-radius: 10px;
       color: #374151;
       text-decoration: none;
-      transition: all 0.2s;
-    }
-    .back-btn:hover {
-      background: #f9fafb;
-      border-color: var(--primary);
-      color: var(--primary);
     }
     .page-title {
       font-size: 1.5rem;
@@ -329,20 +356,78 @@
       color: #111827;
       margin: 0;
     }
-    .report-form {
+    .section-desc {
+      color: #6b7280;
+      font-size: 0.9rem;
+      margin: 0 0 16px;
+    }
+
+    /* スケジュール選択 */
+    .schedule-list {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 12px;
     }
-    .form-section {
-      background: #ffffff;
+    .schedule-card {
+      background: #fff;
+      border: 2px solid #e5e7eb;
       border-radius: 12px;
       padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .schedule-card:hover {
+      border-color: var(--primary, #FF6BA6);
+      box-shadow: 0 4px 12px rgba(255, 107, 166, 0.15);
+    }
+    .schedule-card.completed {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .schedule-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 8px;
+    }
+    .schedule-store {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .schedule-status {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .schedule-status.scheduled { background: #dbeafe; color: #1d4ed8; }
+    .schedule-status.in_progress { background: #fef3c7; color: #d97706; }
+    .schedule-status.completed { background: #dcfce7; color: #16a34a; }
+    .schedule-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .schedule-meta i { margin-right: 4px; }
+    .no-schedules {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+
+    /* フォームセクション */
+    .form-section {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     .section-title {
-      font-size: 1.125rem;
-      font-weight: 600;
+      font-size: 1rem;
+      font-weight: 700;
       color: #111827;
       margin: 0 0 16px 0;
       display: flex;
@@ -350,104 +435,112 @@
       gap: 8px;
     }
     .required-badge {
-      background: #ef4444;
-      color: #ffffff;
-      font-size: 0.75rem;
+      background: #fee2e2;
+      color: #dc2626;
+      font-size: 0.7rem;
       padding: 2px 8px;
       border-radius: 4px;
       font-weight: 600;
     }
     .info-card {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 12px;
-      background: #f9fafb;
-      border-radius: 8px;
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
     }
     .info-item {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e5e7eb;
     }
+    .info-item:last-child { border-bottom: none; }
     .info-label {
       font-size: 0.875rem;
       color: #6b7280;
     }
     .info-value {
+      font-size: 0.875rem;
       font-weight: 600;
-      color: #111827;
-      font-size: 0.95rem;
+      color: #1e293b;
     }
-    .form-group {
-      margin-bottom: 16px;
-    }
-    .form-group:last-child {
-      margin-bottom: 0;
-    }
+
+    /* フォーム要素 */
+    .form-group { margin-bottom: 16px; }
     .form-label {
       display: block;
+      font-size: 0.875rem;
       font-weight: 600;
       color: #374151;
-      font-size: 0.875rem;
       margin-bottom: 8px;
     }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary, #FF6BA6);
+    }
+
+    /* チェックボックス */
     .checkbox-group {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
     }
     .checkbox-item {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       padding: 12px;
       background: #f9fafb;
       border-radius: 8px;
-      border: 1px solid #e5e7eb;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .checkbox-item:hover {
-      background: #ffffff;
-      border-color: var(--primary);
-    }
+    .checkbox-item:hover { background: #f3f4f6; }
     .checkbox-item input[type="checkbox"] {
       width: 20px;
       height: 20px;
-      cursor: pointer;
+      accent-color: var(--primary, #FF6BA6);
     }
-    .checkbox-item input[type="checkbox"]:checked + span {
-      color: var(--primary);
-      font-weight: 600;
+    .checkbox-item span {
+      font-size: 0.9rem;
+      color: #374151;
     }
-    .photo-upload {
-      margin-top: 12px;
-    }
-    .photo-category {
-      margin-bottom: 24px;
-    }
-    .photo-category:last-child {
-      margin-bottom: 0;
-    }
+
+    /* 写真アップロード */
+    .photo-category { margin-bottom: 20px; }
     .photo-category-title {
-      font-size: 1rem;
+      font-size: 0.875rem;
       font-weight: 600;
       color: #374151;
-      margin: 0 0 12px 0;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #e5e7eb;
+      margin-bottom: 12px;
     }
     .photo-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-      margin-bottom: 12px;
     }
     .photo-item {
       aspect-ratio: 1;
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
+      position: relative;
+    }
+    .photo-add {
+      border: 2px dashed #d1d5db;
+      background: #f9fafb;
     }
     .photo-upload-btn {
       display: flex;
@@ -456,88 +549,60 @@
       justify-content: center;
       width: 100%;
       height: 100%;
-      background: #f9fafb;
-      border: 2px dashed #d1d5db;
-      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.2s;
+      color: #9ca3af;
+      gap: 4px;
     }
-    .photo-upload-btn:hover {
-      background: #ffffff;
-      border-color: var(--primary);
+    .photo-upload-btn input { display: none; }
+    .photo-upload-btn i { font-size: 1.5rem; }
+    .photo-upload-btn span { font-size: 0.75rem; }
+    .photo-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
-    .photo-upload-btn input[type="file"] {
-      display: none;
-    }
-    .photo-upload-btn i {
-      font-size: 2rem;
-      color: var(--primary);
-      margin-bottom: 8px;
-    }
-    .photo-upload-btn span {
-      font-size: 0.875rem;
-      color: #6b7280;
+    .photo-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     .form-note {
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       color: #6b7280;
-      margin: 0;
+      margin-top: 8px;
     }
-    .form-textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-family: inherit;
-      resize: vertical;
-      min-height: 100px;
-    }
-    .form-textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
-    }
+
+    /* 位置情報 */
     .location-info {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
     .location-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       padding: 12px;
       background: #d1fae5;
       border-radius: 8px;
       color: #065f46;
       font-size: 0.875rem;
     }
-    .form-actions {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #ffffff;
-      border-top: 1px solid #e5e7eb;
-      padding: 16px;
-      display: flex;
-      gap: 12px;
-      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
-      z-index: 100;
-    }
-    .form-actions .btn {
-      flex: 1;
-    }
-    .btn-large {
-      padding: 16px 24px;
-      font-size: 1.125rem;
-      font-weight: 700;
-      min-height: 56px;
-    }
-    .btn-large i {
-      margin-right: 8px;
-    }
+
+    /* 進捗バー */
     .form-progress {
       margin: 24px 0;
-      padding: 0 16px;
     }
     .progress-bar {
       width: 100%;
@@ -558,6 +623,57 @@
       text-align: center;
       margin: 0;
     }
+
+    /* ボタン */
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary, #FF6BA6);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #ff5a9a; }
+    .btn-outline {
+      background: #fff;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+    }
+    .btn-outline:hover { background: #f9fafb; }
+    .btn-sm { padding: 8px 16px; font-size: 0.8rem; }
+    .btn-block { width: 100%; }
+    .btn-large {
+      padding: 16px 24px;
+      font-size: 1.1rem;
+      min-height: 56px;
+    }
+
+    /* 固定フッター */
+    .form-actions {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-top: 1px solid #e5e7eb;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+      z-index: 100;
+    }
+    .form-actions .btn { flex: 1; }
+
+    /* オフライン */
     .offline-indicator-report {
       position: fixed;
       top: 0;
@@ -566,10 +682,9 @@
       background: #fef3c7;
       border-bottom: 2px solid #f59e0b;
       padding: 12px 16px;
-      z-index: 1000001;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
     }
-    .offline-indicator-report .offline-content {
+    .offline-content {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -578,204 +693,363 @@
       font-weight: 600;
       color: #92400e;
     }
-    .offline-indicator-report i {
-      font-size: 1rem;
+
+    /* ローディング */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
     }
-    @media (max-width: 768px) {
-      .staff-report-new {
-        padding: 12px;
-        padding-bottom: 100px;
-      }
-      .form-section {
-        padding: 12px;
-      }
-      .photo-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .form-actions {
-        padding: 12px;
-      }
+
+    /* レスポンシブ */
+    @media (max-width: 640px) {
+      .checkbox-group { grid-template-columns: 1fr; }
+      .photo-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-row { grid-template-columns: 1fr; }
     }
   </style>
-  <script>
-    // フォームデータの保存（オフライン対応）
-    function saveFormData() {
-      const formData = {
-        workContent: Array.from(document.querySelectorAll('input[name="work-content"]:checked')).map(cb => cb.value),
-        workMemo: document.querySelector('textarea[name="work-memo"]').value,
-        photos: {
-          before: [],
-          after: []
-        },
-        location: null,
-        timestamp: new Date().toISOString()
-      };
 
-      // 写真データを保存
-      document.querySelectorAll('.photo-item img').forEach(img => {
-        const category = img.closest('.photo-grid').dataset.category;
-        formData.photos[category].push(img.src);
+  <script>
+  (function() {
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+    
+    let allSchedules = [];
+    let allStores = [];
+    let selectedSchedule = null;
+    let photoData = { before: [], after: [] };
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', async () => {
+      await Promise.all([loadSchedules(), loadStores()]);
+      setupEventListeners();
+      checkUrlParams();
+    });
+
+    // URLパラメータからスケジュールIDを取得
+    function checkUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const scheduleId = params.get('schedule');
+      if (scheduleId) {
+        const schedule = allSchedules.find(s => String(s.id) === scheduleId);
+        if (schedule) {
+          selectSchedule(schedule);
+        }
+      }
+    }
+
+    // スケジュール読み込み
+    async function loadSchedules() {
+      try {
+        const res = await fetch(`${API_BASE}/schedules`);
+        const schedules = await res.json();
+        
+        // 今日以前の未完了スケジュールを表示
+        const today = new Date().toISOString().split('T')[0];
+        allSchedules = schedules.filter(s => 
+          s.scheduled_date <= today && s.status !== 'completed'
+        ).sort((a, b) => b.scheduled_date.localeCompare(a.scheduled_date));
+
+        renderScheduleList();
+      } catch (e) {
+        console.error('Failed to load schedules:', e);
+        document.getElementById('schedule-list').innerHTML = '<div class="no-schedules">スケジュールの読み込みに失敗しました</div>';
+      }
+    }
+
+    // 店舗読み込み
+    async function loadStores() {
+      try {
+        const res = await fetch(`${API_BASE}/stores`);
+        allStores = await res.json();
+      } catch (e) {
+        console.error('Failed to load stores:', e);
+      }
+    }
+
+    // スケジュール一覧を描画
+    function renderScheduleList() {
+      const container = document.getElementById('schedule-list');
+      
+      if (allSchedules.length === 0) {
+        container.innerHTML = '<div class="no-schedules"><i class="fas fa-calendar-check" style="font-size:2rem;margin-bottom:12px;display:block;"></i>レポート待ちのスケジュールはありません</div>';
+        return;
+      }
+
+      container.innerHTML = allSchedules.map(s => {
+        // DataUtilsで店舗検索（新旧両方のID形式に対応）
+        const normalized = DataUtils.normalizeSchedule(s);
+        const storeName = DataUtils.getStoreName(allStores, s.store_id, s.store_name);
+        const statusLabel = DataUtils.getStatusLabel(normalized.status);
+        
+        return `
+          <div class="schedule-card" data-id="${s.id}">
+            <div class="schedule-card-header">
+              <span class="schedule-store">${DataUtils.escapeHtml(storeName)}</span>
+              <span class="schedule-status ${normalized.status}">${statusLabel}</span>
+            </div>
+            <div class="schedule-meta">
+              <span><i class="fas fa-calendar"></i> ${DataUtils.formatDate(normalized.date)}</span>
+              <span><i class="fas fa-clock"></i> ${normalized.time || '時間未定'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // クリックイベント
+      container.querySelectorAll('.schedule-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const id = card.dataset.id;
+          const schedule = allSchedules.find(s => String(s.id) === id);
+          if (schedule) selectSchedule(schedule);
+        });
+      });
+    }
+
+    // スケジュール選択
+    function selectSchedule(schedule) {
+      selectedSchedule = schedule;
+      // DataUtilsで店舗検索・スケジュール正規化
+      const normalized = DataUtils.normalizeSchedule(schedule);
+      const store = DataUtils.findStore(allStores, schedule.store_id) || {};
+      const storeName = DataUtils.getStoreName(allStores, schedule.store_id, schedule.store_name);
+
+      // フォームに情報をセット
+      document.getElementById('info-store').textContent = storeName;
+      document.getElementById('info-datetime').textContent = `${DataUtils.formatDate(normalized.date)} ${normalized.time || ''}`;
+      document.getElementById('info-notes').textContent = normalized.work_content || '指定なし';
+      
+      document.getElementById('schedule-id').value = schedule.id;
+      document.getElementById('store-id').value = schedule.store_id;
+      document.getElementById('store-name').value = storeName;
+
+      // 時間をセット
+      if (normalized.time) {
+        document.getElementById('start-time').value = normalized.time;
+      }
+
+      // 表示切り替え
+      document.getElementById('schedule-selector').style.display = 'none';
+      document.getElementById('report-form').style.display = 'block';
+    }
+
+    // イベントリスナー
+    function setupEventListeners() {
+      // スケジュール変更
+      document.getElementById('change-schedule').addEventListener('click', () => {
+        document.getElementById('schedule-selector').style.display = 'block';
+        document.getElementById('report-form').style.display = 'none';
+        selectedSchedule = null;
       });
 
-      localStorage.setItem('staff-report-draft', JSON.stringify(formData));
+      // 写真アップロード
+      document.querySelectorAll('.photo-upload-btn input[type="file"]').forEach(input => {
+        input.addEventListener('change', handlePhotoUpload);
+      });
+
+      // 位置情報取得
+      document.getElementById('get-location').addEventListener('click', getLocation);
+
+      // フォーム入力監視
+      document.querySelectorAll('input[name="work-content"]').forEach(cb => {
+        cb.addEventListener('change', updateProgress);
+      });
+      document.getElementById('work-memo').addEventListener('input', updateProgress);
+
+      // フォーム送信
+      document.getElementById('report-form').addEventListener('submit', handleSubmit);
+
+      // オフライン監視
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+      updateOnlineStatus();
     }
 
-    // フォームデータの読み込み
-    function loadFormData() {
-      const saved = localStorage.getItem('staff-report-draft');
-      if (saved) {
-        const formData = JSON.parse(saved);
-        // フォームデータを復元
-        document.querySelectorAll('input[name="work-content"]').forEach(cb => {
-          cb.checked = formData.workContent.includes(cb.value);
+    // 写真アップロード処理
+    function handlePhotoUpload(e) {
+      const file = e.target.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+
+      const category = e.target.dataset.category;
+      const reader = new FileReader();
+      
+      reader.onload = function(event) {
+        const photoGrid = document.querySelector(`.photo-grid[data-category="${category}"]`);
+        const addButton = photoGrid.querySelector('.photo-add');
+
+        // 写真アイテムを作成
+        const photoItem = document.createElement('div');
+        photoItem.className = 'photo-item';
+        photoItem.innerHTML = `
+          <img src="${event.target.result}" class="photo-preview" alt="アップロード写真">
+          <button type="button" class="photo-remove" data-category="${category}">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+
+        // 削除ボタンのイベント
+        photoItem.querySelector('.photo-remove').addEventListener('click', function() {
+          const idx = photoData[category].indexOf(event.target.result);
+          if (idx > -1) photoData[category].splice(idx, 1);
+          photoItem.remove();
+          updateProgress();
         });
-        document.querySelector('textarea[name="work-memo"]').value = formData.workMemo || '';
-      }
+
+        photoGrid.insertBefore(photoItem, addButton);
+        photoData[category].push(event.target.result);
+        updateProgress();
+      };
+      
+      reader.readAsDataURL(file);
+      e.target.value = ''; // リセット
     }
 
-    // 進捗の計算
+    // 位置情報取得
+    function getLocation() {
+      if (!navigator.geolocation) {
+        alert('お使いのブラウザは位置情報に対応していません');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          document.getElementById('latitude').value = position.coords.latitude;
+          document.getElementById('longitude').value = position.coords.longitude;
+          document.getElementById('location-display').style.display = 'flex';
+        },
+        (error) => {
+          alert('位置情報の取得に失敗しました');
+        }
+      );
+    }
+
+    // 進捗更新
     function updateProgress() {
-      const form = document.getElementById('report-form');
-      const totalFields = 4; // 作業内容、写真（前）、写真（後）、メモ
       let completed = 0;
+      const total = 4;
 
       // 作業内容
-      if (document.querySelectorAll('input[name="work-content"]:checked').length > 0) {
-        completed++;
-      }
-
+      if (document.querySelectorAll('input[name="work-content"]:checked').length > 0) completed++;
       // 写真（前）
-      if (document.querySelectorAll('[data-category="before"] .photo-item img').length > 0) {
-        completed++;
-      }
-
+      if (photoData.before.length > 0) completed++;
       // 写真（後）
-      if (document.querySelectorAll('[data-category="after"] .photo-item img').length > 0) {
-        completed++;
-      }
+      if (photoData.after.length > 0) completed++;
+      // メモ
+      if (document.getElementById('work-memo').value.trim()) completed++;
 
-      // メモ（任意）
-      if (document.querySelector('textarea[name="work-memo"]').value.trim()) {
-        completed++;
-      }
-
-      const progress = (completed / totalFields) * 100;
+      const progress = (completed / total) * 100;
       document.getElementById('progress-fill').style.width = progress + '%';
       document.getElementById('progress-text').textContent = `進捗: ${Math.round(progress)}%`;
     }
 
-    // Photo upload preview
-    (function() {
-      const photoUploadBtns = document.querySelectorAll('.photo-upload-btn input[type="file"]');
-      
-      photoUploadBtns.forEach(input => {
-        input.addEventListener('change', function(e) {
-          const file = e.target.files[0];
-          if (file && file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-              const photoGrid = input.closest('.photo-grid');
-              const photoItem = input.closest('.photo-item');
-              const category = photoGrid.dataset.category;
-              
-              // 新しい写真アイテムを作成
-              const newPhotoItem = document.createElement('div');
-              newPhotoItem.className = 'photo-item';
-              newPhotoItem.style.position = 'relative';
-              newPhotoItem.innerHTML = `
-                <img src="${e.target.result}" alt="Uploaded photo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
-                <button type="button" class="photo-remove" onclick="this.closest('.photo-item').remove(); updateProgress(); saveFormData();" style="position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-                  <i class="fas fa-times"></i>
-                </button>
-              `;
-              
-              // 既存のアップロードボタンの前に追加
-              photoItem.parentNode.insertBefore(newPhotoItem, photoItem);
-              
-              // 進捗を更新
-              updateProgress();
-              saveFormData();
-            };
-            reader.readAsDataURL(file);
-          }
-        });
-      });
-    })();
+    // オンライン状態更新
+    function updateOnlineStatus() {
+      const indicator = document.getElementById('offline-indicator-report');
+      indicator.style.display = navigator.onLine ? 'none' : 'block';
+    }
 
-    // フォーム入力の監視
-    document.querySelectorAll('input[name="work-content"]').forEach(cb => {
-      cb.addEventListener('change', function() {
-        updateProgress();
-        saveFormData();
-      });
-    });
-
-    document.querySelector('textarea[name="work-memo"]').addEventListener('input', function() {
-      updateProgress();
-      saveFormData();
-    });
-
-    // Location get
-    document.getElementById('get-location').addEventListener('click', function() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          document.getElementById('location-display').style.display = 'block';
-          saveFormData();
-        });
-      }
-    });
-
-    // オフライン対応
-    (function() {
-      const offlineIndicator = document.getElementById('offline-indicator-report');
-      
-      function updateOnlineStatus() {
-        if (!navigator.onLine) {
-          offlineIndicator.style.display = 'block';
-        } else {
-          offlineIndicator.style.display = 'none';
-        }
-      }
-
-      window.addEventListener('online', updateOnlineStatus);
-      window.addEventListener('offline', updateOnlineStatus);
-      updateOnlineStatus();
-    })();
-
-    // Form submit
-    document.getElementById('report-form').addEventListener('submit', function(e) {
+    // フォーム送信
+    async function handleSubmit(e) {
       e.preventDefault();
-      
-      // 必須項目のチェック
-      const beforePhotos = document.querySelectorAll('[data-category="before"] .photo-item img').length;
-      const afterPhotos = document.querySelectorAll('[data-category="after"] .photo-item img').length;
-      
-      if (beforePhotos === 0 || afterPhotos === 0) {
-        alert('作業前・作業後の写真をそれぞれ最低1枚ずつアップロードしてください。');
+
+      // バリデーション
+      if (photoData.before.length === 0 || photoData.after.length === 0) {
+        alert('作業前・作業後の写真をそれぞれ最低1枚ずつアップロードしてください');
         return;
       }
 
-      // オフラインの場合はローカルストレージに保存
+      if (!selectedSchedule) {
+        alert('スケジュールを選択してください');
+        return;
+      }
+
+      const workContent = Array.from(document.querySelectorAll('input[name="work-content"]:checked'))
+        .map(cb => cb.value);
+
+      const reportData = {
+        schedule_id: selectedSchedule.id,
+        store_id: document.getElementById('store-id').value,
+        store_name: document.getElementById('store-name').value,
+        cleaning_date: selectedSchedule.scheduled_date,
+        cleaning_start_time: document.getElementById('start-time').value,
+        cleaning_end_time: document.getElementById('end-time').value,
+        work_items: workContent.map(item => ({
+          name: item,
+          completed: true,
+          photos_before: [],
+          photos_after: []
+        })),
+        work_memo: document.getElementById('work-memo').value,
+        photos: {
+          before: photoData.before,
+          after: photoData.after
+        },
+        location: document.getElementById('latitude').value ? {
+          latitude: parseFloat(document.getElementById('latitude').value),
+          longitude: parseFloat(document.getElementById('longitude').value)
+        } : null,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+
+      // オフライン時はローカル保存
       if (!navigator.onLine) {
+        localStorage.setItem('pending-report', JSON.stringify(reportData));
         alert('オフラインのため、データを保存しました。オンラインになったら自動的に送信されます。');
-        localStorage.setItem('staff-report-pending', 'true');
         window.location.href = '/staff/dashboard.html';
         return;
       }
 
-      // TODO: Backend integration
-      alert('作業完了を報告しました。');
-      localStorage.removeItem('staff-report-draft');
-      localStorage.removeItem('staff-report-pending');
-      window.location.href = '/staff/dashboard.html';
-    });
+      try {
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
 
-    // 初期化
-    loadFormData();
-    updateProgress();
+        // レポートAPI（あなたが作ったシステム）に送信
+        const response = await fetch(`${REPORT_API}/staff/reports`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer mock-token'
+          },
+          body: JSON.stringify(reportData)
+        });
+
+        if (!response.ok) throw new Error('送信に失敗しました');
+
+        // スケジュールを完了に更新
+        await fetch(`${API_BASE}/schedules/${selectedSchedule.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'completed' })
+        });
+
+        alert('レポートを送信しました！');
+        window.location.href = '/staff/dashboard.html';
+
+      } catch (error) {
+        console.error('Submit error:', error);
+        alert('送信に失敗しました: ' + error.message);
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-check-circle"></i> 作業完了を報告';
+      }
+    }
+
+    // ユーティリティ
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+  })();
   </script>
 </main>
-
 
     </main>
     <footer class="site-footer">

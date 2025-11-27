@@ -1,0 +1,879 @@
+@layout('layouts.base')
+@json('data/meta/admin_reports_title.json', $title)
+@json('data/meta/admin_reports_body_class.json', $body_class)
+
+<script src="/js/data_utils.js"></script>
+
+<main id="main" class="admin-reports">
+  <div class="container">
+    <!-- ヘッダー -->
+    <div class="page-header">
+      <a href="/admin/dashboard.html" class="back-btn">
+        <i class="fas fa-chevron-left"></i>
+        ダッシュボード
+      </a>
+      <h1 class="page-title">レポート管理</h1>
+      <div class="header-actions">
+        <button type="button" class="btn btn-primary" id="btn-new-report">
+          <i class="fas fa-plus"></i> 新規作成
+        </button>
+      </div>
+    </div>
+
+    <!-- 統計カード -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-total">-</div>
+        <div class="stat-label">総レポート数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-pending">-</div>
+        <div class="stat-label">承認待ち</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-approved">-</div>
+        <div class="stat-label">承認済み</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-thismonth">-</div>
+        <div class="stat-label">今月</div>
+      </div>
+    </div>
+
+    <!-- フィルター -->
+    <div class="filters-section">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="search-input" placeholder="店舗名・担当者で検索...">
+      </div>
+      <select id="filter-status" class="filter-select">
+        <option value="">すべてのステータス</option>
+        <option value="pending">承認待ち</option>
+        <option value="approved">承認済み</option>
+        <option value="rejected">却下</option>
+      </select>
+      <select id="filter-store" class="filter-select">
+        <option value="">すべての店舗</option>
+      </select>
+      <input type="date" id="filter-date-from" class="filter-input" title="開始日">
+      <span class="date-separator">〜</span>
+      <input type="date" id="filter-date-to" class="filter-input" title="終了日">
+      <button type="button" class="btn btn-outline" id="btn-reset-filters">リセット</button>
+    </div>
+
+    <!-- レポート一覧 -->
+    <div class="table-container">
+      <table class="reports-table">
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>店舗</th>
+            <th>担当者</th>
+            <th>作業時間</th>
+            <th>ステータス</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="reports-tbody">
+          <tr><td colspan="6" class="loading-cell"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ページネーション -->
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- 詳細モーダル -->
+  <dialog id="detail-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>レポート詳細</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('detail-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="detail-body">
+        <!-- 動的に挿入 -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('detail-dialog').close()">閉じる</button>
+        <button type="button" class="btn btn-success" id="btn-approve">承認</button>
+        <button type="button" class="btn btn-danger" id="btn-reject">却下</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 新規作成モーダル -->
+  <dialog id="new-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="form-title">新規レポート作成</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('new-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="report-form">
+        <div class="modal-body">
+          <input type="hidden" id="report-id" name="id">
+          <div class="form-row">
+            <div class="form-field">
+              <label>店舗 <span class="required">*</span></label>
+              <select id="report-store" name="store_id" required>
+                <option value="">選択してください</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>担当者</label>
+              <select id="report-worker" name="worker_id">
+                <option value="">選択してください</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>作業日 <span class="required">*</span></label>
+              <input type="date" id="report-date" name="work_date" required>
+            </div>
+            <div class="form-field">
+              <label>作業時間</label>
+              <div class="time-range">
+                <input type="time" id="report-start" name="start_time">
+                <span>〜</span>
+                <input type="time" id="report-end" name="end_time">
+              </div>
+            </div>
+          </div>
+          <div class="form-field">
+            <label>作業内容</label>
+            <textarea id="report-content" name="content" rows="4" placeholder="作業内容を入力..."></textarea>
+          </div>
+          <div class="form-field">
+            <label>備考</label>
+            <textarea id="report-notes" name="notes" rows="2" placeholder="備考があれば入力..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('new-dialog').close()">キャンセル</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <style>
+    :root {
+      --primary: #FF6BA6;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    .admin-reports { padding: 24px 0; }
+    .container { max-width: 100%; margin: 0 auto; padding: 0 24px; }
+
+    /* ヘッダー */
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      color: #475569;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+    .back-btn:hover { background: #f8fafc; }
+    .page-title { flex: 1; font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0; }
+    .header-actions { display: flex; gap: 12px; }
+
+    /* 統計 */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 0.875rem; color: #64748b; margin-top: 4px; }
+
+    /* フィルター */
+    .filters-section {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 24px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+    }
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+    }
+    .search-box i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 12px 10px 40px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+    }
+    .filter-select, .filter-input {
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      background: #fff;
+    }
+    .date-separator { color: #94a3b8; }
+
+    /* テーブル */
+    .table-container {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .reports-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .reports-table th {
+      background: #f8fafc;
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .reports-table td {
+      padding: 16px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.9rem;
+      color: #334155;
+    }
+    .reports-table tbody tr:hover { background: #f8fafc; }
+    .loading-cell { text-align: center; padding: 40px !important; color: #94a3b8; }
+
+    /* ステータスバッジ */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #dcfce7; color: #166534; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+
+    /* アクションボタン */
+    .action-btns { display: flex; gap: 8px; }
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .action-btn.view { background: #e0f2fe; color: #0284c7; }
+    .action-btn.edit { background: #fef3c7; color: #d97706; }
+    .action-btn.delete { background: #fee2e2; color: #dc2626; }
+    .action-btn:hover { transform: scale(1.1); }
+
+    /* ボタン */
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: #ff5a9a; }
+    .btn-outline { background: #fff; color: #475569; border: 1px solid #e2e8f0; }
+    .btn-outline:hover { background: #f8fafc; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: #16a34a; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* ページネーション */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .page-btn {
+      padding: 8px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .page-btn:hover:not(.active) { background: #f8fafc; }
+
+    /* モーダル */
+    .modal-dialog {
+      border: none;
+      border-radius: 16px;
+      padding: 0;
+      max-width: 600px;
+      width: 90vw;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+    .modal-dialog::backdrop { background: rgba(0,0,0,0.5); }
+    .modal-content { padding: 0; }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .modal-header h3 { margin: 0; font-size: 1.25rem; color: #1e293b; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #94a3b8;
+      cursor: pointer;
+    }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 16px 24px;
+      border-top: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    /* フォーム */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-field { margin-bottom: 16px; }
+    .form-field label { display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .time-range { display: flex; align-items: center; gap: 8px; }
+    .time-range input { flex: 1; }
+    .required { color: var(--danger); }
+
+    /* 詳細表示 */
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .detail-item { margin-bottom: 16px; }
+    .detail-label { font-size: 0.75rem; color: #64748b; margin-bottom: 4px; }
+    .detail-value { font-size: 0.95rem; color: #1e293b; font-weight: 500; }
+
+    /* レスポンシブ */
+    @media (max-width: 1024px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .container { padding: 0 16px; }
+      .page-header { flex-wrap: wrap; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .filters-section { flex-direction: column; }
+      .search-box { width: 100%; }
+      .form-row { grid-template-columns: 1fr; }
+      .table-container { overflow-x: auto; }
+    }
+  </style>
+
+  <script>
+  (function() {
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+    let allReports = [];
+    let allStores = [];
+    let allWorkers = [];
+    let filteredReports = [];
+    let currentPage = 1;
+    const perPage = 20;
+    let currentReportId = null;
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', async () => {
+      await Promise.all([loadReports(), loadStores(), loadWorkers()]);
+      setupEventListeners();
+    });
+
+    async function loadReports() {
+      try {
+        // 新レポートAPI（あなたが作ったシステム）からデータ取得
+        const res = await fetch(`${REPORT_API}/staff/reports`, {
+          headers: { 'Authorization': 'Bearer mock-token' }
+        });
+        const data = await res.json();
+        allReports = data.items || [];
+        
+        // データ形式を統一
+        allReports = allReports.map(r => ({
+          ...r,
+          id: r.report_id || r.id,
+          store_id: r.store_id,
+          worker_id: r.staff_id,
+          work_date: r.cleaning_date,
+          start_time: r.cleaning_start_time,
+          end_time: r.cleaning_end_time,
+          content: r.work_items?.map(w => w.name).join(', ') || '',
+          notes: r.work_memo,
+          status: r.status === 'published' ? 'approved' : r.status
+        }));
+        
+        updateStats();
+        filterAndRender();
+      } catch (e) {
+        console.error('Failed to load reports:', e);
+        document.getElementById('reports-tbody').innerHTML = '<tr><td colspan="6" class="loading-cell">読み込みに失敗しました</td></tr>';
+      }
+    }
+
+    async function loadStores() {
+      try {
+        const res = await fetch(`${API_BASE}/stores`);
+        allStores = await res.json();
+        populateStoreFilters();
+      } catch (e) {
+        console.error('Failed to load stores:', e);
+      }
+    }
+
+    async function loadWorkers() {
+      try {
+        const res = await fetch(`${API_BASE}/workers`);
+        allWorkers = await res.json();
+        populateWorkerSelect();
+      } catch (e) {
+        console.error('Failed to load workers:', e);
+      }
+    }
+
+    function populateStoreFilters() {
+      const filterSelect = document.getElementById('filter-store');
+      const formSelect = document.getElementById('report-store');
+      const options = allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+      filterSelect.innerHTML = '<option value="">すべての店舗</option>' + options;
+      formSelect.innerHTML = '<option value="">選択してください</option>' + options;
+    }
+
+    function populateWorkerSelect() {
+      const select = document.getElementById('report-worker');
+      const staffWorkers = allWorkers.filter(w => w.role === 'staff');
+      select.innerHTML = '<option value="">選択してください</option>' + 
+        staffWorkers.map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('');
+    }
+
+    function updateStats() {
+      document.getElementById('stat-total').textContent = allReports.length;
+      document.getElementById('stat-pending').textContent = allReports.filter(r => !r.send_at && r.status !== 'approved').length;
+      document.getElementById('stat-approved').textContent = allReports.filter(r => r.send_at || r.status === 'approved').length;
+      
+      const thisMonth = new Date().toISOString().slice(0, 7);
+      document.getElementById('stat-thismonth').textContent = allReports.filter(r => 
+        (r.work_date || r.created_at || '').startsWith(thisMonth)
+      ).length;
+    }
+
+    function filterAndRender() {
+      const search = document.getElementById('search-input').value.toLowerCase();
+      const status = document.getElementById('filter-status').value;
+      const storeId = document.getElementById('filter-store').value;
+      const dateFrom = document.getElementById('filter-date-from').value;
+      const dateTo = document.getElementById('filter-date-to').value;
+
+      filteredReports = allReports.filter(r => {
+        const store = allStores.find(s => s.id === r.store_id) || {};
+        const worker = allWorkers.find(w => w.id === r.worker_id) || {};
+        
+        // 検索
+        if (search) {
+          const searchStr = `${store.name || ''} ${worker.name || ''}`.toLowerCase();
+          if (!searchStr.includes(search)) return false;
+        }
+        
+        // ステータス
+        if (status) {
+          const reportStatus = r.send_at || r.status === 'approved' ? 'approved' : (r.status === 'rejected' ? 'rejected' : 'pending');
+          if (reportStatus !== status) return false;
+        }
+        
+        // 店舗
+        if (storeId && String(r.store_id) !== storeId) return false;
+        
+        // 日付範囲
+        const workDate = r.work_date || r.created_at?.split('T')[0] || '';
+        if (dateFrom && workDate < dateFrom) return false;
+        if (dateTo && workDate > dateTo) return false;
+        
+        return true;
+      });
+
+      // 日付でソート（新しい順）
+      filteredReports.sort((a, b) => {
+        const dateA = a.work_date || a.created_at || '';
+        const dateB = b.work_date || b.created_at || '';
+        return dateB.localeCompare(dateA);
+      });
+
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('reports-tbody');
+      const start = (currentPage - 1) * perPage;
+      const pageReports = filteredReports.slice(start, start + perPage);
+
+      if (pageReports.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">レポートがありません</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = pageReports.map(r => {
+        // DataUtilsで正規化
+        const normalized = DataUtils.normalizeReport(r);
+        const store = DataUtils.findStore(allStores, r.store_id) || {};
+        const worker = allWorkers.find(w => w.id === normalized.worker_id) || {};
+        const status = normalized.status === 'approved' ? 'approved' : (normalized.status === 'rejected' ? 'rejected' : 'pending');
+        const statusLabel = DataUtils.getStatusLabel(status);
+        const displayStoreName = DataUtils.getStoreName(allStores, r.store_id, normalized.store_name);
+
+        return `
+          <tr>
+            <td>${DataUtils.formatDate(normalized.date)}</td>
+            <td>${DataUtils.escapeHtml(displayStoreName)}</td>
+            <td>${DataUtils.escapeHtml(worker.name || normalized.worker_name || '-')}</td>
+            <td>${normalized.start_time || '-'} 〜 ${normalized.end_time || '-'}</td>
+            <td><span class="status-badge status-${status}">${statusLabel}</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn view" title="詳細" onclick="viewReport('${r.id}')"><i class="fas fa-eye"></i></button>
+                <button class="action-btn edit" title="編集" onclick="editReport('${r.id}')"><i class="fas fa-edit"></i></button>
+                <button class="action-btn delete" title="削除" onclick="deleteReport('${r.id}')"><i class="fas fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(filteredReports.length / perPage);
+      const pagination = document.getElementById('pagination');
+      
+      if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      if (currentPage > 1) {
+        html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+      }
+      
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+          html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+          html += '<span style="padding:8px">...</span>';
+        }
+      }
+      
+      if (currentPage < totalPages) {
+        html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+      }
+      
+      pagination.innerHTML = html;
+    }
+
+    window.goToPage = function(page) {
+      currentPage = page;
+      renderTable();
+      renderPagination();
+    };
+
+    // 詳細表示
+    window.viewReport = function(id) {
+      const report = allReports.find(r => String(r.id) === String(id));
+      if (!report) return;
+
+      currentReportId = id;
+      const store = allStores.find(s => s.id === report.store_id) || {};
+      const worker = allWorkers.find(w => w.id === report.worker_id) || {};
+      const status = report.send_at || report.status === 'approved' ? 'approved' : (report.status === 'rejected' ? 'rejected' : 'pending');
+
+      // 写真表示用HTML
+      const photosHtml = report.photos ? `
+        <div class="detail-item" style="grid-column: 1/-1;">
+          <div class="detail-label">写真</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+            <div>
+              <div style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;">作業前</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                ${(report.photos.before || []).map(p => `<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">`).join('') || '<span style="color:#9ca3af;font-size:0.8rem;">なし</span>'}
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.75rem;color:#6b7280;margin-bottom:4px;">作業後</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                ${(report.photos.after || []).map(p => `<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;">`).join('') || '<span style="color:#9ca3af;font-size:0.8rem;">なし</span>'}
+              </div>
+            </div>
+          </div>
+        </div>
+      ` : '';
+
+      document.getElementById('detail-body').innerHTML = `
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">店舗</div>
+            <div class="detail-value">${escapeHtml(report.store_name || store.name || '不明')}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">担当者</div>
+            <div class="detail-value">${escapeHtml(report.staff_name || worker.name || '-')}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">作業日</div>
+            <div class="detail-value">${formatDate(report.work_date || report.cleaning_date || report.created_at?.split('T')[0])}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">作業時間</div>
+            <div class="detail-value">${report.start_time || report.cleaning_start_time || '-'} 〜 ${report.end_time || report.cleaning_end_time || '-'}</div>
+          </div>
+          ${photosHtml}
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">作業内容</div>
+          <div class="detail-value">${escapeHtml(report.content || (report.work_items?.map(w => w.name).join(', ')) || '-')}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">備考</div>
+          <div class="detail-value">${escapeHtml(report.notes || report.work_memo || '-')}</div>
+        </div>
+      `;
+
+      // 承認済みなら承認/却下ボタンを非表示
+      document.getElementById('btn-approve').style.display = status === 'approved' ? 'none' : '';
+      document.getElementById('btn-reject').style.display = status === 'approved' ? 'none' : '';
+
+      document.getElementById('detail-dialog').showModal();
+    };
+
+    // 編集
+    window.editReport = function(id) {
+      const report = allReports.find(r => String(r.id) === String(id));
+      if (!report) return;
+
+      document.getElementById('form-title').textContent = 'レポート編集';
+      document.getElementById('report-id').value = id;
+      document.getElementById('report-store').value = report.store_id || '';
+      document.getElementById('report-worker').value = report.worker_id || '';
+      document.getElementById('report-date').value = report.work_date || '';
+      document.getElementById('report-start').value = report.start_time || '';
+      document.getElementById('report-end').value = report.end_time || '';
+      document.getElementById('report-content').value = report.content || '';
+      document.getElementById('report-notes').value = report.notes || '';
+
+      document.getElementById('new-dialog').showModal();
+    };
+
+    // 削除
+    window.deleteReport = async function(id) {
+      if (!confirm('このレポートを削除しますか？')) return;
+      
+      try {
+        await fetch(`${API_BASE}/reports/${id}`, { method: 'DELETE' });
+        allReports = allReports.filter(r => String(r.id) !== String(id));
+        updateStats();
+        filterAndRender();
+      } catch (e) {
+        alert('削除に失敗しました');
+      }
+    };
+
+    // 承認
+    document.getElementById('btn-approve').addEventListener('click', async () => {
+      if (!currentReportId) return;
+      
+      try {
+        await fetch(`${API_BASE}/reports/${currentReportId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'approved', send_at: new Date().toISOString() })
+        });
+        
+        const report = allReports.find(r => String(r.id) === String(currentReportId));
+        if (report) {
+          report.status = 'approved';
+          report.send_at = new Date().toISOString();
+        }
+        
+        document.getElementById('detail-dialog').close();
+        updateStats();
+        filterAndRender();
+      } catch (e) {
+        alert('承認に失敗しました');
+      }
+    });
+
+    // 却下
+    document.getElementById('btn-reject').addEventListener('click', async () => {
+      if (!currentReportId) return;
+      
+      try {
+        await fetch(`${API_BASE}/reports/${currentReportId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'rejected' })
+        });
+        
+        const report = allReports.find(r => String(r.id) === String(currentReportId));
+        if (report) report.status = 'rejected';
+        
+        document.getElementById('detail-dialog').close();
+        updateStats();
+        filterAndRender();
+      } catch (e) {
+        alert('却下に失敗しました');
+      }
+    });
+
+    // イベントリスナー
+    function setupEventListeners() {
+      document.getElementById('search-input').addEventListener('input', debounce(filterAndRender, 300));
+      document.getElementById('filter-status').addEventListener('change', filterAndRender);
+      document.getElementById('filter-store').addEventListener('change', filterAndRender);
+      document.getElementById('filter-date-from').addEventListener('change', filterAndRender);
+      document.getElementById('filter-date-to').addEventListener('change', filterAndRender);
+      document.getElementById('btn-reset-filters').addEventListener('click', () => {
+        document.getElementById('search-input').value = '';
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-store').value = '';
+        document.getElementById('filter-date-from').value = '';
+        document.getElementById('filter-date-to').value = '';
+        filterAndRender();
+      });
+
+      // 新規作成
+      document.getElementById('btn-new-report').addEventListener('click', () => {
+        document.getElementById('form-title').textContent = '新規レポート作成';
+        document.getElementById('report-form').reset();
+        document.getElementById('report-id').value = '';
+        document.getElementById('report-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('new-dialog').showModal();
+      });
+
+      // フォーム送信
+      document.getElementById('report-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('report-id').value;
+        const data = {
+          store_id: parseInt(document.getElementById('report-store').value) || null,
+          worker_id: document.getElementById('report-worker').value || null,
+          work_date: document.getElementById('report-date').value,
+          start_time: document.getElementById('report-start').value,
+          end_time: document.getElementById('report-end').value,
+          content: document.getElementById('report-content').value,
+          notes: document.getElementById('report-notes').value,
+          status: 'pending'
+        };
+
+        try {
+          if (id) {
+            await fetch(`${API_BASE}/reports/${id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+          } else {
+            data.id = 'R' + Date.now();
+            data.created_at = new Date().toISOString();
+            await fetch(`${API_BASE}/reports`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+          }
+          
+          document.getElementById('new-dialog').close();
+          await loadReports();
+        } catch (e) {
+          alert('保存に失敗しました');
+        }
+      });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function debounce(fn, delay) {
+      let timer;
+      return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+  })();
+  </script>
+</main>

@@ -100,7 +100,7 @@ const ROLE_CONFIG = {
     '/sales/': ['concierge', 'admin', 'developer', 'master'],
     
     // 管理者向けページ（管理者と開発者のみ）
-    '/admin/': ['admin', 'developer', 'master'],
+    '/admin/': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
     '/admin/partners.html': ['admin', 'developer', 'master'],
     '/admin/partners/': ['admin', 'developer', 'master'],
     '/admin/partners/new.html': ['admin', 'developer', 'master'],

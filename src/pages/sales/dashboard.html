@@ -1,810 +1,1436 @@
 @layout('layouts.base')
 @json('data/meta/sales_dashboard_title.json', $title)
 @json('data/meta/sales_dashboard_body_class.json', $body_class)
-@json('data/clients.json', clients_data)
-@json('data/estimates.json', estimates_data)
-@json('data/sales_schedule.json', schedule_data)
-@json('data/new_inquiries.json', inquiries_data)
+@json('data/service_items.json', service_items_data)
 
-<main id="main" class="container sales-dashboard">
-  <div class="dashboard-header">
-    <div class="header-content">
-      <a href="/concierge.html" class="back-link">
-        <i class="fas fa-arrow-left"></i> コンシェルジュに戻る
-      </a>
-      <h1 class="page-title">営業ダッシュボード</h1>
-      <p class="page-subtitle">詳細な統計・分析情報</p>
-    </div>
-    <div class="user-info">
-      <span class="user-name">正田和輝</span>
+<script src="/js/data_utils.js"></script>
+
+<main id="main" class="sales-app">
+  <!-- スワイプコンテナ -->
+  <div class="swipe-container" id="swipe-container">
+    <div class="swipe-wrapper" id="swipe-wrapper">
+      
+      <!-- 画面1: アクティビティ -->
+      <section class="swipe-screen" data-screen="activity">
+        <header class="screen-header gradient-header">
+          <div class="header-content">
+            <div class="greeting">こんにちは</div>
+            <div class="user-name" id="user-name">営業担当</div>
+          </div>
+          <a href="/index.html" class="header-action">
+            <i class="fas fa-sign-out-alt"></i>
+          </a>
+        </header>
+        
+        <!-- 今日のサマリー -->
+        <div class="summary-row">
+          <div class="summary-card" onclick="switchScreen('schedule')">
+            <div class="summary-icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="summary-num" id="today-count">0</div>
+            <div class="summary-label">本日の予定</div>
+          </div>
+          <div class="summary-card" onclick="switchScreen('reserve')">
+            <div class="summary-icon"><i class="fas fa-clock"></i></div>
+            <div class="summary-num" id="draft-count">0</div>
+            <div class="summary-label">仮押さえ申請中</div>
+          </div>
+        </div>
+        
+        <!-- 仮押さえ状況 -->
+        <div class="section" id="draft-status-section">
+          <div class="section-header">
+            <h2><i class="fas fa-clock"></i> 仮押さえ状況</h2>
+          </div>
+          <div class="draft-status-list" id="draft-status-list">
+            <div class="loading">読み込み中...</div>
+          </div>
+        </div>
+
+        <!-- 緊急対応 -->
+        <div class="section urgent-section" id="urgent-section" style="display: none;">
+          <div class="section-header">
+            <h2><i class="fas fa-exclamation-triangle"></i> 緊急対応</h2>
+            <span class="badge urgent" id="urgent-count">0</span>
+          </div>
+          <div class="urgent-list" id="urgent-list"></div>
+        </div>
+
+        <!-- 今週のスケジュール -->
+        <div class="section">
+          <div class="section-header">
+            <h2><i class="fas fa-calendar"></i> 今週の予定</h2>
+            <a href="/sales/schedule.html" class="see-all">すべて見る</a>
+          </div>
+          <div class="schedule-list" id="schedule-list">
+            <div class="loading">読み込み中...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 画面2: 顧客登録 -->
+      <section class="swipe-screen" data-screen="client">
+        <header class="screen-header">
+          <h1>顧客登録</h1>
+        </header>
+        
+        <div class="form-container">
+          <div class="form-group">
+            <label>企業名 / 個人名 <span class="req">*</span></label>
+            <input type="text" id="client-company" placeholder="例: 株式会社ABC" />
+          </div>
+          <div class="form-group">
+            <label>ブランド名 / 屋号</label>
+            <input type="text" id="client-brand" placeholder="例: カフェXYZ" />
+          </div>
+          <div class="form-group">
+            <label>店舗名 <span class="req">*</span></label>
+            <input type="text" id="client-store" placeholder="例: 渋谷店" />
+          </div>
+          <div class="form-row">
+            <div class="form-group half">
+              <label>郵便番号</label>
+              <input type="text" id="client-postcode" placeholder="123-4567" />
+            </div>
+            <div class="form-group half">
+              <label>都道府県</label>
+              <select id="client-pref">
+                <option value="">選択</option>
+                <option value="東京都">東京都</option>
+                <option value="神奈川県">神奈川県</option>
+                <option value="埼玉県">埼玉県</option>
+                <option value="千葉県">千葉県</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>住所</label>
+            <input type="text" id="client-address" placeholder="市区町村・番地" />
+          </div>
+          <div class="form-group">
+            <label>電話番号</label>
+            <input type="tel" id="client-phone" placeholder="03-1234-5678" />
+          </div>
+          <div class="form-group">
+            <label>担当者名</label>
+            <input type="text" id="client-contact" placeholder="山田太郎" />
+          </div>
+          <div class="form-group">
+            <label>メールアドレス</label>
+            <input type="email" id="client-email" placeholder="info@example.com" />
+          </div>
+          <div class="form-group">
+            <label>備考</label>
+            <textarea id="client-notes" rows="3" placeholder="特記事項があれば入力"></textarea>
+          </div>
+          <button class="btn-primary" onclick="submitClient()">
+            <i class="fas fa-save"></i> 登録する
+          </button>
+        </div>
+      </section>
+
+      <!-- 画面3: 仮見積もり -->
+      <section class="swipe-screen estimate-screen" data-screen="estimate">
+        <!-- 固定ヘッダー: 合計金額 + 顧客選択 -->
+        <div class="estimate-fixed-header">
+          <div class="estimate-total-bar">
+            <span class="total-label">合計</span>
+            <span class="total-value" id="estimate-total">¥0</span>
+          </div>
+          <div class="estimate-customer">
+            <select id="estimate-store">
+              <option value="">顧客を選択</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- スクロール可能なコンテンツ -->
+        <div class="estimate-scroll-content">
+          <!-- 選択済みサービス -->
+          <div class="estimate-section">
+            <div class="section-label"><i class="fas fa-check-circle"></i> 選択中のサービス</div>
+            <div class="selected-services" id="selected-services">
+              <div class="empty-hint">
+                <i class="fas fa-hand-pointer"></i>
+                <span>下からサービスを選択</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- サービス一覧 -->
+          <div class="estimate-section">
+            <div class="section-label"><i class="fas fa-list"></i> サービス一覧</div>
+            <div class="service-list" id="service-list">
+              <div class="loading">読み込み中...</div>
+            </div>
+          </div>
+
+          <!-- メモ -->
+          <div class="estimate-section">
+            <div class="section-label"><i class="fas fa-sticky-note"></i> メモ</div>
+            <textarea id="estimate-notes" rows="2" placeholder="補足事項があれば入力"></textarea>
+          </div>
+        </div>
+
+        <!-- 固定フッター: 送信ボタン -->
+        <div class="estimate-fixed-footer">
+          <button class="btn-submit" onclick="submitEstimate()">
+            <i class="fas fa-paper-plane"></i> 見積もりを送信
+          </button>
+        </div>
+      </section>
+
+      <!-- 画面4: 仮押さえ -->
+      <section class="swipe-screen" data-screen="schedule">
+        <header class="screen-header">
+          <h1>スケジュール仮押さえ</h1>
+        </header>
+        
+        <div class="form-container">
+          <div class="info-banner">
+            <i class="fas fa-info-circle"></i>
+            <span>仮押さえ後、管理者が確認して清掃員をアサインします</span>
+          </div>
+
+          <div class="form-group">
+            <label>顧客（店舗） <span class="req">*</span></label>
+            <select id="schedule-store" required>
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group half">
+              <label>希望日 <span class="req">*</span></label>
+              <input type="date" id="schedule-date" required />
+            </div>
+            <div class="form-group half">
+              <label>希望時間 <span class="req">*</span></label>
+              <input type="time" id="schedule-time" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>作業時間</label>
+            <select id="schedule-duration">
+              <option value="60">60分</option>
+              <option value="90">90分</option>
+              <option value="120">120分</option>
+              <option value="180">180分</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>作業内容・要望</label>
+            <textarea id="schedule-notes" rows="3" placeholder="清掃内容や注意事項など"></textarea>
+          </div>
+          <button class="btn-primary" onclick="submitSchedule()">
+            <i class="fas fa-calendar-plus"></i> 仮押さえする
+          </button>
+        </div>
+      </section>
+
     </div>
   </div>
 
-  <!-- Summary Stats -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fas fa-users"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value" id="total-clients">0</div>
-        <div class="stat-label">担当顧客数</div>
-        <div class="stat-change" id="active-clients">稼働中: 0</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fas fa-bell"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value" id="new-inquiries-count">0</div>
-        <div class="stat-label">新規問い合わせ</div>
-        <div class="stat-change" id="pending-inquiries">未対応: 0</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fas fa-shopping-cart"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value" id="processing-orders">0</div>
-        <div class="stat-label">処理中発注</div>
-        <div class="stat-change" id="pending-orders">承認待ち: 0</div>
-      </div>
-    </div>
-    <div class="stat-card highlight">
-      <div class="stat-icon">
-        <i class="fas fa-yen-sign"></i>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value" id="monthly-sales">¥0</div>
-        <div class="stat-label">今月売上</div>
-        <div class="stat-change" id="sales-growth">前月比: -</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Detailed Statistics -->
-  <div class="stats-detail-grid">
-    <!-- Estimates Statistics -->
-    <section class="dashboard-section">
-      <div class="section-header">
-        <h2 class="section-title">
-          <i class="fas fa-file-invoice"></i>
-          見積もり統計
-        </h2>
-        <a href="/sales/estimates.html" class="btn btn-outline btn-sm">すべて見る</a>
-      </div>
-      <div class="estimates-stats-grid">
-        <div class="estimate-stat-item">
-          <div class="estimate-stat-value" id="draft-estimates">0</div>
-          <div class="estimate-stat-label">下書き</div>
-        </div>
-        <div class="estimate-stat-item">
-          <div class="estimate-stat-value" id="sent-estimates">0</div>
-          <div class="estimate-stat-label">送付済み</div>
-        </div>
-        <div class="estimate-stat-item">
-          <div class="estimate-stat-value" id="approved-estimates">0</div>
-          <div class="estimate-stat-label">承認済み</div>
-        </div>
-        <div class="estimate-stat-item highlight">
-          <div class="estimate-stat-value" id="pending-approval-estimates">0</div>
-          <div class="estimate-stat-label">承認待ち</div>
-        </div>
-      </div>
-      <div class="estimates-summary">
-        <div class="summary-item">
-          <span class="summary-label">今月の見積もり総額:</span>
-          <span class="summary-value" id="monthly-estimates-total">¥0</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">承認率:</span>
-          <span class="summary-value" id="approval-rate">0%</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Client Statistics -->
-    <section class="dashboard-section">
-      <div class="section-header">
-        <h2 class="section-title">
-          <i class="fas fa-building"></i>
-          顧客統計
-        </h2>
-        <a href="/sales/clients.html" class="btn btn-outline btn-sm">すべて見る</a>
-      </div>
-      <div class="client-stats-grid">
-        <div class="client-stat-item">
-          <div class="client-stat-value" id="active-clients-count">0</div>
-          <div class="client-stat-label">稼働中</div>
-        </div>
-        <div class="client-stat-item">
-          <div class="client-stat-value" id="inactive-clients-count">0</div>
-          <div class="client-stat-label">休止</div>
-        </div>
-        <div class="client-stat-item">
-          <div class="client-stat-value" id="terminated-clients-count">0</div>
-          <div class="client-stat-label">契約終了</div>
-        </div>
-      </div>
-      <div class="client-summary">
-        <div class="summary-item">
-          <span class="summary-label">総店舗数:</span>
-          <span class="summary-value" id="total-stores">0店舗</span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">今月の新規顧客:</span>
-          <span class="summary-value" id="new-clients-this-month">0件</span>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- Schedule Overview -->
-  <section class="dashboard-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-calendar-alt"></i>
-        スケジュール概要
-      </h2>
-      <a href="/sales/schedule.html" class="btn btn-outline btn-sm">すべて見る</a>
-    </div>
-    <div class="schedule-overview">
-      <div class="overview-item">
-        <div class="overview-icon today">
-          <i class="fas fa-calendar-day"></i>
-        </div>
-        <div class="overview-content">
-          <div class="overview-value" id="today-schedules-count">0</div>
-          <div class="overview-label">本日の予定</div>
-        </div>
-      </div>
-      <div class="overview-item">
-        <div class="overview-icon week">
-          <i class="fas fa-calendar-week"></i>
-        </div>
-        <div class="overview-content">
-          <div class="overview-value" id="week-schedules-count">0</div>
-          <div class="overview-label">今週の予定</div>
-        </div>
-      </div>
-      <div class="overview-item">
-        <div class="overview-icon month">
-          <i class="fas fa-calendar"></i>
-        </div>
-        <div class="overview-content">
-          <div class="overview-value" id="month-schedules-count">0</div>
-          <div class="overview-label">今月の予定</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Recent Activity -->
-  <section class="dashboard-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-history"></i>
-        最近のアクティビティ
-      </h2>
-    </div>
-    <div class="activity-list" id="activity-list">
-      <!-- Activity items will be rendered by JavaScript -->
-    </div>
-  </section>
-
-  <!-- Quick Actions -->
-  <section class="dashboard-section">
-    <h2 class="section-title">クイックアクション</h2>
-    <div class="quick-actions">
-      <a href="/sales/clients/new.html" class="action-btn">
-        <i class="fas fa-user-plus"></i>
-        <span>新規顧客登録</span>
-      </a>
-      <a href="/sales/estimates/new.html" class="action-btn">
-        <i class="fas fa-file-invoice"></i>
-        <span>見積もり作成</span>
-      </a>
-      <a href="/sales/orders.html" class="action-btn">
-        <i class="fas fa-list"></i>
-        <span>発注管理</span>
-      </a>
-      <a href="/sales/schedule.html" class="action-btn">
-        <i class="fas fa-calendar"></i>
-        <span>スケジュール</span>
-      </a>
-      <a href="/sales/schedules/new.html" class="action-btn">
-        <i class="fas fa-calendar-plus"></i>
-        <span>スケジュール作成</span>
-      </a>
-      <a href="/sales/reports.html" class="action-btn">
-        <i class="fas fa-file-alt"></i>
-        <span>レポート</span>
-      </a>
-      <a href="/concierge.html" class="action-btn">
-        <i class="fas fa-home"></i>
-        <span>TOPに戻る</span>
-      </a>
-    </div>
-  </section>
+  <!-- 下部タブバー -->
+  <nav class="bottom-tabs">
+    <button class="tab active" data-screen="activity">
+      <i class="fas fa-bolt"></i>
+      <span>アクティビティ</span>
+    </button>
+    <button class="tab" data-screen="client">
+      <i class="fas fa-user-plus"></i>
+      <span>顧客登録</span>
+    </button>
+    <button class="tab" data-screen="estimate">
+      <i class="fas fa-file-invoice"></i>
+      <span>仮見積</span>
+    </button>
+    <button class="tab" data-screen="schedule">
+      <i class="fas fa-calendar-plus"></i>
+      <span>仮押さえ</span>
+    </button>
+  </nav>
 
   <style>
-    .sales-dashboard {
-      max-width: 100%;
-      margin: 0;
-      padding: 16px;
-      background: #f9fafb;
+    * { box-sizing: border-box; }
+    
+    /* 共通ヘッダー・フッターを非表示 */
+    #default-header-wrapper,
+    #normal-header-wrapper,
+    body > footer,
+    footer,
+    .site-footer {
+      display: none !important;
     }
-    .dashboard-header {
+    
+    /* mainのスタイルをリセット */
+    #main {
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: none !important;
+    }
+    
+    .sales-app {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      background: #f5f5f5;
+    }
+
+    /* スワイプコンテナ */
+    .swipe-container {
+      width: 100%;
+      height: calc(100% - 64px);
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    .swipe-container::-webkit-scrollbar { display: none; }
+    
+    .swipe-wrapper {
+      display: flex;
+      height: 100%;
+    }
+
+    .swipe-screen {
+      width: 100vw;
+      height: 100%;
+      flex-shrink: 0;
+      overflow-y: auto;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      background: #f5f5f5;
+    }
+
+    /* ヘッダー */
+    .screen-header {
+      padding: 16px;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .screen-header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111;
+    }
+    .gradient-header {
+      background: linear-gradient(135deg, var(--primary, #ff679c) 0%, #ff8fb3 100%);
+      color: #fff;
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #e5e7eb;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .header-content {
-      flex: 1;
-    }
-    .back-link {
-      display: inline-flex;
       align-items: center;
-      gap: 6px;
+      padding: 20px 16px;
+    }
+    .gradient-header .greeting {
       font-size: 0.875rem;
-      color: #6b7280;
-      text-decoration: none;
-      margin-bottom: 8px;
-      transition: color 0.2s;
+      opacity: 0.9;
     }
-    .back-link:hover {
-      color: var(--primary);
+    .gradient-header .user-name {
+      font-size: 1.25rem;
+      font-weight: 600;
     }
-    .back-link i {
-      font-size: 0.75rem;
-    }
-    .page-title {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #111827;
-      margin: 0 0 4px 0;
-    }
-    .page-subtitle {
-      font-size: 0.95rem;
-      color: #6b7280;
-      margin: 0;
-    }
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .user-name {
-      color: #6b7280;
-      font-size: 0.875rem;
-    }
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .stat-card {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .stat-card.highlight {
-      border: 2px solid var(--primary);
-      background: linear-gradient(135deg, #ffffff 0%, #fff5f9 100%);
-    }
-    .stat-icon {
-      width: 56px;
-      height: 56px;
+    .header-action {
+      width: 44px;
+      height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
+      background: rgba(255,255,255,0.2);
       border-radius: 12px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 1.125rem;
+    }
+
+    /* サマリー */
+    .summary-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+    .summary-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      cursor: pointer;
+    }
+    .summary-card:active { transform: scale(0.98); }
+    .summary-icon {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: rgba(255, 103, 156, 0.1);
-      color: var(--primary);
-      font-size: 1.5rem;
+      border-radius: 12px;
+      color: var(--primary, #ff679c);
+      font-size: 1.25rem;
     }
-    .stat-content {
-      flex: 1;
-    }
-    .stat-value {
+    .summary-num {
       font-size: 1.75rem;
       font-weight: 700;
-      color: #111827;
-      margin-bottom: 4px;
-      line-height: 1.2;
+      color: #111;
     }
-    .stat-label {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin-bottom: 4px;
+    .summary-label {
+      font-size: 0.8rem;
+      color: #666;
     }
-    .stat-change {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-    .stats-detail-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .dashboard-section {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+
+    /* セクション */
+    .section {
+      margin: 0 16px 16px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     .section-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      gap: 12px;
+      margin-bottom: 12px;
     }
-    .section-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #111827;
+    .section-header h2 {
       margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .section-title i {
-      color: var(--primary);
-    }
-    .estimates-stats-grid,
-    .client-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .estimate-stat-item,
-    .client-stat-item {
-      text-align: center;
-      padding: 16px;
-      background: #f9fafb;
-      border-radius: 8px;
-      border: 1px solid #e5e7eb;
-    }
-    .estimate-stat-item.highlight {
-      background: #fef3c7;
-      border-color: #f59e0b;
-    }
-    .estimate-stat-value,
-    .client-stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 4px;
-    }
-    .estimate-stat-label,
-    .client-stat-label {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-    .estimates-summary,
-    .client-summary {
-      display: flex;
-      justify-content: space-between;
-      padding-top: 16px;
-      border-top: 1px solid #e5e7eb;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .summary-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .summary-label {
-      font-size: 0.875rem;
-      color: #6b7280;
-    }
-    .summary-value {
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      color: #111827;
-    }
-    .schedule-overview {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-    .overview-item {
+      color: #333;
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 16px;
-      background: #f9fafb;
-      border-radius: 8px;
-      border: 1px solid #e5e7eb;
+      gap: 8px;
     }
-    .overview-icon {
-      width: 48px;
-      height: 48px;
-      display: flex;
+    .section-header h2 i { color: var(--primary, #ff679c); }
+    .see-all {
+      font-size: 0.8rem;
+      color: var(--primary, #ff679c);
+      text-decoration: none;
+    }
+    .badge {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge.urgent { background: #ef4444; color: #fff; }
+
+    /* 緊急セクション */
+    .urgent-section {
+      border: 2px solid #ef4444;
+      background: #fef2f2;
+    }
+    .urgent-list { display: flex; flex-direction: column; gap: 8px; }
+    .urgent-item {
+      padding: 12px;
+      background: #fff;
       border-radius: 8px;
-      font-size: 1.25rem;
+      border-left: 3px solid #ef4444;
     }
-    .overview-icon.today {
-      background: rgba(255, 103, 156, 0.1);
-      color: var(--primary);
-    }
-    .overview-icon.week {
-      background: rgba(59, 130, 246, 0.1);
-      color: #3b82f6;
-    }
-    .overview-icon.month {
-      background: rgba(16, 185, 129, 0.1);
-      color: #10b981;
-    }
-    .overview-content {
-      flex: 1;
-    }
-    .overview-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 4px;
-    }
-    .overview-label {
-      font-size: 0.875rem;
-      color: #6b7280;
-    }
-    .activity-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .activity-item {
+    .urgent-title { font-weight: 600; color: #111; font-size: 0.9rem; }
+    .urgent-meta { font-size: 0.75rem; color: #666; margin-top: 4px; }
+
+    /* スケジュールリスト */
+    .schedule-list { display: flex; flex-direction: column; gap: 8px; }
+    .loading { text-align: center; padding: 20px; color: #999; font-size: 0.875rem; }
+    
+    /* 仮押さえ状況リスト */
+    .draft-status-list { display: flex; flex-direction: column; gap: 8px; }
+    .draft-item {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 12px;
-      background: #f9fafb;
-      border-radius: 8px;
-      border-left: 4px solid var(--primary);
+      background: #fff;
+      border-radius: 10px;
+      border-left: 4px solid #999;
     }
-    .activity-icon {
-      width: 40px;
-      height: 40px;
+    .draft-item.status-draft { border-left-color: #f59e0b; }
+    .draft-item.status-scheduled { border-left-color: #10b981; }
+    .draft-item.status-rejected { border-left-color: #ef4444; }
+    .draft-item-info { flex: 1; }
+    .draft-item-store { font-weight: 600; font-size: 0.9rem; color: #111; }
+    .draft-item-date { font-size: 0.8rem; color: #666; margin-top: 2px; }
+    .draft-item-status {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .draft-item-status.draft { background: #fef3c7; color: #92400e; }
+    .draft-item-status.scheduled { background: #d1fae5; color: #065f46; }
+    .draft-item-status.rejected { background: #fee2e2; color: #991b1b; }
+    .empty-draft { text-align: center; padding: 24px; color: #999; font-size: 0.85rem; }
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .schedule-item:active { background: #f0f0f0; }
+    .schedule-date {
+      width: 44px;
+      text-align: center;
+    }
+    .schedule-date .day {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111;
+      line-height: 1;
+    }
+    .schedule-date .dow {
+      font-size: 0.7rem;
+      color: #999;
+    }
+    .schedule-date.today .day { color: var(--primary, #ff679c); }
+    .schedule-info { flex: 1; min-width: 0; }
+    .schedule-time {
+      font-size: 0.8rem;
+      color: var(--primary, #ff679c);
+      font-weight: 500;
+    }
+    .schedule-store {
+      font-size: 0.9rem;
+      color: #111;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .schedule-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary, #ff679c);
+      flex-shrink: 0;
+    }
+    .schedule-dot.draft { background: #f59e0b; }
+    .schedule-dot.completed { background: #10b981; }
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+    }
+    .empty-state i { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
+
+    /* フォーム */
+    .form-container, .estimate-container {
+      padding: 16px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .form-group .req { color: #ef4444; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #fff;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary, #ff679c);
+    }
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+    .form-group.half { flex: 1; }
+    .info-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: #fff8e1;
+      border-radius: 10px;
+      border-left: 3px solid #f59e0b;
+      margin-bottom: 16px;
+      font-size: 0.8rem;
+      color: #92400e;
+    }
+    .info-banner i { color: #f59e0b; }
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary, #ff679c);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 8px;
-      background: rgba(255, 103, 156, 0.1);
-      color: var(--primary);
+      gap: 8px;
     }
-    .activity-content {
+    .btn-primary:active {
+      background: #e85a8a;
+      transform: scale(0.98);
+    }
+
+    /* 見積もり画面 - 固定レイアウト */
+    .estimate-screen {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+    .estimate-fixed-header {
+      flex-shrink: 0;
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      z-index: 10;
+    }
+    .estimate-total-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, var(--primary, #ff679c) 0%, #ff8fb3 100%);
+      border-radius: 12px;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .total-label { font-size: 0.85rem; opacity: 0.9; }
+    .total-value { font-size: 1.5rem; font-weight: 700; }
+    .estimate-customer select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #fff;
+    }
+    .estimate-customer select:focus {
+      outline: none;
+      border-color: var(--primary, #ff679c);
+    }
+    .estimate-scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      padding-bottom: 80px;
+    }
+    .estimate-section {
+      margin-bottom: 16px;
+    }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-label i { color: var(--primary, #ff679c); }
+    .estimate-section textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      resize: none;
+    }
+    .estimate-fixed-footer {
+      flex-shrink: 0;
+      padding: 12px 16px;
+      background: #fff;
+      border-top: 1px solid #eee;
+      position: fixed;
+      bottom: 64px;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: none; /* JSで制御 */
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary, #ff679c);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-submit:active {
+      background: #e85a8a;
+      transform: scale(0.98);
+    }
+
+    /* 選択済みサービス */
+    .selected-services {
+      min-height: 60px;
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .empty-hint {
+      text-align: center;
+      color: #999;
+      padding: 16px;
+      font-size: 0.8rem;
+    }
+    .empty-hint i { margin-right: 6px; }
+    
+    /* 選択されたサービスアイテム */
+    .selected-item {
+      background: #fff;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border-left: 3px solid var(--primary, #ff679c);
+      overflow: hidden;
+    }
+    .selected-item-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+    }
+    .selected-item-info {
       flex: 1;
       min-width: 0;
     }
-    .activity-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #111827;
-      margin-bottom: 2px;
-    }
-    .activity-meta {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-    .activity-time {
-      font-size: 0.75rem;
-      color: #9ca3af;
+    .selected-item-name {
+      font-size: 0.85rem;
+      color: #111;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+    .selected-item-base {
+      font-size: 0.7rem;
+      color: #999;
     }
-    .action-btn {
+    .selected-item-price {
+      font-weight: 700;
+      color: var(--primary, #ff679c);
+      font-size: 0.95rem;
+      margin-right: 8px;
+    }
+    .selected-item-remove {
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: #fee2e2;
+      color: #ef4444;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.7rem;
+      flex-shrink: 0;
+    }
+    
+    /* 倍率セレクター */
+    .multiplier-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px 10px;
+      background: #f8f8f8;
+      border-top: 1px solid #eee;
+    }
+    .multiplier-label {
+      font-size: 0.7rem;
+      color: #888;
+      margin-right: auto;
+    }
+    .multiplier-btn {
+      padding: 4px 10px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .multiplier-btn.active {
+      background: var(--primary, #ff679c);
+      border-color: var(--primary, #ff679c);
+      color: #fff;
+    }
+    .multiplier-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* サービス一覧 */
+    .service-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .service-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #eee;
+      cursor: pointer;
+    }
+    .service-item:active { background: #f9f9f9; }
+    .service-item.selected {
+      border-color: var(--primary, #ff679c);
+      background: rgba(255, 103, 156, 0.05);
+    }
+    .service-name { font-size: 0.85rem; color: #111; }
+    .service-price { font-weight: 600; color: #666; font-size: 0.85rem; }
+
+    /* 下部タブ */
+    .bottom-tabs {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 64px;
+      background: #fff;
+      display: flex;
+      border-top: 1px solid #eee;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .tab {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding: 16px 8px;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      text-decoration: none;
-      color: #374151;
-      transition: all 0.2s;
+      justify-content: center;
+      gap: 4px;
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      font-size: 0.65rem;
+      cursor: pointer;
+      padding: 8px 4px;
+      transition: color 0.2s;
     }
-    .action-btn:hover {
-      background: #ffffff;
-      border-color: var(--primary);
-      color: var(--primary);
+    .tab i {
+      font-size: 1.25rem;
     }
-    .action-btn i {
-      font-size: 1.5rem;
-      color: var(--primary);
-    }
-    .action-btn span {
-      font-size: 0.875rem;
+    .tab span {
       font-weight: 500;
     }
-    @media (max-width: 768px) {
-      .sales-dashboard {
-        padding: 12px;
+    .bottom-tabs .tab.active {
+      color: var(--primary, #ff679c);
+      background: transparent !important;
+      border: none !important;
+    }
+    .bottom-tabs .tab:active {
+      opacity: 0.7;
+    }
+
+    @media (min-width: 600px) {
+      .sales-app {
+        max-width: 480px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 0 30px rgba(0,0,0,0.1);
       }
-      .stats-grid,
-      .stats-detail-grid {
-        grid-template-columns: 1fr;
-      }
-      .estimates-stats-grid,
-      .client-stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .schedule-overview {
-        grid-template-columns: 1fr;
-      }
-      .dashboard-section {
-        padding: 16px;
-      }
-      .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-      }
-      .quick-actions {
-        grid-template-columns: repeat(2, 1fr);
+      .bottom-tabs {
+        max-width: 480px;
+        left: 50%;
+        transform: translateX(-50%);
       }
     }
   </style>
 
-  <script type="application/json" id="clients-data">
-    {{ clients_data | tojson }}
-  </script>
-  <script type="application/json" id="estimates-data">
-    {{ estimates_data | tojson }}
-  </script>
-  <script type="application/json" id="schedule-data">
-    {{ schedule_data | tojson }}
-  </script>
-  <script type="application/json" id="inquiries-data">
-    {{ inquiries_data | tojson }}
+  <script type="application/json" id="service-items-data">
+    @jsonvar $service_items_data
   </script>
 
   <script>
-    (function() {
-      // Load data
-      const clientsData = JSON.parse(document.getElementById('clients-data').textContent);
-      const estimatesData = JSON.parse(document.getElementById('estimates-data').textContent);
-      const scheduleData = JSON.parse(document.getElementById('schedule-data').textContent);
-      const inquiriesData = JSON.parse(document.getElementById('inquiries-data').textContent);
-      
-      const clients = clientsData.clients || [];
-      const estimates = estimatesData.estimates || [];
-      const schedules = scheduleData.schedules || [];
-      const inquiries = inquiriesData.inquiries || [];
-      
-      // Current sales rep (mock)
-      const currentSalesRep = '正田和輝';
-      
-      // Filter by sales rep
-      const myClients = clients.filter(c => c.sales_rep === currentSalesRep);
-      const myEstimates = estimates.filter(e => e.sales_rep === currentSalesRep);
-      const mySchedules = schedules;
-      const myInquiries = inquiries;
-      
-      // Calculate statistics
-      function calculateStats() {
-        // Client stats
-        const totalClients = myClients.length;
-        const activeClients = myClients.filter(c => c.status === '稼働中').length;
-        const inactiveClients = myClients.filter(c => c.status === '休止').length;
-        const terminatedClients = myClients.filter(c => c.status === '契約終了').length;
-        
-        // Unique companies
-        const uniqueCompanies = new Set(myClients.map(c => c.company_name));
-        const totalStores = myClients.length;
-        
-        // Inquiry stats
-        const newInquiries = myInquiries.length;
-        const pendingInquiries = myInquiries.filter(i => i.status === 'pending').length;
-        
-        // Estimate stats
-        const draftEstimates = myEstimates.filter(e => e.status === 'draft').length;
-        const sentEstimates = myEstimates.filter(e => e.status === 'sent').length;
-        const approvedEstimates = myEstimates.filter(e => e.status === 'approved').length;
-        
-        // Pending approval (sent more than 1 day ago)
-        const oneDayAgo = new Date();
-        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-        oneDayAgo.setHours(0, 0, 0, 0);
-        const pendingApproval = myEstimates.filter(e => {
-          if (e.status !== 'sent' || !e.sent_date) return false;
-          try {
-            const dateStr = e.sent_date.replace(/年/g, '-').replace(/月/g, '-').replace(/日/g, '');
-            const parts = dateStr.split('-');
-            if (parts.length === 3) {
-              const year = parseInt(parts[0], 10);
-              const month = parseInt(parts[1], 10);
-              const day = parseInt(parts[2], 10);
-              const sentDate = new Date(year, month - 1, day);
-              sentDate.setHours(0, 0, 0, 0);
-              return sentDate < oneDayAgo;
-            }
-          } catch (err) {
-            return false;
-          }
-          return false;
-        }).length;
-        
-        // Monthly estimates total
-        const monthlyEstimates = myEstimates.filter(e => {
-          if (!e.created_date) return false;
-          try {
-            const dateStr = e.created_date.replace(/年/g, '-').replace(/月/g, '-').replace(/日/g, '');
-            const parts = dateStr.split('-');
-            if (parts.length === 3) {
-              const year = parseInt(parts[0], 10);
-              const month = parseInt(parts[1], 10);
-              const createdDate = new Date(year, month - 1, 1);
-              const now = new Date();
-              return createdDate.getFullYear() === now.getFullYear() && 
-                     createdDate.getMonth() === now.getMonth();
-            }
-          } catch (err) {
-            return false;
-          }
-          return false;
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+    
+    let allStores = [];
+    let allSchedules = [];
+    let selectedServices = [];
+    let serviceItems = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      setupTabs();
+      setupSwipe();
+      await loadData();
+      loadServiceItems();
+    });
+
+    function setupTabs() {
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const screen = tab.dataset.screen;
+          switchScreen(screen);
         });
-        
-        const monthlyTotal = monthlyEstimates.reduce((sum, e) => {
-          const total = parseInt(e.total.replace(/[¥,]/g, '')) || 0;
-          return sum + total;
-        }, 0);
-        
-        // Approval rate
-        const approvalRate = sentEstimates + approvedEstimates > 0
-          ? Math.round((approvedEstimates / (sentEstimates + approvedEstimates)) * 100)
-          : 0;
-        
-        // Schedule stats
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
-        const todaySchedules = mySchedules.filter(s => s.date === todayStr && s.status !== 'completed').length;
-        
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - today.getDay());
-        weekStart.setHours(0, 0, 0, 0);
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        const weekSchedules = mySchedules.filter(s => {
-          const scheduleDate = new Date(s.date);
-          return scheduleDate >= weekStart && scheduleDate <= weekEnd && s.status !== 'completed';
-        }).length;
-        
-        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        const monthSchedules = mySchedules.filter(s => {
-          const scheduleDate = new Date(s.date);
-          return scheduleDate >= monthStart && scheduleDate <= monthEnd && s.status !== 'completed';
-        }).length;
-        
-        // Update UI
-        document.getElementById('total-clients').textContent = totalClients;
-        document.getElementById('active-clients').textContent = `稼働中: ${activeClients}`;
-        document.getElementById('new-inquiries-count').textContent = newInquiries;
-        document.getElementById('pending-inquiries').textContent = `未対応: ${pendingInquiries}`;
-        document.getElementById('processing-orders').textContent = '8'; // Mock data
-        document.getElementById('pending-orders').textContent = '承認待ち: 3'; // Mock data
-        document.getElementById('monthly-sales').textContent = `¥${monthlyTotal.toLocaleString()}`;
-        document.getElementById('sales-growth').textContent = '前月比: -'; // Mock data
-        
-        document.getElementById('draft-estimates').textContent = draftEstimates;
-        document.getElementById('sent-estimates').textContent = sentEstimates;
-        document.getElementById('approved-estimates').textContent = approvedEstimates;
-        document.getElementById('pending-approval-estimates').textContent = pendingApproval;
-        document.getElementById('monthly-estimates-total').textContent = `¥${monthlyTotal.toLocaleString()}`;
-        document.getElementById('approval-rate').textContent = `${approvalRate}%`;
-        
-        document.getElementById('active-clients-count').textContent = activeClients;
-        document.getElementById('inactive-clients-count').textContent = inactiveClients;
-        document.getElementById('terminated-clients-count').textContent = terminatedClients;
-        document.getElementById('total-stores').textContent = `${totalStores}店舗`;
-        document.getElementById('new-clients-this-month').textContent = '0件'; // Mock data
-        
-        document.getElementById('today-schedules-count').textContent = todaySchedules;
-        document.getElementById('week-schedules-count').textContent = weekSchedules;
-        document.getElementById('month-schedules-count').textContent = monthSchedules;
-      }
+      });
+    }
+
+    function switchScreen(screenName) {
+      const container = document.getElementById('swipe-container');
+      const screens = document.querySelectorAll('.swipe-screen');
+      const tabs = document.querySelectorAll('.tab');
       
-      // Calculate statistics
-      calculateStats();
-      
-      // Render activity list
-      function renderActivity() {
-        const activities = [];
-        
-        // Add recent estimates
-        myEstimates.slice(0, 3).forEach(estimate => {
-          activities.push({
-            type: 'estimate',
-            icon: 'fas fa-file-invoice',
-            title: `見積もり${estimate.status_label || '作成'}: ${estimate.client_name} ${estimate.store_name}`,
-            meta: estimate.created_date || estimate.sent_date,
-            link: `/sales/estimates/${estimate.id}.html`
-          });
-        });
-        
-        // Add recent inquiries
-        myInquiries.slice(0, 2).forEach(inquiry => {
-          activities.push({
-            type: 'inquiry',
-            icon: 'fas fa-bell',
-            title: `新規問い合わせ: ${inquiry.company_name}`,
-            meta: `${inquiry.date} ${inquiry.time}`,
-            link: `/sales/clients/new.html?inquiry=${inquiry.id}`
-          });
-        });
-        
-        // Add recent schedules
-        const upcomingSchedules = mySchedules.filter(s => {
-          const scheduleDate = new Date(s.date);
-          return scheduleDate >= new Date() && s.status !== 'completed';
-        }).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 2);
-        
-        upcomingSchedules.forEach(schedule => {
-          activities.push({
-            type: 'schedule',
-            icon: 'fas fa-calendar',
-            title: `訪問予定: ${schedule.client_name} ${schedule.store_name}`,
-            meta: `${schedule.date} ${schedule.time}`,
-            link: `/sales/schedule.html`
-          });
-        });
-        
-        // Sort by date (most recent first) and limit to 6
-        activities.sort((a, b) => {
-          // Simple sort by meta field
-          return b.meta.localeCompare(a.meta);
-        });
-        
-        const activityListEl = document.getElementById('activity-list');
-        if (activities.length === 0) {
-          activityListEl.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">アクティビティはありません</p>';
-          return;
+      screens.forEach((screen, index) => {
+        if (screen.dataset.screen === screenName) {
+          container.scrollTo({ left: index * window.innerWidth, behavior: 'smooth' });
         }
-        
-        activityListEl.innerHTML = activities.slice(0, 6).map(activity => {
-          return `
-            <div class="activity-item" onclick="window.location.href='${activity.link}'">
-              <div class="activity-icon">
-                <i class="${activity.icon}"></i>
-              </div>
-              <div class="activity-content">
-                <div class="activity-title">${activity.title}</div>
-                <div class="activity-meta">${activity.meta}</div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
+      });
       
-      // Initialize
-      renderActivity();
-    })();
+      tabs.forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.screen === screenName);
+      });
+      
+      // 見積もりフッターの表示制御
+      updateEstimateFooterVisibility(screenName);
+    }
+    
+    function updateEstimateFooterVisibility(screenName) {
+      const footer = document.querySelector('.estimate-fixed-footer');
+      if (footer) {
+        footer.style.display = screenName === 'estimate' ? 'block' : 'none';
+      }
+    }
+
+    function setupSwipe() {
+      const container = document.getElementById('swipe-container');
+      container.addEventListener('scroll', () => {
+        const index = Math.round(container.scrollLeft / window.innerWidth);
+        const screens = document.querySelectorAll('.swipe-screen');
+        const tabs = document.querySelectorAll('.tab');
+        
+        if (screens[index]) {
+          const screenName = screens[index].dataset.screen;
+          tabs.forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.screen === screenName);
+          });
+          // 見積もりフッターの表示制御
+          updateEstimateFooterVisibility(screenName);
+        }
+      });
+    }
+
+    async function loadData() {
+      try {
+        const [storesRes, schedulesRes] = await Promise.all([
+          fetch(`${API_BASE}/stores`),
+          fetch(`${API_BASE}/schedules`)
+        ]);
+        
+        allStores = await storesRes.json();
+        allSchedules = await schedulesRes.json();
+        
+        // 統計更新
+        const today = new Date().toISOString().split('T')[0];
+        const todayCount = allSchedules.filter(s => s.scheduled_date === today).length;
+        document.getElementById('today-count').textContent = todayCount;
+        
+        // 仮押さえ件数（自分が申請したもの）
+        const draftSchedules = allSchedules.filter(s => s.status === 'draft');
+        document.getElementById('draft-count').textContent = draftSchedules.length;
+        
+        // スケジュール表示
+        renderSchedules();
+        
+        // 仮押さえ状況表示
+        renderDraftStatus();
+        
+        // 店舗セレクト更新
+        populateStoreSelects();
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      }
+    }
+
+    function renderSchedules() {
+      const container = document.getElementById('schedule-list');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const weekSchedules = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() + i);
+        const dateStr = d.toISOString().split('T')[0];
+        
+        allSchedules.filter(s => s.scheduled_date === dateStr).forEach(s => {
+          weekSchedules.push({ ...s, date: d, isToday: i === 0 });
+        });
+      }
+
+      weekSchedules.sort((a, b) => {
+        if (a.scheduled_date !== b.scheduled_date) return a.scheduled_date.localeCompare(b.scheduled_date);
+        return (a.scheduled_time || '').localeCompare(b.scheduled_time || '');
+      });
+
+      if (weekSchedules.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-check"></i><div>今週の予定はありません</div></div>';
+        return;
+      }
+
+      container.innerHTML = weekSchedules.slice(0, 5).map(s => {
+        // DataUtilsで店舗検索・スケジュール正規化
+        const normalized = DataUtils.normalizeSchedule(s);
+        const storeName = DataUtils.getStoreName(allStores, s.store_id, s.store_name);
+        const statusClass = normalized.status === 'completed' ? 'completed' : (normalized.status === 'draft' ? 'draft' : '');
+        
+        return `
+          <div class="schedule-item" onclick="location.href='/sales/schedule.html'">
+            <div class="schedule-date ${s.isToday ? 'today' : ''}">
+              <div class="day">${s.date.getDate()}</div>
+              <div class="dow">${weekdays[s.date.getDay()]}</div>
+            </div>
+            <div class="schedule-info">
+              <div class="schedule-time">${normalized.time || '-'}</div>
+              <div class="schedule-store">${DataUtils.escapeHtml(storeName)}</div>
+            </div>
+            <div class="schedule-dot ${statusClass}"></div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDraftStatus() {
+      const container = document.getElementById('draft-status-list');
+      
+      // 仮押さえ（draft）と最近確定したスケジュールを表示
+      const recentDrafts = allSchedules
+        .filter(s => s.status === 'draft' || s.status === 'scheduled')
+        .sort((a, b) => {
+          // 作成日時で降順ソート
+          const dateA = a.created_at || a.scheduled_date;
+          const dateB = b.created_at || b.scheduled_date;
+          return dateB.localeCompare(dateA);
+        })
+        .slice(0, 5);
+
+      if (recentDrafts.length === 0) {
+        container.innerHTML = '<div class="empty-draft"><i class="fas fa-clock"></i> 仮押さえの履歴がありません</div>';
+        return;
+      }
+
+      const statusLabels = {
+        draft: '申請中',
+        scheduled: '承認済み',
+        rejected: '却下'
+      };
+
+      container.innerHTML = recentDrafts.map(s => {
+        // DataUtilsで店舗検索・スケジュール正規化
+        const normalized = DataUtils.normalizeSchedule(s);
+        const storeName = DataUtils.getStoreName(allStores, s.store_id, s.store_name);
+        const statusLabel = statusLabels[normalized.status] || normalized.status;
+        
+        return `
+          <div class="draft-item status-${normalized.status}">
+            <div class="draft-item-info">
+              <div class="draft-item-store">${DataUtils.escapeHtml(storeName)}</div>
+              <div class="draft-item-date">${normalized.date || ''} ${normalized.time || ''}</div>
+            </div>
+            <span class="draft-item-status ${normalized.status}">${statusLabel}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function populateStoreSelects() {
+      const estimateOptions = '<option value="">顧客を選択</option>' +
+        allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+      const scheduleOptions = '<option value="">選択してください</option>' +
+        allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+      
+      document.getElementById('estimate-store').innerHTML = estimateOptions;
+      document.getElementById('schedule-store').innerHTML = scheduleOptions;
+    }
+
+    async function loadServiceItems() {
+      try {
+        // 静的JSONファイルから読み込み
+        const res = await fetch('/data/service_items.json');
+        if (res.ok) {
+          const data = await res.json();
+          // 見積もり用にシンプルな形式に変換
+          serviceItems = data.map(item => ({
+            id: String(item.id),
+            name: item.title,
+            price: parsePrice(item.price)
+          }));
+          renderServiceList();
+        }
+      } catch (e) {
+        console.error('Failed to load service items:', e);
+        document.getElementById('service-list').innerHTML = '<div class="empty-state">サービスの読み込みに失敗しました</div>';
+      }
+    }
+
+    function parsePrice(priceStr) {
+      // "¥ 21,000〜" → 21000
+      const match = priceStr.match(/[\d,]+/);
+      if (match) {
+        return parseInt(match[0].replace(/,/g, ''), 10);
+      }
+      return 0;
+    }
+
+    function renderServiceList() {
+      const container = document.getElementById('service-list');
+      if (serviceItems.length === 0) {
+        container.innerHTML = '<div class="empty-state">サービスがありません</div>';
+        return;
+      }
+
+      container.innerHTML = serviceItems.map(item => {
+        const isSelected = selectedServices.some(s => s.id === item.id);
+        return `
+          <div class="service-item ${isSelected ? 'selected' : ''}" onclick="toggleService('${item.id}')">
+            <span class="service-name">${escapeHtml(item.name)}</span>
+            <span class="service-price">¥${item.price.toLocaleString()}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleService(id) {
+      const item = serviceItems.find(s => s.id === id);
+      if (!item) return;
+
+      const index = selectedServices.findIndex(s => s.id === id);
+      if (index >= 0) {
+        selectedServices.splice(index, 1);
+      } else {
+        // 倍率のデフォルトは1
+        selectedServices.push({ ...item, multiplier: 1 });
+      }
+
+      renderSelectedServices();
+      renderServiceList();
+      updateEstimateTotal();
+    }
+
+    function setMultiplier(id, multiplier) {
+      const item = selectedServices.find(s => s.id === id);
+      if (item) {
+        item.multiplier = multiplier;
+        renderSelectedServices();
+        updateEstimateTotal();
+      }
+    }
+
+    function renderSelectedServices() {
+      const container = document.getElementById('selected-services');
+      if (selectedServices.length === 0) {
+        container.innerHTML = '<div class="empty-hint"><i class="fas fa-hand-pointer"></i><span>下からサービスを選択</span></div>';
+        return;
+      }
+
+      const multipliers = [1, 1.5, 2, 3];
+
+      container.innerHTML = selectedServices.map(item => {
+        const currentMultiplier = item.multiplier || 1;
+        const calculatedPrice = Math.round(item.price * currentMultiplier);
+        
+        return `
+          <div class="selected-item">
+            <div class="selected-item-main">
+              <div class="selected-item-info">
+                <div class="selected-item-name">${escapeHtml(item.name)}</div>
+                ${currentMultiplier !== 1 ? `<div class="selected-item-base">基本: ¥${item.price.toLocaleString()}</div>` : ''}
+              </div>
+              <span class="selected-item-price">¥${calculatedPrice.toLocaleString()}</span>
+              <button class="selected-item-remove" onclick="removeService('${item.id}')">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="multiplier-row">
+              <span class="multiplier-label">単価調整</span>
+              ${multipliers.map(m => `
+                <button class="multiplier-btn ${currentMultiplier === m ? 'active' : ''}" 
+                        onclick="setMultiplier('${item.id}', ${m})">
+                  ${m === 1 ? '1x' : m + 'x'}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function removeService(id) {
+      selectedServices = selectedServices.filter(s => s.id !== id);
+      renderSelectedServices();
+      renderServiceList();
+      updateEstimateTotal();
+    }
+
+    function updateEstimateTotal() {
+      const total = selectedServices.reduce((sum, s) => {
+        const multiplier = s.multiplier || 1;
+        return sum + Math.round(s.price * multiplier);
+      }, 0);
+      document.getElementById('estimate-total').textContent = `¥${total.toLocaleString()}`;
+    }
+
+    // 顧客登録（3層構造対応）
+    async function submitClient() {
+      const companyName = document.getElementById('client-company').value.trim();
+      const brandName = document.getElementById('client-brand').value.trim();
+      const storeName = document.getElementById('client-store').value.trim();
+      
+      if (!companyName || !storeName) {
+        alert('企業名と店舗名は必須です');
+        return;
+      }
+
+      try {
+        // 1. 法人を検索または作成
+        let clientId = null;
+        const clientsRes = await fetch(`${API_BASE}/clients`);
+        const clients = await clientsRes.json();
+        const existingClient = clients.find(c => c.name === companyName);
+        
+        if (existingClient) {
+          clientId = existingClient.id;
+        } else {
+          // 新規法人作成
+          const newClientId = 'CL' + Date.now();
+          const clientRes = await fetch(`${API_BASE}/clients`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: newClientId,
+              name: companyName,
+              type: 'company',
+              status: 'active',
+              created_at: new Date().toISOString()
+            })
+          });
+          if (clientRes.ok) {
+            clientId = newClientId;
+          }
+        }
+
+        // 2. ブランドを検索または作成
+        let brandId = null;
+        if (brandName) {
+          const brandsRes = await fetch(`${API_BASE}/brands`);
+          const brands = await brandsRes.json();
+          const existingBrand = brands.find(b => b.name === brandName && b.client_id === clientId);
+          
+          if (existingBrand) {
+            brandId = existingBrand.id;
+          } else {
+            // 新規ブランド作成
+            const newBrandId = 'BR' + Date.now();
+            const brandRes = await fetch(`${API_BASE}/brands`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: newBrandId,
+                name: brandName,
+                client_id: clientId,
+                status: 'active',
+                created_at: new Date().toISOString()
+              })
+            });
+            if (brandRes.ok) {
+              brandId = newBrandId;
+            }
+          }
+        }
+
+        // 3. 店舗を作成
+        const storeId = 'ST' + Date.now();
+        const storeData = {
+          id: storeId,
+          name: storeName,
+          client_id: clientId,
+          brand_id: brandId,
+          pref: document.getElementById('client-pref').value,
+          city: '',
+          address1: document.getElementById('client-address').value,
+          postcode: document.getElementById('client-postcode').value,
+          phone: document.getElementById('client-phone').value,
+          email: document.getElementById('client-email').value,
+          contact_person: document.getElementById('client-contact').value,
+          notes: document.getElementById('client-notes').value,
+          status: 'active',
+          registration_type: 'sales',
+          created_at: new Date().toISOString()
+        };
+
+        const storeRes = await fetch(`${API_BASE}/stores`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(storeData)
+        });
+        
+        if (storeRes.ok) {
+          alert('顧客を登録しました');
+          // フォームクリア
+          document.querySelectorAll('#client-company, #client-brand, #client-store, #client-postcode, #client-address, #client-phone, #client-contact, #client-email, #client-notes').forEach(el => el.value = '');
+          document.getElementById('client-pref').value = '';
+          await loadData();
+        } else {
+          throw new Error('Failed');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('登録に失敗しました');
+      }
+    }
+
+    // 見積もり送信
+    async function submitEstimate() {
+      const storeId = document.getElementById('estimate-store').value;
+      const notes = document.getElementById('estimate-notes').value;
+      
+      if (!storeId) {
+        alert('顧客を選択してください');
+        return;
+      }
+      if (selectedServices.length === 0) {
+        alert('サービスを選択してください');
+        return;
+      }
+
+      const store = allStores.find(s => s.id === storeId);
+      const total = selectedServices.reduce((sum, s) => {
+        const multiplier = s.multiplier || 1;
+        return sum + Math.round(s.price * multiplier);
+      }, 0);
+      
+      // 見積もりデータを作成
+      const estimateData = {
+        store_id: storeId,
+        store_name: store?.name || '不明',
+        items: selectedServices.map(s => ({
+          id: s.id,
+          name: s.name,
+          base_price: s.price,
+          multiplier: s.multiplier || 1,
+          price: Math.round(s.price * (s.multiplier || 1))
+        })),
+        total: total,
+        notes: notes,
+        status: 'pending', // pending: 未処理, processing: 本見積作成中, completed: 完了, rejected: 却下
+        created_by: 'sales', // 営業担当
+        created_at: new Date().toISOString()
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/estimates`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(estimateData)
+        });
+
+        if (!res.ok) throw new Error('送信に失敗しました');
+
+        const result = await res.json();
+        
+        alert(`仮見積もりを経理担当に送信しました！\n\n見積もり番号: ${result.id}\n店舗: ${store?.name}\n合計: ¥${total.toLocaleString()}\n\n経理担当が確認後、本見積もりを作成します。`);
+        
+        // リセット
+        selectedServices = [];
+        document.getElementById('estimate-store').value = '';
+        document.getElementById('estimate-notes').value = '';
+        renderSelectedServices();
+        renderServiceList();
+        updateEstimateTotal();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('送信に失敗しました: ' + error.message);
+      }
+    }
+
+    // スケジュール仮押さえ
+    async function submitSchedule() {
+      const storeId = document.getElementById('schedule-store').value;
+      const date = document.getElementById('schedule-date').value;
+      const time = document.getElementById('schedule-time').value;
+      
+      if (!storeId || !date || !time) {
+        alert('必須項目を入力してください');
+        return;
+      }
+
+      const data = {
+        id: 'DRAFT' + Date.now(),
+        store_id: storeId,
+        worker_id: null,
+        scheduled_date: date,
+        scheduled_time: time,
+        duration_minutes: parseInt(document.getElementById('schedule-duration').value),
+        status: 'draft',
+        notes: document.getElementById('schedule-notes').value,
+        created_by: 'sales',
+        created_at: new Date().toISOString()
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/schedules`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (res.ok) {
+          alert('仮押さえを登録しました\n管理者が確認後、確定されます');
+          document.getElementById('schedule-store').value = '';
+          document.getElementById('schedule-date').value = '';
+          document.getElementById('schedule-time').value = '';
+          document.getElementById('schedule-notes').value = '';
+          await loadData();
+        } else {
+          throw new Error('Failed');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('登録に失敗しました');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
   </script>
 </main>
