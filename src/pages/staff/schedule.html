@@ -648,10 +648,15 @@
       }
       
       try {
+        const updateData = {
+          status: 'in_progress',
+          accepted_at: new Date().toISOString()
+        };
+        
         const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'in_progress' })
+          body: JSON.stringify(updateData)
         });
         
         if (!response.ok) {
@@ -662,6 +667,7 @@
         const schedule = allSchedules.find(s => s.id === scheduleId);
         if (schedule) {
           schedule.status = 'in_progress';
+          schedule.accepted_at = updateData.accepted_at;
         }
         
         renderScheduleList();
