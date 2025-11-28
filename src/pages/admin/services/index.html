@@ -132,36 +132,17 @@
   </div>
 
   <script>
-    // 開発サーバーかどうかをチェック
-    function isDevelopmentServer() {
-      return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    }
-    
-    // AWS APIが利用可能かチェック
-    function isAWSAvailable() {
-      return window.AWSServicesAPI && window.AWSServicesAPI.isAvailable();
-    }
-    
-    // 認証チェックと初期化（AWS移行により認証は不要）
-    async function initAuth() {
-      // AWS APIが利用可能かチェック
-      if (!isAWSAvailable()) {
-        console.warn('[AdminServices] AWS API not available');
-        // 開発サーバーの場合は表示を許可
-        if (isDevelopmentServer()) {
-          return true;
-        } else {
-          console.error('[AdminServices] AWS APIが利用できません。');
-          return false;
-        }
+    // AWS APIの読み込み確認
+    (function() {
+      if (!window.AWSServicesAPI) {
+        console.warn('[AdminServices] AWS Services API not loaded. Waiting...');
+        setTimeout(() => {
+          if (!window.AWSServicesAPI) {
+            console.error('[AdminServices] AWS Services API failed to load');
+            document.getElementById('services-grid').innerHTML = '<div class="error-message">サービス管理APIの読み込みに失敗しました。ページを再読み込みしてください。</div>';
+          }
+        }, 1000);
       }
-      
-      return true;
-    }
-    
-    // ページ読み込み時に認証チェックと初期化
-    (async function() {
-      await initAuth();
     })();
     
     // Load and render services
@@ -176,48 +157,21 @@
       // データ読み込み
       let services = [];
       try {
-        // AWS APIが利用可能な場合はAWSから読み込む
-        if (isAWSAvailable()) {
-          try {
-            services = await window.AWSServicesAPI.loadServices();
-            console.log('[AdminServices] Services loaded from AWS API:', services);
-          } catch (error) {
-            console.error('[AdminServices] AWS API load error:', error);
-            // フォールバックを試す
-          }
+        if (!window.AWSServicesAPI) {
+          throw new Error('AWS Services APIが読み込まれていません。');
         }
         
-        // AWS APIが利用できない、またはエラーが発生した場合
-        if (services.length === 0) {
-          // 開発サーバーの場合はAPIを試す
-          if (isDevelopmentServer()) {
-            try {
-              const response = await fetch('/api/services');
-              if (response.ok) {
-                services = await response.json();
-                console.log('[AdminServices] Services loaded from dev server API:', services);
-              }
-            } catch (e) {
-              console.error('[AdminServices] Dev server API error:', e);
-            }
-          }
-          
-          // APIが利用できない場合は静的ファイルを読み込む
-          if (services.length === 0) {
-            const servicesDataEl = document.getElementById('service-items-data');
-            if (servicesDataEl) {
-              services = JSON.parse(servicesDataEl.textContent);
-              console.log('[AdminServices] Services loaded from static JSON:', services);
-            }
-          }
-        }
+        services = await window.AWSServicesAPI.loadServices();
+        console.log('[AdminServices] Services loaded:', services);
       } catch (error) {
         console.error('[AdminServices] Error loading services:', error);
-        // フォールバック: 静的JSONデータを使用
-        const servicesDataEl = document.getElementById('service-items-data');
-        if (servicesDataEl) {
-          services = JSON.parse(servicesDataEl.textContent);
-        }
+        servicesGridEl.innerHTML = `<div class="error-message" style="padding: 40px; text-align: center; color: #dc2626;">
+          <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 16px; display: block;"></i>
+          <p>サービスの読み込みに失敗しました。</p>
+          <p style="font-size: 0.875rem; color: #6b7280; margin-top: 8px;">${error.message}</p>
+          <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 16px;">再読み込み</button>
+        </div>`;
+        return;
       }
       
       // Category mapping for filter
@@ -375,36 +329,19 @@
       };
       
       window.deleteService = async function(id) {
-        if (!confirm(`サービスID ${id} を削除してもよろしいですか？`)) {
+        if (!confirm(`サービスID ${id} を削除してもよろしいですか？\n\nこの操作は取り消せません。`)) {
           return;
         }
         
         try {
-          // AWS APIが利用可能な場合はAWS APIを使用
-          if (isAWSAvailable()) {
-            await window.AWSServicesAPI.deleteService(id);
-            alert(`サービスID ${id} を削除しました。`);
-            // ページを再読み込み
-            location.reload();
-          } else if (isDevelopmentServer()) {
-            // 開発サーバーの場合はAPIを使用
-            const response = await fetch(`/api/services/${id}`, {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            });
-            
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            alert(`サービスID ${id} を削除しました。`);
-            // ページを再読み込み
-            location.reload();
-          } else {
-            alert('削除機能はAWS APIまたは開発サーバーが必要です。');
+          if (!window.AWSServicesAPI) {
+            throw new Error('AWS Services APIが読み込まれていません。');
           }
+          
+          await window.AWSServicesAPI.deleteService(id);
+          alert(`サービスID ${id} を削除しました。`);
+          // ページを再読み込み
+          location.reload();
         } catch (error) {
           console.error('Delete service error:', error);
           alert('削除エラー: ' + error.message);

@@ -84,10 +84,14 @@
     (function() {
       async function loadServiceData() {
         try {
-          const response = await fetch('/api/services');
-          const services = await response.json();
           const serviceId = parseInt(document.getElementById('main').dataset.serviceId || '0');
-          const service = services.find(s => s.id === serviceId);
+          
+          if (!window.AWSServicesAPI) {
+            console.warn('[AdminServiceDetail] AWS Services API not loaded');
+            return;
+          }
+          
+          const service = await window.AWSServicesAPI.getService(serviceId);
           
           if (service) {
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
@@ -202,29 +206,31 @@
     (function() {
       const previewBtn = document.getElementById('preview-modal-btn');
       if (previewBtn) {
-        previewBtn.addEventListener('click', function() {
-          // Load service data and open modal
-          fetch('/api/services')
-            .then(response => response.json())
-            .then(services => {
-              const serviceId = parseInt(document.getElementById('main').dataset.serviceId || '0');
-              const service = services.find(s => s.id === serviceId);
-              if (service) {
-                if (window.ModalManager) {
-                  window.ModalManager.open('service-modal', service);
-                } else if (window.openModal) {
-                  window.openModal(service);
-                } else {
-                  alert('モーダル機能が利用できません。app.js または modal_manager.js が読み込まれているか確認してください。');
-                }
+        previewBtn.addEventListener('click', async function() {
+          try {
+            const serviceId = parseInt(document.getElementById('main').dataset.serviceId || '0');
+            
+            if (!window.AWSServicesAPI) {
+              throw new Error('AWS Services APIが読み込まれていません。');
+            }
+            
+            const service = await window.AWSServicesAPI.getService(serviceId);
+            
+            if (service) {
+              if (window.ModalManager) {
+                window.ModalManager.open('service-modal', service);
+              } else if (window.openModal) {
+                window.openModal(service);
               } else {
-                alert('サービスデータが見つかりませんでした。');
+                alert('モーダル機能が利用できません。app.js または modal_manager.js が読み込まれているか確認してください。');
               }
-            })
-            .catch(error => {
-              console.error('Failed to load service data:', error);
-              alert('サービスデータの読み込みに失敗しました。');
-            });
+            } else {
+              alert('サービスデータが見つかりませんでした。');
+            }
+          } catch (error) {
+            console.error('Failed to load service data:', error);
+            alert('サービスデータの読み込みに失敗しました: ' + error.message);
+          }
         });
       }
     })();
@@ -256,10 +262,23 @@
       alert(`サービスID ${id} の編集機能は実装予定です。`);
     };
 
-    window.deleteService = function(id) {
-      if (confirm(`サービスID ${id} を削除してもよろしいですか？`)) {
-        // TODO: Implement delete functionality
-        alert(`サービスID ${id} の削除機能は実装予定です。`);
+    window.deleteService = async function(id) {
+      if (!confirm(`サービスID ${id} を削除してもよろしいですか？\n\nこの操作は取り消せません。`)) {
+        return;
+      }
+      
+      try {
+        if (!window.AWSServicesAPI) {
+          throw new Error('AWS Services APIが読み込まれていません。');
+        }
+        
+        await window.AWSServicesAPI.deleteService(id);
+        alert(`サービスID ${id} を削除しました。`);
+        // 一覧ページにリダイレクト
+        window.location.href = '/admin/services/';
+      } catch (error) {
+        console.error('Delete service error:', error);
+        alert('削除エラー: ' + error.message);
       }
     };
   </script>
