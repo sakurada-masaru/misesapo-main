@@ -11,22 +11,11 @@
     const API_GATEWAY_ENDPOINT = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
     
     /**
-     * 開発サーバーかどうかを判定
-     */
-    function isDevelopmentServer() {
-        const hostname = window.location.hostname;
-        return hostname === 'localhost' || hostname === '127.0.0.1';
-    }
-    
-    /**
      * APIエンドポイントを解決
+     * 開発サーバーでもAWS API Gatewayを使用（ローカルAPIは実装されていないため）
      */
     function getApiEndpoint(path = '') {
-        if (isDevelopmentServer()) {
-            // 開発サーバーの場合はローカルAPIを使用（API Gatewayは使わない）
-            return `/api/services${path}`;
-        }
-        // 本番環境ではAPI Gatewayを使用
+        // 常にAWS API Gatewayを使用
         return `${API_GATEWAY_ENDPOINT}/services${path}`;
     }
     
@@ -36,7 +25,7 @@
     async function loadServices() {
         const endpoint = getApiEndpoint('');
         
-        console.log('[AWSServicesAPI] Loading services from:', endpoint, '(isDevelopmentServer:', isDevelopmentServer(), ')');
+        console.log('[AWSServicesAPI] Loading services from:', endpoint);
         
         try {
             const response = await fetch(endpoint, {
@@ -56,23 +45,8 @@
         } catch (error) {
             console.error('[AWSServicesAPI] Load error:', error);
             
-            // 開発サーバーの場合、フォールバックを試す
-            if (isDevelopmentServer()) {
-                console.log('[AWSServicesAPI] Trying fallback to static JSON file...');
-                try {
-                    const fallbackResponse = await fetch('/data/service_items.json');
-                    if (fallbackResponse.ok) {
-                        const fallbackData = await fallbackResponse.json();
-                        console.log('[AWSServicesAPI] Fallback data loaded:', fallbackData);
-                        return fallbackData;
-                    }
-                } catch (fallbackError) {
-                    console.error('[AWSServicesAPI] Fallback error:', fallbackError);
-                }
-            }
-            
-            // 空の配列を返す
-            console.warn('[AWSServicesAPI] Returning empty array');
+            // エラー時は空の配列を返す
+            console.warn('[AWSServicesAPI] Returning empty array due to error');
             return [];
         }
     }
