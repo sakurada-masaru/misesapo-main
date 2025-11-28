@@ -1018,6 +1018,11 @@
       
       // 見積もりフッターの表示制御
       updateEstimateFooterVisibility(screenName);
+      
+      // 見積もり画面に切り替えた時にサービス一覧を再読み込み（最新のサービスを取得）
+      if (screenName === 'estimate') {
+        loadServiceItems();
+      }
     }
     
     function updateEstimateFooterVisibility(screenName) {
