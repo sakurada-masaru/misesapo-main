@@ -1001,7 +1001,7 @@
       }
 
       if (isNew) {
-        data.id = 'SCH' + Date.now();
+        data.id = DataUtils.IdUtils.generateSchedule();
         data.created_at = new Date().toISOString();
       } else {
         data.id = id;

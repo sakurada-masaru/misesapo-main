@@ -2,6 +2,8 @@
 @json('data/meta/sales_schedule_title.json', $title)
 @json('data/meta/sales_schedule_body_class.json', $body_class)
 
+<script src="/js/data_utils.js"></script>
+
 <main id="main" class="gcal-mobile">
   <!-- ヘッダー -->
   <header class="gcal-header">
@@ -1244,7 +1246,7 @@
       }
       
       const data = {
-        id: 'DRAFT' + Date.now(),
+        id: DataUtils.IdUtils.generateSchedule(),
         store_id: storeId,
         worker_id: null, // 管理者がアサイン
         scheduled_date: date,

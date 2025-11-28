@@ -4,6 +4,8 @@
 @json('data/clients.json', clients_data)
 @json('data/service_items.json', service_items_data)
 
+<script src="/js/data_utils.js"></script>
+
 <main id="main" class="container sales-estimate-new">
   <div class="page-header">
     <a href="/sales/estimates.html" class="back-btn">
@@ -777,7 +779,7 @@
         
         // Create estimate object
         const estimate = {
-          id: `EST-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+          id: DataUtils.IdUtils.generateEstimate(),
           client_id: selectedClient.id,
           client_name: selectedClient.company_name,
           store_name: selectedClient.store_name,
@@ -844,7 +846,7 @@
         
         // Create estimate object
         const estimate = {
-          id: `EST-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+          id: DataUtils.IdUtils.generateEstimate(),
           client_id: selectedClient.id,
           client_name: selectedClient.company_name,
           store_name: selectedClient.store_name,

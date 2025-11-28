@@ -1524,7 +1524,7 @@
       }
 
       const data = {
-        id: 'DRAFT' + Date.now(),
+        id: DataUtils.IdUtils.generateSchedule(),
         store_id: storeId,
         worker_id: null,
         scheduled_date: date,
