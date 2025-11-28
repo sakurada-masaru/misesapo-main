@@ -26,128 +26,10 @@
   /* Note: :root also defines the same brand color; inline vars ensure early paint */
   </style>
 
-    <style>
-      /* Admin pages: hide global header while keeping auth buttons */
-      body[class*="page-admin-"] #default-header-wrapper {
-        height: 0;
-        overflow: visible;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .site-header {
-        background: transparent;
-        box-shadow: none;
-        padding: 0;
-        min-height: 0;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .inner {
-        justify-content: flex-end;
-        padding: 0;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-left,
-      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
-      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
-      body[class*="page-admin-"] #default-header-wrapper .spacer,
-      body[class*="page-admin-"] #default-header-wrapper .role-badge {
-        display: none !important;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right {
-        position: fixed;
-        top: 16px;
-        right: 24px;
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        background: #fff;
-        border-radius: 999px;
-        padding: 6px 18px;
-        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
-        z-index: 300;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
-        font-weight: 600;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 999px;
-        border: 1px solid #e5e7eb;
-      }
-    </style>
   </head>
   <body class="theme-pink page-admin-dashboard">
-    <div id="default-header-wrapper">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
-<header id="header-guest" class="site-header" data-role="guest">
-  <div class="inner wide">
-    <div class="nav-left">
-      <a class="brand brand-logo" href="/index.html" aria-label="ミセサポ ホーム">
-        <img src="/images/logo_144x144.png" alt="ミセサポ" />
-      </a>
-      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
-        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
-      </nav>
-    </div>
-    <div class="spacer"></div>
-    <nav class="nav-right hide-sm" aria-label="User">
-      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
-      <a class="nav-link" href="/signin.html">ログイン</a>
-      <a class="nav-link primary" href="/signup.html">新規登録</a>
-      <button class="icon-btn" aria-label="通知">
-        <i class="fas fa-bell"></i>
-      </button>
-      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
-        <i class="fas fa-sign-out-alt"></i>
-      </button>
-    </nav>
-    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-  </div>
-  <!-- スマホ版ナビゲーションメニュー -->
-  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
-    <div class="mobile-nav-content">
-      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
-        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
-      </nav>
-      <nav class="mobile-nav-user" aria-label="User">
-        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
-        <a class="mobile-nav-link" href="/signin.html">ログイン</a>
-        <a class="mobile-nav-link primary" href="/signup.html">新規登録</a>
-      </nav>
-    </div>
-  </nav>
-</header>
-
-    </div>
-    <!-- 通常ヘッダー（ログイン画面用） -->
-    <div id="normal-header-wrapper" style="display: none;">
-    <!-- 通常ヘッダー -->
-<header class="normal-header">
-    <div class="normal-header-inner">
-        <div class="normal-header-logo">
-            <a href="/">
-                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
-            </a>
-                </div>
-        <nav class="normal-header-nav">
-            <a href="/">TOP</a>
-            <a href="/service.html">対応可能サービス</a>
-            <a href="/lp.html#voice">お客様の声</a>
-            <a href="/customers-support-desk.html">カスタマーズサポート</a>
-            <a href="/announcements.html">お知らせ</a>
-            <a href="/privacy-policy.html">規約＆ポリシー</a>
-        </nav>
-        <div class="normal-header-actions">
-            <a href="/signin.html" class="normal-header-login">ログイン</a>
-        </div>
-            </div>
-</header>
-
-
-    </div>
-    <main id="main">
-      
+    
 
 
 
@@ -1167,7 +1049,6 @@
 })();
 </script>
 
-    </main>
     <footer class="site-footer">
   <div class="container text-center muted small" style="padding: 16px 0;">
     <p>&copy; 2025 ミセサポ</p>
@@ -1186,30 +1067,8 @@
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
     <script>
-      // ログイン画面では通常ヘッダーを表示
-      (function() {
-        const path = window.location.pathname || '';
-        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
-        
-        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
-        if (isSigninPage) {
-          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
-          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
-          if (defaultHeaderWrapper) {
-            defaultHeaderWrapper.style.display = 'none';
-          }
-          if (normalHeaderWrapper) {
-            normalHeaderWrapper.style.display = 'block';
-            // ログイン画面では通常ヘッダーを常に表示
-            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
-            if (normalHeader) {
-              normalHeader.classList.add('visible');
-            }
-          }
-        }
-      })();
+      // 管理画面では共通ヘッダーを持たないため追加スクリプトは不要
     </script>
   </body>
-  </html>
-
+</html>
 
