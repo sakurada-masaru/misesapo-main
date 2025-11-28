@@ -71,18 +71,19 @@
 
   <!-- メインコンテンツ -->
   <div class="main-content">
-    <div class="container">
-      <!-- トップバー -->
-      <header class="topbar">
-        <div class="topbar-left">
-          <h1>レポート管理</h1>
-        </div>
-        <div class="topbar-right">
-          <button type="button" class="btn btn-primary" id="btn-new-report">
-            <i class="fas fa-plus"></i> 新規作成
-          </button>
-        </div>
-      </header>
+    <!-- トップバー -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>レポート管理</h1>
+      </div>
+      <div class="topbar-right">
+        <button type="button" class="btn btn-primary" id="btn-new-report">
+          <i class="fas fa-plus"></i> 新規作成
+        </button>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
 
     <!-- 統計カード -->
     <div class="stats-row">
@@ -319,10 +320,10 @@
       padding: 24px;
       background: #f9fafb;
     }
-    .admin-reports-v2 > .main-content > .container {
-      max-width: 100%;
-      margin: 0;
-      padding: 0;
+    .content-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
     }
 
     /* トップバー */
@@ -372,7 +373,7 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 16px;
-      margin-bottom: 24px;
+      width: 100%;
     }
     .stat-card {
       background: #fff;
@@ -390,10 +391,11 @@
       gap: 12px;
       flex-wrap: wrap;
       align-items: center;
-      margin-bottom: 24px;
       padding: 16px;
-      background: #f8fafc;
+      background: #fff;
+      border: 1px solid #e2e8f0;
       border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .search-box {
       position: relative;
@@ -509,9 +511,9 @@
     /* ページネーション */
     .pagination {
       display: flex;
-      justify-content: center;
+      justify-content: flex-end;
       gap: 8px;
-      margin-top: 24px;
+      margin: 0;
     }
     .page-btn {
       padding: 8px 14px;
