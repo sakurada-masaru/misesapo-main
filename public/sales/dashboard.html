@@ -1492,9 +1492,16 @@
       
       // スケジュール画面に切り替えた時にスケジュールを読み込み
       if (screenName === 'schedule-list') {
-        loadScheduleData();
-        renderScheduleWeekStrip();
-        renderScheduleView();
+        // データが既に読み込まれている場合は再読み込みしない
+        if (allSchedules.length === 0 || allWorkers.length === 0) {
+          loadScheduleData().then(() => {
+            renderScheduleWeekStrip();
+            renderScheduleView();
+          });
+        } else {
+          renderScheduleWeekStrip();
+          renderScheduleView();
+        }
       }
     }
     
@@ -2237,32 +2244,22 @@
         
         if (schedulesRes.ok) {
           allSchedules = await schedulesRes.json();
+        } else {
+          console.warn('Failed to load schedules');
+          allSchedules = [];
         }
+        
         if (workersRes.ok) {
           allWorkers = await workersRes.json();
+        } else {
+          console.warn('Failed to load workers');
+          allWorkers = [];
         }
       } catch (error) {
         console.error('Failed to load schedule data:', error);
+        allSchedules = [];
+        allWorkers = [];
       }
-    }
-
-    function getScheduleStoreName(storeId) {
-      if (!storeId) return '不明';
-      const store = allStores.find(s => s.id === storeId);
-      return store ? store.name : '不明';
-    }
-
-    function getScheduleStoreAddress(storeId) {
-      if (!storeId) return '';
-      const store = allStores.find(s => s.id === storeId);
-      if (!store) return '';
-      return `${store.pref || ''}${store.city || ''}${store.address1 || ''}`;
-    }
-
-    function getScheduleWorkerName(workerId) {
-      if (!workerId) return '未割当';
-      const worker = allWorkers.find(w => w.id === workerId);
-      return worker ? worker.name : '不明';
     }
 
     function getWeekStart(d) {
@@ -2275,7 +2272,12 @@
       const ws = getWeekStart(selectedScheduleDate);
       const today = new Date();
       today.setHours(0,0,0,0);
-      const eventDates = new Set(allSchedules.map(s => s.date || s.scheduled_date));
+      
+      // スケジュールの日付を取得（date または scheduled_date フィールドに対応）
+      const eventDates = new Set(allSchedules.map(s => {
+        const normalized = DataUtils.normalizeSchedule(s);
+        return normalized.date || s.date || s.scheduled_date || '';
+      }).filter(d => d));
       
       const weekDaysEl = document.getElementById('week-days');
       if (!weekDaysEl) return;
@@ -2298,11 +2300,14 @@
       }
       weekDaysEl.innerHTML = html;
 
-      // 日付選択イベント
+      // 日付選択イベント（既存のイベントリスナーを削除してから追加）
       weekDaysEl.querySelectorAll('.w-day').forEach(day => {
-        day.addEventListener('click', () => {
-          if (day.dataset.date) {
-            selectedScheduleDate = new Date(day.dataset.date);
+        const newDay = day.cloneNode(true);
+        day.parentNode.replaceChild(newDay, day);
+        
+        newDay.addEventListener('click', () => {
+          if (newDay.dataset.date) {
+            selectedScheduleDate = new Date(newDay.dataset.date);
             renderScheduleWeekStrip();
             renderScheduleView();
           }
@@ -2327,14 +2332,17 @@
         
         // スケジュールを取得（date または scheduled_date フィールドに対応）
         let daySchedules = allSchedules.filter(s => {
-          const scheduleDate = s.date || s.scheduled_date;
+          const normalized = DataUtils.normalizeSchedule(s);
+          const scheduleDate = normalized.date || s.date || s.scheduled_date || '';
           return scheduleDate === dateStr;
         });
         
         // 時間でソート
         daySchedules.sort((a, b) => {
-          const timeA = a.time_slot || a.scheduled_time || '';
-          const timeB = b.time_slot || b.scheduled_time || '';
+          const normalizedA = DataUtils.normalizeSchedule(a);
+          const normalizedB = DataUtils.normalizeSchedule(b);
+          const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '';
+          const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '';
           return timeA.localeCompare(timeB);
         });
         
@@ -2347,17 +2355,24 @@
               </div>
               <div class="day-events">
                 ${daySchedules.length > 0 ? daySchedules.map(s => {
-                  const timeSlot = s.time_slot || s.scheduled_time || '-';
+                  const normalized = DataUtils.normalizeSchedule(s);
+                  const timeSlot = normalized.time || s.time_slot || s.scheduled_time || '-';
                   const [startTime, endTime] = timeSlot.includes('-') ? timeSlot.split('-') : [timeSlot, ''];
-                  const statusClass = s.status === 'completed' ? 'completed' : (s.status === 'draft' ? 'draft' : '');
-                  const storeName = getScheduleStoreName(s.client_id || s.store_id);
-                  const storeAddress = getScheduleStoreAddress(s.client_id || s.store_id);
+                  const statusClass = normalized.status === 'completed' ? 'completed' : (normalized.status === 'draft' ? 'draft' : '');
+                  
+                  // store_id または client_id に対応
+                  const storeId = normalized.store_id || s.store_id || s.client_id;
+                  const storeName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || s.store_name || s.client_name);
+                  
+                  // 店舗情報を取得して住所を表示
+                  const store = DataUtils.findStore(allStores, storeId);
+                  const storeAddress = store ? `${store.pref || ''}${store.city || ''}${store.address1 || ''}` : '';
                   
                   return `
                     <div class="event-card ${statusClass}" onclick="showScheduleEvent('${s.id}')">
                       <div class="event-time-col">
-                        <div class="event-time-start">${startTime}</div>
-                        <div class="event-time-end">${endTime || ''}</div>
+                        <div class="event-time-start">${escapeHtml(startTime)}</div>
+                        <div class="event-time-end">${escapeHtml(endTime || '')}</div>
                       </div>
                       <div class="event-details">
                         <div class="event-name">${escapeHtml(storeName)}</div>
@@ -2378,27 +2393,43 @@
       const s = allSchedules.find(x => x.id === scheduleId);
       if (!s) return;
       
-      const scheduleDate = s.date || s.scheduled_date;
+      // 正規化されたスケジュールデータを使用
+      const normalized = DataUtils.normalizeSchedule(s);
+      const scheduleDate = normalized.date || s.date || s.scheduled_date;
       const d = new Date(scheduleDate);
-      const timeSlot = s.time_slot || s.scheduled_time || '-';
+      const timeSlot = normalized.time || s.time_slot || s.scheduled_time || '-';
       const [startTime, endTime] = timeSlot.includes('-') ? timeSlot.split('-') : [timeSlot, ''];
       
-      document.getElementById('event-title').textContent = getScheduleStoreName(s.client_id || s.store_id);
+      // store_id または client_id に対応
+      const storeId = normalized.store_id || s.store_id || s.client_id;
+      const storeName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || s.store_name || s.client_name);
+      
+      // 店舗情報を取得して住所を表示
+      const store = DataUtils.findStore(allStores, storeId);
+      const storeAddress = store ? `${store.pref || ''}${store.city || ''}${store.address1 || ''}` : '';
+      
+      // worker_id または assigned_to に対応
+      const workerId = normalized.worker_id || s.worker_id || s.assigned_to;
+      const worker = allWorkers.find(w => w.id === workerId);
+      const workerName = worker ? worker.name : '未割当';
+      
+      document.getElementById('event-title').textContent = storeName;
       document.getElementById('event-date').textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${weekdays[d.getDay()]}）`;
       document.getElementById('event-time').textContent = `${startTime}${endTime ? ' - ' + endTime : ''}`;
-      document.getElementById('event-address').textContent = getScheduleStoreAddress(s.client_id || s.store_id) || '-';
-      document.getElementById('event-worker').textContent = `担当: ${getScheduleWorkerName(s.assigned_to || s.worker_id)}`;
+      document.getElementById('event-address').textContent = storeAddress || '-';
+      document.getElementById('event-worker').textContent = `担当: ${workerName}`;
       
       const notesItem = document.getElementById('event-notes-item');
-      if (s.notes) {
-        document.getElementById('event-notes').textContent = s.notes;
+      const notes = normalized.notes || s.notes || '';
+      if (notes) {
+        document.getElementById('event-notes').textContent = notes;
         notesItem.style.display = 'flex';
       } else {
         notesItem.style.display = 'none';
       }
       
-      const isDraft = s.status === 'draft';
-      const isCompleted = s.status === 'completed';
+      const isDraft = normalized.status === 'draft';
+      const isCompleted = normalized.status === 'completed';
       const colorEl = document.getElementById('event-color');
       colorEl.className = 'event-color' + (isCompleted ? ' completed' : (isDraft ? ' draft' : ''));
       const statusEl = document.getElementById('event-status');
