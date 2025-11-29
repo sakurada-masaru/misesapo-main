@@ -1571,9 +1571,16 @@ def create_schedule(event, headers):
             'cleaning_items': body_json.get('cleaning_items', []),
             'notes': body_json.get('notes', ''),
             'status': body_json.get('status', 'draft'),  # draft, pending, assigned, in_progress, completed, cancelled
-            'assigned_to': body_json.get('assigned_to'),  # 清掃員ID（後で割り当て）
-            'created_by': body_json.get('created_by'),  # 作成者ID（営業担当など）
         }
+        
+        # GSIキーとなる属性は、値が存在する場合のみ追加（NULLは許可されない）
+        assigned_to = body_json.get('assigned_to')
+        if assigned_to:
+            schedule_item['assigned_to'] = assigned_to
+        
+        created_by = body_json.get('created_by')
+        if created_by:
+            schedule_item['created_by'] = created_by
         
         # DynamoDBに保存
         SCHEDULES_TABLE.put_item(Item=schedule_item)
