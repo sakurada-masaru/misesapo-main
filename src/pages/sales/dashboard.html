@@ -970,6 +970,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       setupTabs();
       setupSwipe();
+      setupCaseTabs(); // 案件管理タブの初期化
       await loadData();
       loadServiceItems();
     });
@@ -1005,6 +1006,54 @@
       if (screenName === 'estimate') {
         loadServiceItems();
       }
+      
+      // 案件管理画面に切り替えた時にタブ機能を初期化
+      if (screenName === 'case') {
+        setupCaseTabs();
+        loadServiceItems();
+      }
+    }
+    
+    // 案件管理タブの切り替え
+    function setupCaseTabs() {
+      const caseTabs = document.querySelectorAll('.case-tab');
+      const caseContents = document.querySelectorAll('.case-tab-content');
+      
+      // 既存のイベントリスナーを削除するために、一度すべてのタブを再取得
+      caseTabs.forEach(tab => {
+        // 既存のイベントリスナーを削除するため、新しいイベントリスナーを追加する前に
+        // 一度イベントをクリア（ただし、cloneNodeではイベントリスナーはコピーされないので問題なし）
+        const targetTab = tab.dataset.caseTab;
+        
+        // 既存のイベントリスナーを削除するために、新しい要素に置き換え
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+        
+        newTab.addEventListener('click', () => {
+          const clickedTab = newTab.dataset.caseTab;
+          
+          // すべてのタブとコンテンツを再取得（DOMが変更されている可能性があるため）
+          const allCaseTabs = document.querySelectorAll('.case-tab');
+          const allCaseContents = document.querySelectorAll('.case-tab-content');
+          
+          // タブのアクティブ状態を更新
+          allCaseTabs.forEach(t => t.classList.remove('active'));
+          newTab.classList.add('active');
+          
+          // コンテンツの表示を切り替え
+          allCaseContents.forEach(content => {
+            content.classList.remove('active');
+            if (content.dataset.caseContent === clickedTab) {
+              content.classList.add('active');
+            }
+          });
+          
+          // 仮見積もりタブの場合、サービス一覧を再読み込み
+          if (clickedTab === 'estimate') {
+            loadServiceItems();
+          }
+        });
+      });
     }
     
     function updateEstimateFooterVisibility(screenName) {
