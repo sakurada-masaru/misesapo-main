@@ -882,3 +882,65 @@
   </div>
 </main>
 
+<script>
+(function() {
+  // サイドバー開閉機能
+  const sidebar = document.getElementById('admin-sidebar');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  
+  if (sidebar && sidebarToggle) {
+    const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+    if (isCollapsed) {
+      sidebar.classList.add('collapsed');
+    }
+    
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      const collapsed = sidebar.classList.contains('collapsed');
+      localStorage.setItem('sidebar-collapsed', collapsed);
+    });
+  }
+
+  // ロール表示の更新
+  function updateRoleBadge() {
+    const roleBadge = document.getElementById('sidebar-role-badge');
+    if (!roleBadge) return;
+    
+    if (window.Auth && window.Auth.getCurrentUser) {
+      const user = window.Auth.getCurrentUser();
+      if (user && user.role) {
+        const roleConfig = window.RoleConfig?.ROLE_CONFIG;
+        const roleInfo = roleConfig?.roles?.[user.role];
+        if (roleInfo) {
+          roleBadge.textContent = roleInfo.displayName || roleInfo.name || user.role;
+          
+          const badgeColors = {
+            'guest': { bg: '#e5e7eb', color: '#6b7280' },
+            'customer': { bg: '#dbeafe', color: '#1e40af' },
+            'staff': { bg: '#dcfce7', color: '#166534' },
+            'concierge': { bg: '#fef3c7', color: '#92400e' },
+            'admin': { bg: '#e0e7ff', color: '#3730a3' },
+            'developer': { bg: '#fce7f3', color: '#831843' },
+            'master': { bg: '#fef2f2', color: '#991b1b' }
+          };
+          
+          const colors = badgeColors[user.role] || badgeColors['admin'];
+          roleBadge.style.background = colors.bg;
+          roleBadge.style.color = colors.color;
+        }
+      }
+    } else {
+      roleBadge.textContent = '管理者';
+    }
+  }
+  
+  updateRoleBadge();
+  
+  if (window.Auth && window.Auth.onAuthStateChanged) {
+    window.Auth.onAuthStateChanged(() => {
+      updateRoleBadge();
+    });
+  }
+})();
+</script>
+
