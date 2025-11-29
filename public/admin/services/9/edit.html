@@ -26,141 +26,103 @@
   /* Note: :root also defines the same brand color; inline vars ensure early paint */
   </style>
 
-    <style>
-      /* Admin pages: hide global header while keeping auth buttons */
-      body[class*="page-admin-"] #default-header-wrapper {
-        height: 0;
-        overflow: visible;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .site-header {
-        background: transparent;
-        box-shadow: none;
-        padding: 0;
-        min-height: 0;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .inner {
-        justify-content: flex-end;
-        padding: 0;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-left,
-      body[class*="page-admin-"] #default-header-wrapper .hamburger-btn,
-      body[class*="page-admin-"] #default-header-wrapper .mobile-nav,
-      body[class*="page-admin-"] #default-header-wrapper .spacer,
-      body[class*="page-admin-"] #default-header-wrapper .role-badge {
-        display: none !important;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right {
-        position: fixed;
-        top: 16px;
-        right: 24px;
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        background: #fff;
-        border-radius: 999px;
-        padding: 6px 18px;
-        box-shadow: 0 12px 30px rgba(15,23,42,0.18);
-        z-index: 300;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
-        font-weight: 600;
-      }
-      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 999px;
-        border: 1px solid #e5e7eb;
-      }
-    </style>
   </head>
   <body class="theme-pink page-admin-services">
-    <div id="default-header-wrapper">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
-<header id="header-guest" class="site-header" data-role="guest">
-  <div class="inner wide">
-    <div class="nav-left">
-      <a class="brand brand-logo" href="/index.html" aria-label="ミセサポ ホーム">
-        <img src="/images/logo_144x144.png" alt="ミセサポ" />
-      </a>
-      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
-        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
-      </nav>
-    </div>
-    <div class="spacer"></div>
-    <nav class="nav-right hide-sm" aria-label="User">
-      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
-      <a class="nav-link" href="/signin.html">ログイン</a>
-      <a class="nav-link primary" href="/signup.html">新規登録</a>
-      <button class="icon-btn" aria-label="通知">
-        <i class="fas fa-bell"></i>
-      </button>
-      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
-        <i class="fas fa-sign-out-alt"></i>
-      </button>
-    </nav>
-    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-  </div>
-  <!-- スマホ版ナビゲーションメニュー -->
-  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
-    <div class="mobile-nav-content">
-      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
-        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
-      </nav>
-      <nav class="mobile-nav-user" aria-label="User">
-        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
-        <a class="mobile-nav-link" href="/signin.html">ログイン</a>
-        <a class="mobile-nav-link primary" href="/signup.html">新規登録</a>
-      </nav>
-    </div>
-  </nav>
-</header>
-
-    </div>
-    <!-- 通常ヘッダー（ログイン画面用） -->
-    <div id="normal-header-wrapper" style="display: none;">
-    <!-- 通常ヘッダー -->
-<header class="normal-header">
-    <div class="normal-header-inner">
-        <div class="normal-header-logo">
-            <a href="/">
-                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
-            </a>
-                </div>
-        <nav class="normal-header-nav">
-            <a href="/">TOP</a>
-            <a href="/service.html">対応可能サービス</a>
-            <a href="/lp.html#voice">お客様の声</a>
-            <a href="/customers-support-desk.html">カスタマーズサポート</a>
-            <a href="/announcements.html">お知らせ</a>
-            <a href="/privacy-policy.html">規約＆ポリシー</a>
-        </nav>
-        <div class="normal-header-actions">
-            <a href="/signin.html" class="normal-header-login">ログイン</a>
-        </div>
-            </div>
-</header>
-
-
-    </div>
-    <main id="main">
-      
+    
 
 
 
 <!-- AWS API -->
 <script src="/js/aws-services-api.js"></script>
 
-<main id="main" class="container admin-services-edit">
-  <div class="page-header">
-    <a href="/admin/services/9.html" class="back-btn">
+<main id="main" class="admin-services-edit">
+  <!-- サイドバー -->
+  <aside class="sidebar" id="admin-sidebar">
+    <div class="sidebar-header">
+      <a href="/admin/dashboard.html" class="logo-link">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+        <span class="logo-text">ミセサポ</span>
+      </a>
+    </div>
+    
+    <!-- ロール表示 -->
+    <div class="sidebar-role">
+      <span class="role-badge" id="sidebar-role-badge">管理者</span>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="/admin/dashboard.html" class="nav-item">
+        <i class="fas fa-history"></i>
+        <span class="nav-label">アクティビティ</span>
+      </a>
+      <a href="/admin/schedules/" class="nav-item">
+        <i class="fas fa-calendar-alt"></i>
+        <span class="nav-label">スケジュール</span>
+      </a>
+      <a href="/admin/customers/" class="nav-item">
+        <i class="fas fa-store"></i>
+        <span class="nav-label">顧客管理</span>
+      </a>
+      <a href="/admin/reports/" class="nav-item">
+        <i class="fas fa-file-alt"></i>
+        <span class="nav-label">レポート</span>
+      </a>
+      <a href="/admin/estimates/" class="nav-item">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span class="nav-label">見積もり</span>
+      </a>
+      <a href="/admin/orders.html" class="nav-item">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="nav-label">発注管理</span>
+      </a>
+      <a href="/admin/partners.html" class="nav-item">
+        <i class="fas fa-handshake"></i>
+        <span class="nav-label">パートナー企業</span>
+      </a>
+      <a href="/admin/users/" class="nav-item">
+        <i class="fas fa-users"></i>
+        <span class="nav-label">ユーザー</span>
+      </a>
+      <a href="/admin/services/" class="nav-item active">
+        <i class="fas fa-cog"></i>
+        <span class="nav-label">サービス管理</span>
+      </a>
+      <a href="/admin/analytics/" class="nav-item">
+        <i class="fas fa-chart-bar"></i>
+        <span class="nav-label">分析</span>
+      </a>
+      <a href="/admin/images/" class="nav-item">
+        <i class="fas fa-images"></i>
+        <span class="nav-label">メディア</span>
+      </a>
+      <div class="nav-divider"></div>
+      <a href="/wiki" class="nav-item">
+        <i class="fas fa-book-open"></i>
+        <span class="nav-label">WIKI</span>
+      </a>
+      <a href="/admin/settings/" class="nav-item">
+        <i class="fas fa-sliders-h"></i>
+        <span class="nav-label">設定</span>
+      </a>
+      <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        <span class="nav-label">ログアウト</span>
+      </button>
+    </nav>
+
+    <!-- トグルボタン -->
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
       <i class="fas fa-chevron-left"></i>
-    </a>
-    <h1 class="page-title">サービス編集</h1>
-  </div>
+    </button>
+  </aside>
+
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">サービス編集</h1>
+      </div>
 
   <form id="service-form" class="service-form">
     <input type="hidden" name="id" value="9" />
@@ -181,6 +143,7 @@
           <label class="form-label">カテゴリ <span class="required">必須</span></label>
           <select class="form-select" name="category" id="category-select" required>
             <option value="">選択してください</option>
+            <option value="定期清掃">定期清掃</option>
             <option value="厨房設備">厨房設備</option>
             <option value="空調設備">空調設備</option>
             <option value="フロア">フロア</option>
@@ -347,38 +310,188 @@
 
 
   <style>
-    .admin-services-edit {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 24px;
-      background: #f9fafb;
-      min-height: 100vh;
+    :root {
+      --sidebar-width: 240px;
+      --sidebar-width-collapsed: 64px;
     }
-    .page-header {
+
+    .admin-services-edit {
+      display: flex;
+      min-height: 100vh;
+      background: #f9fafb;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* サイドバー */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+      transition: width 0.3s ease;
+      overflow: hidden;
+    }
+    .sidebar.collapsed {
+      width: var(--sidebar-width-collapsed);
+    }
+    .sidebar.collapsed .nav-label,
+    .sidebar.collapsed .logo-text,
+    .sidebar.collapsed .sidebar-role {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+    }
+    .sidebar.collapsed .sidebar-toggle i {
+      transform: rotate(180deg);
+    }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid #e5e7eb;
+      min-height: 64px;
       display: flex;
       align-items: center;
-      gap: 16px;
-      margin-bottom: 32px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #e5e7eb;
     }
-    .back-btn {
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .logo-img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      white-space: nowrap;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-role {
+      padding: 8px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-role .role-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: auto;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      color: #6b7280;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .nav-item-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover {
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .nav-item.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .nav-item i {
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .nav-label {
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+    }
+    .nav-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 8px 12px;
+    }
+    .sidebar-toggle {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border: 1px solid #e5e7eb;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
       color: #6b7280;
-      text-decoration: none;
       transition: all 0.2s;
+      z-index: 200;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    .back-btn:hover {
-      background: #f9fafb;
+    .sidebar.collapsed .sidebar-toggle {
+      right: 18px;
+    }
+    .sidebar-toggle:hover {
+      background: #f3f4f6;
       border-color: var(--primary);
       color: var(--primary);
+    }
+    .sidebar-toggle i {
+      transition: transform 0.3s ease;
+    }
+
+    /* メインコンテンツ */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      background: #f9fafb;
+      transition: margin-left 0.3s ease;
+    }
+    .sidebar.collapsed ~ .main-content {
+      margin-left: var(--sidebar-width-collapsed);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .page-header {
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
     }
     .page-title {
       font-size: 1.75rem;
@@ -1354,8 +1467,18 @@
           const img = preview.querySelector('img');
           if (img) {
             // パスが / で始まっていない場合は / を追加
-            const path = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+            // ベースパスを考慮（GitHub Pages対応）
+            const basePath = window.location.pathname.includes('/misesapo/') ? '/misesapo' : '';
+            let path = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+            // 既にベースパスが含まれている場合は追加しない
+            if (basePath && !path.startsWith(basePath)) {
+              path = basePath + path;
+            }
             img.src = path;
+            img.onerror = function() {
+              // 画像読み込みエラー時は非表示にする
+              preview.style.display = 'none';
+            };
             preview.style.display = 'block';
           }
         } else {
@@ -1610,12 +1733,10 @@
             console.log('[AdminServicesEdit] Service updated:', result);
             
             // 成功メッセージ
-            alert(`サービスID ${result.id} を更新しました！\n\nページを自動生成しています。数秒後に詳細ページに移動します。`);
+            alert(`サービスID ${result.id} を更新しました！\n\nサービス一覧ページに移動します。`);
             
-            // 少し待ってからリダイレクト（ビルドが完了するまで）
-            setTimeout(() => {
-              window.location.href = `/admin/services/${serviceData.id}.html`;
-            }, 2000);
+            // サービス一覧ページにリダイレクト（詳細ページが存在しない場合の404を回避）
+            window.location.href = '/admin/services/';
             
           } catch (error) {
             console.error('Error:', error);
@@ -1626,11 +1747,78 @@
         });
       }
     })();
+
+    // サイドバー開閉機能
+    (function() {
+      const sidebar = document.getElementById('admin-sidebar');
+      const sidebarToggle = document.getElementById('sidebar-toggle');
+      
+      // ローカルストレージから状態を読み込み
+      const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+      if (isCollapsed && sidebar) {
+        sidebar.classList.add('collapsed');
+      }
+      
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+          if (sidebar) {
+            sidebar.classList.toggle('collapsed');
+            const collapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebar-collapsed', collapsed);
+          }
+        });
+      }
+
+      // ロール表示の更新
+      function updateRoleBadge() {
+        const roleBadge = document.getElementById('sidebar-role-badge');
+        if (!roleBadge) return;
+        
+        // ロール情報を取得
+        if (window.Auth && window.Auth.getCurrentUser) {
+          const user = window.Auth.getCurrentUser();
+          if (user && user.role) {
+            const roleConfig = window.RoleConfig?.ROLE_CONFIG;
+            const roleInfo = roleConfig?.roles?.[user.role];
+            if (roleInfo) {
+              roleBadge.textContent = roleInfo.displayName || roleInfo.name || user.role;
+              
+              // ロールに応じたバッジの色を設定
+              const badgeColors = {
+                'guest': { bg: '#e5e7eb', color: '#6b7280' },
+                'customer': { bg: '#dbeafe', color: '#1e40af' },
+                'staff': { bg: '#dcfce7', color: '#166534' },
+                'concierge': { bg: '#fef3c7', color: '#92400e' },
+                'admin': { bg: '#e0e7ff', color: '#3730a3' },
+                'developer': { bg: '#fce7f3', color: '#831843' },
+                'master': { bg: '#fef2f2', color: '#991b1b' }
+              };
+              
+              const colors = badgeColors[user.role] || badgeColors['admin'];
+              roleBadge.style.background = colors.bg;
+              roleBadge.style.color = colors.color;
+            }
+          }
+        } else {
+          // デフォルトで管理者として表示
+          roleBadge.textContent = '管理者';
+        }
+      }
+      
+      // ページ読み込み時にロールを更新
+      updateRoleBadge();
+      
+      // Authの状態が変わったときにロールを更新
+      if (window.Auth && window.Auth.onAuthStateChanged) {
+        window.Auth.onAuthStateChanged(() => {
+          updateRoleBadge();
+        });
+      }
+    })();
   </script>
 </main>
 
 
-    </main>
     <footer class="site-footer">
   <div class="container text-center muted small" style="padding: 16px 0;">
     <p>&copy; 2025 ミセサポ</p>
@@ -1649,30 +1837,8 @@
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
     <script>
-      // ログイン画面では通常ヘッダーを表示
-      (function() {
-        const path = window.location.pathname || '';
-        const isSigninPage = path.includes('/signin.html') || path.includes('/signin');
-        
-        // ログイン画面では通常ヘッダーを表示、デフォルトヘッダーを非表示
-        if (isSigninPage) {
-          const defaultHeaderWrapper = document.getElementById('default-header-wrapper');
-          const normalHeaderWrapper = document.getElementById('normal-header-wrapper');
-          if (defaultHeaderWrapper) {
-            defaultHeaderWrapper.style.display = 'none';
-          }
-          if (normalHeaderWrapper) {
-            normalHeaderWrapper.style.display = 'block';
-            // ログイン画面では通常ヘッダーを常に表示
-            const normalHeader = normalHeaderWrapper.querySelector('.normal-header');
-            if (normalHeader) {
-              normalHeader.classList.add('visible');
-            }
-          }
-        }
-      })();
+      // 管理画面では共通ヘッダーを持たないため追加スクリプトは不要
     </script>
   </body>
-  </html>
-
+</html>
 
