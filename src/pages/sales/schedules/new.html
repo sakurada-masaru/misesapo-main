@@ -871,7 +871,7 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span class="selected-item-price">¥${formatPrice(calculatedPrice)}</span>
-                  <button class="selected-item-remove" onclick="removeServiceNew('${item.id}')">
+                  <button type="button" class="selected-item-remove" onclick="removeServiceNew('${item.id}')">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
@@ -879,7 +879,7 @@
               <div class="multiplier-row">
                 <span style="font-size: 0.7rem; color: #666; margin-right: 8px;">倍率:</span>
                 ${multipliers.map(m => `
-                  <button class="multiplier-btn ${currentMultiplier === m ? 'active' : ''}" 
+                  <button type="button" class="multiplier-btn ${currentMultiplier === m ? 'active' : ''}" 
                           onclick="setMultiplierNew('${item.id}', ${m})">
                     ${m}
                   </button>
