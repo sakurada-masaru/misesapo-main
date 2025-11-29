@@ -4,6 +4,9 @@
 @json('data/clients.json', clients_data)
 @json('data/service_items.json', service_items_data)
 
+<!-- AWS Services API -->
+<script src="/js/aws-services-api.js"></script>
+
 <main id="main" class="container sales-schedules-new">
   <div class="page-header">
     <a href="/sales/schedule.html" class="back-btn">
@@ -433,30 +436,51 @@
       const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
       // サービスマスタの読み込み
-      // 1. まずローカルの service_items_data をデフォルトとしてセット
-      // 2. 可能であれば AWS のサービスAPIで上書き
+      // AWS APIからサービス一覧を取得し、失敗した場合はローカルの service_items_data をフォールバックとして使用
       async function loadServicesFromApi() {
-        // デフォルト: ローカルのサービス定義
-        if (typeof service_items_data !== 'undefined') {
-          serviceItems = service_items_data;
-        } else {
-          serviceItems = [];
+        // まずローカルの service_items_data をデフォルトとしてセット（フォールバック用）
+        let fallbackServices = [];
+        if (typeof service_items_data !== 'undefined' && Array.isArray(service_items_data)) {
+          fallbackServices = service_items_data;
         }
 
         try {
-          // AWSServicesAPI が利用可能なら、AWS側のサービス一覧で上書き
-          if (window.AWSServicesAPI && window.AWSServicesAPI.loadServices) {
-            const data = await window.AWSServicesAPI.loadServices();
-            // APIの戻り値が配列または { items: [] } のどちらでも対応
-            if (Array.isArray(data)) {
-              serviceItems = data;
-            } else if (Array.isArray(data.items)) {
-              serviceItems = data.items;
-            }
+          // AWSServicesAPI が読み込まれるまで待機（最大3秒）
+          let retries = 30;
+          while (!window.AWSServicesAPI && retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries--;
+          }
+
+          if (!window.AWSServicesAPI || !window.AWSServicesAPI.loadServices) {
+            throw new Error('AWSServicesAPI が利用できません。ローカルデータを使用します。');
+          }
+
+          console.log('[sales/schedules/new] Loading services from AWS API...');
+          const data = await window.AWSServicesAPI.loadServices();
+          
+          // APIの戻り値が配列または { items: [] } のどちらでも対応
+          if (Array.isArray(data) && data.length > 0) {
+            serviceItems = data;
+            console.log(`[sales/schedules/new] Loaded ${serviceItems.length} services from AWS API`);
+          } else if (data && Array.isArray(data.items) && data.items.length > 0) {
+            serviceItems = data.items;
+            console.log(`[sales/schedules/new] Loaded ${serviceItems.length} services from AWS API (nested format)`);
+          } else {
+            // APIから空の配列が返された場合は、フォールバックを使用
+            console.warn('[sales/schedules/new] AWS API returned empty data, using fallback');
+            serviceItems = fallbackServices;
           }
         } catch (error) {
-          console.warn('[sales/schedules/new] Failed to load services from API, fallback to local service_items_data:', error);
-          // 既に serviceItems にはローカルの値が入っているので、ここでは何もしない
+          console.warn('[sales/schedules/new] Failed to load services from AWS API, using local fallback:', error);
+          serviceItems = fallbackServices;
+        }
+
+        // 最終的に serviceItems が空の場合は警告
+        if (serviceItems.length === 0) {
+          console.error('[sales/schedules/new] No services available (neither from API nor local data)');
+        } else {
+          console.log(`[sales/schedules/new] Using ${serviceItems.length} services (${serviceItems.length === fallbackServices.length ? 'local fallback' : 'AWS API'})`);
         }
       }
 
@@ -566,6 +590,21 @@
         item.className = 'cleaning-item';
         item.dataset.itemId = itemId;
 
+        // サービスオプションを生成
+        let serviceOptions = '';
+        if (serviceItems && serviceItems.length > 0) {
+          serviceOptions = serviceItems.map(service => {
+            const title = service.title || service.name || '';
+            const category = service.category || '';
+            const selected = serviceItem && serviceItem.name === title ? 'selected' : '';
+            return `<option value="${title}" ${selected}>${title}${category ? ` (${category})` : ''}</option>`;
+          }).join('');
+        } else {
+          // サービスが読み込まれていない場合の警告
+          serviceOptions = '<option value="" disabled>サービスを読み込み中...</option>';
+          console.warn('[sales/schedules/new] serviceItems is empty when adding cleaning item');
+        }
+
         item.innerHTML = `
           <div class="cleaning-item-header">
             <span class="cleaning-item-title">作業項目 ${cleaningItems.length + 1}</span>
@@ -578,11 +617,7 @@
               <label>作業内容 <span class="required">必須</span></label>
               <select class="form-select service-select" name="cleaning_items[${cleaningItems.length}][name]" required>
                 <option value="">作業内容を選択</option>
-                ${serviceItems.map(service => `
-                  <option value="${service.title}" ${serviceItem && serviceItem.name === service.title ? 'selected' : ''}>
-                    ${service.title} ${service.category ? `(${service.category})` : ''}
-                  </option>
-                `).join('')}
+                ${serviceOptions}
                 <option value="その他">その他（自由入力）</option>
               </select>
             </div>
