@@ -956,6 +956,15 @@
       z-index: 100;
       display: none; /* JSで制御 */
     }
+    /* 案件管理画面内のフッターは相対位置で表示 */
+    .case-tab-content .estimate-fixed-footer {
+      position: relative;
+      bottom: auto;
+      left: auto;
+      right: auto;
+      display: block !important;
+      margin-top: auto;
+    }
     .btn-submit {
       width: 100%;
       padding: 14px;
@@ -1175,12 +1184,24 @@
     }
     .case-tab-content {
       display: none;
+      flex-direction: column;
       height: calc(100vh - 64px - 48px); /* ヘッダーとタブの高さを引く */
-      overflow-y: auto;
     }
     .case-tab-content.active {
       display: flex;
-      flex-direction: column;
+    }
+    .case-tab-content .estimate-scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 80px; /* フッターのスペースを確保 */
+    }
+    .case-tab-content .estimate-fixed-footer {
+      position: relative;
+      bottom: auto;
+      left: auto;
+      right: auto;
+      display: block !important;
+      margin-top: auto;
     }
     [data-screen="case"] {
       display: flex;
