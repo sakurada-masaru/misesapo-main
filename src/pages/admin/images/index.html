@@ -259,6 +259,19 @@
           card.addEventListener('click', function() {
             const path = this.dataset.path;
             const fileName = path.split('/').pop();
+            
+            // 選択モードの場合は親ウィンドウにメッセージを送信
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('selectMode') === 'true') {
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                  type: 'image-selected',
+                  path: path
+                }, '*');
+              }
+              return;
+            }
+            
             openImageModal(path, fileName);
           });
         });
