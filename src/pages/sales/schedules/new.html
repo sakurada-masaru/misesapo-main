@@ -96,12 +96,12 @@
       </div>
     </div>
 
-    <!-- 作業内容 -->
+    <!-- 作業内容・見積もり -->
     <div class="form-section">
       <div class="section-header">
         <h2 class="section-title">
           <i class="fas fa-tasks"></i>
-          作業内容
+          作業内容・見積もり
         </h2>
         <button type="button" class="btn btn-outline btn-sm" id="add-cleaning-item">
           <i class="fas fa-plus"></i>
@@ -110,6 +110,37 @@
       </div>
       <div id="cleaning-items-container">
         <!-- 作業項目が動的に追加される -->
+      </div>
+      
+      <!-- 見積もり合計表示 -->
+      <div class="estimate-summary" id="estimate-summary" style="display: none;">
+        <div class="estimate-summary-header">
+          <h3 class="estimate-summary-title">
+            <i class="fas fa-calculator"></i>
+            見積もり合計
+          </h3>
+        </div>
+        <div class="estimate-summary-content">
+          <div class="estimate-total-row">
+            <span class="estimate-total-label">合計金額</span>
+            <span class="estimate-total-value" id="estimate-total-display">¥0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 見積もりメモ -->
+    <div class="form-section">
+      <h2 class="section-title">
+        <i class="fas fa-file-invoice-dollar"></i>
+        見積もりメモ
+      </h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">見積もりに関する補足事項</label>
+          <textarea class="form-textarea" name="estimate_notes" id="estimate-notes" rows="3" placeholder="見積もりに関する補足事項があれば入力してください"></textarea>
+          <p class="form-hint">価格やサービス内容に関する特記事項があれば入力してください</p>
+        </div>
       </div>
     </div>
 
@@ -397,6 +428,63 @@
       padding: 8px 16px;
       font-size: 0.875rem;
     }
+    /* 見積もり合計表示 */
+    .estimate-summary {
+      margin-top: 24px;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .estimate-summary-header {
+      margin-bottom: 16px;
+    }
+    .estimate-summary-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+    .estimate-summary-title i {
+      color: var(--primary, #FF6BA6);
+    }
+    .estimate-summary-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .estimate-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 2px solid var(--primary, #FF6BA6);
+    }
+    .estimate-total-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .estimate-total-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary, #FF6BA6);
+    }
+    /* 作業項目の価格入力フィールド */
+    .service-price-input,
+    .service-quantity-input,
+    .service-subtotal-input {
+      text-align: right;
+    }
+    .service-subtotal-input {
+      font-weight: 600;
+      color: var(--primary, #FF6BA6);
+    }
     @media (max-width: 768px) {
       .sales-schedules-new {
         padding: 16px;
@@ -615,19 +703,27 @@
           <div class="cleaning-item-details">
             <div class="cleaning-item-detail full-width">
               <label>作業内容 <span class="required">必須</span></label>
-              <select class="form-select service-select" name="cleaning_items[${cleaningItems.length}][name]" required>
+              <select class="form-select service-select" name="cleaning_items[${cleaningItems.length}][name]" data-service-price="0" required>
                 <option value="">作業内容を選択</option>
                 ${serviceOptions}
                 <option value="その他">その他（自由入力）</option>
               </select>
             </div>
-            <div class="cleaning-item-detail full-width">
-              <label>備考・特記事項</label>
-              <textarea name="cleaning_items[${cleaningItems.length}][notes]" placeholder="例: 分解洗浄あり、床置き型など">${serviceItem && serviceItem.notes ? serviceItem.notes.join('\n') : ''}</textarea>
+            <div class="cleaning-item-detail">
+              <label>単価</label>
+              <input type="number" class="form-input service-price-input" name="cleaning_items[${cleaningItems.length}][base_price]" min="0" step="1" value="0" placeholder="¥0" readonly>
             </div>
             <div class="cleaning-item-detail">
               <label>数量</label>
-              <input type="number" name="cleaning_items[${cleaningItems.length}][quantity]" min="0" step="1" value="${serviceItem && serviceItem.quantity ? serviceItem.quantity : ''}" placeholder="例: 2">
+              <input type="number" class="form-input service-quantity-input" name="cleaning_items[${cleaningItems.length}][quantity]" min="1" step="1" value="1" placeholder="例: 1">
+            </div>
+            <div class="cleaning-item-detail">
+              <label>小計</label>
+              <input type="number" class="form-input service-subtotal-input" name="cleaning_items[${cleaningItems.length}][price]" min="0" step="1" value="0" placeholder="¥0" readonly>
+            </div>
+            <div class="cleaning-item-detail full-width">
+              <label>備考・特記事項</label>
+              <textarea name="cleaning_items[${cleaningItems.length}][notes]" placeholder="例: 分解洗浄あり、床置き型など">${serviceItem && serviceItem.notes ? serviceItem.notes.join('\n') : ''}</textarea>
             </div>
             <div class="cleaning-item-detail">
               <label>単位</label>
@@ -639,8 +735,12 @@
         container.appendChild(item);
         cleaningItems.push({ id: itemId });
 
-        // 「その他」選択時の処理
+        // サービス選択時の処理（価格を設定）
         const serviceSelect = item.querySelector('.service-select');
+        const priceInput = item.querySelector('.service-price-input');
+        const quantityInput = item.querySelector('.service-quantity-input');
+        const subtotalInput = item.querySelector('.service-subtotal-input');
+
         serviceSelect.addEventListener('change', function() {
           if (this.value === 'その他') {
             // 自由入力フィールドに変更
@@ -651,8 +751,78 @@
             customInput.placeholder = '作業内容を入力';
             customInput.required = true;
             this.parentNode.replaceChild(customInput, this);
+            // 価格は手動入力可能にする
+            priceInput.readOnly = false;
+            priceInput.value = '';
+            updateItemSubtotal(item);
+          } else {
+            // サービスを選択した場合、価格を設定
+            const selectedService = serviceItems.find(s => (s.title || s.name) === this.value);
+            if (selectedService) {
+              const price = selectedService.price || 0;
+              priceInput.value = price;
+              this.dataset.servicePrice = price;
+              updateItemSubtotal(item);
+            }
+          }
+          updateEstimateTotal();
+        });
+
+        // 数量変更時の処理
+        if (quantityInput) {
+          quantityInput.addEventListener('input', function() {
+            updateItemSubtotal(item);
+            updateEstimateTotal();
+          });
+        }
+
+        // 価格変更時の処理（手動入力の場合）
+        if (priceInput) {
+          priceInput.addEventListener('input', function() {
+            updateItemSubtotal(item);
+            updateEstimateTotal();
+          });
+        }
+      }
+
+      // 項目の小計を更新
+      function updateItemSubtotal(item) {
+        const priceInput = item.querySelector('.service-price-input');
+        const quantityInput = item.querySelector('.service-quantity-input');
+        const subtotalInput = item.querySelector('.service-subtotal-input');
+        
+        if (priceInput && quantityInput && subtotalInput) {
+          const price = parseFloat(priceInput.value) || 0;
+          const quantity = parseFloat(quantityInput.value) || 1;
+          const subtotal = Math.round(price * quantity);
+          subtotalInput.value = subtotal;
+        }
+      }
+
+      // 見積もり合計を更新
+      function updateEstimateTotal() {
+        const summary = document.getElementById('estimate-summary');
+        const totalDisplay = document.getElementById('estimate-total-display');
+        
+        if (!summary || !totalDisplay) return;
+
+        let total = 0;
+        const itemElements = document.querySelectorAll('.cleaning-item');
+        itemElements.forEach(item => {
+          const subtotalInput = item.querySelector('.service-subtotal-input');
+          if (subtotalInput) {
+            total += parseFloat(subtotalInput.value) || 0;
           }
         });
+
+        totalDisplay.textContent = `¥${total.toLocaleString()}`;
+        
+        // 合計が0より大きい場合のみ表示
+        if (total > 0) {
+          summary.style.display = 'block';
+        } else {
+          summary.style.display = 'none';
+        }
       }
 
       // 作業項目を削除
@@ -682,14 +852,23 @@
 
           // 作業項目を取得
           const cleaningItemsData = [];
+          const estimateItems = [];
+          let estimateTotal = 0;
+          
           const itemElements = document.querySelectorAll('.cleaning-item');
           itemElements.forEach((item, index) => {
             const nameInput = item.querySelector('[name*="[name]"]');
             const notesTextarea = item.querySelector('[name*="[notes]"]');
             const quantityInput = item.querySelector('[name*="[quantity]"]');
             const unitInput = item.querySelector('[name*="[unit]"]');
+            const priceInput = item.querySelector('.service-price-input');
+            const subtotalInput = item.querySelector('.service-subtotal-input');
 
             if (nameInput && nameInput.value) {
+              const basePrice = parseFloat(priceInput?.value) || 0;
+              const quantity = parseFloat(quantityInput?.value) || 1;
+              const price = parseFloat(subtotalInput?.value) || (basePrice * quantity);
+              
               const itemData = {
                 name: nameInput.value,
                 notes: notesTextarea && notesTextarea.value ? notesTextarea.value.split('\n').filter(n => n.trim()) : [],
@@ -697,6 +876,18 @@
                 unit: unitInput && unitInput.value ? unitInput.value : null
               };
               cleaningItemsData.push(itemData);
+
+              // 見積もり用のアイテムデータ
+              if (price > 0) {
+                estimateItems.push({
+                  id: `service-${index}`,
+                  name: nameInput.value,
+                  base_price: basePrice,
+                  multiplier: quantity,
+                  price: Math.round(price)
+                });
+                estimateTotal += Math.round(price);
+              }
             }
           });
 
@@ -714,8 +905,18 @@
             cleaning_items: cleaningItemsData,
             notes: formData.get('notes') || '',
             // ステータス: 仮押さえ（管理画面側では draft を仮押さえとして扱う）
-            status: 'draft'
+            status: 'draft',
+            created_by: 'sales'
           };
+
+          // 見積もり情報が存在する場合は追加
+          if (estimateItems.length > 0) {
+            scheduleData.estimate = {
+              items: estimateItems,
+              total: estimateTotal,
+              notes: formData.get('estimate_notes') || ''
+            };
+          }
 
           console.log('Schedule data (to POST):', scheduleData);
 

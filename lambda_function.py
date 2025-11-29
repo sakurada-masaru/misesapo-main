@@ -14,6 +14,7 @@ dynamodb = boto3.resource('dynamodb')
 ANNOUNCEMENTS_TABLE = dynamodb.Table('announcements')
 REPORTS_TABLE = dynamodb.Table('staff-reports')
 SCHEDULES_TABLE = dynamodb.Table('schedules')
+ESTIMATES_TABLE = dynamodb.Table('estimates')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -143,6 +144,21 @@ def lambda_handler(event, context):
                 return get_wiki_data(headers)
             elif method == 'PUT' or method == 'POST':
                 return save_wiki_data(event, headers)
+        elif normalized_path == '/estimates':
+            # 見積もりデータの読み書き
+            if method == 'GET':
+                return get_estimates(event, headers)
+            elif method == 'POST':
+                return create_estimate(event, headers)
+        elif normalized_path.startswith('/estimates/'):
+            # 見積もり詳細の取得・更新・削除
+            estimate_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_estimate_detail(estimate_id, headers)
+            elif method == 'PUT':
+                return update_estimate(estimate_id, event, headers)
+            elif method == 'DELETE':
+                return delete_estimate(estimate_id, headers)
         elif normalized_path == '/schedules':
             # スケジュールデータの読み書き
             if method == 'GET':
@@ -1536,7 +1552,7 @@ def delete_report(report_id, event, headers):
 
 def create_schedule(event, headers):
     """
-    スケジュールを作成
+    スケジュールを作成（見積もりも同時に作成可能）
     """
     try:
         # リクエストボディを取得
@@ -1553,6 +1569,37 @@ def create_schedule(event, headers):
         # スケジュールIDを生成（必須）
         schedule_id = str(uuid.uuid4())
         now = datetime.utcnow().isoformat() + 'Z'
+        
+        # 見積もり情報が含まれている場合は、見積もりも同時に作成
+        estimate_id = None
+        estimate_data = body_json.get('estimate')
+        if estimate_data and estimate_data.get('items') and len(estimate_data.get('items', [])) > 0:
+            # 見積もりIDを生成
+            estimate_id = str(uuid.uuid4())
+            
+            # 見積もり合計を計算
+            estimate_total = estimate_data.get('total', 0)
+            if estimate_total == 0:
+                # 合計が指定されていない場合は計算
+                estimate_total = sum(item.get('price', 0) for item in estimate_data.get('items', []))
+            
+            # 見積もりアイテムを作成
+            estimate_item = {
+                'id': estimate_id,  # パーティションキー（必須）
+                'created_at': now,
+                'updated_at': now,
+                'store_id': body_json.get('client_id'),  # スケジュールのclient_idを使用
+                'store_name': body_json.get('store_name', ''),
+                'items': estimate_data.get('items', []),
+                'total': estimate_total,
+                'notes': estimate_data.get('notes', ''),
+                'status': 'pending',  # pending: 未処理, processing: 本見積作成中, completed: 完了, rejected: 却下
+                'created_by': body_json.get('created_by', 'sales'),
+                'schedule_id': schedule_id  # スケジュールIDを紐付け
+            }
+            
+            # 見積もりを保存
+            ESTIMATES_TABLE.put_item(Item=estimate_item)
         
         # DynamoDBに保存するアイテムを作成
         schedule_item = {
@@ -1573,6 +1620,10 @@ def create_schedule(event, headers):
             'status': body_json.get('status', 'draft'),  # draft, pending, assigned, in_progress, completed, cancelled
         }
         
+        # 見積もりIDを紐付け（存在する場合）
+        if estimate_id:
+            schedule_item['estimate_id'] = estimate_id
+        
         # GSIキーとなる属性は、値が存在する場合のみ追加（NULLは許可されない）
         assigned_to = body_json.get('assigned_to')
         if assigned_to:
@@ -1585,14 +1636,21 @@ def create_schedule(event, headers):
         # DynamoDBに保存
         SCHEDULES_TABLE.put_item(Item=schedule_item)
         
+        response_body = {
+            'status': 'success',
+            'message': 'スケジュールを作成しました',
+            'schedule_id': schedule_id
+        }
+        
+        # 見積もりも作成した場合は、見積もりIDも返す
+        if estimate_id:
+            response_body['estimate_id'] = estimate_id
+            response_body['message'] = 'スケジュールと見積もりを作成しました'
+        
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps({
-                'status': 'success',
-                'message': 'スケジュールを作成しました',
-                'schedule_id': schedule_id
-            }, ensure_ascii=False)
+            'body': json.dumps(response_body, ensure_ascii=False)
         }
     except Exception as e:
         print(f"Error creating schedule: {str(e)}")
@@ -1788,6 +1846,273 @@ def delete_schedule(schedule_id, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': 'スケジュールの削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+# ==================== 見積もり関連の関数 ====================
+
+def create_estimate(event, headers):
+    """
+    見積もりを作成
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 見積もりIDを生成（必須）
+        estimate_id = str(uuid.uuid4())
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # 見積もり合計を計算
+        estimate_total = body_json.get('total', 0)
+        if estimate_total == 0:
+            # 合計が指定されていない場合は計算
+            estimate_total = sum(item.get('price', 0) for item in body_json.get('items', []))
+        
+        # DynamoDBに保存するアイテムを作成
+        estimate_item = {
+            'id': estimate_id,  # パーティションキー（必須）
+            'created_at': now,
+            'updated_at': now,
+            'store_id': body_json.get('store_id'),
+            'store_name': body_json.get('store_name', ''),
+            'items': body_json.get('items', []),
+            'total': estimate_total,
+            'notes': body_json.get('notes', ''),
+            'status': body_json.get('status', 'pending'),  # pending: 未処理, processing: 本見積作成中, completed: 完了, rejected: 却下
+            'created_by': body_json.get('created_by', 'sales'),
+        }
+        
+        # スケジュールIDが指定されている場合は紐付け
+        schedule_id = body_json.get('schedule_id')
+        if schedule_id:
+            estimate_item['schedule_id'] = schedule_id
+        
+        # DynamoDBに保存
+        ESTIMATES_TABLE.put_item(Item=estimate_item)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '見積もりを作成しました',
+                'id': estimate_id,
+                'estimate_id': estimate_id
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error creating estimate: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '見積もりの作成に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_estimates(event, headers):
+    """
+    見積もり一覧を取得
+    """
+    try:
+        # クエリパラメータからフィルタ条件を取得
+        query_params = event.get('queryStringParameters') or {}
+        store_id = query_params.get('store_id')
+        status = query_params.get('status')
+        schedule_id = query_params.get('schedule_id')
+        
+        # スキャンまたはクエリを実行
+        if store_id:
+            # 店舗IDでフィルタ
+            response = ESTIMATES_TABLE.scan(
+                FilterExpression=Attr('store_id').eq(store_id)
+            )
+        elif status:
+            # ステータスでフィルタ
+            response = ESTIMATES_TABLE.scan(
+                FilterExpression=Attr('status').eq(status)
+            )
+        elif schedule_id:
+            # スケジュールIDでフィルタ
+            response = ESTIMATES_TABLE.scan(
+                FilterExpression=Attr('schedule_id').eq(schedule_id)
+            )
+        else:
+            # 全件取得
+            response = ESTIMATES_TABLE.scan()
+        
+        estimates = response.get('Items', [])
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'estimates': estimates,
+                'count': len(estimates)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting estimates: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '見積もりの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_estimate_detail(estimate_id, headers):
+    """
+    見積もり詳細を取得
+    """
+    try:
+        response = ESTIMATES_TABLE.get_item(Key={'id': estimate_id})
+        
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '見積もりが見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'estimate': response['Item']
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting estimate detail: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '見積もりの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_estimate(estimate_id, event, headers):
+    """
+    見積もりを更新
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 既存の見積もりを取得
+        response = ESTIMATES_TABLE.get_item(Key={'id': estimate_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '見積もりが見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        # 更新可能なフィールド
+        updatable_fields = ['items', 'total', 'notes', 'status', 'store_id', 'store_name', 'schedule_id']
+        
+        update_expression_parts = []
+        expression_attribute_names = {}
+        expression_attribute_values = {}
+        
+        for field in updatable_fields:
+            if field in body_json:
+                update_expression_parts.append(f"#{field} = :{field}")
+                expression_attribute_names[f"#{field}"] = field
+                expression_attribute_values[f":{field}"] = body_json[field]
+        
+        # updated_atを更新
+        update_expression_parts.append("#updated_at = :updated_at")
+        expression_attribute_names["#updated_at"] = "updated_at"
+        expression_attribute_values[":updated_at"] = datetime.utcnow().isoformat() + 'Z'
+        
+        if update_expression_parts:
+            ESTIMATES_TABLE.update_item(
+                Key={'id': estimate_id},
+                UpdateExpression='SET ' + ', '.join(update_expression_parts),
+                ExpressionAttributeNames=expression_attribute_names,
+                ExpressionAttributeValues=expression_attribute_values
+            )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '見積もりを更新しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating estimate: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '見積もりの更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_estimate(estimate_id, headers):
+    """
+    見積もりを削除
+    """
+    try:
+        ESTIMATES_TABLE.delete_item(Key={'id': estimate_id})
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '見積もりを削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting estimate: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '見積もりの削除に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }
