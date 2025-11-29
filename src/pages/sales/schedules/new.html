@@ -798,11 +798,12 @@
         }
 
         container.innerHTML = serviceItems.map(item => {
-          const isSelected = selectedServicesNew.some(s => s.id === item.id);
+          const isSelected = selectedServicesNew.some(s => String(s.id) === String(item.id));
           const serviceName = item.title || item.name || '';
           const priceNum = parsePrice(item.price);
+          const itemId = String(item.id); // IDを文字列に統一
           return `
-            <div class="service-item ${isSelected ? 'selected' : ''}" onclick="toggleServiceNew('${item.id}')">
+            <div class="service-item ${isSelected ? 'selected' : ''}" onclick="toggleServiceNew('${itemId}')" data-service-id="${itemId}">
               <span class="service-name">${escapeHtml(serviceName)}</span>
               <span class="service-price">¥${formatPrice(priceNum)}</span>
             </div>
