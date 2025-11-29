@@ -1803,13 +1803,11 @@
         if (allSchedules.length === 0 || allWorkers.length === 0) {
           loadScheduleData().then(() => {
             setupScheduleView();
-            renderScheduleList();
-            renderScheduleCalendar();
+            filterAndRenderSchedules();
           });
         } else {
           setupScheduleView();
-          renderScheduleList();
-          renderScheduleCalendar();
+          filterAndRenderSchedules();
         }
       }
     }
