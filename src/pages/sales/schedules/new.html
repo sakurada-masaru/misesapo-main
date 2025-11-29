@@ -9,7 +9,7 @@
 
 <main id="main" class="container sales-schedules-new">
   <div class="page-header">
-    <a href="/sales/schedule.html" class="back-btn">
+    <a href="/sales/dashboard.html" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
     <h1 class="page-title">スケジュール作成</h1>
@@ -161,7 +161,7 @@
 
     <!-- フォームアクション -->
     <div class="form-actions">
-      <button type="button" class="btn btn-outline" onclick="window.location.href='/sales/schedule.html'">
+      <button type="button" class="btn btn-outline" onclick="window.location.href='/sales/dashboard.html'">
         <i class="fas fa-times"></i>
         キャンセル
       </button>
@@ -937,8 +937,8 @@
             }
 
             alert('スケジュール（仮押さえ）を作成しました。');
-            // スケジュール一覧にリダイレクト
-            window.location.href = '/sales/schedule.html';
+            // ダッシュボードのスケジュール画面にリダイレクト
+            window.location.href = '/sales/dashboard.html#schedule-list';
           } catch (error) {
             console.error('Error while creating schedule:', error);
             alert('スケジュールの作成中にエラーが発生しました。');

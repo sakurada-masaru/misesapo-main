@@ -59,7 +59,7 @@
         <div class="section">
           <div class="section-header">
             <h2><i class="fas fa-calendar"></i> 今週の予定</h2>
-            <a href="/sales/schedule.html" class="see-all">すべて見る</a>
+            <button type="button" class="see-all" onclick="switchScreen('schedule-list')">すべて見る</button>
     </div>
           <div class="schedule-list" id="schedule-list">
             <div class="loading">読み込み中...</div>
@@ -1829,7 +1829,7 @@
         const statusClass = normalized.status === 'completed' ? 'completed' : (normalized.status === 'draft' ? 'draft' : '');
         
         return `
-          <div class="schedule-item" onclick="location.href='/sales/schedule.html'">
+          <div class="schedule-item" onclick="switchScreen('schedule-list')">
             <div class="schedule-date ${s.isToday ? 'today' : ''}">
               <div class="day">${s.date.getDate()}</div>
               <div class="dow">${weekdays[s.date.getDay()]}</div>
