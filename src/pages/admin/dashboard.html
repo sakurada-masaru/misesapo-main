@@ -92,15 +92,6 @@
         <span class="topbar-date" id="header-date"></span>
       </div>
       <div class="topbar-right">
-        <button class="topbar-btn" id="open-notice-modal">
-          <i class="fas fa-bell"></i>
-          <span class="notification-dot"></span>
-        </button>
-        <div class="user-menu">
-          <div class="user-avatar">管</div>
-          <span>管理者</span>
-          <i class="fas fa-chevron-down"></i>
-        </div>
       </div>
     </header>
 
@@ -186,35 +177,6 @@
     </div>
   </div>
 
-  <!-- お知らせモーダル -->
-  <div class="modal-backdrop" id="notice-modal-backdrop">
-    <div class="modal">
-      <button class="modal-close" id="close-notice-modal"><i class="fas fa-times"></i></button>
-      <h3>お知らせを投稿</h3>
-      <form id="notice-form">
-        <div class="form-group">
-          <label>タイトル</label>
-          <input type="text" name="title" required placeholder="例：メンテナンスのお知らせ">
-        </div>
-        <div class="form-group">
-          <label>配信対象</label>
-          <select name="target">
-            <option value="all">全ユーザー</option>
-            <option value="customers">顧客</option>
-            <option value="staff">清掃スタッフ</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>本文</label>
-          <textarea name="body" required rows="4" placeholder="お知らせの内容"></textarea>
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn-cancel" id="cancel-notice">キャンセル</button>
-          <button type="submit" class="btn-primary">投稿する</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <style>
     :root {
@@ -413,63 +375,6 @@
       display: flex;
       align-items: center;
       gap: 16px;
-    }
-    .topbar-btn {
-      width: 44px;
-      height: 44px;
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      color: #6b7280;
-      font-size: 1.1rem;
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s;
-    }
-    .topbar-btn:hover {
-      background: #f3f4f6;
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .notification-dot {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 8px;
-      height: 8px;
-      background: #ef4444;
-      border-radius: 50%;
-    }
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 16px;
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 30px;
-      color: #111827;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .user-menu:hover {
-      background: #f3f4f6;
-    }
-    .user-avatar {
-      width: 32px;
-      height: 32px;
-      background: var(--primary);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 0.875rem;
-      color: #fff;
-    }
-    .user-menu i {
-      color: #6b7280;
-      font-size: 0.75rem;
     }
 
     /* Bento Grid */
@@ -1103,27 +1008,6 @@
     return date.toLocaleDateString('ja-JP');
   }
 
-  // モーダル
-  const modalBackdrop = document.getElementById('notice-modal-backdrop');
-  document.getElementById('open-notice-modal').addEventListener('click', () => {
-    modalBackdrop.classList.add('active');
-  });
-  document.getElementById('close-notice-modal').addEventListener('click', () => {
-    modalBackdrop.classList.remove('active');
-  });
-  document.getElementById('cancel-notice').addEventListener('click', () => {
-    modalBackdrop.classList.remove('active');
-  });
-  modalBackdrop.addEventListener('click', (e) => {
-    if (e.target === modalBackdrop) modalBackdrop.classList.remove('active');
-  });
-
-  document.getElementById('notice-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    alert('お知らせを投稿しました');
-    modalBackdrop.classList.remove('active');
-    e.target.reset();
-  });
 
   loadDashboard();
 
