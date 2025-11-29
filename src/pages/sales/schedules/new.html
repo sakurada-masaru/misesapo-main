@@ -432,12 +432,19 @@
       // 管理画面と共通のAPIエンドポイント
       const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
-      // データ読み込み
-      // サービスマスタは、まずAWSのサービスAPIから取得し、
-      // 失敗した場合にのみローカルJSON（service_items_data）をフォールバックとする
+      // サービスマスタの読み込み
+      // 1. まずローカルの service_items_data をデフォルトとしてセット
+      // 2. 可能であれば AWS のサービスAPIで上書き
       async function loadServicesFromApi() {
+        // デフォルト: ローカルのサービス定義
+        if (typeof service_items_data !== 'undefined') {
+          serviceItems = service_items_data;
+        } else {
+          serviceItems = [];
+        }
+
         try {
-          // AWSServicesAPI が読み込まれていればそれを利用
+          // AWSServicesAPI が利用可能なら、AWS側のサービス一覧で上書き
           if (window.AWSServicesAPI && window.AWSServicesAPI.loadServices) {
             const data = await window.AWSServicesAPI.loadServices();
             // APIの戻り値が配列または { items: [] } のどちらでも対応
@@ -445,19 +452,11 @@
               serviceItems = data;
             } else if (Array.isArray(data.items)) {
               serviceItems = data.items;
-            } else {
-              serviceItems = [];
             }
-          } else {
-            serviceItems = [];
           }
         } catch (error) {
-          console.warn('[sales/schedules/new] Failed to load services from API, using local service_items_data if available:', error);
-          if (typeof service_items_data !== 'undefined') {
-            serviceItems = service_items_data;
-          } else {
-            serviceItems = [];
-          }
+          console.warn('[sales/schedules/new] Failed to load services from API, fallback to local service_items_data:', error);
+          // 既に serviceItems にはローカルの値が入っているので、ここでは何もしない
         }
       }
 
