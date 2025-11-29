@@ -2411,6 +2411,170 @@
       }
     }
     
+    // PDF生成関数
+    async function generateEstimatePDF() {
+      const storeId = document.getElementById('estimate-store-case').value;
+      
+      if (!storeId) {
+        alert('顧客を選択してください');
+        return;
+      }
+      if (selectedServicesCase.length === 0) {
+        alert('サービスを選択してください');
+        return;
+      }
+
+      const store = allStores.find(s => s.id === storeId);
+      const customerName = store?.name || '不明';
+      
+      // 合計金額を計算（倍率を考慮）
+      const total = selectedServicesCase.reduce((sum, s) => {
+        const multiplier = s.multiplier || 1;
+        return sum + Math.round(s.price * multiplier);
+      }, 0);
+      
+      // 担当者名を取得
+      const userNameEl = document.getElementById('user-name');
+      const userName = userNameEl ? userNameEl.textContent.trim() : '営業担当';
+      
+      // 見積もり日付
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+      
+      // サービス一覧（倍率は除く、単価と小計のみ）
+      const serviceItems = selectedServicesCase.map(s => {
+        const multiplier = s.multiplier || 1;
+        const subtotal = Math.round(s.price * multiplier);
+        return {
+          name: s.name,
+          unitPrice: s.price,
+          subtotal: subtotal
+        };
+      });
+      
+      // PDF生成
+      try {
+        const docDefinition = {
+          pageSize: 'A4',
+          pageMargins: [40, 60, 40, 60],
+          content: [
+            // ヘッダー（ロゴとタイトル）
+            {
+              columns: [
+                {
+                  text: 'ミセサポ',
+                  fontSize: 20,
+                  bold: true,
+                  color: '#FF6BA6',
+                  width: 'auto'
+                },
+                {
+                  text: '仮見積もり書',
+                  fontSize: 18,
+                  bold: true,
+                  alignment: 'right',
+                  width: '*'
+                }
+              ],
+              marginBottom: 30
+            },
+            // 基本情報
+            {
+              text: '基本情報',
+              fontSize: 14,
+              bold: true,
+              marginBottom: 10,
+              color: '#333'
+            },
+            {
+              columns: [
+                {
+                  text: [
+                    { text: '顧客名：', bold: true },
+                    { text: customerName }
+                  ],
+                  width: '*'
+                },
+                {
+                  text: [
+                    { text: '見積もり日：', bold: true },
+                    { text: dateStr }
+                  ],
+                  width: 'auto'
+                }
+              ],
+              marginBottom: 5
+            },
+            {
+              text: [
+                { text: '担当者：', bold: true },
+                { text: userName }
+              ],
+              marginBottom: 20
+            },
+            // サービス一覧
+            {
+              text: 'サービス内容',
+              fontSize: 14,
+              bold: true,
+              marginBottom: 10,
+              color: '#333'
+            },
+            {
+              table: {
+                headerRows: 1,
+                widths: ['*', 100, 100],
+                body: [
+                  [
+                    { text: 'サービス名', style: 'tableHeader', bold: true },
+                    { text: '単価', style: 'tableHeader', bold: true, alignment: 'right' },
+                    { text: '小計', style: 'tableHeader', bold: true, alignment: 'right' }
+                  ],
+                  ...serviceItems.map(item => [
+                    { text: item.name },
+                    { text: `¥${item.unitPrice.toLocaleString()}`, alignment: 'right' },
+                    { text: `¥${item.subtotal.toLocaleString()}`, alignment: 'right' }
+                  ])
+                ]
+              },
+              marginBottom: 20
+            },
+            // 合計
+            {
+              columns: [
+                { text: '', width: '*' },
+                {
+                  width: 200,
+                  stack: [
+                    {
+                      text: [
+                        { text: '合計金額：', fontSize: 12, bold: true },
+                        { text: `¥${total.toLocaleString()}`, fontSize: 16, bold: true, color: '#FF6BA6' }
+                      ],
+                      alignment: 'right',
+                      marginBottom: 10
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          styles: {
+            tableHeader: {
+              fillColor: '#f3f4f6',
+              color: '#111827'
+            }
+          }
+        };
+        
+        pdfMake.createPdf(docDefinition).download(`見積もり_${customerName}_${dateStr.replace(/\//g, '')}.pdf`);
+        
+      } catch (error) {
+        console.error('PDF生成エラー:', error);
+        alert('PDFの生成に失敗しました: ' + error.message);
+      }
+    }
+
     function updateEstimateTotalCase() {
       const total = selectedServicesCase.reduce((sum, s) => {
         const multiplier = s.multiplier || 1;
