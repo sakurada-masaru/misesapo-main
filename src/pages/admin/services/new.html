@@ -973,6 +973,23 @@
           return;
         }
         
+      // DOMContentLoadedで初期化
+      function initImageSelect() {
+        imageUrlInput = document.getElementById('image_url');
+        imagePreview = document.getElementById('image_preview');
+        previewImg = imagePreview?.querySelector('img');
+        selectImageBtn = document.querySelector('.btn-select-image');
+        
+        if (!selectImageBtn) {
+          console.warn('[AdminServicesNew] Image select button not found');
+          return;
+        }
+        
+        if (!imageUrlInput) {
+          console.warn('[AdminServicesNew] Image URL input not found');
+          return;
+        }
+        
         // 画像選択ボタンをクリック
         selectImageBtn.addEventListener('click', function(e) {
           e.preventDefault();
