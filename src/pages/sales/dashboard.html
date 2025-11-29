@@ -179,28 +179,88 @@
         </div>
       </section>
 
-      <!-- 画面4: スケジュール作成（詳細ページへの導線に変更） -->
-      <section class="swipe-screen" data-screen="schedule">
+      <!-- 画面4: 案件管理（仮見積もりと仮押さえを統合） -->
+      <section class="swipe-screen" data-screen="case">
         <header class="screen-header">
-          <h1>スケジュール作成</h1>
+          <h1>案件管理</h1>
         </header>
         
-        <div class="form-container">
-          <div class="info-banner">
-            <i class="fas fa-info-circle"></i>
-            <span>新しい案件のスケジュールは、詳細入力画面から登録します。</span>
-      </div>
+        <div class="case-tabs">
+          <button class="case-tab active" data-case-tab="estimate">
+            <i class="fas fa-file-invoice"></i>
+            <span>仮見積</span>
+          </button>
+          <button class="case-tab" data-case-tab="schedule">
+            <i class="fas fa-calendar-plus"></i>
+            <span>仮押さえ</span>
+          </button>
+        </div>
 
-          <p style="margin-top:16px; margin-bottom:24px; color:#4b5563; font-size:0.9rem;">
-            営業用の詳細なスケジュール作成フォームに遷移します。<br>
-            顧客・店舗情報、清掃希望日、時間、作業内容（例: グリストラップ清掃・窓拭き）をまとめて登録できます。
-          </p>
+        <!-- 仮見積もりタブ -->
+        <div class="case-tab-content active" data-case-content="estimate">
+          <!-- 仮見積もり画面の内容をここに移動 -->
+          <div class="estimate-fixed-header">
+            <div class="estimate-total-bar">
+              <span class="total-label">合計</span>
+              <span class="total-value" id="estimate-total-case">¥0</span>
+            </div>
+            <div class="estimate-customer">
+              <select id="estimate-store-case">
+                <option value="">顧客を選択</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="estimate-scroll-content">
+            <div class="estimate-section">
+              <div class="section-label"><i class="fas fa-check-circle"></i> 選択中のサービス</div>
+              <div class="selected-services" id="selected-services-case">
+                <div class="empty-hint">
+                  <i class="fas fa-hand-pointer"></i>
+                  <span>下からサービスを選択</span>
+                </div>
+              </div>
+            </div>
 
-          <a class="btn-primary" href="/sales/schedules/new.html" style="width:100%; text-align:center; text-decoration:none;">
-            <i class="fas fa-calendar-plus"></i> 新規スケジュールを作成
-          </a>
-    </div>
-  </section>
+            <div class="estimate-section">
+              <div class="section-label"><i class="fas fa-list"></i> サービス一覧</div>
+              <div class="service-list" id="service-list-case">
+                <div class="loading">読み込み中...</div>
+              </div>
+            </div>
+
+            <div class="estimate-section">
+              <div class="section-label"><i class="fas fa-sticky-note"></i> メモ</div>
+              <textarea id="estimate-notes-case" rows="2" placeholder="補足事項があれば入力"></textarea>
+            </div>
+          </div>
+
+          <div class="estimate-fixed-footer">
+            <button class="btn-submit" onclick="submitEstimateCase()">
+              <i class="fas fa-paper-plane"></i> 見積もりを送信
+            </button>
+          </div>
+        </div>
+
+        <!-- 仮押さえタブ -->
+        <div class="case-tab-content" data-case-content="schedule">
+          <div class="form-container">
+            <div class="info-banner">
+              <i class="fas fa-info-circle"></i>
+              <span>新しい案件のスケジュールは、詳細入力画面から登録します。</span>
+            </div>
+
+            <p style="margin-top:16px; margin-bottom:24px; color:#4b5563; font-size:0.9rem;">
+              営業用の詳細なスケジュール作成フォームに遷移します。<br>
+              顧客・店舗情報、清掃希望日、時間、作業内容（例: グリストラップ清掃・窓拭き）をまとめて登録できます。
+            </p>
+
+            <a class="btn-primary" href="/sales/schedules/new.html" style="width:100%; text-align:center; text-decoration:none;">
+              <i class="fas fa-calendar-plus"></i> 新規スケジュールを作成
+            </a>
+          </div>
+        </div>
+      </section>
 
     </div>
     </div>
@@ -215,13 +275,13 @@
         <i class="fas fa-user-plus"></i>
       <span>顧客登録</span>
     </button>
-    <button class="tab" data-screen="estimate">
-        <i class="fas fa-file-invoice"></i>
-      <span>仮見積</span>
-    </button>
-    <button class="tab" data-screen="schedule">
-        <i class="fas fa-calendar-plus"></i>
-      <span>仮押さえ</span>
+    <a href="/sales/schedule.html" class="tab">
+        <i class="fas fa-calendar"></i>
+      <span>スケジュール</span>
+    </a>
+    <button class="tab" data-screen="case">
+        <i class="fas fa-briefcase"></i>
+      <span>案件管理</span>
     </button>
   </nav>
 
@@ -818,6 +878,7 @@
       cursor: pointer;
       padding: 8px 4px;
       transition: color 0.2s;
+      text-decoration: none;
     }
     .tab i {
       font-size: 1.25rem;
@@ -832,6 +893,54 @@
     }
     .bottom-tabs .tab:active {
       opacity: 0.7;
+    }
+    .bottom-tabs .tab:hover {
+      opacity: 0.8;
+    }
+
+    /* 案件管理タブ */
+    .case-tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      padding: 0 16px;
+    }
+    .case-tab {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .case-tab i {
+      font-size: 1rem;
+    }
+    .case-tab.active {
+      color: var(--primary, #ff679c);
+      border-bottom-color: var(--primary, #ff679c);
+      font-weight: 600;
+    }
+    .case-tab-content {
+      display: none;
+      height: calc(100vh - 64px - 48px); /* ヘッダーとタブの高さを引く */
+      overflow-y: auto;
+    }
+    .case-tab-content.active {
+      display: flex;
+      flex-direction: column;
+    }
+    [data-screen="case"] {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
 
     @media (min-width: 600px) {
@@ -1052,8 +1161,19 @@
       const scheduleOptions = '<option value="">選択してください</option>' +
         allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
         
-      document.getElementById('estimate-store').innerHTML = estimateOptions;
-      document.getElementById('schedule-store').innerHTML = scheduleOptions;
+      const estimateStoreEl = document.getElementById('estimate-store');
+      if (estimateStoreEl) {
+        estimateStoreEl.innerHTML = estimateOptions;
+      }
+      const scheduleStoreEl = document.getElementById('schedule-store');
+      if (scheduleStoreEl) {
+        scheduleStoreEl.innerHTML = scheduleOptions;
+      }
+      // 案件管理画面用のセレクトボックス
+      const estimateStoreCaseEl = document.getElementById('estimate-store-case');
+      if (estimateStoreCaseEl) {
+        estimateStoreCaseEl.innerHTML = estimateOptions;
+      }
     }
 
     async function loadServiceItems() {
@@ -1072,11 +1192,16 @@
           price: parsePrice(item.price)
         }));
         renderServiceList();
+        renderServiceListCase(); // 案件管理画面用も更新
       } catch (e) {
         console.error('Failed to load service items:', e);
         const serviceListEl = document.getElementById('service-list');
         if (serviceListEl) {
           serviceListEl.innerHTML = '<div class="empty-state">サービスの読み込みに失敗しました</div>';
+        }
+        const serviceListCaseEl = document.getElementById('service-list-case');
+        if (serviceListCaseEl) {
+          serviceListCaseEl.innerHTML = '<div class="empty-state">サービスの読み込みに失敗しました</div>';
         }
       }
     }
@@ -1386,6 +1511,179 @@
     }
 
     // 旧「スケジュール仮押さえ」機能は、新規スケジュール作成ページに統合したため未使用
+
+    // 案件管理画面用の仮見積もり関数
+    let selectedServicesCase = [];
+    
+    async function submitEstimateCase() {
+      const storeId = document.getElementById('estimate-store-case').value;
+      const notes = document.getElementById('estimate-notes-case').value;
+      
+      if (!storeId) {
+        alert('顧客を選択してください');
+        return;
+      }
+      if (selectedServicesCase.length === 0) {
+        alert('サービスを選択してください');
+        return;
+      }
+
+      const store = allStores.find(s => s.id === storeId);
+      const total = selectedServicesCase.reduce((sum, s) => {
+        const multiplier = s.multiplier || 1;
+        return sum + Math.round(s.price * multiplier);
+      }, 0);
+      
+      // 見積もりデータを作成
+      const estimateData = {
+        store_id: storeId,
+        store_name: store?.name || '不明',
+        items: selectedServicesCase.map(s => ({
+          id: s.id,
+          name: s.name,
+          base_price: s.price,
+          multiplier: s.multiplier || 1,
+          price: Math.round(s.price * (s.multiplier || 1))
+        })),
+        total: total,
+        notes: notes,
+        status: 'pending',
+        created_by: 'sales',
+        created_at: new Date().toISOString()
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/estimates`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(estimateData)
+        });
+
+        if (!res.ok) throw new Error('送信に失敗しました');
+
+        const result = await res.json();
+        
+        alert(`仮見積もりを経理担当に送信しました！\n\n見積もり番号: ${result.id}\n店舗: ${store?.name}\n合計: ¥${total.toLocaleString()}\n\n経理担当が確認後、本見積もりを作成します。`);
+        
+        // リセット
+        selectedServicesCase = [];
+        document.getElementById('estimate-store-case').value = '';
+        document.getElementById('estimate-notes-case').value = '';
+        renderSelectedServicesCase();
+        renderServiceListCase();
+        updateEstimateTotalCase();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('送信に失敗しました: ' + error.message);
+      }
+    }
+    
+    function renderServiceListCase() {
+      const container = document.getElementById('service-list-case');
+      if (!container) return;
+      
+      if (serviceItems.length === 0) {
+        container.innerHTML = '<div class="empty-state">サービスがありません</div>';
+        return;
+      }
+
+      container.innerHTML = serviceItems.map(item => {
+        const isSelected = selectedServicesCase.some(s => s.id === item.id);
+        return `
+          <div class="service-item ${isSelected ? 'selected' : ''}" onclick="toggleServiceCase('${item.id}')">
+            <span class="service-name">${escapeHtml(item.name)}</span>
+            <span class="service-price">¥${item.price.toLocaleString()}</span>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function toggleServiceCase(id) {
+      const item = serviceItems.find(s => s.id === id);
+      if (!item) return;
+
+      const index = selectedServicesCase.findIndex(s => s.id === id);
+      if (index >= 0) {
+        selectedServicesCase.splice(index, 1);
+      } else {
+        selectedServicesCase.push({ ...item, multiplier: 1 });
+      }
+
+      renderSelectedServicesCase();
+      renderServiceListCase();
+      updateEstimateTotalCase();
+    }
+    
+    function renderSelectedServicesCase() {
+      const container = document.getElementById('selected-services-case');
+      if (!container) return;
+      
+      if (selectedServicesCase.length === 0) {
+        container.innerHTML = '<div class="empty-hint"><i class="fas fa-hand-pointer"></i><span>下からサービスを選択</span></div>';
+        return;
+      }
+        
+      const multipliers = [1, 1.5, 2, 3];
+
+      container.innerHTML = selectedServicesCase.map(item => {
+        const currentMultiplier = item.multiplier || 1;
+        const calculatedPrice = Math.round(item.price * currentMultiplier);
+        
+        return `
+          <div class="selected-item">
+            <div class="selected-item-main">
+              <div class="selected-item-info">
+                <div class="selected-item-name">${escapeHtml(item.name)}</div>
+                <div class="selected-item-base">¥${item.price.toLocaleString()} × ${currentMultiplier}</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="selected-item-price">¥${calculatedPrice.toLocaleString()}</span>
+                <button class="selected-item-remove" onclick="removeServiceCase('${item.id}')">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            <div class="multiplier-row">
+              <span style="font-size: 0.7rem; color: #666; margin-right: 8px;">倍率:</span>
+              ${multipliers.map(m => `
+                <button class="multiplier-btn ${currentMultiplier === m ? 'active' : ''}" 
+                        onclick="setMultiplierCase('${item.id}', ${m})">
+                  ${m}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function removeServiceCase(id) {
+      selectedServicesCase = selectedServicesCase.filter(s => s.id !== id);
+      renderSelectedServicesCase();
+      renderServiceListCase();
+      updateEstimateTotalCase();
+    }
+    
+    function setMultiplierCase(id, multiplier) {
+      const item = selectedServicesCase.find(s => s.id === id);
+      if (item) {
+        item.multiplier = multiplier;
+        renderSelectedServicesCase();
+        updateEstimateTotalCase();
+      }
+    }
+    
+    function updateEstimateTotalCase() {
+      const total = selectedServicesCase.reduce((sum, s) => {
+        const multiplier = s.multiplier || 1;
+        return sum + Math.round(s.price * multiplier);
+      }, 0);
+      
+      const totalEl = document.getElementById('estimate-total-case');
+      if (totalEl) {
+        totalEl.textContent = `¥${total.toLocaleString()}`;
+      }
+    }
 
     function escapeHtml(str) {
       if (!str) return '';
