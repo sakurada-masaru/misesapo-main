@@ -604,8 +604,14 @@
   async function loadEstimates() {
     try {
       const res = await fetch(`${API_BASE}/estimates`);
-      if (!res.ok) throw new Error('Failed to load');
-      allEstimates = await res.json();
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('API Error:', res.status, errorText);
+        throw new Error(`Failed to load: ${res.status} ${errorText}`);
+      }
+      const data = await res.json();
+      // APIレスポンスが {estimates: [], count: 0} の形式の場合
+      allEstimates = data.estimates || data || [];
       renderEstimates();
       updateStats();
     } catch (e) {
@@ -614,6 +620,7 @@
         <tr><td colspan="6"><div class="empty-state">
           <i class="fas fa-exclamation-circle"></i>
           <p>データの読み込みに失敗しました</p>
+          <p style="font-size: 0.8rem; color: #666; margin-top: 8px;">${e.message}</p>
         </div></td></tr>`;
     }
   }
