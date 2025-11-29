@@ -750,23 +750,11 @@
     
     // 画像選択機能
     (function() {
-      // DOMContentLoadedで初期化を確実に実行
-      function initImageSelect() {
-        const imageUrlInput = document.getElementById('image_url');
-        const imagePreview = document.getElementById('image_preview');
-        const previewImg = imagePreview?.querySelector('img');
-        const selectImageBtn = document.querySelector('.btn-select-image');
-        let imageSelectModal = null;
-        
-        if (!selectImageBtn) {
-          console.warn('[AdminServicesNew] Image select button not found');
-          return;
-        }
-        
-        if (!imageUrlInput) {
-          console.warn('[AdminServicesNew] Image URL input not found');
-          return;
-        }
+      const imageUrlInput = document.getElementById('image_url');
+      const imagePreview = document.getElementById('image_preview');
+      const previewImg = imagePreview?.querySelector('img');
+      const selectImageBtn = document.querySelector('.btn-select-image');
+      let imageSelectModal = null;
       
       // ベースパスを取得（GitHub Pages対応）
       function getBasePath() {
@@ -847,7 +835,7 @@
         
         // ESCキーで閉じる
         document.addEventListener('keydown', function(e) {
-          if (e.key === 'Escape' && imageSelectModal.classList.contains('open')) {
+          if (e.key === 'Escape' && imageSelectModal && imageSelectModal.classList.contains('open')) {
             closeImageSelectModal();
           }
         });
@@ -862,9 +850,11 @@
         if (!imageSelectModal) {
           createImageSelectModal();
         }
-        imageSelectModal.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        loadImagesForSelect();
+        if (imageSelectModal) {
+          imageSelectModal.classList.add('open');
+          document.body.style.overflow = 'hidden';
+          loadImagesForSelect();
+        }
       }
       
       // 画像選択モーダルを閉じる
@@ -916,7 +906,6 @@
             grid.innerHTML = filteredImages.map(img => {
               const path = typeof img === 'string' ? img : img.path;
               const fileName = path.split('/').pop();
-              const fileExt = fileName.split('.').pop().toLowerCase();
               const resolvedPath = resolvePath(path);
               
               return `
@@ -972,6 +961,18 @@
         }
       }
       
+      // DOMContentLoadedで初期化
+      function initImageSelect() {
+        if (!selectImageBtn) {
+          console.warn('[AdminServicesNew] Image select button not found');
+          return;
+        }
+        
+        if (!imageUrlInput) {
+          console.warn('[AdminServicesNew] Image URL input not found');
+          return;
+        }
+        
         // 画像選択ボタンをクリック
         selectImageBtn.addEventListener('click', function(e) {
           e.preventDefault();
