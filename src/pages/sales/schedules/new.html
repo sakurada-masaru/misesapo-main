@@ -425,16 +425,60 @@
   <script>
     (function() {
       // グローバル変数
-      let clients = [];
-      let serviceItems = [];
-      let cleaningItems = [];
+      let clients = [];       // 営業画面で使う「顧客・店舗」リスト
+      let serviceItems = [];  // サービスマスタ
+      let cleaningItems = []; // 画面上の作業項目
+
+      // 管理画面と共通のAPIエンドポイント
+      const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
       // データ読み込み
-      if (typeof clients_data !== 'undefined' && clients_data.clients) {
-        clients = clients_data.clients;
-      }
+      // service_items は従来どおりローカルJSONから
       if (typeof service_items_data !== 'undefined') {
         serviceItems = service_items_data;
+      }
+
+      // 顧客・店舗データは、可能であればバックエンドAPIから取得し、
+      // 失敗した場合のみ既存の clients_data（スタブ）をフォールバックとして使用する
+      async function loadClientsFromApi() {
+        try {
+          const [storesRes, rawClientsRes, rawBrandsRes] = await Promise.all([
+            fetch(`${API_BASE}/stores`),
+            fetch(`${API_BASE}/clients`).catch(() => ({ ok: false })),
+            fetch(`${API_BASE}/brands`).catch(() => ({ ok: false }))
+          ]);
+
+          const stores = await storesRes.json();
+          const allClients = rawClientsRes && rawClientsRes.ok ? await rawClientsRes.json() : [];
+          const allBrands  = rawBrandsRes && rawBrandsRes.ok ? await rawBrandsRes.json() : [];
+
+          function getClientName(clientId) {
+            const c = allClients.find(x => x.id === clientId);
+            return c ? c.name : '';
+          }
+
+          function getBrandName(brandId) {
+            const b = allBrands.find(x => x.id === brandId);
+            return b ? b.name : '';
+          }
+
+          // stores から営業画面用の clients 配列を組み立てる
+          clients = stores.map(store => ({
+            id: store.id,
+            company_name: getClientName(store.client_id) || store.group_id || store.name || '',
+            brand_name: getBrandName(store.brand_id) || '',
+            store_name: store.name || '',
+            contact_person: store.contact_person || '',
+            email: store.email || store.report_email || '',
+          }));
+        } catch (error) {
+          console.warn('[sales/schedules/new] Failed to load clients from API, using local clients_data if available:', error);
+          if (typeof clients_data !== 'undefined' && clients_data.clients) {
+            clients = clients_data.clients;
+          } else {
+            clients = [];
+          }
+        }
       }
 
       // 顧客選択ドロップダウンを初期化
@@ -566,7 +610,10 @@
       // フォーム送信
       const form = document.getElementById('schedule-form');
       if (form) {
-        form.addEventListener('submit', function(e) {
+        // 管理画面と同じAPIエンドポイント
+        const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
+        form.addEventListener('submit', async function(e) {
           e.preventDefault();
 
           const formData = new FormData(form);
@@ -601,74 +648,73 @@
             date: formData.get('date'),
             time_slot: timeSlot,
             order_type: formData.get('order_type'),
-            client_id: formData.get('client_id'),
-            client_name: formData.get('client_name'),
-            store_name: formData.get('store_name'),
+            client_id: formData.get('client_id') || null,
+            client_name: formData.get('client_name') || '',
+            store_name: formData.get('store_name') || '',
             address: formData.get('address') || '',
             phone: formData.get('phone') || '',
             email: formData.get('email') || '',
             cleaning_items: cleaningItemsData,
             notes: formData.get('notes') || '',
-            status: 'pending' // 承認待ち
+            // ステータス: 仮押さえ（管理画面側では draft を仮押さえとして扱う）
+            status: 'draft'
           };
 
-          // TODO: 実際のAPI呼び出し（現在はモック）
-          console.log('Schedule data:', scheduleData);
+          console.log('Schedule data (to POST):', scheduleData);
 
-          // モックAPI呼び出し
-          // 実際のAPIが完成したら、以下のように変更:
-          /*
-          const API_BASE_URL = 'https://your-api-gateway-url.execute-api.ap-northeast-1.amazonaws.com/prod';
-          fetch(`${API_BASE_URL}/api/schedules`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await getFirebaseIdToken()}`
-            },
-            body: JSON.stringify(scheduleData)
-          })
-          .then(response => response.json())
-          .then(data => {
-            alert('スケジュールを作成しました');
+          try {
+            const response = await fetch(`${API_BASE}/schedules`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(scheduleData)
+            });
+
+            if (!response.ok) {
+              const text = await response.text().catch(() => '');
+              console.error('Failed to create schedule:', response.status, text);
+              alert('スケジュールの作成に失敗しました。\n時間をおいて再度お試しください。');
+              return;
+            }
+
+            alert('スケジュール（仮押さえ）を作成しました。');
+            // スケジュール一覧にリダイレクト
             window.location.href = '/sales/schedule.html';
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            alert('スケジュールの作成に失敗しました');
-          });
-          */
-
-          // モック: 成功メッセージを表示
-          alert('スケジュールを作成しました。\n（現在はモックです。実際のバックエンド連携は実装予定です。）');
-          
-          // スケジュール一覧にリダイレクト
-          window.location.href = '/sales/schedule.html';
+          } catch (error) {
+            console.error('Error while creating schedule:', error);
+            alert('スケジュールの作成中にエラーが発生しました。');
+          }
         });
       }
 
       // 初期化
-      initClientSelect();
-      
-      // 最初の作業項目を追加
-      addCleaningItem();
+      (async function initPage() {
+        // 顧客・店舗データをAPI（またはローカルJSON）から読み込み
+        await loadClientsFromApi();
+        initClientSelect();
 
-      // 「項目を追加」ボタン
-      const addButton = document.getElementById('add-cleaning-item');
-      if (addButton) {
-        addButton.addEventListener('click', function() {
-          addCleaningItem();
-        });
-      }
+        // 最初の作業項目を追加
+        addCleaningItem();
 
-      // 今日の日付をデフォルトに設定
-      const dateInput = document.getElementById('schedule-date');
-      if (dateInput) {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        dateInput.value = `${year}-${month}-${day}`;
-      }
+        // 「項目を追加」ボタン
+        const addButton = document.getElementById('add-cleaning-item');
+        if (addButton) {
+          addButton.addEventListener('click', function() {
+            addCleaningItem();
+          });
+        }
+
+        // 今日の日付をデフォルトに設定
+        const dateInput = document.getElementById('schedule-date');
+        if (dateInput) {
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          dateInput.value = `${year}-${month}-${day}`;
+        }
+      })();
     })();
   </script>
 </main>

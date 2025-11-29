@@ -179,50 +179,26 @@
         </div>
       </section>
 
-      <!-- 画面4: 仮押さえ -->
+      <!-- 画面4: スケジュール作成（詳細ページへの導線に変更） -->
       <section class="swipe-screen" data-screen="schedule">
         <header class="screen-header">
-          <h1>スケジュール仮押さえ</h1>
+          <h1>スケジュール作成</h1>
         </header>
         
         <div class="form-container">
           <div class="info-banner">
             <i class="fas fa-info-circle"></i>
-            <span>仮押さえ後、管理者が確認して清掃員をアサインします</span>
+            <span>新しい案件のスケジュールは、詳細入力画面から登録します。</span>
       </div>
 
-          <div class="form-group">
-            <label>顧客（店舗） <span class="req">*</span></label>
-            <select id="schedule-store" required>
-              <option value="">選択してください</option>
-            </select>
-        </div>
-          <div class="form-row">
-            <div class="form-group half">
-              <label>希望日 <span class="req">*</span></label>
-              <input type="date" id="schedule-date" required />
-        </div>
-            <div class="form-group half">
-              <label>希望時間 <span class="req">*</span></label>
-              <input type="time" id="schedule-time" required />
-      </div>
-        </div>
-          <div class="form-group">
-            <label>作業時間</label>
-            <select id="schedule-duration">
-              <option value="60">60分</option>
-              <option value="90">90分</option>
-              <option value="120">120分</option>
-              <option value="180">180分</option>
-            </select>
-        </div>
-          <div class="form-group">
-            <label>作業内容・要望</label>
-            <textarea id="schedule-notes" rows="3" placeholder="清掃内容や注意事項など"></textarea>
-      </div>
-          <button class="btn-primary" onclick="submitSchedule()">
-            <i class="fas fa-calendar-plus"></i> 仮押さえする
-          </button>
+          <p style="margin-top:16px; margin-bottom:24px; color:#4b5563; font-size:0.9rem;">
+            営業用の詳細なスケジュール作成フォームに遷移します。<br>
+            顧客・店舗情報、清掃希望日、時間、作業内容（例: グリストラップ清掃・窓拭き）をまとめて登録できます。
+          </p>
+
+          <a class="btn-primary" href="/sales/schedules/new.html" style="width:100%; text-align:center; text-decoration:none;">
+            <i class="fas fa-calendar-plus"></i> 新規スケジュールを作成
+          </a>
     </div>
   </section>
 
@@ -1409,52 +1385,7 @@
       }
     }
 
-    // スケジュール仮押さえ
-    async function submitSchedule() {
-      const storeId = document.getElementById('schedule-store').value;
-      const date = document.getElementById('schedule-date').value;
-      const time = document.getElementById('schedule-time').value;
-      
-      if (!storeId || !date || !time) {
-        alert('必須項目を入力してください');
-        return;
-      }
-
-      const data = {
-        id: DataUtils.IdUtils.generateSchedule(),
-        store_id: storeId,
-        worker_id: null,
-        scheduled_date: date,
-        scheduled_time: time,
-        duration_minutes: parseInt(document.getElementById('schedule-duration').value),
-        status: 'draft',
-        notes: document.getElementById('schedule-notes').value,
-        created_by: 'sales',
-        created_at: new Date().toISOString()
-      };
-
-      try {
-        const res = await fetch(`${API_BASE}/schedules`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        
-        if (res.ok) {
-          alert('仮押さえを登録しました\n管理者が確認後、確定されます');
-          document.getElementById('schedule-store').value = '';
-          document.getElementById('schedule-date').value = '';
-          document.getElementById('schedule-time').value = '';
-          document.getElementById('schedule-notes').value = '';
-          await loadData();
-        } else {
-          throw new Error('Failed');
-        }
-      } catch (e) {
-        console.error(e);
-        alert('登録に失敗しました');
-      }
-    }
+    // 旧「スケジュール仮押さえ」機能は、新規スケジュール作成ページに統合したため未使用
 
     function escapeHtml(str) {
       if (!str) return '';

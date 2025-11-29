@@ -59,6 +59,7 @@ SERVICE_ITEMS_JSON = DATA_DIR / "service_items.json"
 BROWSER_CHANGES_LOG = DATA_DIR / "browser_changes.json"
 STAFF_USERS_JSON = DATA_DIR / "staff_users.json"
 CLEANING_MANUAL_JSON = DATA_DIR / "cleaning-manual.json"
+WIKI_ENTRIES_JSON = DATA_DIR / "wiki_entries.json"
 BUILD_SCRIPT = ROOT / "scripts" / "build.py"
 IMAGES_SERVICE_DIR = PUBLIC / "images-service"
 
@@ -232,6 +233,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         elif path == '/api/training-videos':
             # 研修動画データを返す
             self.handle_training_videos_get()
+        elif path == '/api/wiki':
+            # WIKIデータを返す
+            self.handle_wiki_get()
         elif path == '/api/auth/me':
             # 現在のユーザー情報を取得
             self.handle_auth_me()
@@ -831,6 +835,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         elif path == '/api/training-videos':
             # 研修動画データを保存
             self.handle_training_videos_put()
+        elif path == '/api/wiki':
+            # WIKIデータを保存
+            self.handle_wiki_put()
         elif path.startswith('/api/services/'):
             # サービス更新（既存の処理）
             path_parts = self.path.split('/')
@@ -1406,6 +1413,58 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             })
         except Exception as e:
             self.send_error(500, f"Failed to save training videos: {e}")
+    
+    def handle_wiki_get(self):
+        """WIKIデータを取得"""
+        try:
+            if WIKI_ENTRIES_JSON.exists():
+                with open(WIKI_ENTRIES_JSON, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                self.send_json_response(data)
+            else:
+                # ファイルが存在しない場合は空のデータを返す
+                self.send_json_response({
+                    'entries': [],
+                    'categories': []
+                })
+        except Exception as e:
+            self.send_error(500, f"Failed to load WIKI data: {e}")
+    
+    def handle_wiki_put(self):
+        """WIKIデータを保存"""
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            data = json.loads(body.decode('utf-8'))
+            
+            # JSONファイルを保存
+            DATA_DIR.mkdir(parents=True, exist_ok=True)
+            
+            with open(WIKI_ENTRIES_JSON, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            # S3にも保存（設定されている場合）
+            if USE_S3 and s3_client:
+                try:
+                    s3_client.put_object(
+                        Bucket=AWS_S3_BUCKET_NAME,
+                        Key='wiki/wiki_entries.json',
+                        Body=json.dumps(data, ensure_ascii=False, indent=2),
+                        ContentType='application/json'
+                    )
+                    print(f"[DevServer] WIKI data saved to S3: s3://{AWS_S3_BUCKET_NAME}/wiki/wiki_entries.json")
+                except Exception as s3_error:
+                    print(f"[DevServer] Warning: Failed to save to S3: {s3_error}")
+            
+            # ビルドを実行（非同期）
+            self.run_build_async()
+            
+            self.send_json_response({
+                'status': 'success',
+                'message': 'WIKIデータを保存しました。'
+            })
+        except Exception as e:
+            self.send_error(500, f"Failed to save WIKI data: {e}")
     
     def handle_cleaning_manual_upload_image(self):
         """画像をアップロード（multipart/form-data）"""

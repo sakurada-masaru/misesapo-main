@@ -23,6 +23,7 @@ ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*').split(',')
 DATA_KEY = 'cleaning-manual/data.json'
 DRAFT_KEY = 'cleaning-manual/draft.json'
 SERVICES_KEY = 'services/service_items.json'
+WIKI_KEY = 'wiki/wiki_entries.json'
 
 def lambda_handler(event, context):
     """
@@ -135,6 +136,12 @@ def lambda_handler(event, context):
             # 管理ダッシュボードの統計データを取得
             if method == 'GET':
                 return get_dashboard_stats(headers)
+        elif normalized_path == '/wiki':
+            # WIKIデータの読み書き
+            if method == 'GET':
+                return get_wiki_data(headers)
+            elif method == 'PUT' or method == 'POST':
+                return save_wiki_data(event, headers)
         else:
             # デバッグ: パスが一致しなかった場合
             print(f"DEBUG: Path not matched. normalized_path={normalized_path}, original_path={path}")
@@ -315,6 +322,90 @@ def save_cleaning_manual_data(event, headers, is_draft=False):
         }
     except Exception as e:
         print(f"Error saving to S3: {str(e)}")
+        raise
+
+# ==================== WIKI管理 ====================
+
+def get_wiki_data(headers):
+    """
+    WIKIデータを取得
+    """
+    try:
+        # S3からデータを取得
+        response = s3_client.get_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=WIKI_KEY
+        )
+        data = json.loads(response['Body'].read().decode('utf-8'))
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(data)
+        }
+    except s3_client.exceptions.NoSuchKey:
+        # ファイルが存在しない場合は初期データを返す
+        initial_data = {
+            'entries': [],
+            'categories': []
+        }
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(initial_data)
+        }
+    except Exception as e:
+        print(f"Error reading WIKI data from S3: {str(e)}")
+        raise
+
+def save_wiki_data(event, headers):
+    """
+    WIKIデータを保存
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        # JSONをパース
+        if isinstance(body, str):
+            data = json.loads(body)
+        else:
+            data = json.loads(body.decode('utf-8'))
+        
+        # メタデータを追加
+        if 'updatedAt' not in data:
+            data['updatedAt'] = datetime.now().isoformat()
+        
+        # S3に保存
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=WIKI_KEY,
+            Body=json.dumps(data, ensure_ascii=False, indent=2),
+            ContentType='application/json'
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'WIKIデータを保存しました'
+            })
+        }
+    except json.JSONDecodeError as e:
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'Invalid JSON',
+                'message': str(e)
+            })
+        }
+    except Exception as e:
+        print(f"Error saving WIKI data to S3: {str(e)}")
         raise
 
 # ==================== 管理ダッシュボード統計 ====================

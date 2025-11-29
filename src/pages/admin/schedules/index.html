@@ -60,10 +60,6 @@
         <i class="fas fa-chart-bar"></i>
         <span class="nav-label">分析</span>
       </a>
-      <a href="/admin/cleaning-manual.html" class="nav-item">
-        <i class="fas fa-book"></i>
-        <span class="nav-label">マニュアル</span>
-      </a>
       <a href="/admin/images/" class="nav-item">
         <i class="fas fa-images"></i>
         <span class="nav-label">メディア</span>
@@ -1073,9 +1069,18 @@
   }
 
   function populateWorkerSelects() {
-    const options = allWorkers.map(w => `<option value="${w.id}">${escapeHtml(w.name || '')}</option>`).join('');
+    // 清掃員のみを抽出（role が staff のユーザー）
+    let cleaners = allWorkers.filter(w => (w.role || '').toLowerCase() === 'staff');
+
+    // 万が一 role 情報が無い / staff が一人もいない場合は、従来どおり全件を使う
+    if (cleaners.length === 0) {
+      cleaners = allWorkers;
+    }
+
+    const options = cleaners.map(w => `<option value="${w.id}">${escapeHtml(w.name || '')}</option>`).join('');
     document.getElementById('worker-filter').innerHTML = '<option value="">全員</option>' + options;
-    document.getElementById('schedule-worker').innerHTML = '<option value="">未割当</option>' + options;
+    // 担当清掃員: 「全員（オープン）」を選ぶと特定の清掃員に割り当てずオープンな状態にできる
+    document.getElementById('schedule-worker').innerHTML = '<option value="">全員（オープン）</option>' + options;
   }
 
   // フィルタリング
