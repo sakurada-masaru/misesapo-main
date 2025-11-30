@@ -803,13 +803,41 @@
               <div class="sitemap-node">
                 <div class="sitemap-item">
                   <span class="sitemap-item-name">
-                    <strong>② 顧客登録</strong>（スワイプ2画面目）
-                    <span class="feature-badge">企業名・ブランド名・店舗名・住所・連絡先の新規登録</span>
+                    <strong>② 顧客管理</strong>（スワイプ2画面目）
+                    <span class="feature-badge">顧客登録タブ・顧客一覧タブ</span>
                   </span>
                   <code class="sitemap-item-path">/sales/dashboard.html#client</code>
                   <div class="sitemap-item-badges">
                     <span class="role-badge role-sales">営業</span>
                     <span class="status-badge status implemented">実装済み</span>
+                  </div>
+                </div>
+                <div class="sitemap-children">
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name">
+                        顧客登録タブ
+                        <span class="feature-badge">企業名・ブランド名・店舗名・住所・連絡先の新規登録</span>
+                      </span>
+                      <code class="sitemap-item-path">/sales/dashboard.html#client (registerタブ)</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-sales">営業</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name">
+                        顧客一覧タブ
+                        <span class="feature-badge">検索・フィルター・統計表示・顧客詳細へのリンク</span>
+                      </span>
+                      <code class="sitemap-item-path">/sales/dashboard.html#client (listタブ)</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-sales">営業</span>
+                        <span class="status-badge status implemented">実装済み</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -987,23 +1015,11 @@
           </div>
           <div class="sitemap-node">
             <div class="sitemap-item">
-              <span class="sitemap-item-name"><a href="/sales/schedule.html">スケジュール管理（Googleカレンダー風）</a><span class="new-badge">リニューアル</span></span>
-              <code class="sitemap-item-path">/sales/schedule.html</code>
+              <span class="sitemap-item-name"><a href="/sales/schedules/new.html">スケジュール作成</a><span class="system-badge">要システム</span></span>
+              <code class="sitemap-item-path">/sales/schedules/new.html</code>
               <div class="sitemap-item-badges">
                 <span class="role-badge role-sales">営業</span>
-                <span class="status-badge status implemented">実装済み</span>
-              </div>
-            </div>
-            <div class="sitemap-children">
-              <div class="sitemap-node">
-                <div class="sitemap-item">
-                  <span class="sitemap-item-name"><a href="/sales/schedules/new.html">スケジュール作成</a><span class="system-badge">要システム</span></span>
-                  <code class="sitemap-item-path">/sales/schedules/new.html</code>
-                  <div class="sitemap-item-badges">
-                    <span class="role-badge role-sales">営業</span>
-                    <span class="status-badge status partial">部分実装</span>
-                  </div>
-                </div>
+                <span class="status-badge status partial">部分実装</span>
               </div>
             </div>
           </div>
@@ -1237,7 +1253,8 @@
         <ul class="summary-task-list">
           <li><strong>3層構造の顧客管理</strong>: 企業 → ブランド → 店舗の階層構造を実装</li>
           <li><strong>顧客詳細ページ</strong>: 企業詳細・ブランド詳細・店舗詳細（マイページ風レイアウト）</li>
-          <li><strong>営業ダッシュボード</strong>: スワイプUIで4画面（アクティビティ/顧客登録/スケジュール/案件管理）</li>
+          <li><strong>営業ダッシュボード</strong>: スワイプUIで4画面（アクティビティ/顧客管理/スケジュール/案件管理）</li>
+          <li><strong>顧客管理画面</strong>: 顧客登録タブと顧客一覧タブ（検索・フィルター・統計表示）を統合</li>
           <li><strong>案件管理画面</strong>: 仮見積もりタブ（サービス選択・PDF出力）と仮押さえタブを統合</li>
           <li><strong>見積もり管理</strong>: 仮見積もり作成→経理承認フロー</li>
           <li><strong>スケジュール管理</strong>: 仮押さえ→管理者承認フロー</li>
