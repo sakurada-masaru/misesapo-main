@@ -2594,21 +2594,27 @@
       // 表示切り替えボタン
       const viewToggleEl = document.getElementById('schedule-view-toggle');
       if (viewToggleEl) {
-        viewToggleEl.addEventListener('click', () => {
-          if (scheduleCurrentView === 'list') {
-            scheduleCurrentView = 'calendar';
-            document.getElementById('schedule-list-view').style.display = 'none';
-            document.getElementById('schedule-calendar-view').style.display = 'block';
-            viewToggleEl.innerHTML = '<i class="fas fa-list"></i>';
-            renderScheduleCalendar();
-          } else {
-            scheduleCurrentView = 'list';
-            document.getElementById('schedule-list-view').style.display = 'block';
-            document.getElementById('schedule-calendar-view').style.display = 'none';
-            viewToggleEl.innerHTML = '<i class="fas fa-calendar"></i>';
-            renderScheduleList();
-          }
-        });
+        // SP版ではカレンダー表示ボタンを非表示
+        const isMobile = window.innerWidth < 600;
+        if (isMobile) {
+          viewToggleEl.style.display = 'none';
+        } else {
+          viewToggleEl.addEventListener('click', () => {
+            if (scheduleCurrentView === 'list') {
+              scheduleCurrentView = 'calendar';
+              document.getElementById('schedule-list-view').style.display = 'none';
+              document.getElementById('schedule-calendar-view').style.display = 'block';
+              viewToggleEl.innerHTML = '<i class="fas fa-list"></i>';
+              renderScheduleCalendar();
+            } else {
+              scheduleCurrentView = 'list';
+              document.getElementById('schedule-list-view').style.display = 'block';
+              document.getElementById('schedule-calendar-view').style.display = 'none';
+              viewToggleEl.innerHTML = '<i class="fas fa-calendar"></i>';
+              renderScheduleList();
+            }
+          });
+        }
       }
 
       // カレンダーナビゲーション（1ヶ月ずつ）
