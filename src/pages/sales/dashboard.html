@@ -2535,8 +2535,21 @@
           .sort((a, b) => {
             const normalizedA = DataUtils.normalizeSchedule(a);
             const normalizedB = DataUtils.normalizeSchedule(b);
-            const dateA = normalizedA.date || a.date || a.scheduled_date || '';
-            const dateB = normalizedB.date || b.date || b.scheduled_date || '';
+            let dateA = normalizedA.date || a.date || a.scheduled_date || '';
+            let dateB = normalizedB.date || b.date || b.scheduled_date || '';
+            
+            // Dateオブジェクトの場合は文字列に変換
+            if (dateA instanceof Date) {
+              dateA = dateA.toISOString().split('T')[0];
+            } else if (typeof dateA !== 'string') {
+              dateA = String(dateA || '');
+            }
+            if (dateB instanceof Date) {
+              dateB = dateB.toISOString().split('T')[0];
+            } else if (typeof dateB !== 'string') {
+              dateB = String(dateB || '');
+            }
+            
             return dateA.localeCompare(dateB);
           })[0];
         
@@ -2842,13 +2855,26 @@
         // 正規化された日付で比較
         const normalizedA = DataUtils.normalizeSchedule(a);
         const normalizedB = DataUtils.normalizeSchedule(b);
-        const dateA = normalizedA.date || a.date || a.scheduled_date || '';
-        const dateB = normalizedB.date || b.date || b.scheduled_date || '';
+        let dateA = normalizedA.date || a.date || a.scheduled_date || '';
+        let dateB = normalizedB.date || b.date || b.scheduled_date || '';
+        
+        // Dateオブジェクトの場合は文字列に変換
+        if (dateA instanceof Date) {
+          dateA = dateA.toISOString().split('T')[0];
+        } else if (typeof dateA !== 'string') {
+          dateA = String(dateA || '');
+        }
+        if (dateB instanceof Date) {
+          dateB = dateB.toISOString().split('T')[0];
+        } else if (typeof dateB !== 'string') {
+          dateB = String(dateB || '');
+        }
+        
         if (dateA !== dateB) return dateA.localeCompare(dateB);
         // 時間で比較
         const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '';
         const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '';
-        return timeA.localeCompare(timeB);
+        return (timeA || '').localeCompare(timeB || '');
       });
 
       if (weekSchedules.length === 0) {
@@ -2895,8 +2921,21 @@
         })
         .sort((a, b) => {
           // 作成日時で降順ソート
-          const dateA = a.created_at || a.scheduled_date;
-          const dateB = b.created_at || b.scheduled_date;
+          let dateA = a.created_at || a.scheduled_date || '';
+          let dateB = b.created_at || b.scheduled_date || '';
+          
+          // Dateオブジェクトの場合は文字列に変換
+          if (dateA instanceof Date) {
+            dateA = dateA.toISOString();
+          } else if (typeof dateA !== 'string') {
+            dateA = String(dateA || '');
+          }
+          if (dateB instanceof Date) {
+            dateB = dateB.toISOString();
+          } else if (typeof dateB !== 'string') {
+            dateB = String(dateB || '');
+          }
+          
           return dateB.localeCompare(dateA);
         })
         .slice(0, 5);
@@ -3877,8 +3916,21 @@
       scheduleFilteredSchedules.sort((a, b) => {
         const normalizedA = DataUtils.normalizeSchedule(a);
         const normalizedB = DataUtils.normalizeSchedule(b);
-        const dateA = normalizedA.date || a.date || a.scheduled_date || '';
-        const dateB = normalizedB.date || b.date || b.scheduled_date || '';
+        let dateA = normalizedA.date || a.date || a.scheduled_date || '';
+        let dateB = normalizedB.date || b.date || b.scheduled_date || '';
+        
+        // Dateオブジェクトの場合は文字列に変換
+        if (dateA instanceof Date) {
+          dateA = dateA.toISOString().split('T')[0];
+        } else if (typeof dateA !== 'string') {
+          dateA = String(dateA || '');
+        }
+        if (dateB instanceof Date) {
+          dateB = dateB.toISOString().split('T')[0];
+        } else if (typeof dateB !== 'string') {
+          dateB = String(dateB || '');
+        }
+        
         const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '00:00';
         const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '00:00';
         return `${dateA} ${timeA}`.localeCompare(`${dateB} ${timeB}`);
