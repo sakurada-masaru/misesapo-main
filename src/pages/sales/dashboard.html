@@ -2367,10 +2367,16 @@
           loadScheduleData().then(() => {
             setupScheduleView();
             filterAndRenderSchedules();
+            // アクティビティ画面の表示も更新
+            renderSchedules();
+            renderDraftStatus();
           });
         } else {
           setupScheduleView();
           filterAndRenderSchedules();
+          // アクティビティ画面の表示も更新
+          renderSchedules();
+          renderDraftStatus();
         }
       }
     }
@@ -3883,6 +3889,10 @@
       } else {
         renderScheduleCalendar();
       }
+      
+      // アクティビティ画面の表示も更新
+      renderSchedules();
+      renderDraftStatus();
     }
 
     function renderScheduleList() {
@@ -4027,6 +4037,10 @@
         emptyCell.className = 'calendar-day empty';
         calendarDaysEl.appendChild(emptyCell);
       }
+      
+      // アクティビティ画面の表示も更新
+      renderSchedules();
+      renderDraftStatus();
     }
 
     function getStatusLabel(status) {
