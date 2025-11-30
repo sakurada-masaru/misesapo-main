@@ -5,7 +5,7 @@
 
 <main id="main" class="container sales-clients-new">
   <div class="page-header">
-    <a href="/sales/clients.html" class="back-btn">
+    <a href="/sales/dashboard.html#client" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
     <h1 class="page-title">リード登録（営業向け）</h1>
@@ -100,7 +100,7 @@
 
     <!-- フォームアクション -->
     <div class="form-actions">
-      <button type="button" class="btn btn-outline" onclick="window.location.href='/sales/clients.html'">
+      <button type="button" class="btn btn-outline" onclick="window.location.href='/sales/dashboard.html#client'">
         <i class="fas fa-times"></i>
         キャンセル
       </button>
@@ -331,7 +331,7 @@
             const inviteLink = `${window.location.origin}/registration/customer-complete.html?token=${result.id}`;
             
             alert(`リードを登録しました！\n\n招待リンク:\n${inviteLink}\n\n（このリンクをお客様にお送りください）`);
-          window.location.href = '/sales/clients.html';
+          window.location.href = '/sales/dashboard.html#client';
           } else {
             throw new Error('登録に失敗しました');
           }

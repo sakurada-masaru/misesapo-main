@@ -137,7 +137,7 @@ const ROLE_CONFIG = {
     ],
     concierge: [
       { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
-      { href: '/sales/clients.html', label: '顧客管理', icon: 'fa-users' },
+      { href: '/sales/dashboard.html#client', label: '顧客管理', icon: 'fa-users' },
       { href: '/sales/clients/new.html', label: '新規顧客登録', icon: 'fa-user-plus' },
       { href: '/sales/estimates.html', label: '見積もり一覧', icon: 'fa-file-invoice' },
       { href: '/sales/estimates/new.html', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },
@@ -200,7 +200,7 @@ const ROLE_CONFIG = {
     ],
     '営業マン（コンシェルジュ）': [
       { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
-      { href: '/sales/clients.html', label: '顧客管理', icon: 'fa-users' },
+      { href: '/sales/dashboard.html#client', label: '顧客管理', icon: 'fa-users' },
       { href: '/sales/clients/new.html', label: '新規顧客登録', icon: 'fa-user-plus' },
       { href: '/sales/estimates.html', label: '見積もり一覧', icon: 'fa-file-invoice' },
       { href: '/sales/estimates/new.html', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },
