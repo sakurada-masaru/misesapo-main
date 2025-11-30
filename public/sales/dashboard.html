@@ -353,6 +353,9 @@
       <section class="swipe-screen" data-screen="schedule-list">
         <header class="screen-header">
           <h1>スケジュール</h1>
+          <button type="button" class="header-action-btn" id="new-schedule-btn" title="新規予定作成">
+            <i class="fas fa-plus"></i>
+          </button>
         </header>
 
         <!-- フィルター -->
@@ -407,6 +410,52 @@
             <div class="calendar-day-header sat">土</div>
           </div>
           <div class="calendar-grid" id="schedule-calendar-days"></div>
+        </div>
+
+        <!-- 新規予定作成モーダル -->
+        <div class="modal-overlay" id="new-schedule-modal" style="display: none;">
+          <div class="modal-content schedule-modal">
+            <div class="modal-header">
+              <h2>新規予定作成</h2>
+              <button type="button" class="modal-close" id="close-schedule-modal">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <form id="new-schedule-form" class="schedule-form-modal">
+              <div class="form-group">
+                <label>日付 <span class="req">*</span></label>
+                <input type="date" id="new-schedule-date" required />
+              </div>
+              <div class="form-group">
+                <label>時間帯 <span class="req">*</span></label>
+                <div class="time-inputs">
+                  <input type="time" id="new-schedule-start-time" required />
+                  <span>〜</span>
+                  <input type="time" id="new-schedule-end-time" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>顧客・店舗 <span class="req">*</span></label>
+                <select id="new-schedule-store" required>
+                  <option value="">選択してください</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>担当者</label>
+                <select id="new-schedule-worker">
+                  <option value="">未割当</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>メモ</label>
+                <textarea id="new-schedule-notes" rows="3" placeholder="メモを入力"></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn btn-outline" id="cancel-schedule-btn">キャンセル</button>
+                <button type="submit" class="btn btn-primary">作成</button>
+              </div>
+            </form>
+          </div>
         </div>
 
         <!-- イベント詳細シート -->
@@ -2190,6 +2239,139 @@
       padding: 2px;
     }
 
+    /* モーダル */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .schedule-form-modal {
+      padding: 20px;
+    }
+    .schedule-form-modal .form-group {
+      margin-bottom: 20px;
+    }
+    .schedule-form-modal label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #374151;
+    }
+    .schedule-form-modal .req {
+      color: #ef4444;
+    }
+    .schedule-form-modal input[type="date"],
+    .schedule-form-modal input[type="time"],
+    .schedule-form-modal select,
+    .schedule-form-modal textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .schedule-form-modal .time-inputs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .schedule-form-modal .time-inputs input {
+      flex: 1;
+    }
+    .schedule-form-modal .time-inputs span {
+      color: #6b7280;
+    }
+    .schedule-form-modal textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .schedule-form-modal .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .schedule-form-modal .form-actions .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .schedule-form-modal .form-actions .btn-outline {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .schedule-form-modal .form-actions .btn-primary {
+      background: var(--primary, #ff679c);
+      color: #fff;
+    }
+    .schedule-form-modal .form-actions .btn:active {
+      transform: scale(0.98);
+    }
+    .header-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--primary, #ff679c);
+      color: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .header-action-btn:active {
+      transform: scale(0.95);
+      opacity: 0.8;
+    }
+
     @media (min-width: 600px) {
       .sales-app {
         max-width: 480px;
@@ -2228,6 +2410,7 @@
       setupSwipe();
       setupCaseTabs(); // 案件管理タブの初期化
       setupClientTabs(); // 顧客管理タブの初期化
+      setupNewScheduleModal(); // 新規予定作成モーダルの初期化
       await loadData();
       loadServiceItems();
       renderClientList(); // 顧客一覧の初期表示
@@ -2813,9 +2996,19 @@
 
     function populateStoreSelects() {
       const estimateOptions = '<option value="">顧客を選択</option>' +
-        allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+        allStores.map(s => {
+          const clientName = getClientName(s.client_id) || '';
+          const brandName = getBrandName(s.brand_id) || '';
+          const displayName = `${escapeHtml(s.name)}${clientName ? ' (' + escapeHtml(clientName) + ')' : ''}${brandName ? ' / ' + escapeHtml(brandName) : ''}`;
+          return `<option value="${s.id}">${displayName}</option>`;
+        }).join('');
       const scheduleOptions = '<option value="">選択してください</option>' +
-        allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+        allStores.map(s => {
+          const clientName = getClientName(s.client_id) || '';
+          const brandName = getBrandName(s.brand_id) || '';
+          const displayName = `${escapeHtml(s.name)}${clientName ? ' (' + escapeHtml(clientName) + ')' : ''}${brandName ? ' / ' + escapeHtml(brandName) : ''}`;
+          return `<option value="${s.id}">${displayName}</option>`;
+        }).join('');
         
       const scheduleStoreEl = document.getElementById('schedule-store');
       if (scheduleStoreEl) {
@@ -2825,6 +3018,18 @@
       const estimateStoreCaseEl = document.getElementById('estimate-store-case');
       if (estimateStoreCaseEl) {
         estimateStoreCaseEl.innerHTML = estimateOptions;
+      }
+      // 新規予定作成モーダルのセレクトも更新
+      const newScheduleStoreEl = document.getElementById('new-schedule-store');
+      if (newScheduleStoreEl) {
+        newScheduleStoreEl.innerHTML = scheduleOptions;
+      }
+      // 新規予定作成モーダルの担当者セレクトを更新
+      const workerSelect = document.getElementById('new-schedule-worker');
+      if (workerSelect) {
+        const workerOptions = '<option value="">未割当</option>' +
+          allWorkers.map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('');
+        workerSelect.innerHTML = workerOptions;
       }
     }
 
