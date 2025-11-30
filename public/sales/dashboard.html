@@ -482,6 +482,11 @@
               <span class="event-color" id="event-color"></span>
               <span class="event-status-badge" id="event-status">-</span>
             </div>
+            <div class="event-actions" id="event-actions" style="display: none;">
+              <button type="button" class="btn btn-danger btn-block" id="delete-schedule-btn">
+                <i class="fas fa-trash"></i> 削除
+              </button>
+            </div>
           </div>
         </div>
         <div class="sheet-overlay" id="sheet-overlay"></div>
@@ -1991,6 +1996,29 @@
       background: #fff8e1;
       color: #f57c00;
     }
+    .event-actions {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-danger:active {
+      background: #dc2626;
+      transform: scale(0.98);
+    }
+    .btn-block {
+      width: 100%;
+    }
 
     /* スケジュールパネルのスタイル */
     .screen-header-actions {
@@ -2943,14 +2971,27 @@
         d.setDate(d.getDate() + i);
         const dateStr = d.toISOString().split('T')[0];
         
-        allSchedules.filter(s => s.scheduled_date === dateStr).forEach(s => {
+        allSchedules.filter(s => {
+          // 正規化された日付も確認（リマインダーを含むすべての予定に対応）
+          const normalized = DataUtils.normalizeSchedule(s);
+          const scheduleDate = normalized.date || s.date || s.scheduled_date || '';
+          return scheduleDate === dateStr;
+        }).forEach(s => {
           weekSchedules.push({ ...s, date: d, isToday: i === 0 });
         });
       }
 
       weekSchedules.sort((a, b) => {
-        if (a.scheduled_date !== b.scheduled_date) return a.scheduled_date.localeCompare(b.scheduled_date);
-        return (a.scheduled_time || '').localeCompare(b.scheduled_time || '');
+        // 正規化された日付で比較
+        const normalizedA = DataUtils.normalizeSchedule(a);
+        const normalizedB = DataUtils.normalizeSchedule(b);
+        const dateA = normalizedA.date || a.date || a.scheduled_date || '';
+        const dateB = normalizedB.date || b.date || b.scheduled_date || '';
+        if (dateA !== dateB) return dateA.localeCompare(dateB);
+        // 時間で比較
+        const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '';
+        const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '';
+        return timeA.localeCompare(timeB);
       });
 
       if (weekSchedules.length === 0) {
@@ -2987,9 +3028,14 @@
     function renderDraftStatus() {
       const container = document.getElementById('draft-status-list');
       
-      // 仮押さえ（draft）と最近確定したスケジュールを表示
+      // 仮押さえ（draft）のみを表示（リマインダーは除外）
       const recentDrafts = allSchedules
-        .filter(s => s.status === 'draft' || s.status === 'scheduled')
+        .filter(s => {
+          // リマインダー（新規予定）を除外
+          const isReminder = s.type === 'reminder' || (!s.store_id && !s.client_id);
+          // draftステータスのみ、かつリマインダーでないもの
+          return s.status === 'draft' && !isReminder;
+        })
         .sort((a, b) => {
           // 作成日時で降順ソート
           const dateA = a.created_at || a.scheduled_date;
@@ -3799,6 +3845,60 @@
       const statusEl = document.getElementById('event-status');
       statusEl.textContent = isDraft ? '仮押さえ' : (isCompleted ? '完了' : '確定');
       statusEl.className = 'event-status-badge' + (isCompleted ? ' completed' : (isDraft ? ' draft' : ''));
+      
+      // 削除ボタンの表示/非表示（リマインダーのみ表示、仮押さえは非表示）
+      const actionsEl = document.getElementById('event-actions');
+      const deleteBtn = document.getElementById('delete-schedule-btn');
+      if (actionsEl && deleteBtn) {
+        if (isReminder && !isDraft) {
+          actionsEl.style.display = 'block';
+          // 削除ボタンのイベントリスナーを設定
+          const newDeleteBtn = deleteBtn.cloneNode(true);
+          deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+          newDeleteBtn.addEventListener('click', async () => {
+            if (confirm('この予定を削除しますか？')) {
+              try {
+                const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+                  method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                  // スケジュールリストから削除
+                  allSchedules = allSchedules.filter(s => s.id !== scheduleId);
+                  
+                  // データを再読み込み
+                  await loadData();
+                  
+                  // スケジュール表示を更新
+                  if (scheduleCurrentView === 'list') {
+                    filterAndRenderSchedules();
+                  } else {
+                    renderScheduleCalendar();
+                  }
+                  
+                  // アクティビティ画面のスケジュール表示も更新
+                  renderSchedules();
+                  
+                  // シートを閉じる
+                  const sheet = document.getElementById('event-sheet');
+                  const overlay = document.getElementById('sheet-overlay');
+                  if (sheet) sheet.classList.remove('open');
+                  if (overlay) overlay.classList.remove('open');
+                  
+                  alert('予定を削除しました');
+                } else {
+                  throw new Error('予定の削除に失敗しました');
+                }
+              } catch (error) {
+                console.error('Failed to delete schedule:', error);
+                alert('予定の削除に失敗しました');
+              }
+            }
+          });
+        } else {
+          actionsEl.style.display = 'none';
+        }
+      }
       
       document.getElementById('event-sheet').classList.add('open');
       document.getElementById('sheet-overlay').classList.add('open');

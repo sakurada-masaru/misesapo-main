@@ -2822,14 +2822,27 @@
         d.setDate(d.getDate() + i);
         const dateStr = d.toISOString().split('T')[0];
         
-        allSchedules.filter(s => s.scheduled_date === dateStr).forEach(s => {
+        allSchedules.filter(s => {
+          // 正規化された日付も確認（リマインダーを含むすべての予定に対応）
+          const normalized = DataUtils.normalizeSchedule(s);
+          const scheduleDate = normalized.date || s.date || s.scheduled_date || '';
+          return scheduleDate === dateStr;
+        }).forEach(s => {
           weekSchedules.push({ ...s, date: d, isToday: i === 0 });
         });
       }
 
       weekSchedules.sort((a, b) => {
-        if (a.scheduled_date !== b.scheduled_date) return a.scheduled_date.localeCompare(b.scheduled_date);
-        return (a.scheduled_time || '').localeCompare(b.scheduled_time || '');
+        // 正規化された日付で比較
+        const normalizedA = DataUtils.normalizeSchedule(a);
+        const normalizedB = DataUtils.normalizeSchedule(b);
+        const dateA = normalizedA.date || a.date || a.scheduled_date || '';
+        const dateB = normalizedB.date || b.date || b.scheduled_date || '';
+        if (dateA !== dateB) return dateA.localeCompare(dateB);
+        // 時間で比較
+        const timeA = normalizedA.time || a.time_slot || a.scheduled_time || '';
+        const timeB = normalizedB.time || b.time_slot || b.scheduled_time || '';
+        return timeA.localeCompare(timeB);
       });
 
       if (weekSchedules.length === 0) {
@@ -2866,9 +2879,14 @@
     function renderDraftStatus() {
       const container = document.getElementById('draft-status-list');
       
-      // 仮押さえ（draft）と最近確定したスケジュールを表示
+      // 仮押さえ（draft）のみを表示（リマインダーは除外）
       const recentDrafts = allSchedules
-        .filter(s => s.status === 'draft' || s.status === 'scheduled')
+        .filter(s => {
+          // リマインダー（新規予定）を除外
+          const isReminder = s.type === 'reminder' || (!s.store_id && !s.client_id);
+          // draftステータスのみ、かつリマインダーでないもの
+          return s.status === 'draft' && !isReminder;
+        })
         .sort((a, b) => {
           // 作成日時で降順ソート
           const dateA = a.created_at || a.scheduled_date;
