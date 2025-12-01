@@ -2324,10 +2324,10 @@
       formStatus.textContent = '保存中...';
       formStatus.className = 'form-status';
       
-      // 新規法人の作成
+      // 新規法人の作成（IDはバックエンドで生成）
       if (!clientId && newClientName) {
         const newClient = {
-          id: 'CL' + Date.now(),
+          // IDはバックエンドで生成されるため、ここでは指定しない
           name: newClientName,
           type: 'corporate',
           created_at: new Date().toISOString()
@@ -2346,13 +2346,13 @@
         clientId = createdClient.id || newClient.id;
       }
       
-      // 新規ブランドの作成
+      // 新規ブランドの作成（IDはバックエンドで生成）
       if (!brandId && newBrandName) {
         if (!clientId) {
           throw new Error('ブランドを作成するには法人を選択または作成してください');
         }
         const newBrand = {
-          id: 'BR' + Date.now(),
+          // IDはバックエンドで生成されるため、ここでは指定しない
           name: newBrandName,
           client_id: clientId,
           created_at: new Date().toISOString()
@@ -2389,7 +2389,8 @@
     };
     
     if (isNew) {
-        data.id = 'ST' + Date.now();
+        // IDはバックエンドで生成されるため、ここでは指定しない
+        // data.id = 'ST' + Date.now(); // 削除: バックエンドで生成
         data.created_at = new Date().toISOString();
         if (sendInvite) data.status = 'pending_customer_info';
     } else {

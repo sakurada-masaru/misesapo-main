@@ -1319,8 +1319,8 @@
       }
 
       if (isNew) {
-        // 新規作成時: IDを自動生成（ロールに基づいたID形式）
-        data.id = 'W' + Date.now();
+        // 新規作成時: IDはバックエンドで生成されるため、ここでは指定しない
+        // data.id = 'W' + Date.now(); // 削除: バックエンドで生成
         data.created_at = new Date().toISOString();
         
         // ロールコードを設定

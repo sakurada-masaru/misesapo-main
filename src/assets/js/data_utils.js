@@ -39,7 +39,8 @@
     SCHEDULE: 'SCH',
     ESTIMATE: 'EST',
     REPORT: 'RPT',
-    WORKER: 'WK',
+    WORKER: 'W',
+    CUSTOMER: 'CU',
     USER: 'USR'
   };
 
@@ -116,18 +117,28 @@
 
   const IdUtils = {
     /**
-     * IDを正規化（プレフィックス+4桁形式に統一）
+     * IDを正規化（プレフィックス+5桁形式に統一）
      */
     normalize(id, prefix) {
       if (!id) return null;
       const str = String(id);
       
-      // 既に正しい形式の場合
-      if (str.startsWith(prefix)) return str;
+      // 既に正しい形式の場合（プレフィックス+5桁）
+      if (str.startsWith(prefix) && /^\d{5}$/.test(str.substring(prefix.length))) {
+        return str;
+      }
+      
+      // プレフィックス付きだが桁数が異なる場合
+      if (str.startsWith(prefix)) {
+        const numPart = str.substring(prefix.length);
+        if (/^\d+$/.test(numPart)) {
+          return `${prefix}${numPart.padStart(5, '0')}`;
+        }
+      }
       
       // 数値のみの場合はプレフィックス付きに変換
       if (/^\d+$/.test(str)) {
-        return `${prefix}${str.padStart(4, '0')}`;
+        return `${prefix}${str.padStart(5, '0')}`;
       }
       
       return str;
@@ -154,19 +165,34 @@
     },
 
     /**
-     * 新しいIDを生成
+     * 新しいIDを生成（非推奨: バックエンドで生成することを推奨）
+     * @deprecated バックエンドでID生成を行うことを推奨します
      */
     generate(prefix) {
+      console.warn('IdUtils.generate() is deprecated. ID generation should be handled by the backend.');
       return `${prefix}${Date.now()}`;
+    },
+    
+    /**
+     * 連番IDを生成（5桁形式）
+     * 注意: この関数は最大IDを取得できないため、バックエンドでの実装を推奨
+     */
+    generateSequential(prefix, number) {
+      return `${prefix}${String(number).padStart(5, '0')}`;
     },
 
     // 各エンティティ用のショートカット
     normalizeStore(id) { return this.normalize(id, ID_PREFIX.STORE); },
     normalizeClient(id) { return this.normalize(id, ID_PREFIX.CLIENT); },
     normalizeBrand(id) { return this.normalize(id, ID_PREFIX.BRAND); },
+    normalizeCustomer(id) { return this.normalize(id, ID_PREFIX.CUSTOMER); },
+    normalizeWorker(id) { return this.normalize(id, ID_PREFIX.WORKER); },
+    // 非推奨: バックエンドでID生成を行うことを推奨
     generateStore() { return this.generate(ID_PREFIX.STORE); },
     generateClient() { return this.generate(ID_PREFIX.CLIENT); },
     generateBrand() { return this.generate(ID_PREFIX.BRAND); },
+    generateCustomer() { return this.generate(ID_PREFIX.CUSTOMER); },
+    generateWorker() { return this.generate(ID_PREFIX.WORKER); },
     generateSchedule() { return this.generate(ID_PREFIX.SCHEDULE); },
     generateEstimate() { return this.generate(ID_PREFIX.ESTIMATE); },
     generateReport() { return this.generate(ID_PREFIX.REPORT); }

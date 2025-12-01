@@ -6,6 +6,49 @@ import uuid
 from datetime import datetime
 from boto3.dynamodb.conditions import Key, Attr
 
+# ID生成ヘルパー関数をインポート
+def extract_number_from_id(id_str, prefix):
+    """IDから数値部分を抽出"""
+    if not id_str:
+        return 0
+    str_id = str(id_str)
+    if str_id.startswith(prefix):
+        str_id = str_id[len(prefix):]
+    import re
+    match = re.match(r'^0*(\d+)', str_id)
+    if match:
+        return int(match.group(1))
+    return 0
+
+def get_max_id_number(table, prefix):
+    """テーブル内の最大ID番号を取得"""
+    try:
+        response = table.scan(ProjectionExpression='id')
+        max_num = 0
+        for item in response.get('Items', []):
+            num = extract_number_from_id(item.get('id', ''), prefix)
+            if num > max_num:
+                max_num = num
+        while 'LastEvaluatedKey' in response:
+            response = table.scan(
+                ProjectionExpression='id',
+                ExclusiveStartKey=response['LastEvaluatedKey']
+            )
+            for item in response.get('Items', []):
+                num = extract_number_from_id(item.get('id', ''), prefix)
+                if num > max_num:
+                    max_num = num
+        return max_num
+    except Exception as e:
+        print(f"Error getting max ID: {str(e)}")
+        return 0
+
+def generate_next_id(table, prefix):
+    """次のIDを生成（5桁形式）"""
+    max_num = get_max_id_number(table, prefix)
+    next_num = max_num + 1
+    return f"{prefix}{str(next_num).zfill(5)}"
+
 # Cognitoクライアントの初期化
 cognito_client = boto3.client('cognito-idp', region_name='ap-northeast-1')
 COGNITO_USER_POOL_ID = 'ap-northeast-1_EDKElIGoC'
@@ -2330,11 +2373,11 @@ def create_client(event, headers):
         else:
             body_json = json.loads(body.decode('utf-8'))
         
-        # 必須フィールドのチェック
-        if 'id' not in body_json:
-            body_json['id'] = 'C' + str(int(datetime.utcnow().timestamp() * 1000))
-        
-        client_id = body_json['id']
+        # ID生成（5桁形式: CL00001〜）
+        if 'id' not in body_json or not body_json['id']:
+            client_id = generate_next_id(CLIENTS_TABLE, 'CL')
+        else:
+            client_id = body_json['id']
         now = datetime.utcnow().isoformat() + 'Z'
         
         # デフォルト値を設定
@@ -2660,11 +2703,11 @@ def create_worker(event, headers):
         else:
             body_json = json.loads(body.decode('utf-8'))
         
-        # 必須フィールドのチェック
-        if 'id' not in body_json:
-            body_json['id'] = 'W' + str(int(datetime.utcnow().timestamp() * 1000))
-        
-        worker_id = body_json['id']
+        # ID生成（5桁形式: W00001〜）
+        if 'id' not in body_json or not body_json['id']:
+            worker_id = generate_next_id(WORKERS_TABLE, 'W')
+        else:
+            worker_id = body_json['id']
         now = datetime.utcnow().isoformat() + 'Z'
         
         # デフォルト値を設定
