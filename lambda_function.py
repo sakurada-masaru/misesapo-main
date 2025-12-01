@@ -2257,6 +2257,285 @@ def get_worker_detail(worker_id, headers):
             }, ensure_ascii=False)
         }
 
+# ==================== Clients（クライアント）管理 ====================
+
+def get_clients(event, headers):
+    """
+    クライアント一覧を取得
+    """
+    try:
+        # クエリパラメータからフィルタ条件を取得
+        query_params = event.get('queryStringParameters') or {}
+        email = query_params.get('email')
+        firebase_uid = query_params.get('firebase_uid')
+        status = query_params.get('status')
+        
+        # スキャンまたはクエリを実行
+        if firebase_uid:
+            # Firebase UIDでフィルタ（クライアントログイン用）
+            response = CLIENTS_TABLE.scan(
+                FilterExpression=Attr('firebase_uid').eq(firebase_uid)
+            )
+        elif email:
+            # メールアドレスでフィルタ
+            response = CLIENTS_TABLE.scan(
+                FilterExpression=Attr('email').eq(email)
+            )
+        elif status:
+            # ステータスでフィルタ
+            response = CLIENTS_TABLE.scan(
+                FilterExpression=Attr('status').eq(status)
+            )
+        else:
+            # 全件取得
+            response = CLIENTS_TABLE.scan()
+        
+        clients = response.get('Items', [])
+        
+        # レスポンス形式を統一（items配列で返す）
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'items': clients,
+                'count': len(clients)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting clients: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'クライアント一覧の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_client(event, headers):
+    """
+    クライアントを作成
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 必須フィールドのチェック
+        if 'id' not in body_json:
+            body_json['id'] = 'C' + str(int(datetime.utcnow().timestamp() * 1000))
+        
+        client_id = body_json['id']
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # デフォルト値を設定
+        client_data = {
+            'id': client_id,
+            'firebase_uid': body_json.get('firebase_uid', ''),  # Firebase UID（必須）
+            'email': body_json.get('email', ''),
+            'name': body_json.get('name', ''),
+            'phone': body_json.get('phone', ''),
+            'company_name': body_json.get('company_name', ''),
+            'store_name': body_json.get('store_name', ''),
+            'role': 'customer',  # 固定
+            'status': body_json.get('status', 'active'),
+            'created_at': body_json.get('created_at', now),
+            'updated_at': now
+        }
+        
+        # DynamoDBに保存
+        CLIENTS_TABLE.put_item(Item=client_data)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'id': client_id,
+                'message': 'クライアントを作成しました',
+                'client': client_data
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error creating client: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'クライアントの作成に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_client_detail(client_id, headers):
+    """
+    クライアント詳細を取得
+    """
+    try:
+        response = CLIENTS_TABLE.get_item(Key={'id': client_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'クライアントが見つかりません',
+                    'id': client_id
+                }, ensure_ascii=False)
+            }
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting client detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'クライアント詳細の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_client(client_id, event, headers):
+    """
+    クライアントを更新
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 既存のクライアントを取得
+        response = CLIENTS_TABLE.get_item(Key={'id': client_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'クライアントが見つかりません',
+                    'id': client_id
+                }, ensure_ascii=False)
+            }
+        
+        existing_item = response['Item']
+        
+        # 更新可能なフィールドを更新
+        update_expression_parts = []
+        expression_attribute_values = {}
+        expression_attribute_names = {}
+        
+        updatable_fields = [
+            'name', 'email', 'phone', 'company_name', 'store_name', 'status'
+        ]
+        
+        for field in updatable_fields:
+            if field in body_json:
+                update_expression_parts.append(f"#{field} = :{field}")
+                expression_attribute_names[f"#{field}"] = field
+                expression_attribute_values[f":{field}"] = body_json[field]
+        
+        # updated_atを更新
+        update_expression_parts.append("#updated_at = :updated_at")
+        expression_attribute_names["#updated_at"] = "updated_at"
+        expression_attribute_values[":updated_at"] = datetime.utcnow().isoformat() + 'Z'
+        
+        if update_expression_parts:
+            update_expression = "SET " + ", ".join(update_expression_parts)
+            CLIENTS_TABLE.update_item(
+                Key={'id': client_id},
+                UpdateExpression=update_expression,
+                ExpressionAttributeNames=expression_attribute_names,
+                ExpressionAttributeValues=expression_attribute_values
+            )
+        
+        # 更新後のデータを取得
+        updated_response = CLIENTS_TABLE.get_item(Key={'id': client_id})
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'クライアントを更新しました',
+                'client': updated_response['Item']
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error updating client: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'クライアントの更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_client(client_id, headers):
+    """
+    クライアントを削除
+    """
+    try:
+        # 既存のクライアントを確認
+        response = CLIENTS_TABLE.get_item(Key={'id': client_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'クライアントが見つかりません',
+                    'id': client_id
+                }, ensure_ascii=False)
+            }
+        
+        # 削除実行
+        CLIENTS_TABLE.delete_item(Key={'id': client_id})
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'クライアントを削除しました',
+                'id': client_id
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting client: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'クライアントの削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
 def create_cognito_user(event, headers):
     """
     AWS Cognitoにユーザーを作成（管理者のみ）
