@@ -530,13 +530,17 @@
 
     /* メインコンテンツ */
     .main-content {
+      margin-left: var(--sidebar-width);
       padding: 24px;
       background: #f9fafb;
-    }
+    
+      transition: margin-left 0.3s ease;}
     .sidebar.collapsed ~ .main-content {
+      margin-left: var(--sidebar-width);
       padding: 24px;
       background: #f9fafb;
-    }
+    
+      transition: margin-left 0.3s ease;}
     main.admin-services-v2 > .main-content > .container {
       max-width: 100%;
       margin: 0;

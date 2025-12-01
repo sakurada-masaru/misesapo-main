@@ -314,13 +314,17 @@
 
   /* メインコンテンツ */
   .main-content {
+      margin-left: var(--sidebar-width);
       padding: 24px;
       background: #f9fafb;
-    }
+    
+      transition: margin-left 0.3s ease;}
   .sidebar.collapsed ~ .main-content {
+      margin-left: var(--sidebar-width);
       padding: 24px;
       background: #f9fafb;
-    }
+    
+      transition: margin-left 0.3s ease;}
 
   /* トップバー */
   .topbar {
@@ -533,9 +537,11 @@
   @media (max-width: 768px) {
     
     .main-content {
+      margin-left: var(--sidebar-width);
       padding: 24px;
       background: #f9fafb;
-    }
+    
+      transition: margin-left 0.3s ease;}
     .filter-row {
       flex-direction: column;
     }

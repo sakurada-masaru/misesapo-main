@@ -63,13 +63,17 @@
 
   /* メインコンテンツ */
   .main-content {
+      margin-left: var(--sidebar-width);
       padding: 24px;
       background: #f9fafb;
-    }
+    
+      transition: margin-left 0.3s ease;}
   .sidebar.collapsed ~ .main-content {
+      margin-left: var(--sidebar-width);
       padding: 24px;
       background: #f9fafb;
-    }
+    
+      transition: margin-left 0.3s ease;}
 
   .estimates-page {
     padding: 0;
