@@ -1227,13 +1227,15 @@
         currentView = 'calendar';
         document.getElementById('list-view').style.display = 'none';
         document.getElementById('calendar-view').style.display = 'block';
-        document.getElementById('view-toggle').innerHTML = '<i class="fas fa-list"></i> リスト表示';
+        document.getElementById('view-toggle').innerHTML = '<i class="fas fa-list"></i>';
+        document.getElementById('view-toggle').title = 'リスト表示';
         renderCalendar();
       } else {
         currentView = 'list';
         document.getElementById('list-view').style.display = 'block';
         document.getElementById('calendar-view').style.display = 'none';
-        document.getElementById('view-toggle').innerHTML = '<i class="fas fa-calendar"></i> カレンダー表示';
+        document.getElementById('view-toggle').innerHTML = '<i class="fas fa-calendar"></i>';
+        document.getElementById('view-toggle').title = 'カレンダー表示';
       }
     });
 
