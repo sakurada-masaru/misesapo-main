@@ -2365,18 +2365,37 @@ def delete_worker(worker_id, headers):
     従業員を削除
     """
     try:
+        # 削除前に存在確認
+        response = WORKERS_TABLE.get_item(Key={'id': worker_id})
+        if 'Item' not in response:
+            print(f"Worker not found: {worker_id}")
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '従業員が見つかりません',
+                    'id': worker_id
+                }, ensure_ascii=False)
+            }
+        
+        # 削除実行
+        print(f"Deleting worker: {worker_id}")
         WORKERS_TABLE.delete_item(Key={'id': worker_id})
+        print(f"Worker deleted successfully: {worker_id}")
         
         return {
             'statusCode': 200,
             'headers': headers,
             'body': json.dumps({
                 'status': 'success',
-                'message': '従業員を削除しました'
+                'message': '従業員を削除しました',
+                'id': worker_id
             }, ensure_ascii=False)
         }
     except Exception as e:
         print(f"Error deleting worker: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         return {
             'statusCode': 500,
             'headers': headers,
