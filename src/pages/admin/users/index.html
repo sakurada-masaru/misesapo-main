@@ -1263,6 +1263,9 @@
           <div class="user-name-cell">
             <span class="user-avatar">${(u.name || '?')[0]}</span>
             <a href="/admin/users/detail.html?id=${u.id}" class="user-name-link">${escapeHtml(u.name || '-')}</a>
+            <a href="/staff/mypage.html?id=${u.id}" class="user-mypage-link" title="マイページを開く" style="margin-left: 8px; color: #3b82f6; font-size: 0.875rem;">
+              <i class="fas fa-external-link-alt"></i>
+            </a>
           </div>
         </td>
         <td>${escapeHtml(u.phone || '-')}</td>
