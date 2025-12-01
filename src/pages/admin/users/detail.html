@@ -781,9 +781,12 @@
 
         currentUser = await response.json();
         
-        // ロールを変換
-        if (currentUser.role_code !== undefined) {
+        // ロールを変換（role_codeが存在する場合は優先的に使用）
+        if (currentUser.role_code !== undefined && currentUser.role_code !== null) {
           currentUser.role = getRoleFromCode(currentUser.role_code);
+        } else if (!currentUser.role) {
+          // role_codeもroleも存在しない場合はデフォルト値を設定
+          currentUser.role = 'staff';
         }
 
         // 出退勤記録を読み込み
@@ -806,11 +809,22 @@
       if (code === '99' || code === 99) return 'staff';
       if (code === '1' || code === 1) return 'admin';
       if (code === '2' || code === 2) return 'sales';
+      if (code === '3' || code === 3) return 'office';
+      if (code === '4' || code === 4) return 'designer';
       return 'staff';
     }
 
     function getRoleLabel(role) {
-      const labels = { staff: '清掃員', sales: '営業', admin: '管理者', other: 'その他' };
+      const labels = { 
+        staff: '清掃員', 
+        sales: '営業', 
+        office: '事務',
+        designer: 'デザイナー',
+        admin: '管理者', 
+        developer: '開発者',
+        master: 'マスター',
+        other: 'その他' 
+      };
       return labels[role] || role;
     }
 
