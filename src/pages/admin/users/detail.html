@@ -173,30 +173,63 @@
       </div>
     </div>
 
-    <!-- 出退勤記録セクション -->
+    <!-- タイムカードセクション -->
     <div class="attendance-section">
-      <h3 class="section-title">
-        <i class="fas fa-clock"></i>
-        出退勤記録
-      </h3>
-      <div class="attendance-card">
-        <div class="attendance-today">
-          <div class="attendance-status" id="attendance-status">
-            <div class="status-indicator" id="status-indicator"></div>
-            <div class="status-text">
-              <span class="status-label" id="status-label">出勤状況</span>
-              <span class="status-time" id="status-time">-</span>
-            </div>
-          </div>
-          <button class="btn btn-primary btn-round" id="attendance-toggle-btn">
-            <i class="fas fa-power-off"></i>
-            <span id="toggle-btn-text">出勤する</span>
+      <div class="section-header">
+        <h3 class="section-title">
+          <i class="fas fa-clock"></i>
+          タイムカード
+        </h3>
+        <div class="month-selector">
+          <button class="btn-icon" id="prev-month-btn" title="前月">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="month-display" id="month-display">2025年12月</span>
+          <button class="btn-icon" id="next-month-btn" title="次月">
+            <i class="fas fa-chevron-right"></i>
           </button>
         </div>
-        
-        <div class="attendance-calendar" id="attendance-calendar">
-          <!-- カレンダーが動的に生成される -->
+      </div>
+      
+      <!-- 月間サマリー -->
+      <div class="monthly-summary" id="monthly-summary">
+        <div class="summary-card">
+          <div class="summary-label">出勤日数</div>
+          <div class="summary-value" id="summary-work-days">-</div>
         </div>
+        <div class="summary-card">
+          <div class="summary-label">総労働時間</div>
+          <div class="summary-value" id="summary-total-hours">-</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">残業時間</div>
+          <div class="summary-value" id="summary-overtime-hours">-</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">遅刻回数</div>
+          <div class="summary-value" id="summary-late-count">-</div>
+        </div>
+      </div>
+      
+      <!-- タイムカードテーブル -->
+      <div class="timecard-table-container">
+        <table class="timecard-table" id="timecard-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>曜日</th>
+              <th>出勤</th>
+              <th>退勤</th>
+              <th>休憩</th>
+              <th>実労働</th>
+              <th>残業</th>
+              <th>状態</th>
+            </tr>
+          </thead>
+          <tbody id="timecard-tbody">
+            <!-- 動的に生成 -->
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -290,6 +323,18 @@
                 <option value="active">有効</option>
                 <option value="inactive">無効</option>
               </select>
+            </div>
+            <div class="form-group">
+              <label for="edit-scheduled-start-time">所定開始時刻</label>
+              <input type="time" id="edit-scheduled-start-time" value="09:00">
+            </div>
+            <div class="form-group">
+              <label for="edit-scheduled-end-time">所定終了時刻</label>
+              <input type="time" id="edit-scheduled-end-time" value="18:00">
+            </div>
+            <div class="form-group">
+              <label for="edit-scheduled-work-hours">所定労働時間（時間）</label>
+              <input type="number" id="edit-scheduled-work-hours" step="0.5" min="0" max="24" value="8.0">
             </div>
           </div>
           <div class="form-status" id="edit-form-status"></div>
@@ -709,6 +754,111 @@
     .attendance-calendar {
       margin-top: 16px;
     }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .month-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .month-display {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      min-width: 120px;
+      text-align: center;
+    }
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #fff;
+      color: #6b7280;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-icon:hover {
+      background: #f3f4f6;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .monthly-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .summary-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+    .summary-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .timecard-table-container {
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+    .timecard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .timecard-table thead {
+      background: #f9fafb;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .timecard-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      white-space: nowrap;
+    }
+    .timecard-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .timecard-table tbody tr:hover {
+      background: #f9fafb;
+    }
+    .status-badge-timecard {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-completed { background: #d1fae5; color: #065f46; }
+    .status-working { background: #dbeafe; color: #1e40af; }
+    .status-absent { background: #fee2e2; color: #991b1b; }
+    .status-late { background: #fef3c7; color: #92400e; }
+    .status-early-leave { background: #fce7f3; color: #9f1239; }
+    .today-row {
+      background: #eff6ff !important;
+      font-weight: 600;
+    }
+    .today-row:hover {
+      background: #dbeafe !important;
+    }
     .schedule-card {
       margin-top: 16px;
     }
@@ -961,6 +1111,9 @@
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
     let currentUser = null;
     let attendanceRecords = {};
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+    let monthlyAttendance = [];
 
     // URLからユーザーIDを取得
     function getUserIdFromUrl() {
@@ -1062,6 +1215,9 @@
 
         // ユーザー情報を表示
         renderUser(currentUser);
+        
+        // タイムカードを読み込み
+        loadTimecard();
 
         loadingEl.style.display = 'none';
         contentEl.style.display = 'block';
@@ -1248,6 +1404,9 @@
       document.getElementById('edit-role').value = currentUser.role || 'staff';
       document.getElementById('edit-department').value = currentUser.department || '';
       document.getElementById('edit-status').value = currentUser.status || 'active';
+      document.getElementById('edit-scheduled-start-time').value = currentUser.scheduled_start_time || '09:00';
+      document.getElementById('edit-scheduled-end-time').value = currentUser.scheduled_end_time || '18:00';
+      document.getElementById('edit-scheduled-work-hours').value = currentUser.scheduled_work_hours || 8.0;
       document.getElementById('edit-form-status').textContent = '';
       document.getElementById('edit-form-status').className = 'form-status';
       
@@ -1293,7 +1452,10 @@
         phone: document.getElementById('edit-phone').value,
         role: document.getElementById('edit-role').value,
         department: document.getElementById('edit-department').value,
-        status: document.getElementById('edit-status').value
+        status: document.getElementById('edit-status').value,
+        scheduled_start_time: document.getElementById('edit-scheduled-start-time').value,
+        scheduled_end_time: document.getElementById('edit-scheduled-end-time').value,
+        scheduled_work_hours: parseFloat(document.getElementById('edit-scheduled-work-hours').value) || 8.0
       };
       
       // ロールコードを設定
@@ -1391,11 +1553,171 @@
       });
     }
 
+    // タイムカードを読み込み
+    async function loadTimecard() {
+      if (!currentUser) return;
+      
+      try {
+        const year = currentYear;
+        const month = String(currentMonth + 1).padStart(2, '0');
+        
+        const response = await fetch(`${API_BASE}/attendance?staff_id=${currentUser.id}&year=${year}&month=${month}&limit=1000`);
+        if (!response.ok) {
+          throw new Error('タイムカードの取得に失敗しました');
+        }
+        
+        const data = await response.json();
+        monthlyAttendance = data.attendance || [];
+        
+        renderTimecard();
+        renderMonthlySummary();
+      } catch (error) {
+        console.error('Error loading timecard:', error);
+        monthlyAttendance = [];
+        renderTimecard();
+        renderMonthlySummary();
+      }
+    }
+    
+    // タイムカードを表示
+    function renderTimecard() {
+      const tbody = document.getElementById('timecard-tbody');
+      if (!tbody) return;
+      
+      // 月の日数を取得
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const lastDay = new Date(currentYear, currentMonth, daysInMonth);
+      
+      // 出退勤記録を日付でマップ
+      const attendanceMap = {};
+      monthlyAttendance.forEach(record => {
+        attendanceMap[record.date] = record;
+      });
+      
+      let html = '';
+      const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(currentYear, currentMonth, day);
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const weekday = weekdays[date.getDay()];
+        const record = attendanceMap[dateStr];
+        
+        const isToday = dateStr === new Date().toISOString().split('T')[0];
+        const rowClass = isToday ? 'today-row' : '';
+        
+        let statusBadge = '<span class="status-badge-timecard status-absent">未出勤</span>';
+        let clockIn = '-';
+        let clockOut = '-';
+        let breakTime = '-';
+        let workHours = '-';
+        let overtime = '-';
+        
+        if (record) {
+          clockIn = record.clock_in ? formatTime(record.clock_in) : '-';
+          clockOut = record.clock_out ? formatTime(record.clock_out) : '-';
+          breakTime = record.break_time ? `${record.break_time}h` : '-';
+          workHours = record.work_hours ? `${record.work_hours}h` : '-';
+          overtime = record.overtime_hours ? `${record.overtime_hours}h` : '-';
+          
+          if (record.status === 'completed') {
+            if (record.is_late && record.is_early_leave) {
+              statusBadge = '<span class="status-badge-timecard status-late">遅刻・早退</span>';
+            } else if (record.is_late) {
+              statusBadge = `<span class="status-badge-timecard status-late">遅刻 ${record.late_minutes}分</span>`;
+            } else if (record.is_early_leave) {
+              statusBadge = `<span class="status-badge-timecard status-early-leave">早退 ${record.early_leave_minutes}分</span>`;
+            } else {
+              statusBadge = '<span class="status-badge-timecard status-completed">完了</span>';
+            }
+          } else if (record.status === 'working') {
+            statusBadge = '<span class="status-badge-timecard status-working">勤務中</span>';
+          }
+        }
+        
+        html += `
+          <tr class="${rowClass}">
+            <td>${day}日</td>
+            <td>${weekday}</td>
+            <td>${clockIn}</td>
+            <td>${clockOut}</td>
+            <td>${breakTime}</td>
+            <td>${workHours}</td>
+            <td>${overtime}</td>
+            <td>${statusBadge}</td>
+          </tr>
+        `;
+      }
+      
+      tbody.innerHTML = html;
+      
+      // 月表示を更新
+      document.getElementById('month-display').textContent = `${currentYear}年${currentMonth + 1}月`;
+    }
+    
+    // 月間サマリーを表示
+    function renderMonthlySummary() {
+      let workDays = 0;
+      let totalHours = 0;
+      let overtimeHours = 0;
+      let lateCount = 0;
+      
+      monthlyAttendance.forEach(record => {
+        if (record.status === 'completed') {
+          workDays++;
+          if (record.work_hours) {
+            totalHours += record.work_hours;
+          }
+          if (record.overtime_hours) {
+            overtimeHours += record.overtime_hours;
+          }
+          if (record.is_late) {
+            lateCount++;
+          }
+        }
+      });
+      
+      document.getElementById('summary-work-days').textContent = `${workDays}日`;
+      document.getElementById('summary-total-hours').textContent = `${totalHours.toFixed(1)}h`;
+      document.getElementById('summary-overtime-hours').textContent = `${overtimeHours.toFixed(1)}h`;
+      document.getElementById('summary-late-count').textContent = `${lateCount}回`;
+    }
+    
+    // 月移動
+    function setupMonthNavigation() {
+      const prevBtn = document.getElementById('prev-month-btn');
+      const nextBtn = document.getElementById('next-month-btn');
+      
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+          currentMonth--;
+          if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+          }
+          loadTimecard();
+        });
+      }
+      
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          currentMonth++;
+          if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+          }
+          loadTimecard();
+        });
+      }
+    }
+    
     // 初期化
     document.addEventListener('DOMContentLoaded', () => {
       loadUser();
       setupEditForm();
       setupAttendanceButton();
+      setupMonthNavigation();
       initSidebar();
     });
 

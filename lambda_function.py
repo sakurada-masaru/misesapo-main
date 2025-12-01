@@ -2900,7 +2900,8 @@ def update_worker(worker_id, event, headers):
         expression_attribute_names = {}
         
         updatable_fields = [
-            'name', 'email', 'phone', 'role', 'role_code', 'department', 'status'
+            'name', 'email', 'phone', 'role', 'role_code', 'department', 'status',
+            'scheduled_start_time', 'scheduled_end_time', 'scheduled_work_hours', 'work_pattern'
         ]
         
         for field in updatable_fields:
@@ -3332,6 +3333,65 @@ def create_or_update_attendance(event, headers):
         # 総休憩時間を計算
         total_break_hours = sum(b.get('break_duration', 0) for b in processed_breaks if isinstance(b, dict))
         
+        # 従業員の所定労働時間を取得
+        scheduled_start_time = None
+        scheduled_end_time = None
+        scheduled_work_hours = 8.0  # デフォルト8時間
+        
+        try:
+            worker_response = WORKERS_TABLE.get_item(Key={'id': staff_id})
+            if 'Item' in worker_response:
+                worker = worker_response['Item']
+                scheduled_start_time = worker.get('scheduled_start_time', '09:00')
+                scheduled_end_time = worker.get('scheduled_end_time', '18:00')
+                scheduled_work_hours = float(worker.get('scheduled_work_hours', 8.0))
+        except Exception as e:
+            print(f"Error fetching worker info: {str(e)}")
+        
+        # 遅刻・早退の判定
+        is_late = False
+        late_minutes = 0
+        is_early_leave = False
+        early_leave_minutes = 0
+        
+        if clock_in and scheduled_start_time:
+            try:
+                clock_in_dt = datetime.fromisoformat(clock_in.replace('Z', '+00:00'))
+                # 日付部分を取得（UTC+9に変換）
+                clock_in_jst = clock_in_dt + timedelta(hours=9)
+                date_str = clock_in_jst.strftime('%Y-%m-%d')
+                
+                # 所定開始時刻を取得（JST）
+                scheduled_hour, scheduled_minute = map(int, scheduled_start_time.split(':'))
+                scheduled_dt_jst = datetime.strptime(f"{date_str} {scheduled_hour:02d}:{scheduled_minute:02d}", '%Y-%m-%d %H:%M')
+                scheduled_dt_utc = scheduled_dt_jst - timedelta(hours=9)
+                scheduled_dt_utc = scheduled_dt_utc.replace(tzinfo=timezone.utc)
+                
+                if clock_in_dt > scheduled_dt_utc:
+                    is_late = True
+                    late_minutes = int((clock_in_dt - scheduled_dt_utc).total_seconds() / 60)
+            except (ValueError, AttributeError) as e:
+                print(f"Error calculating late time: {str(e)}")
+        
+        if clock_out and scheduled_end_time:
+            try:
+                clock_out_dt = datetime.fromisoformat(clock_out.replace('Z', '+00:00'))
+                # 日付部分を取得（UTC+9に変換）
+                clock_out_jst = clock_out_dt + timedelta(hours=9)
+                date_str = clock_out_jst.strftime('%Y-%m-%d')
+                
+                # 所定終了時刻を取得（JST）
+                scheduled_hour, scheduled_minute = map(int, scheduled_end_time.split(':'))
+                scheduled_dt_jst = datetime.strptime(f"{date_str} {scheduled_hour:02d}:{scheduled_minute:02d}", '%Y-%m-%d %H:%M')
+                scheduled_dt_utc = scheduled_dt_jst - timedelta(hours=9)
+                scheduled_dt_utc = scheduled_dt_utc.replace(tzinfo=timezone.utc)
+                
+                if clock_out_dt < scheduled_dt_utc:
+                    is_early_leave = True
+                    early_leave_minutes = int((scheduled_dt_utc - clock_out_dt).total_seconds() / 60)
+            except (ValueError, AttributeError) as e:
+                print(f"Error calculating early leave time: {str(e)}")
+        
         # 労働時間を計算
         total_hours = 0
         work_hours = 0
@@ -3343,8 +3403,8 @@ def create_or_update_attendance(event, headers):
                 clock_out_dt = datetime.fromisoformat(clock_out.replace('Z', '+00:00'))
                 total_hours = (clock_out_dt - clock_in_dt).total_seconds() / 3600
                 work_hours = max(0, total_hours - total_break_hours)
-                # 残業時間（8時間超過分）
-                overtime_hours = max(0, work_hours - 8.0)
+                # 残業時間（所定労働時間超過分）
+                overtime_hours = max(0, work_hours - scheduled_work_hours)
             except (ValueError, AttributeError):
                 pass
         
@@ -3398,6 +3458,22 @@ def create_or_update_attendance(event, headers):
                 expression_attribute_names["#overtime_hours"] = "overtime_hours"
                 expression_attribute_values[":overtime_hours"] = round(overtime_hours, 2)
             
+            if is_late:
+                update_expression_parts.append("#is_late = :is_late")
+                update_expression_parts.append("#late_minutes = :late_minutes")
+                expression_attribute_names["#is_late"] = "is_late"
+                expression_attribute_names["#late_minutes"] = "late_minutes"
+                expression_attribute_values[":is_late"] = True
+                expression_attribute_values[":late_minutes"] = late_minutes
+            
+            if is_early_leave:
+                update_expression_parts.append("#is_early_leave = :is_early_leave")
+                update_expression_parts.append("#early_leave_minutes = :early_leave_minutes")
+                expression_attribute_names["#is_early_leave"] = "is_early_leave"
+                expression_attribute_names["#early_leave_minutes"] = "early_leave_minutes"
+                expression_attribute_values[":is_early_leave"] = True
+                expression_attribute_values[":early_leave_minutes"] = early_leave_minutes
+            
             update_expression_parts.append("#status = :status")
             expression_attribute_names["#status"] = "status"
             expression_attribute_values[":status"] = status
@@ -3426,6 +3502,10 @@ def create_or_update_attendance(event, headers):
                 'total_hours': round(total_hours, 2) if total_hours > 0 else None,
                 'work_hours': round(work_hours, 2) if work_hours > 0 else None,
                 'overtime_hours': round(overtime_hours, 2) if overtime_hours > 0 else None,
+                'is_late': is_late if is_late else None,
+                'late_minutes': late_minutes if is_late else None,
+                'is_early_leave': is_early_leave if is_early_leave else None,
+                'early_leave_minutes': early_leave_minutes if is_early_leave else None,
                 'status': status,
                 'created_at': now,
                 'updated_at': now
