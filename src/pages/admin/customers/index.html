@@ -2,40 +2,8 @@
 @json('data/meta/admin_stores_title.json', $title)
 @json('data/meta/admin_stores_body_class.json', $body_class)
 
-<script src="/js/data_utils.js"></script>
-<script>
-  async 
-      }
-
-      // Firebase認証からメールアドレスを取得（フォールバック）
-      if (!email) {
-        const authData = window.Auth?.getAuthData?.();
-        if (authData) {
-          email = authData.user?.email || authData.email;
-        }
-      }
-
-      if (email) {
-        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
-        mypageLink.style.display = 'flex';
-        console.log('[Admin] Mypage link set:', mypageLink.href);
-      }
-    } else {
-        console.warn('[Admin] No email found for mypage link');
-      }
-    } catch (error) {
-      console.error('Error setting up mypage link:', error);
-    }
-  }
-
-
-</script>
-
 <main id="main" class="admin-stores-v2">
-  @include(\'partials.admin-sidebar\')
-<!-- サイドバー -->
-  
-
+  @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->
   <div class="main-content">
     <div class="container">
@@ -401,8 +369,6 @@
       background: #f9fafb;
     }
 
-    
-    
     .logo-link {
       display: flex;
       align-items: center;
@@ -434,12 +400,7 @@
       font-weight: 500;
       white-space: nowrap;
     }
-    
-    
-    
-    
-    
-    
+
     .nav-label {
       transition: opacity 0.3s ease;
       white-space: nowrap;
@@ -455,8 +416,6 @@
     }
     
     .sidebar.collapsed 
-    
-    
 
     /* メインコンテンツ */
     .main-content {
@@ -2474,8 +2433,7 @@
   }
   
   // ページ読み込み時にロールを更新
-  
-  
+
   // Authの状態が変わったときにロールを更新
   if (window.Auth && window.Auth.onAuthStateChanged) {
     window.Auth.onAuthStateChanged(() => {
@@ -2484,7 +2442,5 @@
   }
     </script>
 
-
     </main>
-
 

@@ -1,35 +1,9 @@
 @layout('layouts.admin')
 @json('data/meta/admin_user_detail_title.json', $title)
 @json('data/meta/admin_user_detail_body_class.json', $body_class)
-<script src="/js/client_auth.js">
-  // マイページリンクを設定
-  async 
-      }
-
-      // Firebase認証からメールアドレスを取得（フォールバック）
-      if (!email) {
-        const authData = window.Auth?.getAuthData?.();
-        if (authData) {
-          email = authData.user?.email || authData.email;
-        }
-      }
-
-      if (email) {
-        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
-        mypageLink.style.display = 'flex';
-      }
-    } catch (error) {
-      console.error('Error setting up mypage link:', error);
-    }
-  }
-
-</script>
 
 <main id="main" class="admin-user-detail">
-  @include(\'partials.admin-sidebar\')
-<!-- サイドバー -->
-  
-
+  @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->
   <div class="main-content">
     <div class="page-header">
@@ -305,7 +279,6 @@
       background: #f9fafb;
     }
 
-    
           padding: 16px;
       border-bottom: 1px solid #e5e7eb;
       min-height: 64px;
@@ -354,9 +327,7 @@
       transition: all 0.2s;
       white-space: nowrap;
     }
-    
-    
-    
+
           width: 18px;
       text-align: center;
       flex-shrink: 0;
@@ -366,9 +337,7 @@
       white-space: nowrap;
       font-size: 0.8125rem;
     }
-    
-    
-    
+
     .sidebar.collapsed 
     .nav-divider {
       height: 1px;
@@ -1199,7 +1168,6 @@
       // エラーを防ぐため、空の関数として残す
     }
 
-
     // メールアドレスのバリデーション（現状は個人メールアドレスも許可）
     function validateEmail(email) {
       if (!email) {
@@ -1514,8 +1482,7 @@
       }
 
       // ロール表示の更新
-      
-      
+
       if (window.Auth && window.Auth.onAuthStateChanged) {
         window.Auth.onAuthStateChanged(() => {
           

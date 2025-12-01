@@ -3,10 +3,7 @@
 @json('data/meta/admin_orders_body_class.json', $body_class)
 
 <main id="main" class="admin-orders-v2">
-  @include(\'partials.admin-sidebar\')
-<!-- サイドバー -->
-  
-
+  @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->
   <div class="main-content">
     <!-- トップバー -->
@@ -131,8 +128,6 @@
     background: #f9fafb;
   }
 
-  
-  
   .logo-link {
     display: flex;
     align-items: center;
@@ -175,9 +170,7 @@
     transition: all 0.2s;
     white-space: nowrap;
   }
-  
-  
-  
+
         width: 18px;
     text-align: center;
     flex-shrink: 0;
@@ -187,9 +180,7 @@
     white-space: nowrap;
       font-size: 0.8125rem;
   }
-  
-  
-  
+
   .sidebar.collapsed 
   .nav-divider {
     height: 1px;
@@ -465,9 +456,7 @@
       roleBadge.textContent = '管理者';
     }
   }
-  
-  
-  
+
   if (window.Auth && window.Auth.onAuthStateChanged) {
     window.Auth.onAuthStateChanged(() => {
       

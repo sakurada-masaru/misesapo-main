@@ -2,38 +2,8 @@
 @json('data/meta/admin_reports_title.json', $title)
 @json('data/meta/admin_reports_body_class.json', $body_class)
 
-<script src="/js/data_utils.js"></script>
-<script>
-  // マイページリンクを設定
-  async 
-      }
-
-      // Firebase認証からメールアドレスを取得（フォールバック）
-      if (!email) {
-        const authData = window.Auth?.getAuthData?.();
-        if (authData) {
-          email = authData.user?.email || authData.email;
-        }
-      }
-
-      if (email) {
-        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
-        mypageLink.style.display = 'flex';
-        console.log('[Reports] Mypage link set:', mypageLink.href);
-      } else {
-        console.warn('[Reports] No email found for mypage link');
-      }
-    } catch (error) {
-      console.error('Error setting up mypage link:', error);
-    }
-  }
-</script>
-
 <main id="main" class="admin-reports-v2">
-  @include(\'partials.admin-sidebar\')
-<!-- サイドバー -->
-  
-
+  @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->
   <div class="main-content">
     <!-- トップバー -->
@@ -211,8 +181,6 @@
       background: #f9fafb;
     }
 
-    
-    
     .logo-link {
       display: flex;
       align-items: center;
@@ -244,11 +212,7 @@
       font-weight: 500;
       white-space: nowrap;
     }
-    
-    
-    
-    
-    
+
           width: 18px;
       text-align: center;
       flex-shrink: 0;
@@ -265,8 +229,6 @@
     }
     
     .sidebar.collapsed 
-    
-    
 
     /* メインコンテンツ */
     .main-content {
@@ -1038,8 +1000,7 @@
   }
   
   // ページ読み込み時にロールを更新
-  
-  
+
   // Authの状態が変わったときにロールを更新
   if (window.Auth && window.Auth.onAuthStateChanged) {
     window.Auth.onAuthStateChanged(() => {

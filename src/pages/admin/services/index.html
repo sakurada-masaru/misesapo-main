@@ -3,40 +3,9 @@
 @json('data/meta/admin_services_body_class.json', $body_class)
 
 <!-- AWS API -->
-<script src="/js/aws-services-api.js"></script>
-<script>
-  async 
-      }
-
-      // Firebase認証からメールアドレスを取得（フォールバック）
-      if (!email) {
-        const authData = window.Auth?.getAuthData?.();
-        if (authData) {
-          email = authData.user?.email || authData.email;
-        }
-      }
-
-      if (email) {
-        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
-        mypageLink.style.display = 'flex';
-        console.log('[Admin] Mypage link set:', mypageLink.href);
-      }
-    } else {
-        console.warn('[Admin] No email found for mypage link');
-      }
-    } catch (error) {
-      console.error('Error setting up mypage link:', error);
-    }
-  }
-
-
-</script>
 
 <main id="main" class="admin-services-v2">
-  @include(\'partials.admin-sidebar\')
-<!-- サイドバー -->
-  
-
+  @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->
   <div class="main-content">
     <div class="container">
@@ -499,8 +468,6 @@
       transition: margin-left 0.3s ease;
     }
 
-    
-  
     .logo-link {
       display: flex;
       align-items: center;
@@ -543,9 +510,7 @@
       transition: all 0.2s;
       white-space: nowrap;
     }
-    
-    
-    
+
           width: 18px;
       text-align: center;
       flex-shrink: 0;
@@ -562,8 +527,6 @@
     }
     
     .sidebar.collapsed 
-    
-    
 
     /* メインコンテンツ */
     .main-content {

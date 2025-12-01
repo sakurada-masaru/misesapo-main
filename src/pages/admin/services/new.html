@@ -3,13 +3,9 @@
 @json('data/meta/admin_services_new_body_class.json', $body_class)
 
 <!-- AWS API -->
-<script src="/js/aws-services-api.js"></script>
 
 <main id="main" class="admin-services-new">
-  @include(\'partials.admin-sidebar\')
-<!-- サイドバー -->
-  
-
+  @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->
   <div class="main-content">
     <div class="container">
@@ -136,8 +132,6 @@
       transition: margin-left 0.3s ease;
     }
 
-    
-    
     .logo-link {
       display: flex;
       align-items: center;
@@ -169,12 +163,7 @@
       font-weight: 500;
       white-space: nowrap;
     }
-    
-    
-    
-    
-    
-    
+
     .nav-label {
       transition: opacity 0.3s ease;
       white-space: nowrap;
@@ -186,8 +175,6 @@
     }
     
     .sidebar.collapsed 
-    
-    
 
     /* メインコンテンツ */
     .main-content {
@@ -932,8 +919,7 @@
       }
       
       // ページ読み込み時にロールを更新
-      
-      
+
       // Authの状態が変わったときにロールを更新
       if (window.Auth && window.Auth.onAuthStateChanged) {
         window.Auth.onAuthStateChanged(() => {

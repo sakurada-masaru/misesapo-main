@@ -4,10 +4,7 @@
 @json('data/partners.json', partners_data)
 
 <main id="main" class="admin-partners-v2">
-  @include(\'partials.admin-sidebar\')
-<!-- サイドバー -->
-  
-
+  @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->
   <div class="main-content">
     <!-- トップバー -->
@@ -93,8 +90,6 @@
     background: #f9fafb;
   }
 
-  
-  
   .logo-link {
     display: flex;
     align-items: center;
@@ -137,9 +132,7 @@
     transition: all 0.2s;
     white-space: nowrap;
   }
-  
-  
-  
+
         width: 18px;
     text-align: center;
     flex-shrink: 0;
@@ -149,9 +142,7 @@
     white-space: nowrap;
       font-size: 0.8125rem;
   }
-  
-  
-  
+
   .sidebar.collapsed 
   .nav-divider {
     height: 1px;
@@ -374,29 +365,6 @@
 <script type="application/json" id="partners-data">
   @jsonvar $partners_data
 </script>
-<script>
-  // マイページリンクを設定
-  async 
-      }
-
-      // Firebase認証からメールアドレスを取得（フォールバック）
-      if (!email) {
-        const authData = window.Auth?.getAuthData?.();
-        if (authData) {
-          email = authData.user?.email || authData.email;
-        }
-      }
-
-      if (email) {
-        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
-        mypageLink.style.display = 'flex';
-      }
-    } catch (error) {
-      console.error('Error setting up mypage link:', error);
-    }
-  }
-
-</script>
 
 <script>
   // パートナー企業データの読み込みと表示
@@ -537,9 +505,7 @@
       roleBadge.textContent = '管理者';
     }
   }
-  
-  
-  
+
   if (window.Auth && window.Auth.onAuthStateChanged) {
     window.Auth.onAuthStateChanged(() => {
       
