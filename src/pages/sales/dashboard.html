@@ -2799,14 +2799,16 @@
         ]);
         
         if (storesRes.ok) {
-        allStores = await storesRes.json();
+          const storesData = await storesRes.json();
+          allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
         } else {
           console.warn('Failed to load stores');
           allStores = [];
         }
         
         if (schedulesRes.ok) {
-        allSchedules = await schedulesRes.json();
+          const schedulesData = await schedulesRes.json();
+          allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
         } else {
           console.warn('Failed to load schedules');
           allSchedules = [];
