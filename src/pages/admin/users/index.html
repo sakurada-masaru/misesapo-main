@@ -925,30 +925,6 @@
     
   });
 
-  // マイページリンクを設定
-  async 
-      }
-
-      // Firebase認証からメールアドレスを取得（フォールバック）
-      if (!email) {
-        const authData = window.Auth?.getAuthData?.();
-        if (authData) {
-          email = authData.user?.email || authData.email;
-        }
-      }
-
-      if (email) {
-        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
-        mypageLink.style.display = 'flex';
-        console.log('[Users] Mypage link set:', mypageLink.href);
-      } else {
-        console.warn('[Users] No email found for mypage link');
-      }
-    } catch (error) {
-      console.error('Error setting up mypage link:', error);
-    }
-  }
-
   // ユーザー読み込み
   async function loadUsers() {
     try {
@@ -1723,44 +1699,6 @@
     }
   });
 })();
-
-  , collapsed);
-    });
-  }
-
-  // ロール表示の更新
-  ,
-            'customer': { bg: '#dbeafe', color: '#1e40af' },
-            'admin': { bg: '#fce7f3', color: '#be185d' },
-            'sales': { bg: '#dcfce7', color: '#15803d' },
-            'office': { bg: '#e0e7ff', color: '#3730a3' },
-            'staff': { bg: '#ffedd5', color: '#c2410c' },
-            'developer': { bg: '#f0f9ff', color: '#0c4a6e' },
-            'designer': { bg: '#fce7f3', color: '#9f1239' },
-            'general_affairs': { bg: '#fef3c7', color: '#92400e' },
-            'operation': { bg: '#ddd6fe', color: '#5b21b6' },
-            'contractor': { bg: '#f3f4f6', color: '#374151' },
-            'accounting': { bg: '#d1fae5', color: '#065f46' },
-            'human_resources': { bg: '#fce7f3', color: '#831843' },
-            'concierge': { bg: '#fef3c7', color: '#92400e' },
-            'master': { bg: '#fef2f2', color: '#991b1b' }
-          };
-          
-          const colors = badgeColors[user.role] || badgeColors['admin'];
-          roleBadge.style.background = colors.bg;
-          roleBadge.style.color = colors.color;
-        }
-      }
-    } else {
-      roleBadge.textContent = '管理者';
-    }
-  }
-
-  if (window.Auth && window.Auth.onAuthStateChanged) {
-    window.Auth.onAuthStateChanged(() => {
-      
-    });
-  }
 </script>
   </div>
 </main>
