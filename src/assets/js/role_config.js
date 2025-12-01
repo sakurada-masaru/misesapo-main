@@ -50,6 +50,26 @@ const ROLE_CONFIG = {
       password: null,
       displayName: '外部委託'
     },
+    general_affairs: { 
+      name: '総務', 
+      password: null,
+      displayName: '総務'
+    },
+    operation: { 
+      name: '運営', 
+      password: null,
+      displayName: '運営'
+    },
+    accounting: { 
+      name: '経理', 
+      password: null,
+      displayName: '経理'
+    },
+    human_resources: { 
+      name: '人事', 
+      password: null,
+      displayName: '人事'
+    },
     master: { 
       name: 'マスター', 
       password: 'master1234',
@@ -58,7 +78,7 @@ const ROLE_CONFIG = {
   },
   
   // ロール階層（上位ロールは下位ロールの権限も持つ）
-  // 階層: マスター > 開発者 > 管理者 > コンシェルジュ > 事務・デザイナー > 清掃員・外部委託・ユーザー（同レベル）
+  // 階層: マスター > 開発者 > 管理者 > コンシェルジュ > 事務・デザイナー・総務・運営・経理・人事 > 清掃員・外部委託・ユーザー（同レベル）
   roleHierarchy: {
     guest: ['guest'],
     customer: ['guest', 'customer'],  // ユーザー（顧客）
@@ -66,10 +86,14 @@ const ROLE_CONFIG = {
     contractor: ['guest', 'contractor'],  // 外部委託
     office: ['guest', 'office'],      // 事務
     designer: ['guest', 'designer'],  // デザイナー
+    general_affairs: ['guest', 'general_affairs'],  // 総務
+    operation: ['guest', 'operation'],  // 運営
+    accounting: ['guest', 'accounting'],  // 経理
+    human_resources: ['guest', 'human_resources'],  // 人事
     concierge: ['guest', 'customer', 'staff', 'concierge'],  // コンシェルジュ: 清掃員とユーザーの権限も持つ
-    admin: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'concierge', 'admin'],  // 管理者: すべての権限
-    developer: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'concierge', 'admin', 'developer'],  // 開発者: すべての権限
-    master: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'concierge', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
+    admin: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'general_affairs', 'operation', 'accounting', 'human_resources', 'concierge', 'admin'],  // 管理者: すべての権限
+    developer: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'general_affairs', 'operation', 'accounting', 'human_resources', 'concierge', 'admin', 'developer'],  // 開発者: すべての権限
+    master: ['guest', 'customer', 'staff', 'contractor', 'office', 'designer', 'general_affairs', 'operation', 'accounting', 'human_resources', 'concierge', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
   },
   
   // ロールごとのログイン後リダイレクト先
