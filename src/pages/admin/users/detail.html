@@ -1,17 +1,104 @@
 @layout('layouts.admin')
 @json('data/meta/admin_user_detail_title.json', $title)
 @json('data/meta/admin_user_detail_body_class.json', $body_class)
+<script src="/assets/js/client_auth.js"></script>
 
 <main id="main" class="admin-user-detail">
-  <div class="page-header">
-    <a href="/admin/users/" class="back-btn">
+  <!-- サイドバー -->
+  <aside class="sidebar" id="admin-sidebar">
+    <div class="sidebar-header">
+      <a href="/admin/dashboard.html" class="logo-link">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+        <span class="logo-text">ミセサポ</span>
+      </a>
+    </div>
+    
+    <!-- ロール表示 -->
+    <div class="sidebar-role">
+      <span class="role-badge" id="sidebar-role-badge">管理者</span>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="/admin/dashboard.html" class="nav-item">
+        <i class="fas fa-history"></i>
+        <span class="nav-label">アクティビティ</span>
+      </a>
+      <a href="/admin/schedules/" class="nav-item">
+        <i class="fas fa-calendar-alt"></i>
+        <span class="nav-label">スケジュール</span>
+      </a>
+      <a href="/admin/customers/" class="nav-item">
+        <i class="fas fa-store"></i>
+        <span class="nav-label">顧客管理</span>
+      </a>
+      <a href="/admin/reports/" class="nav-item">
+        <i class="fas fa-file-alt"></i>
+        <span class="nav-label">レポート</span>
+      </a>
+      <a href="/admin/estimates/" class="nav-item">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span class="nav-label">見積もり</span>
+      </a>
+      <a href="/admin/orders.html" class="nav-item">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="nav-label">発注管理</span>
+      </a>
+      <a href="/admin/partners.html" class="nav-item">
+        <i class="fas fa-handshake"></i>
+        <span class="nav-label">パートナー企業</span>
+      </a>
+      <a href="/admin/users/" class="nav-item active">
+        <i class="fas fa-users"></i>
+        <span class="nav-label">ユーザー</span>
+      </a>
+      <a href="/admin/services/" class="nav-item">
+        <i class="fas fa-cog"></i>
+        <span class="nav-label">サービス管理</span>
+      </a>
+      <a href="/admin/analytics/" class="nav-item">
+        <i class="fas fa-chart-bar"></i>
+        <span class="nav-label">分析</span>
+      </a>
+      <a href="/admin/images/" class="nav-item">
+        <i class="fas fa-images"></i>
+        <span class="nav-label">メディア</span>
+      </a>
+      <div class="nav-divider"></div>
+      <a href="/wiki" class="nav-item">
+        <i class="fas fa-book-open"></i>
+        <span class="nav-label">WIKI</span>
+      </a>
+      <a href="/admin/settings/" class="nav-item">
+        <i class="fas fa-sliders-h"></i>
+        <span class="nav-label">設定</span>
+      </a>
+      <a href="/admin/sitemap.html" class="nav-item">
+        <i class="fas fa-sitemap"></i>
+        <span class="nav-label">サイトマップ</span>
+      </a>
+      <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        <span class="nav-label">ログアウト</span>
+      </button>
+    </nav>
+
+    <!-- トグルボタン -->
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
       <i class="fas fa-chevron-left"></i>
-    </a>
-    <h1 class="page-title" id="page-title">ユーザー詳細</h1>
-    <button class="btn btn-outline btn-sm" id="edit-btn" style="display: none;" onclick="openEditModal()">
-      <i class="fas fa-edit"></i> 編集
     </button>
-  </div>
+  </aside>
+
+  <!-- メインコンテンツ -->
+  <div class="main-content">
+    <div class="page-header">
+      <a href="/admin/users/" class="back-btn">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+      <h1 class="page-title" id="page-title">ユーザー詳細</h1>
+      <button class="btn btn-outline btn-sm" id="edit-btn" style="display: none;" onclick="openEditModal()">
+        <i class="fas fa-edit"></i> 編集
+      </button>
+    </div>
 
   <div class="loading" id="loading">読み込み中...</div>
   <div id="error-message" class="error-message" style="display: none;"></div>
@@ -216,10 +303,183 @@
   </div>
 
   <style>
+    :root {
+      --sidebar-width: 240px;
+      --sidebar-width-collapsed: 64px;
+    }
+
     .admin-user-detail {
+      display: flex;
+      min-height: 100vh;
+      background: #f9fafb;
+    }
+
+    /* サイドバー */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+      transition: width 0.3s ease;
+      overflow: hidden;
+    }
+    .sidebar.collapsed {
+      width: var(--sidebar-width-collapsed);
+    }
+    .sidebar.collapsed .nav-label,
+    .sidebar.collapsed .logo-text,
+    .sidebar.collapsed .sidebar-role {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+    }
+    .sidebar.collapsed .sidebar-toggle i {
+      transform: rotate(180deg);
+    }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid #e5e7eb;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+    }
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .logo-img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      white-space: nowrap;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-role {
+      padding: 8px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-role .role-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: auto;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      color: #6b7280;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .nav-item-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover {
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .nav-item.active {
+      background: var(--primary, #3b82f6);
+      color: #fff;
+    }
+    .nav-item i {
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .nav-label {
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+    }
+    .sidebar-toggle {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border: 1px solid #e5e7eb;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      transition: all 0.2s;
+      z-index: 200;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .sidebar-toggle:hover {
+      background: #f3f4f6;
+      border-color: var(--primary, #3b82f6);
+      color: var(--primary, #3b82f6);
+    }
+    .sidebar-toggle i {
+      transition: transform 0.3s ease;
+    }
+    .sidebar.collapsed .sidebar-toggle {
+      right: 18px;
+    }
+    .nav-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 8px 12px;
+    }
+
+    /* メインコンテンツ */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 24px;
+      background: #f9fafb;
+      transition: margin-left 0.3s ease;
+      min-height: 100vh;
+    }
+    .sidebar.collapsed ~ .main-content {
+      margin-left: var(--sidebar-width-collapsed);
+    }
+
+    /* 既存のスタイル */
+    .main-content {
       max-width: 100%;
-      margin: 0;
-      padding: 16px;
       background: #f9fafb;
     }
     .page-header {
@@ -1140,7 +1400,77 @@
       loadUser();
       setupEditForm();
       setupAttendanceButton();
+      initSidebar();
     });
+
+    // サイドバーの初期化
+    function initSidebar() {
+      const sidebar = document.getElementById('admin-sidebar');
+      const sidebarToggle = document.getElementById('sidebar-toggle');
+      
+      if (sidebar && sidebarToggle) {
+        const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+        if (isCollapsed) {
+          sidebar.classList.add('collapsed');
+        }
+        
+        sidebarToggle.addEventListener('click', () => {
+          sidebar.classList.toggle('collapsed');
+          const collapsed = sidebar.classList.contains('collapsed');
+          localStorage.setItem('sidebar-collapsed', collapsed);
+        });
+      }
+
+      // ロール表示の更新
+      updateRoleBadge();
+      
+      if (window.Auth && window.Auth.onAuthStateChanged) {
+        window.Auth.onAuthStateChanged(() => {
+          updateRoleBadge();
+        });
+      }
+    }
+
+    // ロール表示の更新
+    function updateRoleBadge() {
+      const roleBadge = document.getElementById('sidebar-role-badge');
+      if (!roleBadge) return;
+      
+      if (window.Auth && window.Auth.getCurrentUser) {
+        const user = window.Auth.getCurrentUser();
+        if (user && user.role) {
+          const roleConfig = window.RoleConfig?.ROLE_CONFIG;
+          const roleInfo = roleConfig?.roles?.[user.role];
+          if (roleInfo) {
+            roleBadge.textContent = roleInfo.displayName || roleInfo.name || user.role;
+            
+            const badgeColors = {
+              'guest': { bg: '#e5e7eb', color: '#6b7280' },
+              'customer': { bg: '#dbeafe', color: '#1e40af' },
+              'admin': { bg: '#fce7f3', color: '#be185d' },
+              'sales': { bg: '#dcfce7', color: '#15803d' },
+              'office': { bg: '#e0e7ff', color: '#3730a3' },
+              'staff': { bg: '#ffedd5', color: '#c2410c' },
+              'developer': { bg: '#f0f9ff', color: '#0c4a6e' },
+              'designer': { bg: '#fce7f3', color: '#9f1239' },
+              'general_affairs': { bg: '#fef3c7', color: '#92400e' },
+              'operation': { bg: '#ddd6fe', color: '#5b21b6' },
+              'contractor': { bg: '#f3f4f6', color: '#374151' },
+              'accounting': { bg: '#d1fae5', color: '#065f46' },
+              'human_resources': { bg: '#fce7f3', color: '#831843' },
+              'concierge': { bg: '#fef3c7', color: '#92400e' },
+              'master': { bg: '#fef2f2', color: '#991b1b' }
+            };
+            
+            const colors = badgeColors[user.role] || badgeColors['admin'];
+            roleBadge.style.background = colors.bg;
+            roleBadge.style.color = colors.color;
+          }
+        }
+      } else {
+        roleBadge.textContent = '管理者';
+      }
+    }
   </script>
 </main>
 
