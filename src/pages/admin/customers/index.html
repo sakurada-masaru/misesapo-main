@@ -1652,10 +1652,14 @@
         (store.address1 || '').toLowerCase().includes(searchTerm) ||
         (store.phone || '').includes(searchTerm);
       
-      // ブランドでフィルター
+      // ブランドでフィルター（IdUtils.isSameを使用）
       let matchBrand = true;
       if (brandValue) {
-        matchBrand = store.brand_id === brandValue;
+        if (window.DataUtils?.IdUtils?.isSame) {
+          matchBrand = window.DataUtils.IdUtils.isSame(store.brand_id, brandValue);
+        } else {
+          matchBrand = store.brand_id === brandValue || String(store.brand_id) === String(brandValue);
+        }
       }
       
       // 取引先でフィルター（ブランド経由、または直接）

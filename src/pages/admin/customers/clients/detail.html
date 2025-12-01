@@ -907,7 +907,12 @@
         console.warn('Failed to load schedules');
       }
 
-      clientData = clients.find(c => String(c.id) === String(clientId));
+      // EntityFinderを使用してID形式の違いに対応
+      if (window.DataUtils?.EntityFinder?.findClient) {
+        clientData = window.DataUtils.EntityFinder.findClient(clients, clientId);
+      } else {
+        clientData = clients.find(c => String(c.id) === String(clientId));
+      }
       if (!clientData) {
         document.getElementById('client-name').textContent = '企業が見つかりません';
         return;

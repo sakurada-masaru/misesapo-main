@@ -684,12 +684,26 @@
           const allBrands  = rawBrandsRes && rawBrandsRes.ok ? await rawBrandsRes.json() : [];
 
           function getClientName(clientId) {
-            const c = allClients.find(x => x.id === clientId);
-            return c ? c.name : '';
+            if (!clientId) return '';
+            // EntityFinderを使用してID形式の違いに対応
+            let c = null;
+            if (window.DataUtils?.EntityFinder?.findClient) {
+              c = window.DataUtils.EntityFinder.findClient(allClients, clientId);
+            } else {
+              c = allClients.find(x => x.id === clientId || String(x.id) === String(clientId));
+            }
+            return c ? (c.name || c.company_name || '') : '';
           }
 
           function getBrandName(brandId) {
-            const b = allBrands.find(x => x.id === brandId);
+            if (!brandId) return '';
+            // EntityFinderを使用してID形式の違いに対応
+            let b = null;
+            if (window.DataUtils?.EntityFinder?.findBrand) {
+              b = window.DataUtils.EntityFinder.findBrand(allBrands, brandId);
+            } else {
+              b = allBrands.find(x => x.id === brandId || String(x.id) === String(brandId));
+            }
             return b ? b.name : '';
           }
 
