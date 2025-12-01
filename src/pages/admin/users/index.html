@@ -1111,8 +1111,11 @@
           role = getRoleFromCode(w.role_code);
         }
         
+        // IDを正規化（文字列として扱う）
+        const workerId = String(w.id || w.user_id || `user_${Date.now()}_${Math.random()}`);
+        
         return {
-          id: w.id || w.user_id || `user_${Date.now()}_${Math.random()}`,
+          id: workerId,
           name: w.name || w.display_name || `ユーザー${w.id || ''}`,
           email: w.email || w.email_address || '-',
           phone: w.phone || w.phone_number || '-',
@@ -1336,11 +1339,15 @@
       confirmBtn.disabled = true;
       confirmBtn.textContent = '削除中...';
       
-      console.log('Attempting to delete worker with ID:', deleteTargetId);
-      console.log('All available user IDs:', allUsers.map(u => u.id));
+      // IDを文字列として正規化
+      const normalizedId = String(deleteTargetId);
+      
+      console.log('Attempting to delete worker with ID:', normalizedId);
+      console.log('ID type:', typeof normalizedId);
+      console.log('All available user IDs:', allUsers.map(u => ({ id: u.id, type: typeof u.id })));
       
       try {
-        const response = await fetch(`${API_BASE}/workers/${deleteTargetId}`, {
+        const response = await fetch(`${API_BASE}/workers/${encodeURIComponent(normalizedId)}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'

@@ -2365,16 +2365,25 @@ def delete_worker(worker_id, headers):
     従業員を削除
     """
     try:
+        # IDを文字列として正規化
+        worker_id = str(worker_id)
+        print(f"Delete request for worker_id: {worker_id} (type: {type(worker_id).__name__})")
+        
         # 削除前に存在確認
         response = WORKERS_TABLE.get_item(Key={'id': worker_id})
         if 'Item' not in response:
+            # 全ユーザーをスキャンしてIDを確認（デバッグ用）
+            scan_response = WORKERS_TABLE.scan()
+            all_ids = [item.get('id') for item in scan_response.get('Items', [])]
             print(f"Worker not found: {worker_id}")
+            print(f"Available worker IDs: {all_ids}")
             return {
                 'statusCode': 404,
                 'headers': headers,
                 'body': json.dumps({
                     'error': '従業員が見つかりません',
-                    'id': worker_id
+                    'id': worker_id,
+                    'available_ids': all_ids[:10]  # 最初の10件のみ返す
                 }, ensure_ascii=False)
             }
         
