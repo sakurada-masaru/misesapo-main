@@ -120,7 +120,10 @@
             // ロールに応じてリダイレクト
             const role = result.user.role || 'staff';
             let redirectPath = '/staff/dashboard.html';
-            if (role === 'admin' || role === 'developer' || role === 'master') {
+            if (role === 'master') {
+              // マスター権限はサイトマップにリダイレクト
+              redirectPath = '/admin/sitemap.html';
+            } else if (role === 'admin' || role === 'developer') {
               redirectPath = '/admin/dashboard.html';
             } else if (role === 'sales') {
               redirectPath = '/sales/dashboard.html';
