@@ -48,7 +48,7 @@
       const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
 
       cognitoUser.authenticateUser(authenticationDetails, {
-        onSuccess: function(result) {
+        onSuccess: async function(result) {
           // トークンを保存
           const idToken = result.getIdToken().getJwtToken();
           const accessToken = result.getAccessToken().getJwtToken();
@@ -135,7 +135,7 @@
         return;
       }
 
-      cognitoUser.getSession(function(err, session) {
+      cognitoUser.getSession(async function(err, session) {
         if (err || !session.isValid()) {
           resolve(null);
           return;
