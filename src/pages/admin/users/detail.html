@@ -471,16 +471,23 @@
 
     // URLからユーザーIDを取得
     function getUserIdFromUrl() {
+      // まずクエリパラメータから取得を試みる
+      const urlParams = new URLSearchParams(window.location.search);
+      const idFromQuery = urlParams.get('id') || urlParams.get('user_id');
+      if (idFromQuery) {
+        return idFromQuery;
+      }
+      
+      // パスから取得を試みる（後方互換性のため）
       const path = window.location.pathname;
       let match = path.match(/\/admin\/users\/([^\/]+)(?:\.html)?$/);
       if (match) {
         const id = match[1];
-        if (id === '[id]') {
-          const urlParams = new URLSearchParams(window.location.search);
-          return urlParams.get('id') || urlParams.get('user_id');
+        if (id !== 'detail') {
+          return id;
         }
-        return id;
       }
+      
       return null;
     }
 

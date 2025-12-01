@@ -1221,7 +1221,7 @@
         <td>
           <div class="user-name-cell">
             <span class="user-avatar">${(u.name || '?')[0]}</span>
-            <a href="/admin/users/${u.id}.html" class="user-name-link">${escapeHtml(u.name || '-')}</a>
+            <a href="/admin/users/detail.html?id=${u.id}" class="user-name-link">${escapeHtml(u.name || '-')}</a>
           </div>
         </td>
         <td>${escapeHtml(u.email || '-')}</td>
