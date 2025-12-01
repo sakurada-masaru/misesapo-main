@@ -868,17 +868,44 @@
   async function loadAllData() {
     try {
       const [clientsRes, brandsRes, storesRes, schedulesRes] = await Promise.all([
-        fetch(`${API_BASE}/clients`),
-        fetch(`${API_BASE}/brands`),
-        fetch(`${API_BASE}/stores`),
-        fetch(`${API_BASE}/schedules`)
+        fetch(`${API_BASE}/clients`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE}/brands`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE}/stores`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE}/schedules`).catch(() => ({ ok: false }))
       ]);
 
-      const clients = await clientsRes.json();
-      const brands = await brandsRes.json();
-      const stores = await storesRes.json();
-      const schedulesData = await schedulesRes.json();
-      const schedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+      let clients = [];
+      let brands = [];
+      let stores = [];
+      let schedules = [];
+      
+      if (clientsRes.ok) {
+        const clientsData = await clientsRes.json();
+        clients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
+      } else {
+        console.warn('Failed to load clients');
+      }
+      
+      if (brandsRes.ok) {
+        const brandsData = await brandsRes.json();
+        brands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
+      } else {
+        console.warn('Failed to load brands');
+      }
+      
+      if (storesRes.ok) {
+        const storesData = await storesRes.json();
+        stores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+      } else {
+        console.warn('Failed to load stores');
+      }
+      
+      if (schedulesRes.ok) {
+        const schedulesData = await schedulesRes.json();
+        schedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+      } else {
+        console.warn('Failed to load schedules');
+      }
 
       clientData = clients.find(c => String(c.id) === String(clientId));
       if (!clientData) {
