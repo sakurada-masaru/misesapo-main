@@ -913,16 +913,28 @@
         return;
       }
 
-      // この企業に属するブランド
-      allBrands = brands.filter(b => String(b.client_id) === String(clientId));
+      // この企業に属するブランド（IdUtils.isSameを使用）
+      if (window.DataUtils?.IdUtils?.isSame) {
+        allBrands = brands.filter(b => window.DataUtils.IdUtils.isSame(b.client_id, clientId));
+      } else {
+        allBrands = brands.filter(b => String(b.client_id) === String(clientId));
+      }
       
-      // この企業に属する店舗（ブランド経由）
+      // この企業に属する店舗（ブランド経由、IdUtils.isSameを使用）
       const brandIds = allBrands.map(b => String(b.id));
-      allStores = stores.filter(s => brandIds.includes(String(s.brand_id)));
+      if (window.DataUtils?.IdUtils?.isSame) {
+        allStores = stores.filter(s => brandIds.some(bid => window.DataUtils.IdUtils.isSame(s.brand_id, bid)));
+      } else {
+        allStores = stores.filter(s => brandIds.includes(String(s.brand_id)));
+      }
       
-      // この企業の店舗のスケジュール
+      // この企業の店舗のスケジュール（IdUtils.isSameを使用）
       const storeIds = allStores.map(s => String(s.id));
-      allSchedules = schedules.filter(s => storeIds.includes(String(s.store_id)));
+      if (window.DataUtils?.IdUtils?.isSame) {
+        allSchedules = schedules.filter(s => storeIds.some(sid => window.DataUtils.IdUtils.isSame(s.store_id, sid)));
+      } else {
+        allSchedules = schedules.filter(s => storeIds.includes(String(s.store_id)));
+      }
 
       renderAll();
 
@@ -999,7 +1011,13 @@
     }
 
     container.innerHTML = allBrands.map(brand => {
-      const storeCount = allStores.filter(s => String(s.brand_id) === String(brand.id)).length;
+      // IdUtils.isSameを使用してID形式の違いに対応
+      let storeCount = 0;
+      if (window.DataUtils?.IdUtils?.isSame) {
+        storeCount = allStores.filter(s => window.DataUtils.IdUtils.isSame(s.brand_id, brand.id)).length;
+      } else {
+        storeCount = allStores.filter(s => String(s.brand_id) === String(brand.id)).length;
+      }
       return `
         <div class="brand-item" onclick="viewBrand('${brand.id}')">
           <div class="brand-icon"><i class="fas fa-store"></i></div>

@@ -794,12 +794,20 @@
       // 親企業を取得
       clientData = clients.find(c => String(c.id) === String(brandData.client_id));
       
-      // このブランドに属する店舗
-      allStores = stores.filter(s => String(s.brand_id) === String(brandId));
+      // このブランドに属する店舗（IdUtils.isSameを使用）
+      if (window.DataUtils?.IdUtils?.isSame) {
+        allStores = stores.filter(s => window.DataUtils.IdUtils.isSame(s.brand_id, brandId));
+      } else {
+        allStores = stores.filter(s => String(s.brand_id) === String(brandId));
+      }
       
-      // この店舗のスケジュール
+      // この店舗のスケジュール（IdUtils.isSameを使用）
       const storeIds = allStores.map(s => String(s.id));
-      allSchedules = schedules.filter(s => storeIds.includes(String(s.store_id)));
+      if (window.DataUtils?.IdUtils?.isSame) {
+        allSchedules = schedules.filter(s => storeIds.some(sid => window.DataUtils.IdUtils.isSame(s.store_id, sid)));
+      } else {
+        allSchedules = schedules.filter(s => storeIds.includes(String(s.store_id)));
+      }
 
       renderAll();
 

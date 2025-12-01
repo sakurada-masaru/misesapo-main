@@ -2727,7 +2727,13 @@
           .filter(s => {
             const normalized = DataUtils.normalizeSchedule(s);
             const scheduleStoreId = normalized.store_id || s.store_id || s.client_id;
-            return scheduleStoreId === id && (normalized.status === 'scheduled' || normalized.status === 'draft');
+            // IdUtils.isSameを使用してID形式の違いに対応
+            const statusMatch = normalized.status === 'scheduled' || normalized.status === 'draft';
+            if (window.DataUtils?.IdUtils?.isSame) {
+              return window.DataUtils.IdUtils.isSame(scheduleStoreId, id) && statusMatch;
+            } else {
+              return (scheduleStoreId === id || String(scheduleStoreId) === String(id)) && statusMatch;
+            }
           })
           .sort((a, b) => {
             const normalizedA = DataUtils.normalizeSchedule(a);
@@ -3361,7 +3367,13 @@
             throw new Error('ブランド一覧の取得に失敗しました');
           }
           const brands = await brandsRes.json();
-          const existingBrand = brands.find(b => b.name === brandName && b.client_id === clientId);
+          // IdUtils.isSameを使用してID形式の違いに対応
+          let existingBrand = null;
+          if (window.DataUtils?.IdUtils?.isSame) {
+            existingBrand = brands.find(b => b.name === brandName && window.DataUtils.IdUtils.isSame(b.client_id, clientId));
+          } else {
+            existingBrand = brands.find(b => b.name === brandName && (b.client_id === clientId || String(b.client_id) === String(clientId)));
+          }
           
           if (existingBrand) {
             brandId = existingBrand.id;

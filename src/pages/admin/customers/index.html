@@ -1974,7 +1974,12 @@
     
     let brands;
     if (clientId) {
-      brands = allBrands.filter(b => b.client_id === clientId);
+      // IdUtils.isSameを使用してID形式の違いに対応
+      if (window.DataUtils?.IdUtils?.isSame) {
+        brands = allBrands.filter(b => window.DataUtils.IdUtils.isSame(b.client_id, clientId));
+      } else {
+        brands = allBrands.filter(b => b.client_id === clientId || String(b.client_id) === String(clientId));
+      }
     } else {
       brands = allBrands;
     }
