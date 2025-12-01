@@ -1328,15 +1328,57 @@
         };
         data.role_code = roleCodeMap[data.role] || '99';
         
-        // 新規作成時はFirebaseユーザーも作成する（firebase_uidは後で設定）
-        // 注意: 実際のFirebaseユーザー作成はLambda関数で行う
+        // 新規作成時はFirebaseユーザーも作成する
+        if (!password) {
+          alert('新規ユーザー作成にはパスワードが必要です。');
+          return;
+        }
+        
+        try {
+          document.getElementById('form-status').textContent = 'Firebaseユーザーを作成中...';
+          
+          // Firebase Authenticationにユーザーを作成
+          const firebaseAuth = window.FirebaseAuth;
+          if (!firebaseAuth) {
+            throw new Error('Firebase Authenticationが利用できません');
+          }
+          
+          const userCredential = await firebaseAuth.createUserWithEmailAndPassword(
+            data.email,
+            password
+          );
+          
+          const firebaseUser = userCredential.user;
+          data.firebase_uid = firebaseUser.uid;
+          
+          // Custom Claimsにロールを設定（Firebase Admin SDKが必要なため、現時点ではスキップ）
+          // 注意: Custom Claimsの設定は、Firebase Admin SDKを使用する必要があります
+          // 現時点では、DynamoDBにロールを保存し、ログイン時にDynamoDBから取得します
+          
+          document.getElementById('form-status').textContent = 'ユーザー情報を保存中...';
+        } catch (firebaseError) {
+          console.error('Firebase user creation error:', firebaseError);
+          let errorMessage = 'Firebaseユーザーの作成に失敗しました。';
+          if (firebaseError.code === 'auth/email-already-in-use') {
+            errorMessage = 'このメールアドレスは既に使用されています。';
+          } else if (firebaseError.code === 'auth/invalid-email') {
+            errorMessage = '無効なメールアドレスです。';
+          } else if (firebaseError.code === 'auth/weak-password') {
+            errorMessage = 'パスワードが弱すぎます。6文字以上にしてください。';
+          }
+          document.getElementById('form-status').textContent = errorMessage;
+          document.getElementById('form-status').style.color = 'red';
+          return;
+        }
       } else {
         data.id = id;
       }
       data.updated_at = new Date().toISOString();
 
       try {
-        document.getElementById('form-status').textContent = '保存中...';
+        if (!isNew) {
+          document.getElementById('form-status').textContent = '保存中...';
+        }
         
         // workersテーブルに保存
         const response = await fetch(`${API_BASE}/workers${isNew ? '' : '/' + id}`, {
