@@ -1126,6 +1126,7 @@
       
       console.log('Users loaded:', allUsers.length);
       console.log('Sample user:', allUsers[0]);
+      console.log('All user IDs:', allUsers.map(u => u.id));
       
       if (allUsers.length === 0) {
         console.warn('No users found. API response:', workers);
@@ -1334,6 +1335,9 @@
       const originalText = confirmBtn.textContent;
       confirmBtn.disabled = true;
       confirmBtn.textContent = '削除中...';
+      
+      console.log('Attempting to delete worker with ID:', deleteTargetId);
+      console.log('All available user IDs:', allUsers.map(u => u.id));
       
       try {
         const response = await fetch(`${API_BASE}/workers/${deleteTargetId}`, {
