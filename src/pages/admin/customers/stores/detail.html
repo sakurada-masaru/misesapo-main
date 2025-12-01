@@ -1097,9 +1097,18 @@
         return;
       }
 
-      brandData = brands.find(b => b.id === storeData.brand_id);
+      // EntityFinderを使用してID形式の違いに対応
+      if (window.DataUtils?.EntityFinder?.findBrand) {
+        brandData = window.DataUtils.EntityFinder.findBrand(brands, storeData.brand_id);
+      } else {
+        brandData = brands.find(b => b.id === storeData.brand_id || String(b.id) === String(storeData.brand_id));
+      }
       if (brandData) {
-        clientData = clients.find(c => c.id === brandData.client_id);
+        if (window.DataUtils?.EntityFinder?.findClient) {
+          clientData = window.DataUtils.EntityFinder.findClient(clients, brandData.client_id);
+        } else {
+          clientData = clients.find(c => c.id === brandData.client_id || String(c.id) === String(brandData.client_id));
+        }
       }
 
       // この店舗のデータをフィルター（DataUtilsで新旧両方のID形式に対応）

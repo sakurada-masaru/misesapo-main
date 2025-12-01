@@ -1132,8 +1132,13 @@
           }
           
           // IDを正規化（文字列として扱う）
-          // 新しいID形式（W + タイムスタンプ）を優先
-          const workerId = String(w.id || w.user_id || `W${Date.now()}`);
+          // 5桁形式（W00001）に対応
+          const workerId = String(w.id || w.user_id || '');
+          // IDが存在しない場合はスキップ（バックエンドで生成される）
+          if (!workerId) {
+            console.warn('Worker ID not found:', w);
+            return null;
+          }
           
           return {
             id: workerId,

@@ -64,6 +64,8 @@ SCHEDULES_TABLE = dynamodb.Table('schedules')
 ESTIMATES_TABLE = dynamodb.Table('estimates')
 WORKERS_TABLE = dynamodb.Table('workers')
 CLIENTS_TABLE = dynamodb.Table('clients')
+BRANDS_TABLE = dynamodb.Table('brands')
+STORES_TABLE = dynamodb.Table('stores')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -2920,3 +2922,499 @@ def delete_worker(worker_id, headers):
                 'message': str(e)
             }, ensure_ascii=False)
         }
+# ==================== Brands（ブランド）管理 ====================
+
+def get_brands(event, headers):
+    """
+    ブランド一覧を取得
+    """
+    try:
+        # クエリパラメータからフィルタ条件を取得
+        query_params = event.get('queryStringParameters') or {}
+        client_id = query_params.get('client_id')
+        
+        # スキャンまたはクエリを実行
+        if client_id:
+            # クライアントIDでフィルタ
+            response = BRANDS_TABLE.scan(
+                FilterExpression=Attr('client_id').eq(client_id)
+            )
+        else:
+            # 全件取得
+            response = BRANDS_TABLE.scan()
+        
+        brands = response.get('Items', [])
+        
+        # レスポンス形式を統一（items配列で返す）
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'items': brands,
+                'count': len(brands)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting brands: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'ブランド一覧の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_brand(event, headers):
+    """
+    ブランドを作成
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # ID生成（5桁形式: BR00001〜）
+        if 'id' not in body_json or not body_json['id']:
+            brand_id = generate_next_id(BRANDS_TABLE, 'BR')
+        else:
+            brand_id = body_json['id']
+        
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # デフォルト値を設定
+        brand_data = {
+            'id': brand_id,
+            'name': body_json.get('name', ''),
+            'client_id': body_json.get('client_id', ''),
+            'status': body_json.get('status', 'active'),
+            'created_at': body_json.get('created_at', now),
+            'updated_at': now
+        }
+        
+        # DynamoDBに保存
+        BRANDS_TABLE.put_item(Item=brand_data)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'id': brand_id,
+                'message': 'ブランドを作成しました',
+                'brand': brand_data
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error creating brand: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'ブランドの作成に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_brand_detail(brand_id, headers):
+    """
+    ブランド詳細を取得
+    """
+    try:
+        response = BRANDS_TABLE.get_item(Key={'id': brand_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'ブランドが見つかりません',
+                    'id': brand_id
+                }, ensure_ascii=False)
+            }
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting brand detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'ブランド詳細の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_brand(brand_id, event, headers):
+    """
+    ブランドを更新
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 既存データを取得
+        response = BRANDS_TABLE.get_item(Key={'id': brand_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'ブランドが見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        existing_item = response['Item']
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # 更新可能なフィールド
+        updatable_fields = ['name', 'client_id', 'status']
+        updated_data = existing_item.copy()
+        for field in updatable_fields:
+            if field in body_json:
+                updated_data[field] = body_json[field]
+        
+        updated_data['updated_at'] = now
+        
+        # DynamoDBに保存
+        BRANDS_TABLE.put_item(Item=updated_data)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'ブランドを更新しました',
+                'brand': updated_data
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error updating brand: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'ブランドの更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_brand(brand_id, headers):
+    """
+    ブランドを削除
+    """
+    try:
+        # ブランドが存在するか確認
+        response = BRANDS_TABLE.get_item(Key={'id': brand_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'ブランドが見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        # 削除
+        BRANDS_TABLE.delete_item(Key={'id': brand_id})
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'ブランドを削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting brand: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'ブランドの削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+# ==================== Stores（店舗）管理 ====================
+
+def get_stores(event, headers):
+    """
+    店舗一覧を取得
+    """
+    try:
+        # クエリパラメータからフィルタ条件を取得
+        query_params = event.get('queryStringParameters') or {}
+        client_id = query_params.get('client_id')
+        brand_id = query_params.get('brand_id')
+        
+        # スキャンまたはクエリを実行
+        if brand_id:
+            # ブランドIDでフィルタ
+            response = STORES_TABLE.scan(
+                FilterExpression=Attr('brand_id').eq(brand_id)
+            )
+        elif client_id:
+            # クライアントIDでフィルタ
+            response = STORES_TABLE.scan(
+                FilterExpression=Attr('client_id').eq(client_id)
+            )
+        else:
+            # 全件取得
+            response = STORES_TABLE.scan()
+        
+        stores = response.get('Items', [])
+        
+        # レスポンス形式を統一（items配列で返す）
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'items': stores,
+                'count': len(stores)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting stores: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '店舗一覧の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_store(event, headers):
+    """
+    店舗を作成
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # ID生成（5桁形式: ST00001〜）
+        if 'id' not in body_json or not body_json['id']:
+            store_id = generate_next_id(STORES_TABLE, 'ST')
+        else:
+            store_id = body_json['id']
+        
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # デフォルト値を設定
+        store_data = {
+            'id': store_id,
+            'name': body_json.get('name', ''),
+            'client_id': body_json.get('client_id', ''),
+            'brand_id': body_json.get('brand_id', ''),
+            'postcode': body_json.get('postcode', ''),
+            'pref': body_json.get('pref', ''),
+            'city': body_json.get('city', ''),
+            'address1': body_json.get('address1', ''),
+            'address2': body_json.get('address2', ''),
+            'phone': body_json.get('phone', ''),
+            'email': body_json.get('email', ''),
+            'contact_person': body_json.get('contact_person', ''),
+            'status': body_json.get('status', 'active'),
+            'notes': body_json.get('notes', ''),
+            'sales_notes': body_json.get('sales_notes', ''),
+            'registration_type': body_json.get('registration_type', 'manual'),
+            'created_at': body_json.get('created_at', now),
+            'updated_at': now
+        }
+        
+        # DynamoDBに保存
+        STORES_TABLE.put_item(Item=store_data)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'id': store_id,
+                'message': '店舗を作成しました',
+                'store': store_data
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error creating store: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '店舗の作成に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_store_detail(store_id, headers):
+    """
+    店舗詳細を取得
+    """
+    try:
+        response = STORES_TABLE.get_item(Key={'id': store_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '店舗が見つかりません',
+                    'id': store_id
+                }, ensure_ascii=False)
+            }
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting store detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '店舗詳細の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_store(store_id, event, headers):
+    """
+    店舗を更新
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 既存データを取得
+        response = STORES_TABLE.get_item(Key={'id': store_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '店舗が見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        existing_item = response['Item']
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # 更新可能なフィールド
+        updatable_fields = [
+            'name', 'client_id', 'brand_id', 'postcode', 'pref', 'city',
+            'address1', 'address2', 'phone', 'email', 'contact_person',
+            'status', 'notes', 'sales_notes', 'registration_type'
+        ]
+        updated_data = existing_item.copy()
+        for field in updatable_fields:
+            if field in body_json:
+                updated_data[field] = body_json[field]
+        
+        updated_data['updated_at'] = now
+        
+        # DynamoDBに保存
+        STORES_TABLE.put_item(Item=updated_data)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '店舗を更新しました',
+                'store': updated_data
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error updating store: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '店舗の更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_store(store_id, headers):
+    """
+    店舗を削除
+    """
+    try:
+        # 店舗が存在するか確認
+        response = STORES_TABLE.get_item(Key={'id': store_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '店舗が見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        # 削除
+        STORES_TABLE.delete_item(Key={'id': store_id})
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '店舗を削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting store: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '店舗の削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
