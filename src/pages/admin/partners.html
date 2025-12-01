@@ -710,11 +710,35 @@
     }
   }
   
+  // サイドバーナビゲーションの生成
+  function updateSidebar() {
+    const sidebarNav = document.getElementById('admin-sidebar-nav');
+    let userRole = 'admin'; // デフォルト
+    
+    if (window.Auth && window.Auth.getCurrentUser) {
+      const user = window.Auth.getCurrentUser();
+      if (user && user.role) {
+        userRole = user.role;
+      }
+    } else if (window.CognitoAuth && window.CognitoAuth.isAuthenticated) {
+      const cognitoUser = JSON.parse(localStorage.getItem('cognito_user') || '{}');
+      if (cognitoUser && cognitoUser.role) {
+        userRole = cognitoUser.role;
+      }
+    }
+    
+    if (sidebarNav && window.Navigation && window.Navigation.renderAdminSidebar) {
+      window.Navigation.renderAdminSidebar('admin-sidebar-nav', userRole);
+    }
+  }
+  
   updateRoleBadge();
+  updateSidebar();
   
   if (window.Auth && window.Auth.onAuthStateChanged) {
     window.Auth.onAuthStateChanged(() => {
       updateRoleBadge();
+      updateSidebar();
     });
   }
 </script>
