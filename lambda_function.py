@@ -2816,6 +2816,19 @@ def update_worker(worker_id, event, headers):
         else:
             body_json = json.loads(body.decode('utf-8'))
         
+        # メールアドレスのバリデーション（メールアドレスが更新される場合）
+        if 'email' in body_json:
+            email = body_json.get('email', '')
+            email_validation = validate_worker_email(email)
+            if not email_validation['valid']:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': email_validation['message']
+                    }, ensure_ascii=False)
+                }
+        
         # 既存の従業員を取得
         response = WORKERS_TABLE.get_item(Key={'id': worker_id})
         if 'Item' not in response:
