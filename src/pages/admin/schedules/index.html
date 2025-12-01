@@ -1004,7 +1004,12 @@
   async function loadSchedules() {
     try {
       const response = await fetch(`${API_BASE}/schedules`);
-      allSchedules = await response.json();
+      if (!response.ok) {
+        throw new Error('Failed to load schedules');
+      }
+      const schedulesData = await response.json();
+      // APIレスポンスが配列かオブジェクトかをチェック
+      allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
       updateDraftAlert();
       filterAndRender();
     } catch (error) {

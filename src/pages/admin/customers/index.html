@@ -2003,7 +2003,9 @@
     try {
       const res = await fetch(`${API_BASE}/schedules`);
       if (!res.ok) throw new Error('Failed');
-      const schedules = await res.json();
+      const schedulesData = await res.json();
+      // APIレスポンスが配列かオブジェクトかをチェック
+      const schedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
       // DataUtilsで新旧両方のID形式に対応
       const storeSchedules = DataUtils.filterByStoreId(schedules, currentDetailStore.id);
       loading.style.display = 'none';

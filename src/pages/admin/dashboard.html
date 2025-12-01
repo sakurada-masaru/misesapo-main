@@ -844,10 +844,17 @@
         fetch(`${API_BASE}/reports`)
       ]);
 
-      const stores = await storesRes.json();
-      const schedules = await schedulesRes.json();
-      const workers = await workersRes.json();
-      const reports = await reportsRes.json();
+      const storesData = await storesRes.json();
+      const stores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+      
+      const schedulesData = await schedulesRes.json();
+      const schedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+      
+      const workersData = await workersRes.json();
+      const workers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
+      
+      const reportsData = await reportsRes.json();
+      const reports = Array.isArray(reportsData) ? reportsData : (reportsData.items || reportsData.reports || []);
 
       // 統計
       document.getElementById('stat-customers').textContent = stores.length;
