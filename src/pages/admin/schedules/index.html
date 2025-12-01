@@ -217,6 +217,7 @@
     display: flex;
     min-height: 100vh;
     background: #f9fafb;
+    width: 100%;
   }
 
   .logo-link {
@@ -267,12 +268,20 @@
 
   /* メインコンテンツ */
   .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
       padding: 24px;
       background: #f9fafb;
+      min-width: 0;
+      width: calc(100% - var(--sidebar-width));
+      box-sizing: border-box;
+      transition: margin-left 0.3s ease, width 0.3s ease;
     }
-  .sidebar.collapsed ~ .main-content {
-      padding: 24px;
-      background: #f9fafb;
+  
+  .sidebar.collapsed ~ .main-content,
+  .sidebar.collapsed + .main-content {
+      margin-left: var(--sidebar-width-collapsed);
+      width: calc(100% - var(--sidebar-width-collapsed));
     }
 
   /* トップバー */
