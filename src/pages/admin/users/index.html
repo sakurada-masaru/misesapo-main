@@ -1107,6 +1107,10 @@
       // 新しいデータ構造に対応
       allUsers = workersArray
         .filter(w => {
+          // お客様（customer）を除外（従業員のみを表示）
+          const role = w.role || (w.role_code !== undefined ? getRoleFromCode(w.role_code) : 'staff');
+          if (role === 'customer') return false;
+          
           // 意味をなしていないユーザーを除外
           const name = (w.name || w.display_name || '').trim();
           if (!name) return false;
