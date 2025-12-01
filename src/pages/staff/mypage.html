@@ -635,16 +635,36 @@
 
     // 出退勤記録を読み込み
     async function loadAttendanceRecords() {
-      if (!currentUser) return;
+      if (!currentUser) {
+        // ローカルストレージから読み込み（フォールバック）
+        try {
+          const stored = localStorage.getItem('attendanceRecords');
+          if (stored) {
+            attendanceRecords = JSON.parse(stored);
+          }
+        } catch (error) {
+          console.error('Error loading attendance records from localStorage:', error);
+          attendanceRecords = {};
+        }
+        renderAttendanceStatus();
+        calculateMonthlyStats();
+        return;
+      }
       
       try {
-        // APIから勤怠記録を取得
+        // APIから勤怠記録を取得（今日の記録）
         const today = new Date().toISOString().split('T')[0];
         const response = await fetch(`${API_BASE}/attendance?staff_id=${currentUser.id}&date=${today}`);
         
         if (response.ok) {
           const data = await response.json();
-          const record = data.items ? data.items[0] : data;
+          // レスポンスが配列の場合とオブジェクトの場合に対応
+          let record = null;
+          if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+            record = data.items[0];
+          } else if (data.date || data.clock_in) {
+            record = data;
+          }
           
           if (record) {
             // APIから取得したデータをattendanceRecordsに変換
@@ -655,8 +675,8 @@
             attendanceRecords[date][currentUser.id] = {
               clock_in: record.clock_in,
               clock_out: record.clock_out,
-              staff_id: record.staff_id,
-              staff_name: record.staff_name
+              staff_id: record.staff_id || currentUser.id,
+              staff_name: record.staff_name || currentUser.name
             };
           }
         }
