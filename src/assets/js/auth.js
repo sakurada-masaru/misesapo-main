@@ -47,13 +47,16 @@
    * APIエンドポイントのベースURLを取得
    */
   function getApiBaseUrl() {
-    // GitHub PagesではAPIが使えないため、ローカル開発サーバーのURLを使用
-    // 本番環境では別のAPIサーバーを使用する必要がある
+    // 本番環境のAPIエンドポイント
+    const PROD_API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    
+    // ローカル開発環境
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:5173';
+      return PROD_API_BASE;  // ローカルでも本番APIを使用
     }
-    // GitHub PagesではAPIが使えないため、空文字を返す
-    return '';
+    
+    // 本番環境
+    return PROD_API_BASE;
   }
   
   /**
