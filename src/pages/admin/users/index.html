@@ -145,6 +145,8 @@
         <option value="">すべてのロール</option>
         <option value="staff">清掃員</option>
         <option value="sales">営業</option>
+        <option value="office">事務</option>
+        <option value="designer">デザイナー</option>
         <option value="admin">管理者</option>
         <option value="other">その他</option>
       </select>
@@ -270,6 +272,8 @@
               <option value="">選択してください</option>
               <option value="staff">清掃員</option>
               <option value="sales">営業</option>
+              <option value="office">事務</option>
+              <option value="designer">デザイナー</option>
               <option value="admin">管理者</option>
               <option value="other">その他</option>
             </select>
@@ -717,7 +721,11 @@
     }
     .role-staff { background: #ffedd5; color: #c2410c; }
     .role-sales { background: #dcfce7; color: #15803d; }
+    .role-office { background: #e0e7ff; color: #3730a3; }
+    .role-designer { background: #fce7f3; color: #9f1239; }
     .role-admin { background: #fce7f3; color: #be185d; }
+    .role-developer { background: #f0f9ff; color: #0c4a6e; }
+    .role-master { background: #fef3c7; color: #92400e; }
     .role-other { background: #e2e8f0; color: #475569; }
     .status-badge {
       padding: 4px 10px;
@@ -1182,6 +1190,8 @@
     if (code === '99' || code === 99) return 'staff';
     if (code === '1' || code === 1) return 'admin';
     if (code === '2' || code === 2) return 'sales';
+    if (code === '3' || code === 3) return 'office';
+    if (code === '4' || code === 4) return 'designer';
     return 'staff';
   }
 
@@ -1359,6 +1369,8 @@
         const roleCodeMap = {
           'staff': '99',
           'sales': '2',
+          'office': '3',
+          'designer': '4',
           'admin': '1',
           'developer': '1',
           'master': '1'
@@ -1786,7 +1798,11 @@
       const roleCodeMap = {
         staff: '99',
         sales: '2',
-        admin: '1'
+        office: '3',
+        designer: '4',
+        admin: '1',
+        developer: '1',
+        master: '1'
       };
 
       const roleCode = roleCodeMap[bulkRoleTarget] || '99';
@@ -1874,9 +1890,11 @@
             'guest': { bg: '#e5e7eb', color: '#6b7280' },
             'customer': { bg: '#dbeafe', color: '#1e40af' },
             'staff': { bg: '#dcfce7', color: '#166534' },
+            'office': { bg: '#e0e7ff', color: '#3730a3' },
+            'designer': { bg: '#fce7f3', color: '#9f1239' },
             'concierge': { bg: '#fef3c7', color: '#92400e' },
             'admin': { bg: '#e0e7ff', color: '#3730a3' },
-            'developer': { bg: '#fce7f3', color: '#831843' },
+            'developer': { bg: '#f0f9ff', color: '#0c4a6e' },
             'master': { bg: '#fef2f2', color: '#991b1b' }
           };
           

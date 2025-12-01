@@ -35,6 +35,16 @@ const ROLE_CONFIG = {
       password: 'misesapo1234',
       displayName: '開発者'
     },
+    office: { 
+      name: '事務', 
+      password: null,
+      displayName: '事務'
+    },
+    designer: { 
+      name: 'デザイナー', 
+      password: null,
+      displayName: 'デザイナー'
+    },
     master: { 
       name: 'マスター', 
       password: 'master1234',
@@ -43,21 +53,25 @@ const ROLE_CONFIG = {
   },
   
   // ロール階層（上位ロールは下位ロールの権限も持つ）
-  // 階層: マスター > 開発者 > 管理者 > コンシェルジュ > 清掃員・ユーザー（同レベル）
+  // 階層: マスター > 開発者 > 管理者 > コンシェルジュ > 事務・デザイナー > 清掃員・ユーザー（同レベル）
   roleHierarchy: {
     guest: ['guest'],
     customer: ['guest', 'customer'],  // ユーザー（顧客）
     staff: ['guest', 'staff'],        // 清掃員
+    office: ['guest', 'office'],      // 事務
+    designer: ['guest', 'designer'],  // デザイナー
     concierge: ['guest', 'customer', 'staff', 'concierge'],  // コンシェルジュ: 清掃員とユーザーの権限も持つ
-    admin: ['guest', 'customer', 'staff', 'concierge', 'admin'],  // 管理者: すべての権限
-    developer: ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer'],  // 開発者: すべての権限
-    master: ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
+    admin: ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin'],  // 管理者: すべての権限
+    developer: ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer'],  // 開発者: すべての権限
+    master: ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master']  // マスター: すべての権限（最上位）
   },
   
   // ロールごとのログイン後リダイレクト先
   defaultPages: {
     'customer': '/mypage.html',
     'staff': '/staff/dashboard.html',
+    'office': '/admin/dashboard.html',
+    'designer': '/admin/dashboard.html',
     'concierge': '/sales/dashboard.html',
     'admin': '/admin/dashboard.html',
     'developer': '/admin/dashboard.html',
@@ -68,38 +82,38 @@ const ROLE_CONFIG = {
   // ページ別アクセス制御（パスパターン）
   pageAccess: {
     // パブリックページ（全員アクセス可能）
-    '/index.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/service.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/index.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/service.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/service/': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/recruit.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/recruit/': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/signin.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/signup.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/signup2.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/signup3.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/reset-password.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/contact.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/recruit.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/recruit/': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/signin.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/signup.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/signup2.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/signup3.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/reset-password.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/contact.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     
     // 顧客向けページ（ユーザーと清掃員がアクセス可能、コンシェルジュと管理者も可）
-    '/mypage.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/mypage/': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/cart.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/checkout.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/order/': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/order-complete.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
-    '/order-confirm.html': ['customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/mypage.html': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/mypage/': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/cart.html': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/checkout.html': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/order/': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/order-complete.html': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/order-confirm.html': ['customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     
     // 清掃員向けページ（清掃員とユーザーがアクセス可能、コンシェルジュと管理者も可）
-    '/staff/': ['staff', 'customer', 'concierge', 'admin', 'developer', 'master'],
-    '/schedule.html': ['staff', 'customer', 'concierge', 'admin', 'developer', 'master'],
-    '/report.html': ['staff', 'customer', 'concierge', 'admin', 'developer', 'master'],
-    '/reports/': ['staff', 'customer', 'concierge', 'admin', 'developer', 'master'],
+    '/staff/': ['staff', 'customer', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/schedule.html': ['staff', 'customer', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/report.html': ['staff', 'customer', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/reports/': ['staff', 'customer', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     
     // コンシェルジュ向けページ（コンシェルジュと管理者のみ）
     '/sales/': ['concierge', 'admin', 'developer', 'master'],
     
     // 管理者向けページ（管理者と開発者のみ）
-    '/admin/': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master'],
+    '/admin/': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/admin/partners.html': ['admin', 'developer', 'master'],
     '/admin/partners/': ['admin', 'developer', 'master'],
     '/admin/partners/new.html': ['admin', 'developer', 'master'],
@@ -108,8 +122,8 @@ const ROLE_CONFIG = {
     '/admin/services/review.html': ['developer', 'master'],
     
     // 清掃マニュアル管理画面（管理者・清掃員・コンシェルジュ・開発者・マスター）
-    '/cleaning-manual-admin.html': ['admin', 'staff', 'concierge', 'developer', 'master'],
-    '/cleaning-manual.html': ['guest', 'customer', 'staff', 'concierge', 'admin', 'developer', 'master']
+    '/cleaning-manual-admin.html': ['admin', 'staff', 'office', 'designer', 'concierge', 'developer', 'master'],
+    '/cleaning-manual.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master']
   },
   
   // ロールごとのナビゲーション項目（推奨ナビゲーション）
@@ -134,6 +148,17 @@ const ROLE_CONFIG = {
       { href: '/staff/assignments.html', label: '作業一覧', icon: 'fa-tasks' },
       { href: '/staff/reports/new.html', label: 'レポート作成', icon: 'fa-file-alt' },
       { href: '/staff/training.html', label: 'トレーニング', icon: 'fa-graduation-cap' }
+    ],
+    office: [
+      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
+      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' }
+    ],
+    designer: [
+      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/images.html', label: '画像管理', icon: 'fa-images' },
+      { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' }
     ],
     concierge: [
       { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
@@ -197,6 +222,17 @@ const ROLE_CONFIG = {
       { href: '/staff/assignments.html', label: '作業一覧', icon: 'fa-tasks' },
       { href: '/staff/reports/new.html', label: 'レポート作成', icon: 'fa-file-alt' },
       { href: '/staff/training.html', label: 'トレーニング', icon: 'fa-graduation-cap' }
+    ],
+    '事務': [
+      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/clients.html', label: '顧客管理', icon: 'fa-users' },
+      { href: '/admin/orders.html', label: '発注管理', icon: 'fa-shopping-cart' },
+      { href: '/admin/users.html', label: 'ユーザー管理', icon: 'fa-user-shield' }
+    ],
+    'デザイナー': [
+      { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
+      { href: '/admin/images.html', label: '画像管理', icon: 'fa-images' },
+      { href: '/admin/services.html', label: 'サービス管理', icon: 'fa-cogs' }
     ],
     '営業マン（コンシェルジュ）': [
       { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },

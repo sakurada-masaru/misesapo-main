@@ -2768,6 +2768,10 @@ def create_worker(event, headers):
                 worker_data['role'] = 'admin'
             elif worker_data['role_code'] == '2':
                 worker_data['role'] = 'sales'
+            elif worker_data['role_code'] == '3':
+                worker_data['role'] = 'office'
+            elif worker_data['role_code'] == '4':
+                worker_data['role'] = 'designer'
             elif worker_data['role_code'] == '99':
                 worker_data['role'] = 'staff'
         
