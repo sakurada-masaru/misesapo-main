@@ -1763,12 +1763,38 @@
     
     tbody.innerHTML = pageStores.map(store => {
       // 3層構造の情報を取得（data_utils.jsを使用）
-      const hierarchy = window.DataUtils?.Hierarchy?.getFromStore 
-        ? window.DataUtils.Hierarchy.getFromStore(store, allClients, allBrands)
-        : { client: null, brand: null, store: null };
-      const brand = hierarchy.brand || allBrands.find(b => b.id === store.brand_id);
-      const client = hierarchy.client || (brand ? allClients.find(c => c.id === brand.client_id) : 
-                     allClients.find(c => c.id === store.client_id));
+      let hierarchy = { client: null, brand: null, store: null };
+      if (window.DataUtils?.Hierarchy?.getFromStore) {
+        try {
+          hierarchy = window.DataUtils.Hierarchy.getFromStore(store, allClients, allBrands);
+        } catch (e) {
+          console.warn('Failed to get hierarchy from DataUtils:', e);
+        }
+      }
+      
+      // フォールバック: 手動で取得
+      let brand = hierarchy.brand;
+      let client = hierarchy.client;
+      
+      if (!brand && store.brand_id) {
+        brand = allBrands.find(b => {
+          // ID形式の違いに対応（文字列比較と数値比較）
+          return b.id === store.brand_id || String(b.id) === String(store.brand_id);
+        });
+      }
+      
+      if (!client) {
+        if (brand && brand.client_id) {
+          client = allClients.find(c => {
+            return c.id === brand.client_id || String(c.id) === String(brand.client_id);
+          });
+        }
+        if (!client && store.client_id) {
+          client = allClients.find(c => {
+            return c.id === store.client_id || String(c.id) === String(store.client_id);
+          });
+        }
+      }
       
       // 店舗名からブランド名と店舗名（〜店）を分離
       const storeName = store.name || '';
@@ -1786,7 +1812,7 @@
         ? `<a href="/admin/customers/brands/detail.html?id=${brand.id}" class="table-link brand-link">${escapeHtml(brandName)}</a>`
         : `<span class="text-muted">${escapeHtml(brandName || '-')}</span>`;
       const clientCell = client 
-        ? `<a href="/admin/customers/clients/detail.html?id=${client.id}" class="table-link client-link">${escapeHtml(client.name)}</a>`
+        ? `<a href="/admin/customers/clients/detail.html?id=${client.id}" class="table-link client-link">${escapeHtml(client.name || client.company_name || '-')}</a>`
         : `<span class="text-muted">-</span>`;
       
       return `
