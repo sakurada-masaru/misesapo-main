@@ -1604,8 +1604,14 @@
     }
     brandFilter.innerHTML = '<option value="">全ブランド</option>' + 
       brands.map(b => {
-        const client = allClients.find(c => c.id === b.client_id);
-        const clientName = client ? ` (${client.name})` : '';
+        // EntityFinderを使用してID形式の違いに対応
+        let client = null;
+        if (window.DataUtils?.EntityFinder?.findClient) {
+          client = window.DataUtils.EntityFinder.findClient(allClients, b.client_id);
+        } else {
+          client = allClients.find(c => c.id === b.client_id || String(c.id) === String(b.client_id));
+        }
+        const clientName = client ? ` (${client.name || client.company_name || ''})` : '';
         return `<option value="${b.id}">${b.name}${selectedClient ? '' : clientName}</option>`;
       }).join('');
   }
@@ -1652,12 +1658,34 @@
       if (clientValue) {
         if (brandValue) {
           // ブランドも選択されている場合、ブランドがその取引先に属しているか確認
-          const brand = allBrands.find(b => b.id === brandValue);
-          matchClient = brand && brand.client_id === clientValue;
+          let brand = null;
+          if (window.DataUtils?.EntityFinder?.findBrand) {
+            brand = window.DataUtils.EntityFinder.findBrand(allBrands, brandValue);
+          } else {
+            brand = allBrands.find(b => b.id === brandValue || String(b.id) === String(brandValue));
+          }
+          // IdUtils.isSameを使用してID形式の違いに対応
+          if (window.DataUtils?.IdUtils?.isSame) {
+            matchClient = brand && window.DataUtils.IdUtils.isSame(brand.client_id, clientValue);
+          } else {
+            matchClient = brand && (brand.client_id === clientValue || String(brand.client_id) === String(clientValue));
+          }
         } else {
           // ブランドが選択されていない場合、取引先に属するブランドの店舗を表示
-          const clientBrands = allBrands.filter(b => b.client_id === clientValue).map(b => b.id);
-          matchBrand = clientBrands.includes(store.brand_id) || store.client_id === clientValue;
+          let clientBrands = [];
+          if (window.DataUtils?.IdUtils?.isSame) {
+            clientBrands = allBrands.filter(b => window.DataUtils.IdUtils.isSame(b.client_id, clientValue)).map(b => b.id);
+          } else {
+            clientBrands = allBrands.filter(b => b.client_id === clientValue || String(b.client_id) === String(clientValue)).map(b => b.id);
+          }
+          // IdUtils.isSameを使用してID形式の違いに対応
+          if (window.DataUtils?.IdUtils?.isSame) {
+            matchBrand = clientBrands.some(bid => window.DataUtils.IdUtils.isSame(store.brand_id, bid)) || 
+                        window.DataUtils.IdUtils.isSame(store.client_id, clientValue);
+          } else {
+            matchBrand = clientBrands.includes(store.brand_id) || store.brand_id === clientValue || 
+                        store.client_id === clientValue || String(store.client_id) === String(clientValue);
+          }
         }
       }
       
@@ -1698,11 +1726,21 @@
     const filters = [];
     if (searchInput.value) filters.push({ key: 'search', label: `検索: ${searchInput.value}` });
     if (clientFilter.value) {
-      const client = allClients.find(c => c.id === clientFilter.value);
-      filters.push({ key: 'client', label: `取引先: ${client ? client.name : clientFilter.value}` });
+      let client = null;
+      if (window.DataUtils?.EntityFinder?.findClient) {
+        client = window.DataUtils.EntityFinder.findClient(allClients, clientFilter.value);
+      } else {
+        client = allClients.find(c => c.id === clientFilter.value || String(c.id) === String(clientFilter.value));
+      }
+      filters.push({ key: 'client', label: `取引先: ${client ? (client.name || client.company_name || '') : clientFilter.value}` });
     }
     if (brandFilter.value) {
-      const brand = allBrands.find(b => b.id === brandFilter.value);
+      let brand = null;
+      if (window.DataUtils?.EntityFinder?.findBrand) {
+        brand = window.DataUtils.EntityFinder.findBrand(allBrands, brandFilter.value);
+      } else {
+        brand = allBrands.find(b => b.id === brandFilter.value || String(b.id) === String(brandFilter.value));
+      }
       filters.push({ key: 'brand', label: `ブランド: ${brand ? brand.name : brandFilter.value}` });
     }
     if (prefFilter.value) filters.push({ key: 'pref', label: prefFilter.value });
@@ -1772,27 +1810,44 @@
         }
       }
       
-      // フォールバック: 手動で取得
+      // フォールバック: EntityFinderを使用（ID形式の違いに対応）
       let brand = hierarchy.brand;
       let client = hierarchy.client;
       
       if (!brand && store.brand_id) {
-        brand = allBrands.find(b => {
-          // ID形式の違いに対応（文字列比較と数値比較）
-          return b.id === store.brand_id || String(b.id) === String(store.brand_id);
-        });
+        // EntityFinderを使用してID形式の違いに対応
+        if (window.DataUtils?.EntityFinder?.findBrand) {
+          brand = window.DataUtils.EntityFinder.findBrand(allBrands, store.brand_id);
+        } else {
+          // フォールバック: 手動で取得（文字列比較と数値比較）
+          brand = allBrands.find(b => {
+            return b.id === store.brand_id || String(b.id) === String(store.brand_id);
+          });
+        }
       }
       
       if (!client) {
         if (brand && brand.client_id) {
-          client = allClients.find(c => {
-            return c.id === brand.client_id || String(c.id) === String(brand.client_id);
-          });
+          // EntityFinderを使用してID形式の違いに対応
+          if (window.DataUtils?.EntityFinder?.findClient) {
+            client = window.DataUtils.EntityFinder.findClient(allClients, brand.client_id);
+          } else {
+            // フォールバック: 手動で取得
+            client = allClients.find(c => {
+              return c.id === brand.client_id || String(c.id) === String(brand.client_id);
+            });
+          }
         }
         if (!client && store.client_id) {
-          client = allClients.find(c => {
-            return c.id === store.client_id || String(c.id) === String(store.client_id);
-          });
+          // EntityFinderを使用してID形式の違いに対応
+          if (window.DataUtils?.EntityFinder?.findClient) {
+            client = window.DataUtils.EntityFinder.findClient(allClients, store.client_id);
+          } else {
+            // フォールバック: 手動で取得
+            client = allClients.find(c => {
+              return c.id === store.client_id || String(c.id) === String(store.client_id);
+            });
+          }
         }
       }
       
