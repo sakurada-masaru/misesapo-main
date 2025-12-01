@@ -1556,6 +1556,20 @@
   
   // フィルター選択肢を生成
   function populateFilters() {
+    // 配列であることを確認
+    if (!Array.isArray(allClients)) {
+      console.warn('allClients is not an array:', allClients);
+      allClients = [];
+    }
+    if (!Array.isArray(allBrands)) {
+      console.warn('allBrands is not an array:', allBrands);
+      allBrands = [];
+    }
+    if (!Array.isArray(allStores)) {
+      console.warn('allStores is not an array:', allStores);
+      allStores = [];
+    }
+    
     // 取引先（企業/個人）
     clientFilter.innerHTML = '<option value="">全取引先</option>' + 
       allClients.map(c => `<option value="${c.id}">${c.name}${c.type === 'individual' ? '（個人）' : ''}</option>`).join('');
@@ -1571,6 +1585,16 @@
   
   // ブランドフィルターを更新（取引先に連動）
   function updateBrandFilter() {
+    // 配列であることを確認
+    if (!Array.isArray(allBrands)) {
+      console.warn('allBrands is not an array in updateBrandFilter:', allBrands);
+      allBrands = [];
+    }
+    if (!Array.isArray(allClients)) {
+      console.warn('allClients is not an array in updateBrandFilter:', allClients);
+      allClients = [];
+    }
+    
     const selectedClient = clientFilter.value;
     let brands;
     if (selectedClient) {
