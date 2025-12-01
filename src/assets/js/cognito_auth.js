@@ -60,12 +60,31 @@
 
           // ユーザー情報を取得
           const payload = result.getIdToken().payload;
+          const cognitoSub = payload.sub;
+          
+          // DynamoDBからユーザー情報を取得（Cognito Subで検索）
+          let userInfo = null;
+          try {
+            const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+            const response = await fetch(`${apiBaseUrl}/workers?cognito_sub=${encodeURIComponent(cognitoSub)}`);
+            if (response.ok) {
+              const workers = await response.json();
+              const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+              if (workersArray.length > 0) {
+                userInfo = workersArray[0];
+              }
+            }
+          } catch (error) {
+            console.warn('[CognitoAuth] Could not fetch user info from DynamoDB:', error);
+          }
+          
           const user = {
-            id: payload.sub,
+            id: userInfo ? userInfo.id : cognitoSub,  // DynamoDBのID（重要！）
+            cognito_sub: cognitoSub,  // Cognito Sub
             email: payload.email,
-            name: payload.name || payload.email.split('@')[0],
-            role: payload['custom:role'] || 'staff',
-            department: payload['custom:department'] || ''
+            name: userInfo ? userInfo.name : (payload['custom:name'] || payload.email.split('@')[0]),
+            role: userInfo ? userInfo.role : (payload['custom:role'] || 'staff'),
+            department: userInfo ? userInfo.department : (payload['custom:department'] || '')
           };
 
           resolve({
@@ -124,12 +143,31 @@
 
         const idToken = session.getIdToken();
         const payload = idToken.payload;
+        const cognitoSub = payload.sub;
+        
+        // DynamoDBからユーザー情報を取得（Cognito Subで検索）
+        let userInfo = null;
+        try {
+          const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+          const response = await fetch(`${apiBaseUrl}/workers?cognito_sub=${encodeURIComponent(cognitoSub)}`);
+          if (response.ok) {
+            const workers = await response.json();
+            const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+            if (workersArray.length > 0) {
+              userInfo = workersArray[0];
+            }
+          }
+        } catch (error) {
+          console.warn('[CognitoAuth] Could not fetch user info from DynamoDB:', error);
+        }
+        
         const user = {
-          id: payload.sub,
+          id: userInfo ? userInfo.id : cognitoSub,  // DynamoDBのID
+          cognito_sub: cognitoSub,  // Cognito Sub
           email: payload.email,
-          name: payload.name || payload.email.split('@')[0],
-          role: payload['custom:role'] || 'staff',
-          department: payload['custom:department'] || ''
+          name: userInfo ? userInfo.name : (payload['custom:name'] || payload.email.split('@')[0]),
+          role: userInfo ? userInfo.role : (payload['custom:role'] || 'staff'),
+          department: userInfo ? userInfo.department : (payload['custom:department'] || '')
         };
 
         resolve(user);

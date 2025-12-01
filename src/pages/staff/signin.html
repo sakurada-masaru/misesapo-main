@@ -110,9 +110,22 @@
 
             // ユーザー情報を保存
             localStorage.setItem('cognito_user', JSON.stringify(result.user));
+            localStorage.setItem('misesapo_auth', JSON.stringify({
+              role: result.user.role,
+              email: result.user.email,
+              user: result.user
+            }));
 
-            // 従業員ダッシュボードにリダイレクト
-            window.location.href = '/staff/dashboard.html';
+            // ロールに応じてリダイレクト
+            const role = result.user.role || 'staff';
+            let redirectUrl = '/staff/dashboard.html';
+            if (role === 'admin' || role === 'developer' || role === 'master') {
+              redirectUrl = '/admin/dashboard.html';
+            } else if (role === 'sales') {
+              redirectUrl = '/sales/dashboard.html';
+            }
+            
+            window.location.href = redirectUrl;
           } else {
             errorDiv.textContent = result.message || 'ログインに失敗しました';
             errorDiv.style.display = 'block';
