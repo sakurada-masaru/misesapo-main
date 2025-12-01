@@ -2820,14 +2820,26 @@
         }
         
         if (clientsRes.ok) {
-          allClients = await clientsRes.json();
+          const clientsData = await clientsRes.json();
+          // APIレスポンスが配列かオブジェクトかをチェック
+          if (Array.isArray(clientsData)) {
+            allClients = clientsData;
+          } else if (clientsData.items && Array.isArray(clientsData.items)) {
+            allClients = clientsData.items;
+          } else if (clientsData.clients && Array.isArray(clientsData.clients)) {
+            allClients = clientsData.clients;
+          } else {
+            console.warn('Unexpected clients data format:', clientsData);
+            allClients = [];
+          }
         } else {
           console.warn('Failed to load clients');
           allClients = [];
         }
         
         if (brandsRes.ok) {
-          allBrands = await brandsRes.json();
+          const brandsData = await brandsRes.json();
+          allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
         } else {
           console.warn('Failed to load brands');
           allBrands = [];
