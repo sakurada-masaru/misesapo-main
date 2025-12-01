@@ -6,6 +6,7 @@
     <base href="{{ base_path }}" />
     <title>{{ title }}</title>
     @include('partials.head-links')
+    <link rel="stylesheet" href="/css/admin-sidebar.css" />
   </head>
   <body class="theme-pink {{ body_class }}">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
@@ -21,6 +22,7 @@
     <script src="/js/navigation.js"></script>
     <script src="/modal_manager.js"></script>
     <script src="/app.js"></script>
+    <script src="/js/admin-sidebar.js"></script>
     <script>
       // 管理画面では共通ヘッダーを持たないため追加スクリプトは不要
     </script>
