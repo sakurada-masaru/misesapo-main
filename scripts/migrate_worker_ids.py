@@ -103,59 +103,54 @@ def migrate_workers():
         except Exception as e:
             print(f"✗ 削除失敗: ID {old_id} - {e}")
     
-    # 5. 有効なユーザーのIDを確認・更新
-    print("\n=== 有効なユーザーのIDを確認中 ===")
+    # 5. 有効なユーザーをDynamoDBに保存
+    print("\n=== 有効なユーザーをDynamoDBに保存中 ===")
     migration_map = {}  # 旧ID -> 新IDのマッピング
     updated_count = 0
     skipped_count = 0
+    saved_count = 0
     
     for user in valid_users:
         old_id = str(user.get('id'))
         
-        # 既に新しい形式（W + タイムスタンプ）の場合はスキップ
-        if old_id.startswith('W') and len(old_id) > 10 and old_id[1:].isdigit():
-            skipped_count += 1
-            print(f"○ スキップ（既に新形式）: {old_id} ({user.get('name', 'N/A')})")
-            continue
+        # データを正規化
+        worker_data = {
+            'id': old_id,
+            'name': user.get('name') or user.get('display_name') or '',
+            'email': user.get('email') or user.get('email_address') or '',
+            'phone': user.get('phone') or user.get('phone_number') or '',
+            'role': user.get('role') or 'staff',
+            'role_code': user.get('role_code') or '99',
+            'department': user.get('department') or user.get('team') or '',
+            'status': user.get('status') or 'active',
+            'created_at': user.get('created_at') or user.get('created_date') or datetime.utcnow().isoformat() + 'Z',
+            'updated_at': user.get('updated_at') or datetime.utcnow().isoformat() + 'Z'
+        }
         
-        # W001形式のIDもそのまま残す（既に適切な形式）
-        if old_id.startswith('W') and len(old_id) <= 5:
-            skipped_count += 1
-            print(f"○ スキップ（W001形式）: {old_id} ({user.get('name', 'N/A')})")
-            continue
+        # role_codeからroleを設定
+        if worker_data['role'] == 'staff' and worker_data['role_code'] == '99':
+            pass  # デフォルト値のまま
+        elif worker_data['role_code'] == '1':
+            worker_data['role'] = 'admin'
+        elif worker_data['role_code'] == '2':
+            worker_data['role'] = 'sales'
         
-        # 数値IDやその他の形式の場合は新しい形式に変換
-        new_id = generate_new_id()
-        migration_map[old_id] = new_id
-        
-        # 新しいIDでデータを更新
-        user['id'] = new_id
-        user['updated_at'] = datetime.utcnow().isoformat() + 'Z'
-        
-        # 古いIDのデータを削除
+        # DynamoDBに保存
         try:
-            WORKERS_TABLE.delete_item(Key={'id': old_id})
+            WORKERS_TABLE.put_item(Item=worker_data)
+            print(f"✓ 保存: {old_id} ({worker_data['name']})")
+            saved_count += 1
         except Exception as e:
-            print(f"警告: 古いID {old_id} の削除に失敗: {e}")
-        
-        # 新しいIDでデータを保存
-        try:
-            WORKERS_TABLE.put_item(Item=user)
-            print(f"✓ 更新: {old_id} -> {new_id} ({user.get('name', 'N/A')})")
-            updated_count += 1
-        except Exception as e:
-            print(f"✗ 更新失敗: {old_id} -> {new_id} - {e}")
+            print(f"✗ 保存失敗: {old_id} - {e}")
     
     # 6. マイグレーションマップを保存
     with open('worker_id_migration_map.json', 'w', encoding='utf-8') as f:
         json.dump(migration_map, f, ensure_ascii=False, indent=2)
     
     print(f"\n=== マイグレーション完了 ===")
-    print(f"更新: {updated_count}件")
-    print(f"スキップ: {skipped_count}件")
+    print(f"保存: {saved_count}件")
     print(f"削除: {len(invalid_users)}件")
-    if migration_map:
-        print(f"マイグレーションマップを保存: worker_id_migration_map.json")
+    print(f"合計: {saved_count + len(invalid_users)}件処理")
 
 if __name__ == '__main__':
     migrate_workers()
