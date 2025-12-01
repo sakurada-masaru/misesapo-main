@@ -3,7 +3,7 @@ import boto3
 import base64
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from boto3.dynamodb.conditions import Key, Attr
 
 # ID生成ヘルパー関数をインポート
@@ -2991,14 +2991,107 @@ def create_or_update_attendance(event, headers):
         clock_in = body_json.get('clock_in')
         clock_out = body_json.get('clock_out')
         
+        # バリデーション
         if not staff_id or not date:
             return {
                 'statusCode': 400,
                 'headers': headers,
                 'body': json.dumps({
-                    'error': 'staff_idとdateは必須です'
+                    'error': 'staff_idとdateは必須です',
+                    'code': 'VALIDATION_ERROR'
                 }, ensure_ascii=False)
             }
+        
+        # 日付形式のバリデーション
+        try:
+            datetime.strptime(date, '%Y-%m-%d')
+        except ValueError:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '日付の形式が正しくありません（YYYY-MM-DD形式で指定してください）',
+                    'code': 'VALIDATION_ERROR'
+                }, ensure_ascii=False)
+            }
+        
+        # 時刻のバリデーション
+        now_utc = datetime.utcnow()
+        now_iso = now_utc.isoformat() + 'Z'
+        
+        if clock_in:
+            try:
+                clock_in_dt = datetime.fromisoformat(clock_in.replace('Z', '+00:00'))
+                # 未来時刻のチェック（5分の許容範囲を設ける）
+                if clock_in_dt > now_utc.replace(tzinfo=clock_in_dt.tzinfo) + timedelta(minutes=5):
+                    return {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({
+                            'error': '出勤時刻が未来の時刻です',
+                            'code': 'VALIDATION_ERROR'
+                        }, ensure_ascii=False)
+                    }
+            except (ValueError, AttributeError):
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': '出勤時刻の形式が正しくありません',
+                        'code': 'VALIDATION_ERROR'
+                    }, ensure_ascii=False)
+                }
+        
+        if clock_out:
+            try:
+                clock_out_dt = datetime.fromisoformat(clock_out.replace('Z', '+00:00'))
+                # 未来時刻のチェック（5分の許容範囲を設ける）
+                if clock_out_dt > now_utc.replace(tzinfo=clock_out_dt.tzinfo) + timedelta(minutes=5):
+                    return {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({
+                            'error': '退勤時刻が未来の時刻です',
+                            'code': 'VALIDATION_ERROR'
+                        }, ensure_ascii=False)
+                    }
+            except (ValueError, AttributeError):
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': '退勤時刻の形式が正しくありません',
+                        'code': 'VALIDATION_ERROR'
+                    }, ensure_ascii=False)
+                }
+        
+        # 出退勤時刻の整合性チェック
+        if clock_in and clock_out:
+            try:
+                clock_in_dt = datetime.fromisoformat(clock_in.replace('Z', '+00:00'))
+                clock_out_dt = datetime.fromisoformat(clock_out.replace('Z', '+00:00'))
+                if clock_out_dt <= clock_in_dt:
+                    return {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({
+                            'error': '退勤時刻が出勤時刻より前です',
+                            'code': 'VALIDATION_ERROR'
+                        }, ensure_ascii=False)
+                    }
+                # 勤務時間が24時間を超える場合は警告（エラーにはしない）
+                work_hours = (clock_out_dt - clock_in_dt).total_seconds() / 3600
+                if work_hours > 24:
+                    return {
+                        'statusCode': 400,
+                        'headers': headers,
+                        'body': json.dumps({
+                            'error': '勤務時間が24時間を超えています。時刻を確認してください',
+                            'code': 'VALIDATION_ERROR'
+                        }, ensure_ascii=False)
+                    }
+            except (ValueError, AttributeError):
+                pass  # 既に個別の時刻バリデーションでエラーが返される
         
         # 勤怠記録IDを生成（日付_従業員ID）
         attendance_id = f"{date}_{staff_id}"
@@ -3008,6 +3101,49 @@ def create_or_update_attendance(event, headers):
         # 既存の記録を取得
         existing_response = ATTENDANCE_TABLE.get_item(Key={'id': attendance_id})
         existing_item = existing_response.get('Item')
+        
+        # 重複記録のチェック（1日1回制限）
+        if existing_item:
+            # 出勤記録の重複チェック
+            if clock_in and existing_item.get('clock_in'):
+                # 既存の出勤時刻と新しい出勤時刻が同じ日付の場合
+                existing_clock_in = existing_item.get('clock_in')
+                if existing_clock_in and date == existing_item.get('date'):
+                    # 既存の出勤記録がある場合、更新を許可（修正の場合）
+                    # ただし、新しい出勤時刻が既存の出勤時刻より大幅に異なる場合は警告
+                    try:
+                        existing_clock_in_dt = datetime.fromisoformat(existing_clock_in.replace('Z', '+00:00'))
+                        new_clock_in_dt = datetime.fromisoformat(clock_in.replace('Z', '+00:00'))
+                        # 既存の出勤記録があり、退勤記録がない場合は更新を許可
+                        if not existing_item.get('clock_out'):
+                            pass  # 出勤時刻の更新を許可
+                        else:
+                            # 退勤済みの場合は、再出勤として別記録として扱う（IDを変更）
+                            # 再出勤の場合は、新しいIDを生成（日付_従業員ID_2, _3...）
+                            counter = 2
+                            new_attendance_id = f"{date}_{staff_id}_{counter}"
+                            while True:
+                                check_response = ATTENDANCE_TABLE.get_item(Key={'id': new_attendance_id})
+                                if 'Item' not in check_response:
+                                    attendance_id = new_attendance_id
+                                    existing_item = None  # 新規作成として扱う
+                                    break
+                                counter += 1
+                                new_attendance_id = f"{date}_{staff_id}_{counter}"
+                    except (ValueError, AttributeError):
+                        pass
+            
+            # 退勤記録の重複チェック
+            if clock_out and existing_item.get('clock_out'):
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': '既に退勤記録があります',
+                        'code': 'DUPLICATE_RECORD',
+                        'existing_clock_out': existing_item.get('clock_out')
+                    }, ensure_ascii=False)
+                }
         
         if existing_item:
             # 既存の記録を更新

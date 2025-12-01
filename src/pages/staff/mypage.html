@@ -890,6 +890,58 @@
       });
     }
 
+    // エラーメッセージを表示
+    function showErrorMessage(message) {
+      const errorEl = document.getElementById('error-message');
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+        errorEl.style.background = '#fee2e2';
+        errorEl.style.color = '#991b1b';
+        
+        // 5秒後に自動的に非表示
+        setTimeout(() => {
+          errorEl.style.display = 'none';
+        }, 5000);
+      } else {
+        alert(message);
+      }
+    }
+    
+    // 警告メッセージを表示
+    function showWarningMessage(message) {
+      const errorEl = document.getElementById('error-message');
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+        errorEl.style.background = '#fef3c7';
+        errorEl.style.color = '#92400e';
+        
+        // 5秒後に自動的に非表示
+        setTimeout(() => {
+          errorEl.style.display = 'none';
+        }, 5000);
+      } else {
+        alert(message);
+      }
+    }
+    
+    // 成功メッセージを表示
+    function showSuccessMessage(message) {
+      const errorEl = document.getElementById('error-message');
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+        errorEl.style.background = '#d1fae5';
+        errorEl.style.color = '#065f46';
+        
+        // 3秒後に自動的に非表示
+        setTimeout(() => {
+          errorEl.style.display = 'none';
+        }, 3000);
+      }
+    }
+
     // 時刻をフォーマット（確認ダイアログ用）
     function formatTimeForDialog(dateString) {
       if (!dateString) return '-';
@@ -915,6 +967,61 @@
       return { hours, minutes };
     }
 
+    // 時刻の妥当性チェック
+    function validateTime(timeString, type = 'clock_in') {
+      if (!timeString) return { valid: true };
+      
+      const time = new Date(timeString);
+      const now = new Date();
+      
+      // 未来時刻のチェック（5分の許容範囲を設ける）
+      const futureLimit = new Date(now.getTime() + 5 * 60 * 1000); // 5分後
+      if (time > futureLimit) {
+        return {
+          valid: false,
+          message: `${type === 'clock_in' ? '出勤' : '退勤'}時刻が未来の時刻です`
+        };
+      }
+      
+      // 過去の時刻チェック（1日前より前はエラー）
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      if (time < oneDayAgo) {
+        return {
+          valid: false,
+          message: `${type === 'clock_in' ? '出勤' : '退勤'}時刻が過去すぎます（24時間以内の時刻を指定してください）`
+        };
+      }
+      
+      return { valid: true };
+    }
+    
+    // 出退勤時刻の整合性チェック
+    function validateAttendanceTimes(clockIn, clockOut) {
+      if (!clockIn || !clockOut) return { valid: true };
+      
+      const inTime = new Date(clockIn);
+      const outTime = new Date(clockOut);
+      
+      // 退勤時刻が出勤時刻より前の場合はエラー
+      if (outTime <= inTime) {
+        return {
+          valid: false,
+          message: '退勤時刻が出勤時刻より前です'
+        };
+      }
+      
+      // 勤務時間が24時間を超える場合は警告
+      const workHours = (outTime - inTime) / (1000 * 60 * 60);
+      if (workHours > 24) {
+        return {
+          valid: false,
+          message: '勤務時間が24時間を超えています。時刻を確認してください'
+        };
+      }
+      
+      return { valid: true };
+    }
+
     // 出退勤トグル
     document.getElementById('attendance-toggle-btn').addEventListener('click', async () => {
       if (!currentUser) return;
@@ -934,7 +1041,14 @@
         // 出勤
         // 1日1回制限チェック（既に出勤済みでないか確認）
         if (todayRecord.clock_in) {
-          alert(`既に出勤記録があります。\n出勤時刻: ${formatTimeForDialog(todayRecord.clock_in)}`);
+          showErrorMessage(`既に出勤記録があります。\n出勤時刻: ${formatTimeForDialog(todayRecord.clock_in)}`);
+          return;
+        }
+        
+        // 時刻の妥当性チェック
+        const timeValidation = validateTime(now, 'clock_in');
+        if (!timeValidation.valid) {
+          showErrorMessage(timeValidation.message);
           return;
         }
         
@@ -968,7 +1082,21 @@
         // 退勤
         // 1日1回制限チェック（既に退勤済みでないか確認）
         if (todayRecord.clock_out) {
-          alert(`既に退勤記録があります。\n退勤時刻: ${formatTimeForDialog(todayRecord.clock_out)}`);
+          showErrorMessage(`既に退勤記録があります。\n退勤時刻: ${formatTimeForDialog(todayRecord.clock_out)}`);
+          return;
+        }
+        
+        // 時刻の妥当性チェック
+        const timeValidation = validateTime(now, 'clock_out');
+        if (!timeValidation.valid) {
+          showErrorMessage(timeValidation.message);
+          return;
+        }
+        
+        // 出退勤時刻の整合性チェック
+        const consistencyValidation = validateAttendanceTimes(todayRecord.clock_in, now);
+        if (!consistencyValidation.valid) {
+          showErrorMessage(consistencyValidation.message);
           return;
         }
         
@@ -998,6 +1126,13 @@
         };
       } else {
         // 再出勤（1日1回制限の例外：退勤後の再出勤は別記録として扱う）
+        // 時刻の妥当性チェック
+        const timeValidation = validateTime(now, 'clock_in');
+        if (!timeValidation.valid) {
+          showErrorMessage(timeValidation.message);
+          return;
+        }
+        
         // 確認ダイアログを表示
         const currentTime = formatTimeForDialog(now);
         const message = `現在時刻: ${currentTime}\n\n再出勤を記録しますか？\n（退勤後の再出勤は別記録として扱われます）`;
@@ -1029,30 +1164,73 @@
         });
         
         if (response.ok) {
+          const result = await response.json();
+          // 成功メッセージを表示（オプション）
+          showSuccessMessage('出退勤記録を保存しました');
+          
           // ローカルストレージにも保存（オフライン対応）
           localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
           renderAttendanceStatus();
           calculateMonthlyStats();
           renderCalendar();
         } else {
-          // API保存に失敗した場合でもローカルストレージに保存
-          localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-          renderAttendanceStatus();
-          calculateMonthlyStats();
-          renderCalendar();
-          console.warn('APIへの保存に失敗しましたが、ローカルストレージに保存しました');
+          // エラーレスポンスを解析
+          let errorMessage = '出退勤記録の保存に失敗しました';
+          let errorCode = 'UNKNOWN_ERROR';
+          
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+            errorCode = errorData.code || errorCode;
+            
+            // エラーコードに応じた処理
+            if (errorCode === 'VALIDATION_ERROR') {
+              // バリデーションエラーの場合
+              showErrorMessage(`入力エラー: ${errorMessage}`);
+              
+              // ローカルストレージには保存しない（不正なデータのため）
+              return;
+            } else if (errorCode === 'DUPLICATE_RECORD') {
+              // 重複記録エラーの場合
+              showErrorMessage(`記録エラー: ${errorMessage}`);
+              
+              // 既存の記録を再読み込み
+              await loadAttendanceRecords();
+              renderAttendanceStatus();
+              return;
+            }
+          } catch (parseError) {
+            // JSON解析に失敗した場合
+            errorMessage = `サーバーエラー (${response.status}): ${response.statusText}`;
+          }
+          
+          // ネットワークエラー以外の場合は、ローカルストレージに保存を試みる
+          if (response.status >= 500) {
+            // サーバーエラーの場合はローカルストレージに保存
+            localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+            renderAttendanceStatus();
+            calculateMonthlyStats();
+            renderCalendar();
+            showWarningMessage('APIへの保存に失敗しましたが、ローカルストレージに保存しました。後で同期してください。');
+          } else {
+            // クライアントエラー（400番台）の場合は保存しない
+            showErrorMessage(errorMessage);
+          }
         }
       } catch (error) {
-        // エラーが発生した場合でもローカルストレージに保存
+        // ネットワークエラーなどの例外
+        console.error('Error saving attendance:', error);
+        
+        // ネットワークエラーの場合はローカルストレージに保存
         try {
           localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
           renderAttendanceStatus();
           calculateMonthlyStats();
           renderCalendar();
-          console.warn('APIへの保存に失敗しましたが、ローカルストレージに保存しました:', error);
+          showWarningMessage('ネットワークエラーが発生しましたが、ローカルストレージに保存しました。接続が復旧したら自動的に同期されます。');
         } catch (localError) {
-          console.error('Error saving attendance:', localError);
-          alert('出退勤記録の保存に失敗しました');
+          console.error('Error saving to local storage:', localError);
+          showErrorMessage('出退勤記録の保存に失敗しました。ページを再読み込みして再試行してください。');
         }
       }
     });
