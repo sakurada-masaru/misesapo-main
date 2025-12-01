@@ -217,7 +217,6 @@
         <tr>
           <th>ID</th>
           <th>名前</th>
-          <th>メール</th>
           <th>電話番号</th>
           <th>ロール</th>
           <th>部署</th>
@@ -227,7 +226,7 @@
       </thead>
       <tbody id="users-tbody">
         <tr>
-          <td colspan="8" class="loading-cell">
+          <td colspan="7" class="loading-cell">
             <i class="fas fa-spinner fa-spin"></i> 読み込み中...
           </td>
         </tr>
@@ -1200,8 +1199,7 @@
 
     filteredUsers = allUsers.filter(u => {
       const matchSearch = !search || 
-        (u.name && u.name.toLowerCase().includes(search)) ||
-        (u.email && u.email.toLowerCase().includes(search));
+        (u.name && u.name.toLowerCase().includes(search));
       const matchRole = !roleFilter || u.role === roleFilter;
       const matchStatus = !statusFilter || u.status === statusFilter;
       return matchSearch && matchRole && matchStatus;
@@ -1217,7 +1215,7 @@
     const pageUsers = filteredUsers.slice(start, start + perPage);
 
     if (pageUsers.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">該当するユーザーがいません</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">該当するユーザーがいません</td></tr>';
       return;
     }
 
@@ -1230,7 +1228,6 @@
             <a href="/admin/users/detail.html?id=${u.id}" class="user-name-link">${escapeHtml(u.name || '-')}</a>
           </div>
         </td>
-        <td>${escapeHtml(u.email || '-')}</td>
         <td>${escapeHtml(u.phone || '-')}</td>
         <td><span class="role-badge role-${u.role}">${getRoleLabel(u.role)}</span></td>
         <td>${escapeHtml(u.department || '-')}</td>
@@ -1780,7 +1777,7 @@
     const usersList = document.getElementById('bulk-role-users-list');
     usersList.innerHTML = roleUsers.map(u => `
       <div style="padding: 8px; border-bottom: 1px solid #e5e7eb;">
-        <strong>${escapeHtml(u.name || '-')}</strong> (${escapeHtml(u.email || '-')})
+        <strong>${escapeHtml(u.name || '-')}</strong>
       </div>
     `).join('');
 
