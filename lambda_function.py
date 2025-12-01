@@ -2935,6 +2935,11 @@ def get_attendance(event, headers):
         query_params = event.get('queryStringParameters') or {}
         staff_id = query_params.get('staff_id')
         date = query_params.get('date')
+        date_from = query_params.get('date_from')
+        date_to = query_params.get('date_to')
+        year = query_params.get('year')
+        month = query_params.get('month')
+        limit = int(query_params.get('limit', 100))
         
         if staff_id and date:
             # 特定の従業員の特定日の勤怠記録を取得
@@ -2954,30 +2959,93 @@ def get_attendance(event, headers):
                         'error': '勤怠記録が見つかりません'
                     }, ensure_ascii=False)
                 }
-        elif staff_id:
-            # 特定の従業員の勤怠記録一覧を取得（scanでフィルタリング）
-            response = ATTENDANCE_TABLE.scan(
-                FilterExpression=Attr('staff_id').eq(staff_id)
-            )
-            items = response.get('Items', [])
-            # 日付でソート
-            items.sort(key=lambda x: x.get('date', ''), reverse=True)
-            return {
-                'statusCode': 200,
-                'headers': headers,
-                'body': json.dumps({
-                    'items': items
-                }, ensure_ascii=False, default=str)
-            }
         else:
-            # 全従業員の勤怠記録を取得
-            response = ATTENDANCE_TABLE.scan()
+            # フィルタリング条件を構築
+            filter_expressions = []
+            expression_attribute_values = {}
+            expression_attribute_names = {}
+            
+            if staff_id:
+                filter_expressions.append("#staff_id = :staff_id")
+                expression_attribute_names["#staff_id"] = "staff_id"
+                expression_attribute_values[":staff_id"] = staff_id
+            
+            if date_from:
+                filter_expressions.append("#date >= :date_from")
+                expression_attribute_names["#date"] = "date"
+                expression_attribute_values[":date_from"] = date_from
+            
+            if date_to:
+                filter_expressions.append("#date <= :date_to")
+                if "#date" not in expression_attribute_names:
+                    expression_attribute_names["#date"] = "date"
+                expression_attribute_values[":date_to"] = date_to
+            
+            if year and month:
+                # 月次フィルタリング
+                month_start = f"{year}-{month.zfill(2)}-01"
+                # 次の月の1日を計算
+                next_month = int(month) + 1
+                next_year = int(year)
+                if next_month > 12:
+                    next_month = 1
+                    next_year += 1
+                month_end = f"{next_year}-{str(next_month).zfill(2)}-01"
+                
+                filter_expressions.append("#date >= :month_start")
+                filter_expressions.append("#date < :month_end")
+                if "#date" not in expression_attribute_names:
+                    expression_attribute_names["#date"] = "date"
+                expression_attribute_values[":month_start"] = month_start
+                expression_attribute_values[":month_end"] = month_end
+            
+            # スキャンまたはクエリを実行
+            if staff_id and 'staff_id-date-index' in [idx['IndexName'] for idx in ATTENDANCE_TABLE.meta.client.describe_table(TableName='attendance').get('Table', {}).get('GlobalSecondaryIndexes', [])]:
+                # GSIを使用してクエリ
+                try:
+                    response = ATTENDANCE_TABLE.query(
+                        IndexName='staff_id-date-index',
+                        KeyConditionExpression=Key('staff_id').eq(staff_id),
+                        FilterExpression=' AND '.join(filter_expressions) if filter_expressions else None,
+                        ExpressionAttributeNames=expression_attribute_names if expression_attribute_names else None,
+                        ExpressionAttributeValues=expression_attribute_values if expression_attribute_values else None,
+                        ScanIndexForward=False,
+                        Limit=limit
+                    )
+                except Exception as e:
+                    # GSIが存在しない場合はスキャンにフォールバック
+                    print(f"GSI query failed, falling back to scan: {str(e)}")
+                    if filter_expressions:
+                        response = ATTENDANCE_TABLE.scan(
+                            FilterExpression=' AND '.join(filter_expressions),
+                            ExpressionAttributeNames=expression_attribute_names,
+                            ExpressionAttributeValues=expression_attribute_values,
+                            Limit=limit
+                        )
+                    else:
+                        response = ATTENDANCE_TABLE.scan(Limit=limit)
+            else:
+                # スキャンでフィルタリング
+                if filter_expressions:
+                    response = ATTENDANCE_TABLE.scan(
+                        FilterExpression=' AND '.join(filter_expressions),
+                        ExpressionAttributeNames=expression_attribute_names,
+                        ExpressionAttributeValues=expression_attribute_values,
+                        Limit=limit
+                    )
+                else:
+                    response = ATTENDANCE_TABLE.scan(Limit=limit)
+            
             items = response.get('Items', [])
+            # 日付でソート（新しい順）
+            items.sort(key=lambda x: x.get('date', ''), reverse=True)
+            
             return {
                 'statusCode': 200,
                 'headers': headers,
                 'body': json.dumps({
-                    'items': items
+                    'attendance': items,
+                    'count': len(items)
                 }, ensure_ascii=False, default=str)
             }
     except Exception as e:
