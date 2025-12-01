@@ -22,9 +22,29 @@ aws dynamodb create-table \
   --table-name ${TABLE_NAME} \
   --attribute-definitions \
     AttributeName=id,AttributeType=S \
+    AttributeName=staff_id,AttributeType=S \
+    AttributeName=date,AttributeType=S \
   --key-schema \
     AttributeName=id,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST \
+  --global-secondary-indexes \
+    "[
+      {
+        \"IndexName\": \"staff_id-date-index\",
+        \"KeySchema\": [
+          {\"AttributeName\": \"staff_id\", \"KeyType\": \"HASH\"},
+          {\"AttributeName\": \"date\", \"KeyType\": \"RANGE\"}
+        ],
+        \"Projection\": {
+          \"ProjectionType\": \"ALL\"
+        },
+        \"ProvisionedThroughput\": {
+          \"ReadCapacityUnits\": 5,
+          \"WriteCapacityUnits\": 5
+        }
+      }
+    ]" \
+  --provisioned-throughput \
+    ReadCapacityUnits=5,WriteCapacityUnits=5 \
   --region ${REGION}
 
 echo "テーブル ${TABLE_NAME} の作成を開始しました"
