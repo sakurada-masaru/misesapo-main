@@ -113,14 +113,23 @@
               user: result.user
             }));
 
+            // ベースパスを取得（GitHub Pages対応）
+            const base = document.querySelector('base');
+            const basePath = base ? (base.getAttribute('href') || '/') : '/';
+            
             // ロールに応じてリダイレクト
             const role = result.user.role || 'staff';
-            let redirectUrl = '/staff/dashboard.html';
+            let redirectPath = '/staff/dashboard.html';
             if (role === 'admin' || role === 'developer' || role === 'master') {
-              redirectUrl = '/admin/dashboard.html';
+              redirectPath = '/admin/dashboard.html';
             } else if (role === 'sales') {
-              redirectUrl = '/sales/dashboard.html';
+              redirectPath = '/sales/dashboard.html';
             }
+            
+            // ベースパスを考慮したリダイレクトURL
+            const redirectUrl = basePath === '/' 
+              ? redirectPath 
+              : basePath.replace(/\/$/, '') + redirectPath;
             
             window.location.href = redirectUrl;
           } else {
