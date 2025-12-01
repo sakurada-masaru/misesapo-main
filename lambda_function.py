@@ -52,26 +52,22 @@ def generate_next_id(table, prefix):
 def validate_worker_email(email):
     """
     従業員のメールアドレスをバリデーション
-    @misesapo.appで終わることを確認し、個人のメールアドレスを拒否
+    現状は個人メールアドレスも許可（将来的には企業用メールアドレスへの移行を推奨）
     """
     if not email:
         return {'valid': False, 'message': 'メールアドレスは必須です。'}
     
-    # @misesapo.appで終わることを確認
-    if not email.endswith('@misesapo.app'):
+    # 基本的なメールアドレス形式のチェック
+    import re
+    email_pattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+    if not re.match(email_pattern, email):
         return {
             'valid': False,
-            'message': 'メールアドレスは@misesapo.appで終わる必要があります。企業用メールアドレスを使用してください。'
+            'message': '有効なメールアドレスを入力してください。'
         }
     
-    # 個人のメールアドレスを拒否
-    personal_domains = ['@gmail.com', '@yahoo.co.jp', '@outlook.com', '@hotmail.com', '@icloud.com']
-    if any(email.endswith(domain) for domain in personal_domains):
-        return {
-            'valid': False,
-            'message': '個人のメールアドレスは使用できません。企業用メールアドレス（@misesapo.app）を使用してください。'
-        }
-    
+    # 現状は個人メールアドレスも許可
+    # 将来的には企業用メールアドレス（@misesapo.app）への移行を推奨
     return {'valid': True}
 
 # Cognitoクライアントの初期化

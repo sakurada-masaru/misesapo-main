@@ -170,8 +170,8 @@
             </div>
             <div class="form-group full">
               <label for="edit-email">メールアドレス <span class="required">*</span></label>
-              <input type="email" id="edit-email" required placeholder="yamada.taro@misesapo.app">
-              <small class="form-hint">企業用メールアドレス（@misesapo.app）のみ使用可能です</small>
+              <input type="email" id="edit-email" required placeholder="yamada.taro@example.com">
+              <small class="form-hint">現状は個人メールアドレスも使用可能です（将来的には企業用メールアドレスへの移行を推奨）</small>
             </div>
             <div class="form-group">
               <label for="edit-phone">電話番号</label>
@@ -918,29 +918,23 @@
     }
 
 
-    // メールアドレスのバリデーション
+    // メールアドレスのバリデーション（現状は個人メールアドレスも許可）
     function validateEmail(email) {
       if (!email) {
         return { valid: false, message: 'メールアドレスは必須です。' };
       }
       
-      // @misesapo.appで終わることを確認
-      if (!email.endsWith('@misesapo.app')) {
+      // 基本的なメールアドレス形式のチェック
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
         return {
           valid: false,
-          message: 'メールアドレスは@misesapo.appで終わる必要があります。企業用メールアドレスを使用してください。'
+          message: '有効なメールアドレスを入力してください。'
         };
       }
       
-      // 個人のメールアドレスを拒否
-      const personalDomains = ['@gmail.com', '@yahoo.co.jp', '@outlook.com', '@hotmail.com', '@icloud.com'];
-      if (personalDomains.some(domain => email.includes(domain))) {
-        return {
-          valid: false,
-          message: '個人のメールアドレスは使用できません。企業用メールアドレス（@misesapo.app）を使用してください。'
-        };
-      }
-      
+      // 現状は個人メールアドレスも許可
+      // 将来的には企業用メールアドレス（@misesapo.app）への移行を推奨
       return { valid: true };
     }
 
