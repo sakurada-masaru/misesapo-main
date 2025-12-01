@@ -620,6 +620,11 @@
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
+    .form-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
     .form-status {
       margin-bottom: 16px;
       padding: 12px;
@@ -652,6 +657,13 @@
     .btn-primary {
       background: var(--primary);
       color: #ffffff;
+    }
+    .btn-secondary {
+      background: #6b7280;
+      color: #ffffff;
+    }
+    .btn-secondary:hover {
+      background: #4b5563;
     }
     .btn-primary:hover {
       opacity: 0.9;
@@ -905,6 +917,32 @@
       }
     }
 
+
+    // メールアドレスのバリデーション
+    function validateEmail(email) {
+      if (!email) {
+        return { valid: false, message: 'メールアドレスは必須です。' };
+      }
+      
+      // @misesapo.appで終わることを確認
+      if (!email.endsWith('@misesapo.app')) {
+        return {
+          valid: false,
+          message: 'メールアドレスは@misesapo.appで終わる必要があります。企業用メールアドレスを使用してください。'
+        };
+      }
+      
+      // 個人のメールアドレスを拒否
+      const personalDomains = ['@gmail.com', '@yahoo.co.jp', '@outlook.com', '@hotmail.com', '@icloud.com'];
+      if (personalDomains.some(domain => email.includes(domain))) {
+        return {
+          valid: false,
+          message: '個人のメールアドレスは使用できません。企業用メールアドレス（@misesapo.app）を使用してください。'
+        };
+      }
+      
+      return { valid: true };
+    }
 
     // 編集モーダルを開く
     function openEditModal() {
