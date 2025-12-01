@@ -150,16 +150,21 @@
       
 
 
+<script src="/assets/js/auth.js"></script>
 <script src="/assets/js/client_auth.js"></script>
 
 <main id="main" class="container mypage">
+  <div class="loading" id="loading" style="display: none; text-align: center; padding: 48px; color: #6b7280;">読み込み中...</div>
+  <div id="error-message" class="error-message" style="display: none; background: #fee2e2; color: #991b1b; padding: 16px; border-radius: 8px; margin-bottom: 24px; text-align: center;"></div>
+  
+  <div id="mypage-content">
       <!-- Page Header -->
       <header class="mypage-header">
         <div class="mypage-header-content">
           <div class="mypage-header-left">
-            <div class="client-name">株式会社 Dart Ace</div>
+            <div class="client-name" id="client-name">-</div>
             <div class="client-name-divider">/</div>
-            <div class="person-name">オーナー：山田 太郎</div>
+            <div class="person-name" id="person-name">-</div>
           </div>
           <div class="mypage-header-right">
             <a class="btn btn-outline btn-sm" href="/mypage/info.html">オーナー情報</a>
@@ -378,7 +383,103 @@
 
         </aside>
       </div>
-    </main>
+  </div>
+</main>
+
+<script>
+  const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  let currentClient = null;
+
+  // 現在のクライアント情報を取得
+  async function loadCurrentClient() {
+    const loadingEl = document.getElementById('loading');
+    const contentEl = document.getElementById('mypage-content');
+    const errorEl = document.getElementById('error-message');
+
+    try {
+      loadingEl.style.display = 'block';
+      contentEl.style.display = 'none';
+      errorEl.style.display = 'none';
+
+      // 認証情報を確認
+      const authData = window.Auth?.getAuthData?.();
+      if (!authData || !authData.user) {
+        // 未ログインの場合はログインページにリダイレクト
+        window.location.href = '/signin.html';
+        return;
+      }
+
+      const userId = authData.user.id; // DynamoDBのID
+      const firebaseUid = authData.user.firebase_uid;
+
+      // APIからクライアント情報を取得
+      try {
+        let response = null;
+        
+        // まずIDで取得を試みる
+        if (userId) {
+          response = await fetch(`${API_BASE}/clients/${userId}`);
+        }
+        
+        // IDで見つからない場合、Firebase UIDで検索
+        if (!response || !response.ok) {
+          if (firebaseUid) {
+            response = await fetch(`${API_BASE}/clients?firebase_uid=${encodeURIComponent(firebaseUid)}`);
+            if (response.ok) {
+              const clients = await response.json();
+              const clientsArray = Array.isArray(clients) ? clients : (clients.items || clients.clients || []);
+              if (clientsArray.length > 0) {
+                currentClient = clientsArray[0];
+              }
+            }
+          }
+        } else {
+          currentClient = await response.json();
+        }
+      } catch (error) {
+        console.error('Error fetching client info:', error);
+      }
+
+      if (!currentClient || !currentClient.id) {
+        throw new Error('クライアント情報を取得できませんでした。ログインしてください。');
+      }
+
+      // クライアント情報を表示
+      renderClient(currentClient);
+
+      loadingEl.style.display = 'none';
+      contentEl.style.display = 'block';
+    } catch (error) {
+      console.error('Error loading client:', error);
+      loadingEl.style.display = 'none';
+      errorEl.style.display = 'block';
+      errorEl.textContent = error.message || 'クライアント情報の読み込みに失敗しました。';
+      
+      // 認証エラーの場合はログインページにリダイレクト
+      if (error.message.includes('ログイン') || error.message.includes('認証')) {
+        setTimeout(() => {
+          window.location.href = '/signin.html';
+        }, 2000);
+      }
+    }
+  }
+
+  // クライアント情報を表示
+  function renderClient(client) {
+    // 会社名を表示
+    const companyName = client.company_name || '会社名未設定';
+    document.getElementById('client-name').textContent = companyName;
+
+    // 担当者名を表示（ない場合は「ご担当者様」）
+    const personName = client.name || 'ご担当者様';
+    document.getElementById('person-name').textContent = `オーナー：${personName}`;
+  }
+
+  // ページ読み込み時にクライアント情報を取得
+  document.addEventListener('DOMContentLoaded', () => {
+    loadCurrentClient();
+  });
+</script>
 
     </main>
     <footer class="site-footer">
