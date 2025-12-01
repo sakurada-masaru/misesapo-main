@@ -164,7 +164,12 @@
     <div class="attendance-section" id="attendance-section-staff">
       <div class="attendance-section-header">
         <h2><i class="fas fa-hard-hat"></i> 清掃員の出退勤</h2>
-        <span class="attendance-count" id="staff-attendance-count">0名</span>
+        <div class="attendance-header-actions">
+          <span class="attendance-count" id="staff-attendance-count">0名</span>
+          <button class="btn btn-outline btn-sm" onclick="bulkAssignRole('staff')" title="このセクションのユーザー全員を清掃員に設定">
+            <i class="fas fa-users"></i> このロールに一括設定
+          </button>
+        </div>
       </div>
       <div class="attendance-grid" id="attendance-grid-staff">
         <!-- 清掃員のトグルスイッチがここに表示されます -->
@@ -175,7 +180,12 @@
     <div class="attendance-section" id="attendance-section-sales">
       <div class="attendance-section-header">
         <h2><i class="fas fa-user-tie"></i> 営業の出退勤</h2>
-        <span class="attendance-count" id="sales-attendance-count">0名</span>
+        <div class="attendance-header-actions">
+          <span class="attendance-count" id="sales-attendance-count">0名</span>
+          <button class="btn btn-outline btn-sm" onclick="bulkAssignRole('sales')" title="このセクションのユーザー全員を営業に設定">
+            <i class="fas fa-users"></i> このロールに一括設定
+          </button>
+        </div>
       </div>
       <div class="attendance-grid" id="attendance-grid-sales">
         <!-- 営業のトグルスイッチがここに表示されます -->
@@ -186,7 +196,12 @@
     <div class="attendance-section" id="attendance-section-admin">
       <div class="attendance-section-header">
         <h2><i class="fas fa-user-shield"></i> 管理者の出退勤</h2>
-        <span class="attendance-count" id="admin-attendance-count">0名</span>
+        <div class="attendance-header-actions">
+          <span class="attendance-count" id="admin-attendance-count">0名</span>
+          <button class="btn btn-outline btn-sm" onclick="bulkAssignRole('admin')" title="このセクションのユーザー全員を管理者に設定">
+            <i class="fas fa-users"></i> このロールに一括設定
+          </button>
+        </div>
       </div>
       <div class="attendance-grid" id="attendance-grid-admin">
         <!-- 管理者のトグルスイッチがここに表示されます -->
@@ -296,6 +311,21 @@
       <div class="dialog-actions">
         <button type="button" class="btn btn-secondary" onclick="document.getElementById('delete-dialog').close()">キャンセル</button>
         <button type="button" class="btn btn-danger" id="confirm-delete">削除</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 一括ロール割り当て確認 -->
+  <dialog id="bulk-role-dialog" class="delete-dialog">
+    <div class="dialog-content dialog-sm">
+      <h3>一括ロール割り当て</h3>
+      <p id="bulk-role-message">選択したユーザーを<span id="bulk-role-name"></span>に設定しますか？</p>
+      <div id="bulk-role-users-list" style="max-height: 200px; overflow-y: auto; margin: 16px 0; padding: 12px; background: #f9fafb; border-radius: 8px;">
+        <!-- ユーザーリストがここに表示されます -->
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('bulk-role-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="confirm-bulk-role">設定する</button>
       </div>
     </div>
   </dialog>
@@ -865,6 +895,11 @@
     }
     .attendance-section-header h2 i {
       color: var(--primary);
+    }
+    .attendance-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
     .attendance-count {
       font-size: 0.875rem;
@@ -1511,6 +1546,108 @@
     saveAttendanceRecords();
     renderAttendanceSections();
   };
+
+  // 一括ロール割り当て
+  let bulkRoleTarget = null;
+  let bulkRoleUsers = [];
+
+  window.bulkAssignRole = function(role) {
+    // 現在そのロールに設定されているユーザーを取得
+    const roleUsers = allUsers.filter(u => {
+      if (role === 'admin') {
+        return (u.role === 'admin' || u.role === 'other') && u.status === 'active';
+      }
+      return u.role === role && u.status === 'active';
+    });
+
+    if (roleUsers.length === 0) {
+      alert('このロールに設定するユーザーがいません');
+      return;
+    }
+
+    bulkRoleTarget = role;
+    bulkRoleUsers = roleUsers;
+
+    const roleNames = {
+      staff: '清掃員',
+      sales: '営業',
+      admin: '管理者'
+    };
+
+    document.getElementById('bulk-role-name').textContent = roleNames[role] || role;
+    document.getElementById('bulk-role-message').textContent = `選択した${roleUsers.length}名のユーザーを${roleNames[role] || role}に設定しますか？`;
+
+    // ユーザーリストを表示
+    const usersList = document.getElementById('bulk-role-users-list');
+    usersList.innerHTML = roleUsers.map(u => `
+      <div style="padding: 8px; border-bottom: 1px solid #e5e7eb;">
+        <strong>${escapeHtml(u.name || '-')}</strong> (${escapeHtml(u.email || '-')})
+      </div>
+    `).join('');
+
+    document.getElementById('bulk-role-dialog').showModal();
+  };
+
+  // 一括ロール割り当ての確認
+  document.getElementById('confirm-bulk-role').addEventListener('click', async () => {
+    if (!bulkRoleTarget || bulkRoleUsers.length === 0) return;
+
+    try {
+      const roleCodeMap = {
+        staff: '99',
+        sales: '2',
+        admin: '1'
+      };
+
+      const roleCode = roleCodeMap[bulkRoleTarget] || '99';
+      let successCount = 0;
+      let errorCount = 0;
+
+      // 各ユーザーのロールを更新
+      for (const user of bulkRoleUsers) {
+        try {
+          const data = {
+            name: user.name,
+            email: user.email,
+            phone: user.phone || '',
+            role: bulkRoleTarget,
+            role_code: roleCode,
+            department: user.department || '',
+            status: user.status || 'active',
+            updated_at: new Date().toISOString()
+          };
+
+          const response = await fetch(`${API_BASE}/workers/${user.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          if (response.ok) {
+            successCount++;
+          } else {
+            errorCount++;
+            console.error(`Failed to update user ${user.id}:`, response.status);
+          }
+        } catch (error) {
+          errorCount++;
+          console.error(`Error updating user ${user.id}:`, error);
+        }
+      }
+
+      document.getElementById('bulk-role-dialog').close();
+
+      if (successCount > 0) {
+        alert(`${successCount}名のユーザーのロールを更新しました${errorCount > 0 ? `\n${errorCount}名の更新に失敗しました` : ''}`);
+        loadUsers(); // ユーザーリストを再読み込み
+      } else {
+        alert('ロールの更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Bulk role assignment error:', error);
+      alert('エラーが発生しました: ' + error.message);
+    }
+  });
 })();
 
   // サイドバー開閉機能
