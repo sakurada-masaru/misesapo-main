@@ -470,22 +470,32 @@
         contentEl.style.display = 'none';
         errorEl.style.display = 'none';
 
-        // 認証情報から個人のIDを取得（Cognito認証を優先）
+        // ユーザーIDを取得（優先順位: URLパラメータ > 認証情報）
         let userId = null;
         
-        // Cognito認証を確認
-        if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
-          const cognitoUser = await window.CognitoAuth.getCurrentUser();
-          if (cognitoUser && cognitoUser.id) {
-            userId = cognitoUser.id;  // DynamoDBのID
-          }
+        // URLパラメータからIDを取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlId = urlParams.get('id');
+        if (urlId) {
+          userId = urlId;
         }
         
-        // Firebase認証を確認（フォールバック）
+        // URLパラメータがない場合、認証情報から個人のIDを取得（Cognito認証を優先）
         if (!userId) {
-          const authData = window.Auth?.getAuthData?.();
-          if (authData && authData.user && authData.user.id) {
-            userId = authData.user.id;
+          // Cognito認証を確認
+          if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+            const cognitoUser = await window.CognitoAuth.getCurrentUser();
+            if (cognitoUser && cognitoUser.id) {
+              userId = cognitoUser.id;  // DynamoDBのID
+            }
+          }
+          
+          // Firebase認証を確認（フォールバック）
+          if (!userId) {
+            const authData = window.Auth?.getAuthData?.();
+            if (authData && authData.user && authData.user.id) {
+              userId = authData.user.id;
+            }
           }
         }
         
@@ -624,16 +634,56 @@
     }
 
     // 出退勤記録を読み込み
-    function loadAttendanceRecords() {
+    async function loadAttendanceRecords() {
+      if (!currentUser) return;
+      
+      try {
+        // APIから勤怠記録を取得
+        const today = new Date().toISOString().split('T')[0];
+        const response = await fetch(`${API_BASE}/attendance?staff_id=${currentUser.id}&date=${today}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const record = data.items ? data.items[0] : data;
+          
+          if (record) {
+            // APIから取得したデータをattendanceRecordsに変換
+            const date = record.date || today;
+            if (!attendanceRecords[date]) {
+              attendanceRecords[date] = {};
+            }
+            attendanceRecords[date][currentUser.id] = {
+              clock_in: record.clock_in,
+              clock_out: record.clock_out,
+              staff_id: record.staff_id,
+              staff_name: record.staff_name
+            };
+          }
+        }
+      } catch (error) {
+        console.warn('APIからの勤怠記録取得に失敗しました。ローカルストレージから読み込みます:', error);
+      }
+      
+      // ローカルストレージからも読み込み（フォールバック）
       try {
         const stored = localStorage.getItem('attendanceRecords');
         if (stored) {
-          attendanceRecords = JSON.parse(stored);
+          const localRecords = JSON.parse(stored);
+          // ローカルストレージのデータとマージ
+          for (const date in localRecords) {
+            if (!attendanceRecords[date]) {
+              attendanceRecords[date] = {};
+            }
+            Object.assign(attendanceRecords[date], localRecords[date]);
+          }
         }
       } catch (error) {
-        console.error('Error loading attendance records:', error);
-        attendanceRecords = {};
+        console.error('Error loading attendance records from localStorage:', error);
+        if (Object.keys(attendanceRecords).length === 0) {
+          attendanceRecords = {};
+        }
       }
+      
       renderAttendanceStatus();
       calculateMonthlyStats();
     }
@@ -709,47 +759,95 @@
     }
 
     // 出退勤トグル
-    document.getElementById('attendance-toggle-btn').addEventListener('click', () => {
+    document.getElementById('attendance-toggle-btn').addEventListener('click', async () => {
       if (!currentUser) return;
       
       const today = new Date().toISOString().split('T')[0];
+      const now = new Date().toISOString();
+      
       if (!attendanceRecords[today]) {
         attendanceRecords[today] = {};
       }
       
       const todayRecord = attendanceRecords[today][currentUser.id] || {};
+      let attendanceData = {};
       
       if (!todayRecord.clock_in) {
         // 出勤
+        attendanceData = {
+          staff_id: currentUser.id,
+          staff_name: currentUser.name,
+          date: today,
+          clock_in: now
+        };
         attendanceRecords[today][currentUser.id] = {
           ...todayRecord,
-          clock_in: new Date().toISOString(),
+          clock_in: now,
           staff_id: currentUser.id,
           staff_name: currentUser.name
         };
       } else if (!todayRecord.clock_out) {
         // 退勤
+        attendanceData = {
+          staff_id: currentUser.id,
+          staff_name: currentUser.name,
+          date: today,
+          clock_in: todayRecord.clock_in,
+          clock_out: now
+        };
         attendanceRecords[today][currentUser.id] = {
           ...todayRecord,
-          clock_out: new Date().toISOString()
+          clock_out: now
         };
       } else {
         // 再出勤
+        attendanceData = {
+          staff_id: currentUser.id,
+          staff_name: currentUser.name,
+          date: today,
+          clock_in: now
+        };
         attendanceRecords[today][currentUser.id] = {
-          clock_in: new Date().toISOString(),
+          clock_in: now,
           staff_id: currentUser.id,
           staff_name: currentUser.name
         };
       }
       
       try {
-        localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-        renderAttendanceStatus();
-        calculateMonthlyStats();
-        renderCalendar();
+        // APIに保存
+        const response = await fetch(`${API_BASE}/attendance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(attendanceData)
+        });
+        
+        if (response.ok) {
+          // ローカルストレージにも保存（オフライン対応）
+          localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+          renderAttendanceStatus();
+          calculateMonthlyStats();
+          renderCalendar();
+        } else {
+          // API保存に失敗した場合でもローカルストレージに保存
+          localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+          renderAttendanceStatus();
+          calculateMonthlyStats();
+          renderCalendar();
+          console.warn('APIへの保存に失敗しましたが、ローカルストレージに保存しました');
+        }
       } catch (error) {
-        console.error('Error saving attendance:', error);
-        alert('出退勤記録の保存に失敗しました');
+        // エラーが発生した場合でもローカルストレージに保存
+        try {
+          localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+          renderAttendanceStatus();
+          calculateMonthlyStats();
+          renderCalendar();
+          console.warn('APIへの保存に失敗しましたが、ローカルストレージに保存しました:', error);
+        } catch (localError) {
+          console.error('Error saving attendance:', localError);
+          alert('出退勤記録の保存に失敗しました');
+        }
       }
     });
 

@@ -87,6 +87,7 @@ WORKERS_TABLE = dynamodb.Table('workers')
 CLIENTS_TABLE = dynamodb.Table('clients')
 BRANDS_TABLE = dynamodb.Table('brands')
 STORES_TABLE = dynamodb.Table('stores')
+ATTENDANCE_TABLE = dynamodb.Table('attendance')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -2900,6 +2901,295 @@ def update_worker(worker_id, event, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': '従業員の更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_attendance(event, headers):
+    """
+    勤怠記録を取得
+    """
+    try:
+        # クエリパラメータを取得
+        query_params = event.get('queryStringParameters') or {}
+        staff_id = query_params.get('staff_id')
+        date = query_params.get('date')
+        
+        if staff_id and date:
+            # 特定の従業員の特定日の勤怠記録を取得
+            attendance_id = f"{date}_{staff_id}"
+            response = ATTENDANCE_TABLE.get_item(Key={'id': attendance_id})
+            if 'Item' in response:
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+                }
+            else:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': '勤怠記録が見つかりません'
+                    }, ensure_ascii=False)
+                }
+        elif staff_id:
+            # 特定の従業員の勤怠記録一覧を取得（scanでフィルタリング）
+            response = ATTENDANCE_TABLE.scan(
+                FilterExpression=Attr('staff_id').eq(staff_id)
+            )
+            items = response.get('Items', [])
+            # 日付でソート
+            items.sort(key=lambda x: x.get('date', ''), reverse=True)
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'items': items
+                }, ensure_ascii=False, default=str)
+            }
+        else:
+            # 全従業員の勤怠記録を取得
+            response = ATTENDANCE_TABLE.scan()
+            items = response.get('Items', [])
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'items': items
+                }, ensure_ascii=False, default=str)
+            }
+    except Exception as e:
+        print(f"Error getting attendance: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '勤怠記録の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_or_update_attendance(event, headers):
+    """
+    勤怠記録を作成または更新
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        staff_id = body_json.get('staff_id')
+        date = body_json.get('date')
+        clock_in = body_json.get('clock_in')
+        clock_out = body_json.get('clock_out')
+        
+        if not staff_id or not date:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'staff_idとdateは必須です'
+                }, ensure_ascii=False)
+            }
+        
+        # 勤怠記録IDを生成（日付_従業員ID）
+        attendance_id = f"{date}_{staff_id}"
+        
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # 既存の記録を取得
+        existing_response = ATTENDANCE_TABLE.get_item(Key={'id': attendance_id})
+        existing_item = existing_response.get('Item')
+        
+        if existing_item:
+            # 既存の記録を更新
+            update_expression_parts = []
+            expression_attribute_values = {}
+            expression_attribute_names = {}
+            
+            if clock_in:
+                update_expression_parts.append("#clock_in = :clock_in")
+                expression_attribute_names["#clock_in"] = "clock_in"
+                expression_attribute_values[":clock_in"] = clock_in
+            
+            if clock_out:
+                update_expression_parts.append("#clock_out = :clock_out")
+                expression_attribute_names["#clock_out"] = "clock_out"
+                expression_attribute_values[":clock_out"] = clock_out
+            
+            update_expression_parts.append("#updated_at = :updated_at")
+            expression_attribute_names["#updated_at"] = "updated_at"
+            expression_attribute_values[":updated_at"] = now
+            
+            ATTENDANCE_TABLE.update_item(
+                Key={'id': attendance_id},
+                UpdateExpression='SET ' + ', '.join(update_expression_parts),
+                ExpressionAttributeNames=expression_attribute_names,
+                ExpressionAttributeValues=expression_attribute_values
+            )
+        else:
+            # 新規作成
+            attendance_data = {
+                'id': attendance_id,
+                'staff_id': staff_id,
+                'staff_name': body_json.get('staff_name', ''),
+                'date': date,
+                'clock_in': clock_in,
+                'clock_out': clock_out,
+                'created_at': now,
+                'updated_at': now
+            }
+            ATTENDANCE_TABLE.put_item(Item=attendance_data)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '勤怠記録を保存しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error creating/updating attendance: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '勤怠記録の保存に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_attendance_detail(attendance_id, headers):
+    """
+    勤怠記録詳細を取得
+    """
+    try:
+        response = ATTENDANCE_TABLE.get_item(Key={'id': attendance_id})
+        if 'Item' in response:
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+            }
+        else:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '勤怠記録が見つかりません'
+                }, ensure_ascii=False)
+            }
+    except Exception as e:
+        print(f"Error getting attendance detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '勤怠記録の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_attendance(attendance_id, event, headers):
+    """
+    勤怠記録を更新
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 既存の記録を取得
+        existing_response = ATTENDANCE_TABLE.get_item(Key={'id': attendance_id})
+        if 'Item' not in existing_response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '勤怠記録が見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        # 更新可能なフィールドを更新
+        update_expression_parts = []
+        expression_attribute_values = {}
+        expression_attribute_names = {}
+        
+        updatable_fields = ['clock_in', 'clock_out', 'staff_name']
+        for field in updatable_fields:
+            if field in body_json:
+                update_expression_parts.append(f"#{field} = :{field}")
+                expression_attribute_names[f"#{field}"] = field
+                expression_attribute_values[f":{field}"] = body_json[field]
+        
+        update_expression_parts.append("#updated_at = :updated_at")
+        expression_attribute_names["#updated_at"] = "updated_at"
+        expression_attribute_values[":updated_at"] = datetime.utcnow().isoformat() + 'Z'
+        
+        if update_expression_parts:
+            ATTENDANCE_TABLE.update_item(
+                Key={'id': attendance_id},
+                UpdateExpression='SET ' + ', '.join(update_expression_parts),
+                ExpressionAttributeNames=expression_attribute_names,
+                ExpressionAttributeValues=expression_attribute_values
+            )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '勤怠記録を更新しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating attendance: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '勤怠記録の更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_attendance(attendance_id, headers):
+    """
+    勤怠記録を削除
+    """
+    try:
+        ATTENDANCE_TABLE.delete_item(Key={'id': attendance_id})
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '勤怠記録を削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting attendance: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '勤怠記録の削除に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }

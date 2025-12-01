@@ -117,16 +117,14 @@
             const base = document.querySelector('base');
             const basePath = base ? (base.getAttribute('href') || '/') : '/';
             
-            // ロールに応じてリダイレクト
+            // ロールに応じてリダイレクト（全ロールをマイページにリダイレクト）
             const role = result.user.role || 'staff';
-            let redirectPath = '/staff/dashboard.html';
-            if (role === 'master') {
-              // マスター権限はサイトマップにリダイレクト
-              redirectPath = '/admin/sitemap.html';
-            } else if (role === 'admin' || role === 'developer') {
-              redirectPath = '/admin/dashboard.html';
-            } else if (role === 'sales') {
-              redirectPath = '/sales/dashboard.html';
+            const userId = result.user.id || result.user.user_id;
+            
+            // マイページにリダイレクト（従業員IDをパラメータとして渡す）
+            let redirectPath = '/staff/mypage.html';
+            if (userId) {
+              redirectPath += `?id=${userId}`;
             }
             
             // ベースパスを考慮したリダイレクトURL
