@@ -429,47 +429,47 @@
       // 現時点では、デフォルトでcustomerロールを使用
       // 将来的に、Cloud FunctionsでCustom Claimsを設定する必要がある
       
-      // DynamoDBのworkersテーブルにも登録（管理画面で表示されるようにするため）
+      // DynamoDBのclientsテーブルに登録（お客様専用）
       try {
         const apiBaseUrl = getApiBaseUrl();
         if (apiBaseUrl) {
-          const workerId = 'W' + Date.now();
-          const workerData = {
-            id: workerId,
+          const clientId = 'C' + Date.now();
+          const clientData = {
+            id: clientId,
             firebase_uid: firebaseUser.uid,
             email: firebaseUser.email,
             name: name || email.split('@')[0],
             phone: '',
-            role: role,
-            role_code: role === 'customer' ? '99' : '99',  // customerはデフォルトでstaff扱い
-            department: '',
+            company_name: '',
+            store_name: '',
+            role: 'customer',  // 固定
             status: 'active',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
           
-          const response = await fetch(`${apiBaseUrl}/workers`, {
+          const response = await fetch(`${apiBaseUrl}/clients`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify(workerData)
+            body: JSON.stringify(clientData)
           });
           
           if (response.ok) {
-            console.log('[Auth] Worker created in DynamoDB:', workerId);
+            console.log('[Auth] Client created in DynamoDB:', clientId);
             // DynamoDBのIDを使用
-            const createdWorker = await response.json();
-            if (createdWorker && createdWorker.id) {
-              workerData.id = createdWorker.id;
+            const createdClient = await response.json();
+            if (createdClient && createdClient.id) {
+              clientData.id = createdClient.id;
             }
           } else {
-            console.warn('[Auth] Failed to create worker in DynamoDB:', await response.text());
+            console.warn('[Auth] Failed to create client in DynamoDB:', await response.text());
             // DynamoDBへの登録に失敗しても、Firebase登録は成功とする
           }
         }
       } catch (error) {
-        console.error('[Auth] Error creating worker in DynamoDB:', error);
+        console.error('[Auth] Error creating client in DynamoDB:', error);
         // DynamoDBへの登録に失敗しても、Firebase登録は成功とする
       }
       

@@ -20,6 +20,7 @@ REPORTS_TABLE = dynamodb.Table('staff-reports')
 SCHEDULES_TABLE = dynamodb.Table('schedules')
 ESTIMATES_TABLE = dynamodb.Table('estimates')
 WORKERS_TABLE = dynamodb.Table('workers')
+CLIENTS_TABLE = dynamodb.Table('clients')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -194,6 +195,21 @@ def lambda_handler(event, context):
                 return update_worker(worker_id, event, headers)
             elif method == 'DELETE':
                 return delete_worker(worker_id, headers)
+        elif normalized_path == '/clients':
+            # クライアント（お客様）一覧の取得・作成
+            if method == 'GET':
+                return get_clients(event, headers)
+            elif method == 'POST':
+                return create_client(event, headers)
+        elif normalized_path.startswith('/clients/'):
+            # クライアント（お客様）詳細の取得・更新・削除
+            client_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_client_detail(client_id, headers)
+            elif method == 'PUT':
+                return update_client(client_id, event, headers)
+            elif method == 'DELETE':
+                return delete_client(client_id, headers)
         elif normalized_path.startswith('/admin/cognito/users'):
             # Cognitoユーザー作成（管理者のみ）
             if method == 'POST':
