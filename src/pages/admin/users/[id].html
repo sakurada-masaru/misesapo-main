@@ -1,0 +1,741 @@
+@layout('layouts.admin')
+@json('data/meta/admin_user_detail_title.json', $title)
+@json('data/meta/admin_user_detail_body_class.json', $body_class)
+<script src="/assets/js/client_auth.js"></script>
+
+<main id="main" class="admin-user-detail">
+  <div class="page-header">
+    <a href="/admin/users/" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title" id="page-title">ユーザー詳細</h1>
+    <a href="#" class="btn btn-outline btn-sm" id="edit-btn" style="display: none;">
+      <i class="fas fa-edit"></i> 編集
+    </a>
+  </div>
+
+  <div class="loading" id="loading">読み込み中...</div>
+  <div id="error-message" class="error-message" style="display: none;"></div>
+  
+  <div id="user-content" style="display: none;">
+    <!-- ユーザー基本情報カード -->
+    <div class="info-card">
+      <div class="card-header">
+        <div class="user-main-info">
+          <div class="user-avatar-large" id="user-avatar-large">
+            <span id="user-avatar-text">?</span>
+          </div>
+          <div class="user-info-text">
+            <h2 class="user-name" id="user-name">-</h2>
+            <div class="user-email" id="user-email">-</div>
+            <div class="user-role-badge" id="user-role-badge">
+              <span class="role-badge" id="role-badge">-</span>
+            </div>
+          </div>
+        </div>
+        <span class="status-badge" id="status-badge">-</span>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="fas fa-user"></i>
+            基本情報
+          </h3>
+          <div class="info-item">
+            <span class="info-label">ユーザーID</span>
+            <span class="info-value" id="user-id">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">名前</span>
+            <span class="info-value" id="info-name">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">メールアドレス</span>
+            <span class="info-value">
+              <a href="#" id="info-email">-</a>
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">電話番号</span>
+            <span class="info-value" id="info-phone">-</span>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="fas fa-briefcase"></i>
+            所属情報
+          </h3>
+          <div class="info-item">
+            <span class="info-label">ロール</span>
+            <span class="info-value" id="info-role">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">部署</span>
+            <span class="info-value" id="info-department">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">ステータス</span>
+            <span class="info-value" id="info-status">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">登録日</span>
+            <span class="info-value" id="info-created-at">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 出退勤記録セクション -->
+    <div class="attendance-section">
+      <h3 class="section-title">
+        <i class="fas fa-clock"></i>
+        出退勤記録
+      </h3>
+      <div class="attendance-card">
+        <div class="attendance-today">
+          <div class="attendance-status" id="attendance-status">
+            <div class="status-indicator" id="status-indicator"></div>
+            <div class="status-text">
+              <span class="status-label" id="status-label">出勤状況</span>
+              <span class="status-time" id="status-time">-</span>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-round" id="attendance-toggle-btn">
+            <i class="fas fa-power-off"></i>
+            <span id="toggle-btn-text">出勤する</span>
+          </button>
+        </div>
+        
+        <div class="attendance-calendar" id="attendance-calendar">
+          <!-- カレンダーが動的に生成される -->
+        </div>
+      </div>
+    </div>
+
+    <!-- スケジュール情報セクション -->
+    <div class="schedule-section">
+      <h3 class="section-title">
+        <i class="fas fa-calendar-alt"></i>
+        スケジュール情報
+      </h3>
+      <div class="schedule-card">
+        <div id="schedule-list">
+          <!-- スケジュールが動的に生成される -->
+        </div>
+      </div>
+    </div>
+
+    <!-- クイックアクション -->
+    <div class="actions-section">
+      <h3 class="section-title">クイックアクション</h3>
+      <div class="action-buttons">
+        <a href="#" class="action-btn" id="schedule-btn">
+          <i class="fas fa-calendar-plus"></i>
+          <span>スケジュール追加</span>
+        </a>
+        <a href="#" class="action-btn" id="report-btn">
+          <i class="fas fa-file-alt"></i>
+          <span>レポート確認</span>
+        </a>
+        <a href="#" class="action-btn" id="email-btn">
+          <i class="fas fa-envelope"></i>
+          <span>メール送信</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 戻るボタン -->
+    <div class="nav-section">
+      <a href="/admin/users/" class="btn btn-outline btn-block">
+        <i class="fas fa-list"></i> ユーザー一覧に戻る
+      </a>
+    </div>
+  </div>
+
+  <style>
+    .admin-user-detail {
+      max-width: 100%;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+      flex-wrap: wrap;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      flex: 1;
+    }
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+      font-size: 1rem;
+    }
+    .error-message {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .info-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    .user-main-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+    }
+    .user-avatar-large {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+    .user-info-text {
+      flex: 1;
+    }
+    .user-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 8px 0;
+    }
+    .user-email {
+      font-size: 1rem;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+    .user-role-badge {
+      display: inline-block;
+    }
+    .role-badge {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .role-staff { background: #ffedd5; color: #c2410c; }
+    .role-sales { background: #dcfce7; color: #15803d; }
+    .role-admin { background: #fce7f3; color: #be185d; }
+    .role-other { background: #e2e8f0; color: #475569; }
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-inactive { background: #fee2e2; color: #991b1b; }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .info-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .info-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .info-value {
+      font-size: 0.95rem;
+      color: #111827;
+      font-weight: 500;
+    }
+    .info-value a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .info-value a:hover {
+      text-decoration: underline;
+    }
+    .attendance-section,
+    .schedule-section {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    .attendance-card {
+      margin-top: 16px;
+    }
+    .attendance-today {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+    .attendance-status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .status-indicator {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #9ca3af;
+    }
+    .status-indicator.working {
+      background: #10b981;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    }
+    .status-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .status-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .status-time {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+    }
+    .attendance-calendar {
+      margin-top: 16px;
+    }
+    .schedule-card {
+      margin-top: 16px;
+    }
+    .actions-section {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #374151;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      background: #ffffff;
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .action-btn i {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+    .action-btn span {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .nav-section {
+      margin-bottom: 24px;
+    }
+    @media (max-width: 768px) {
+      .admin-user-detail {
+        padding: 12px;
+      }
+      .info-card,
+      .attendance-section,
+      .schedule-section,
+      .actions-section {
+        padding: 16px;
+      }
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .user-main-info {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+      .attendance-today {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .action-buttons {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+
+  <script>
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    let currentUser = null;
+    let attendanceRecords = {};
+
+    // URLからユーザーIDを取得
+    function getUserIdFromUrl() {
+      const path = window.location.pathname;
+      let match = path.match(/\/admin\/users\/([^\/]+)(?:\.html)?$/);
+      if (match) {
+        const id = match[1];
+        if (id === '[id]') {
+          const urlParams = new URLSearchParams(window.location.search);
+          return urlParams.get('id') || urlParams.get('user_id');
+        }
+        return id;
+      }
+      return null;
+    }
+
+    // 日付フォーマット
+    function formatDate(dateString) {
+      if (!dateString) return '-';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ja-JP', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric'
+      });
+    }
+
+    function formatDateTime(dateString) {
+      if (!dateString) return '-';
+      const date = new Date(dateString);
+      return date.toLocaleString('ja-JP', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function formatTime(dateString) {
+      if (!dateString) return '-';
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('ja-JP', { 
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // ユーザー情報を読み込み
+    async function loadUser() {
+      const loadingEl = document.getElementById('loading');
+      const contentEl = document.getElementById('user-content');
+      const errorEl = document.getElementById('error-message');
+      
+      const userId = getUserIdFromUrl();
+      if (!userId) {
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorEl.textContent = 'ユーザーIDが取得できませんでした';
+        return;
+      }
+
+      try {
+        loadingEl.style.display = 'block';
+        contentEl.style.display = 'none';
+        errorEl.style.display = 'none';
+
+        // ユーザー情報を取得
+        const response = await fetch(`${API_BASE}/workers/${userId}`);
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('ユーザーが見つかりませんでした');
+          }
+          throw new Error('ユーザー情報の取得に失敗しました');
+        }
+
+        currentUser = await response.json();
+        
+        // ロールを変換
+        if (currentUser.role_code !== undefined) {
+          currentUser.role = getRoleFromCode(currentUser.role_code);
+        }
+
+        // 出退勤記録を読み込み
+        loadAttendanceRecords();
+
+        // ユーザー情報を表示
+        renderUser(currentUser);
+
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+      } catch (error) {
+        console.error('Error loading user:', error);
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorEl.textContent = `エラー: ${error.message}`;
+      }
+    }
+
+    function getRoleFromCode(code) {
+      if (code === '99' || code === 99) return 'staff';
+      if (code === '1' || code === 1) return 'admin';
+      if (code === '2' || code === 2) return 'sales';
+      return 'staff';
+    }
+
+    function getRoleLabel(role) {
+      const labels = { staff: '清掃員', sales: '営業', admin: '管理者', other: 'その他' };
+      return labels[role] || role;
+    }
+
+    // ユーザー情報を表示
+    function renderUser(user) {
+      // ページタイトル
+      document.getElementById('page-title').textContent = `${user.name || 'ユーザー'}の詳細`;
+      
+      // アバター
+      const avatarText = (user.name || '?')[0].toUpperCase();
+      document.getElementById('user-avatar-text').textContent = avatarText;
+      document.getElementById('user-avatar-large').style.background = getRoleColor(user.role);
+      
+      // 基本情報
+      document.getElementById('user-name').textContent = user.name || '-';
+      document.getElementById('user-email').textContent = user.email || '-';
+      
+      // ロールバッジ
+      const roleLabel = getRoleLabel(user.role);
+      const roleBadge = document.getElementById('role-badge');
+      roleBadge.textContent = roleLabel;
+      roleBadge.className = `role-badge role-${user.role}`;
+      
+      // ステータスバッジ
+      const status = user.status || 'active';
+      const statusBadge = document.getElementById('status-badge');
+      statusBadge.textContent = status === 'inactive' ? '無効' : '有効';
+      statusBadge.className = `status-badge status-${status}`;
+      
+      // 詳細情報
+      document.getElementById('user-id').textContent = user.id || '-';
+      document.getElementById('info-name').textContent = user.name || '-';
+      const emailLink = document.getElementById('info-email');
+      emailLink.textContent = user.email || '-';
+      emailLink.href = user.email ? `mailto:${user.email}` : '#';
+      document.getElementById('info-phone').textContent = user.phone || '-';
+      document.getElementById('info-role').textContent = roleLabel;
+      document.getElementById('info-department').textContent = user.department || '-';
+      document.getElementById('info-status').textContent = status === 'inactive' ? '無効' : '有効';
+      document.getElementById('info-created-at').textContent = formatDate(user.created_at);
+      
+      // 編集ボタン
+      document.getElementById('edit-btn').href = `/admin/users/${user.id}/edit.html`;
+      document.getElementById('edit-btn').style.display = 'inline-flex';
+      
+      // クイックアクション
+      document.getElementById('email-btn').href = user.email ? `mailto:${user.email}` : '#';
+    }
+
+    function getRoleColor(role) {
+      const colors = {
+        staff: '#f59e0b',
+        sales: '#10b981',
+        admin: '#ec4899',
+        other: '#64748b'
+      };
+      return colors[role] || '#64748b';
+    }
+
+    // 出退勤記録を読み込み
+    function loadAttendanceRecords() {
+      try {
+        const stored = localStorage.getItem('attendanceRecords');
+        if (stored) {
+          attendanceRecords = JSON.parse(stored);
+        }
+      } catch (error) {
+        console.error('Error loading attendance records:', error);
+        attendanceRecords = {};
+      }
+      renderAttendanceStatus();
+    }
+
+    // 出退勤ステータスを表示
+    function renderAttendanceStatus() {
+      if (!currentUser) return;
+      
+      const today = new Date().toISOString().split('T')[0];
+      const todayRecord = attendanceRecords[today]?.[currentUser.id];
+      
+      const statusIndicator = document.getElementById('status-indicator');
+      const statusLabel = document.getElementById('status-label');
+      const statusTime = document.getElementById('status-time');
+      const toggleBtn = document.getElementById('attendance-toggle-btn');
+      const toggleBtnText = document.getElementById('toggle-btn-text');
+      
+      if (todayRecord && todayRecord.clock_in && !todayRecord.clock_out) {
+        // 出勤中
+        statusIndicator.className = 'status-indicator working';
+        statusLabel.textContent = '出勤中';
+        statusTime.textContent = `出勤時刻: ${formatTime(todayRecord.clock_in)}`;
+        toggleBtnText.textContent = '退勤する';
+        toggleBtn.classList.remove('btn-primary');
+        toggleBtn.classList.add('btn-danger');
+      } else if (todayRecord && todayRecord.clock_out) {
+        // 退勤済み
+        statusIndicator.className = 'status-indicator';
+        statusLabel.textContent = '退勤済み';
+        statusTime.textContent = `出勤: ${formatTime(todayRecord.clock_in)} - 退勤: ${formatTime(todayRecord.clock_out)}`;
+        toggleBtnText.textContent = '再出勤';
+        toggleBtn.classList.remove('btn-danger');
+        toggleBtn.classList.add('btn-primary');
+      } else {
+        // 未出勤
+        statusIndicator.className = 'status-indicator';
+        statusLabel.textContent = '未出勤';
+        statusTime.textContent = '-';
+        toggleBtnText.textContent = '出勤する';
+        toggleBtn.classList.remove('btn-danger');
+        toggleBtn.classList.add('btn-primary');
+      }
+    }
+
+    // 出退勤トグル
+    document.getElementById('attendance-toggle-btn').addEventListener('click', () => {
+      if (!currentUser) return;
+      
+      const today = new Date().toISOString().split('T')[0];
+      if (!attendanceRecords[today]) {
+        attendanceRecords[today] = {};
+      }
+      
+      const todayRecord = attendanceRecords[today][currentUser.id] || {};
+      
+      if (!todayRecord.clock_in) {
+        // 出勤
+        attendanceRecords[today][currentUser.id] = {
+          ...todayRecord,
+          clock_in: new Date().toISOString(),
+          staff_id: currentUser.id,
+          staff_name: currentUser.name
+        };
+      } else if (!todayRecord.clock_out) {
+        // 退勤
+        attendanceRecords[today][currentUser.id] = {
+          ...todayRecord,
+          clock_out: new Date().toISOString()
+        };
+      } else {
+        // 再出勤
+        attendanceRecords[today][currentUser.id] = {
+          clock_in: new Date().toISOString(),
+          staff_id: currentUser.id,
+          staff_name: currentUser.name
+        };
+      }
+      
+      try {
+        localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+        renderAttendanceStatus();
+      } catch (error) {
+        console.error('Error saving attendance:', error);
+        alert('出退勤記録の保存に失敗しました');
+      }
+    });
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUser();
+    });
+  </script>
+</main>
+

@@ -664,6 +664,16 @@
       font-weight: 600;
       font-size: 0.875rem;
     }
+    .user-name-link {
+      color: #1e293b;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .user-name-link:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
     .role-badge {
       padding: 4px 10px;
       border-radius: 6px;
@@ -1146,7 +1156,7 @@
         <td>
           <div class="user-name-cell">
             <span class="user-avatar">${(u.name || '?')[0]}</span>
-            <span>${escapeHtml(u.name || '-')}</span>
+            <a href="/admin/users/${u.id}.html" class="user-name-link">${escapeHtml(u.name || '-')}</a>
           </div>
         </td>
         <td>${escapeHtml(u.email || '-')}</td>

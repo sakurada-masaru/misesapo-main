@@ -1,0 +1,810 @@
+@layout('layouts.base')
+@json('data/meta/staff_mypage_title.json', $title)
+@json('data/meta/staff_mypage_body_class.json', $body_class)
+<script src="/assets/js/client_auth.js"></script>
+
+<main id="main" class="container staff-mypage">
+  <div class="loading" id="loading">読み込み中...</div>
+  <div id="error-message" class="error-message" style="display: none;"></div>
+  
+  <div id="mypage-content" style="display: none;">
+    <!-- ページヘッダー -->
+    <header class="mypage-header">
+      <div class="mypage-header-content">
+        <div class="mypage-header-left">
+          <div class="user-avatar-large" id="user-avatar-large">
+            <span id="user-avatar-text">?</span>
+          </div>
+          <div class="user-info-header">
+            <div class="user-name-header" id="user-name-header">-</div>
+            <div class="user-role-header" id="user-role-header">-</div>
+            <div class="user-department-header" id="user-department-header">-</div>
+          </div>
+        </div>
+        <div class="mypage-header-right">
+          <a class="btn btn-outline btn-sm" href="/staff/mypage/settings.html">アカウント設定</a>
+          <a class="btn btn-outline btn-sm" href="/staff/schedule.html">スケジュール</a>
+          <a class="btn btn-outline btn-sm" href="/staff/reports.html">レポート</a>
+        </div>
+      </div>
+      <hr class="mypage-header-divider" />
+    </header>
+
+    <!-- メインコンテンツ -->
+    <div class="mypage-grid stack-on-sm">
+      <!-- メインカラム -->
+      <div class="mypage-main">
+        <!-- 出退勤記録セクション -->
+        <section class="section section-order-1">
+          <h2 class="section-title">
+            <i class="fas fa-clock"></i>
+            出退勤記録
+          </h2>
+          <div class="card attendance-card">
+            <div class="attendance-today">
+              <div class="attendance-status" id="attendance-status">
+                <div class="status-indicator" id="status-indicator"></div>
+                <div class="status-text">
+                  <span class="status-label" id="status-label">出勤状況</span>
+                  <span class="status-time" id="status-time">-</span>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-round" id="attendance-toggle-btn">
+                <i class="fas fa-power-off"></i>
+                <span id="toggle-btn-text">出勤する</span>
+              </button>
+            </div>
+            
+            <div class="attendance-summary">
+              <div class="summary-item">
+                <span class="summary-label">今月の出勤日数</span>
+                <span class="summary-value" id="monthly-work-days">-</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">今月の総労働時間</span>
+                <span class="summary-value" id="monthly-work-hours">-</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 今週のスケジュール -->
+        <section class="section section-order-2">
+          <h2 class="section-title">
+            <i class="fas fa-calendar-alt"></i>
+            今週のスケジュール
+          </h2>
+          <div class="card">
+            <div id="weekly-schedule">
+              <div class="empty-state">予定はありません</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 最近のレポート -->
+        <section class="section section-order-3">
+          <h2 class="section-title">
+            <i class="fas fa-file-alt"></i>
+            最近のレポート
+          </h2>
+          <div class="card">
+            <div id="recent-reports">
+              <div class="empty-state">レポートはありません</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- サイドバーカラム -->
+      <aside class="mypage-side">
+        <!-- 基本情報 -->
+        <section class="section">
+          <h2 class="section-title">
+            <i class="fas fa-user"></i>
+            基本情報
+          </h2>
+          <div class="card">
+            <div class="info-item">
+              <span class="info-item-label">ユーザーID</span>
+              <span class="info-item-value" id="info-user-id">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-label">メールアドレス</span>
+              <span class="info-item-value" id="info-email">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-label">電話番号</span>
+              <span class="info-item-value" id="info-phone">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-label">部署</span>
+              <span class="info-item-value" id="info-department">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-label">登録日</span>
+              <span class="info-item-value" id="info-created-at">-</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 今月のカレンダー -->
+        <section class="section calendar-section hide-sm">
+          <div class="calendar-head">
+            <a class="calendar-nav" href="#" id="calendar-prev" aria-label="前へ">
+              <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <h2 class="calendar-title" id="calendar-title">2025 06</h2>
+            <a class="calendar-nav" href="#" id="calendar-next" aria-label="次へ">
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+          </div>
+          <div class="card">
+            <div class="calendar-grid" id="calendar-grid">
+              <!-- カレンダーが動的に生成される -->
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <style>
+    .staff-mypage {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f9fafb;
+    }
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+      font-size: 1rem;
+    }
+    .error-message {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .mypage-header {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .mypage-header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .mypage-header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .user-avatar-large {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+    .user-info-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .user-name-header {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .user-role-header {
+      font-size: 1rem;
+      color: #6b7280;
+    }
+    .user-department-header {
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+    .mypage-header-right {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .mypage-header-divider {
+      margin: 20px 0 0 0;
+      border: none;
+      border-top: 1px solid #e5e7eb;
+    }
+    .mypage-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+    }
+    .mypage-main {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .mypage-side {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .section {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title i {
+      color: var(--primary);
+    }
+    .card {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .attendance-card {
+      padding: 20px;
+    }
+    .attendance-today {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .attendance-status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .status-indicator {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #9ca3af;
+    }
+    .status-indicator.working {
+      background: #10b981;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    }
+    .status-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .status-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .status-time {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+    }
+    .attendance-summary {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 8px;
+    }
+    .summary-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .summary-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .info-item:last-child {
+      border-bottom: none;
+    }
+    .info-item-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .info-item-value {
+      font-size: 0.95rem;
+      color: #111827;
+      font-weight: 500;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: #9ca3af;
+      font-size: 0.95rem;
+    }
+    .calendar-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .calendar-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0;
+    }
+    .calendar-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #6b7280;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .calendar-nav:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .calendar-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      border-radius: 4px;
+    }
+    .calendar-day-name {
+      font-weight: 600;
+      color: #6b7280;
+      background: transparent;
+    }
+    .calendar-date {
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .calendar-date:hover {
+      background: #f3f4f6;
+    }
+    .calendar-date.disabled {
+      color: #d1d5db;
+      cursor: default;
+    }
+    .calendar-date.has-attendance {
+      background: #d1fae5;
+      color: #065f46;
+      font-weight: 600;
+    }
+    .calendar-date.today {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+    }
+    @media (max-width: 767.98px) {
+      .staff-mypage {
+        padding: 12px;
+      }
+      .mypage-grid {
+        grid-template-columns: 1fr;
+      }
+      .mypage-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .mypage-header-right {
+        width: 100%;
+      }
+      .attendance-today {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .attendance-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <script>
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    let currentUser = null;
+    let attendanceRecords = {};
+    let currentCalendarDate = new Date();
+
+    // 現在のユーザー情報を取得
+    async function loadCurrentUser() {
+      const loadingEl = document.getElementById('loading');
+      const contentEl = document.getElementById('mypage-content');
+      const errorEl = document.getElementById('error-message');
+
+      try {
+        loadingEl.style.display = 'block';
+        contentEl.style.display = 'none';
+        errorEl.style.display = 'none';
+
+        // 認証情報からユーザー情報を取得
+        if (window.Auth && window.Auth.getCurrentUser) {
+          currentUser = window.Auth.getCurrentUser();
+        }
+
+        if (!currentUser || !currentUser.id) {
+          // APIからユーザー情報を取得
+          const authData = window.Auth?.getAuthData?.();
+          if (authData && authData.email) {
+            const response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(authData.email)}`);
+            if (response.ok) {
+              const users = await response.json();
+              const items = users.items || users.workers || users;
+              if (Array.isArray(items) && items.length > 0) {
+                currentUser = items[0];
+              }
+            }
+          }
+        }
+
+        if (!currentUser || !currentUser.id) {
+          throw new Error('ユーザー情報を取得できませんでした。ログインしてください。');
+        }
+
+        // ロールを変換
+        if (currentUser.role_code !== undefined) {
+          currentUser.role = getRoleFromCode(currentUser.role_code);
+        }
+
+        // 出退勤記録を読み込み
+        loadAttendanceRecords();
+
+        // ユーザー情報を表示
+        renderUser(currentUser);
+
+        // スケジュールとレポートを読み込み
+        loadWeeklySchedule();
+        loadRecentReports();
+
+        // カレンダーを表示
+        renderCalendar();
+
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+      } catch (error) {
+        console.error('Error loading user:', error);
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorEl.textContent = `エラー: ${error.message}`;
+      }
+    }
+
+    function getRoleFromCode(code) {
+      if (code === '99' || code === 99) return 'staff';
+      if (code === '1' || code === 1) return 'admin';
+      if (code === '2' || code === 2) return 'sales';
+      return 'staff';
+    }
+
+    function getRoleLabel(role) {
+      const labels = { staff: '清掃員', sales: '営業', admin: '管理者', other: 'その他' };
+      return labels[role] || role;
+    }
+
+    function getRoleColor(role) {
+      const colors = {
+        staff: '#f59e0b',
+        sales: '#10b981',
+        admin: '#ec4899',
+        other: '#64748b'
+      };
+      return colors[role] || '#64748b';
+    }
+
+    // ユーザー情報を表示
+    function renderUser(user) {
+      // アバター
+      const avatarText = (user.name || '?')[0].toUpperCase();
+      document.getElementById('user-avatar-text').textContent = avatarText;
+      document.getElementById('user-avatar-large').style.background = getRoleColor(user.role);
+      
+      // ヘッダー情報
+      document.getElementById('user-name-header').textContent = user.name || '-';
+      document.getElementById('user-role-header').textContent = getRoleLabel(user.role);
+      document.getElementById('user-department-header').textContent = user.department || '-';
+      
+      // 基本情報
+      document.getElementById('info-user-id').textContent = user.id || '-';
+      document.getElementById('info-email').textContent = user.email || '-';
+      document.getElementById('info-phone').textContent = user.phone || '-';
+      document.getElementById('info-department').textContent = user.department || '-';
+      document.getElementById('info-created-at').textContent = formatDate(user.created_at);
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return '-';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ja-JP', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric'
+      });
+    }
+
+    function formatTime(dateString) {
+      if (!dateString) return '-';
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('ja-JP', { 
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // 出退勤記録を読み込み
+    function loadAttendanceRecords() {
+      try {
+        const stored = localStorage.getItem('attendanceRecords');
+        if (stored) {
+          attendanceRecords = JSON.parse(stored);
+        }
+      } catch (error) {
+        console.error('Error loading attendance records:', error);
+        attendanceRecords = {};
+      }
+      renderAttendanceStatus();
+      calculateMonthlyStats();
+    }
+
+    // 出退勤ステータスを表示
+    function renderAttendanceStatus() {
+      if (!currentUser) return;
+      
+      const today = new Date().toISOString().split('T')[0];
+      const todayRecord = attendanceRecords[today]?.[currentUser.id];
+      
+      const statusIndicator = document.getElementById('status-indicator');
+      const statusLabel = document.getElementById('status-label');
+      const statusTime = document.getElementById('status-time');
+      const toggleBtn = document.getElementById('attendance-toggle-btn');
+      const toggleBtnText = document.getElementById('toggle-btn-text');
+      
+      if (todayRecord && todayRecord.clock_in && !todayRecord.clock_out) {
+        // 出勤中
+        statusIndicator.className = 'status-indicator working';
+        statusLabel.textContent = '出勤中';
+        statusTime.textContent = `出勤時刻: ${formatTime(todayRecord.clock_in)}`;
+        toggleBtnText.textContent = '退勤する';
+        toggleBtn.classList.remove('btn-primary');
+        toggleBtn.classList.add('btn-danger');
+      } else if (todayRecord && todayRecord.clock_out) {
+        // 退勤済み
+        statusIndicator.className = 'status-indicator';
+        statusLabel.textContent = '退勤済み';
+        statusTime.textContent = `出勤: ${formatTime(todayRecord.clock_in)} - 退勤: ${formatTime(todayRecord.clock_out)}`;
+        toggleBtnText.textContent = '再出勤';
+        toggleBtn.classList.remove('btn-danger');
+        toggleBtn.classList.add('btn-primary');
+      } else {
+        // 未出勤
+        statusIndicator.className = 'status-indicator';
+        statusLabel.textContent = '未出勤';
+        statusTime.textContent = '-';
+        toggleBtnText.textContent = '出勤する';
+        toggleBtn.classList.remove('btn-danger');
+        toggleBtn.classList.add('btn-primary');
+      }
+    }
+
+    // 月間統計を計算
+    function calculateMonthlyStats() {
+      if (!currentUser) return;
+      
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      
+      let workDays = 0;
+      let totalHours = 0;
+      
+      for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        const record = attendanceRecords[dateStr]?.[currentUser.id];
+        
+        if (record && record.clock_in && record.clock_out) {
+          workDays++;
+          const clockIn = new Date(record.clock_in);
+          const clockOut = new Date(record.clock_out);
+          const hours = (clockOut - clockIn) / (1000 * 60 * 60);
+          totalHours += hours;
+        }
+      }
+      
+      document.getElementById('monthly-work-days').textContent = `${workDays}日`;
+      document.getElementById('monthly-work-hours').textContent = `${Math.round(totalHours)}時間`;
+    }
+
+    // 出退勤トグル
+    document.getElementById('attendance-toggle-btn').addEventListener('click', () => {
+      if (!currentUser) return;
+      
+      const today = new Date().toISOString().split('T')[0];
+      if (!attendanceRecords[today]) {
+        attendanceRecords[today] = {};
+      }
+      
+      const todayRecord = attendanceRecords[today][currentUser.id] || {};
+      
+      if (!todayRecord.clock_in) {
+        // 出勤
+        attendanceRecords[today][currentUser.id] = {
+          ...todayRecord,
+          clock_in: new Date().toISOString(),
+          staff_id: currentUser.id,
+          staff_name: currentUser.name
+        };
+      } else if (!todayRecord.clock_out) {
+        // 退勤
+        attendanceRecords[today][currentUser.id] = {
+          ...todayRecord,
+          clock_out: new Date().toISOString()
+        };
+      } else {
+        // 再出勤
+        attendanceRecords[today][currentUser.id] = {
+          clock_in: new Date().toISOString(),
+          staff_id: currentUser.id,
+          staff_name: currentUser.name
+        };
+      }
+      
+      try {
+        localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+        renderAttendanceStatus();
+        calculateMonthlyStats();
+        renderCalendar();
+      } catch (error) {
+        console.error('Error saving attendance:', error);
+        alert('出退勤記録の保存に失敗しました');
+      }
+    });
+
+    // 週間スケジュールを読み込み
+    async function loadWeeklySchedule() {
+      if (!currentUser) return;
+      
+      try {
+        // TODO: APIからスケジュールを取得
+        const scheduleEl = document.getElementById('weekly-schedule');
+        scheduleEl.innerHTML = '<div class="empty-state">今週の予定はありません</div>';
+      } catch (error) {
+        console.error('Error loading schedule:', error);
+      }
+    }
+
+    // 最近のレポートを読み込み
+    async function loadRecentReports() {
+      if (!currentUser) return;
+      
+      try {
+        // TODO: APIからレポートを取得
+        const reportsEl = document.getElementById('recent-reports');
+        reportsEl.innerHTML = '<div class="empty-state">最近のレポートはありません</div>';
+      } catch (error) {
+        console.error('Error loading reports:', error);
+      }
+    }
+
+    // カレンダーを表示
+    function renderCalendar() {
+      const year = currentCalendarDate.getFullYear();
+      const month = currentCalendarDate.getMonth();
+      
+      document.getElementById('calendar-title').textContent = `${year} ${month + 1}`;
+      
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDate = new Date(firstDay);
+      startDate.setDate(startDate.getDate() - startDate.getDay());
+      
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+      
+      // 曜日ヘッダー
+      const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+      dayNames.forEach(day => {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell calendar-day-name';
+        cell.textContent = day;
+        grid.appendChild(cell);
+      });
+      
+      // 日付セル
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      for (let i = 0; i < 42; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell calendar-date';
+        
+        if (date.getMonth() !== month) {
+          cell.classList.add('disabled');
+        } else {
+          if (date.getTime() === today.getTime()) {
+            cell.classList.add('today');
+          }
+          
+          // 出退勤記録があるかチェック
+          if (currentUser && attendanceRecords[dateStr]?.[currentUser.id]) {
+            cell.classList.add('has-attendance');
+          }
+        }
+        
+        cell.textContent = date.getDate();
+        grid.appendChild(cell);
+      }
+    }
+
+    // カレンダーナビゲーション
+    document.getElementById('calendar-prev').addEventListener('click', (e) => {
+      e.preventDefault();
+      currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+      renderCalendar();
+    });
+
+    document.getElementById('calendar-next').addEventListener('click', (e) => {
+      e.preventDefault();
+      currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+      renderCalendar();
+    });
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCurrentUser();
+    });
+  </script>
+</main>
+

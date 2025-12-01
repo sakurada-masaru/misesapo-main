@@ -936,13 +936,39 @@
               </div>
             </div>
             <div class="sitemap-children">
-              <div class="sitemap-node">
-                <div class="sitemap-item">
-                  <span class="sitemap-item-name">
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+              <span class="sitemap-item-name">
                     <strong>① アクティビティ</strong>（スワイプ1画面目・初期画面）
                     <span class="feature-badge">本日の予定・仮押さえ状況・緊急対応・今週のスケジュール</span>
-                  </span>
+              </span>
                   <code class="sitemap-item-path">/sales/dashboard.html#activity</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
+                  <span class="sitemap-item-name">
+                    <strong>② 顧客管理</strong>（スワイプ2画面目）
+                    <span class="feature-badge">顧客登録タブ・顧客一覧タブ</span>
+                  </span>
+                  <code class="sitemap-item-path">/sales/dashboard.html#client</code>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-sales">営業</span>
+                <span class="status-badge status implemented">実装済み</span>
+              </div>
+            </div>
+            <div class="sitemap-children">
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                      <span class="sitemap-item-name">
+                        顧客登録タブ
+                        <span class="feature-badge">企業名・ブランド名・店舗名・住所・連絡先の新規登録</span>
+                      </span>
+                      <code class="sitemap-item-path">/sales/dashboard.html#client (registerタブ)</code>
                   <div class="sitemap-item-badges">
                     <span class="role-badge role-sales">営業</span>
                     <span class="status-badge status implemented">実装済み</span>
@@ -951,40 +977,14 @@
               </div>
               <div class="sitemap-node">
                 <div class="sitemap-item">
-                  <span class="sitemap-item-name">
-                    <strong>② 顧客管理</strong>（スワイプ2画面目）
-                    <span class="feature-badge">顧客登録タブ・顧客一覧タブ</span>
-                  </span>
-                  <code class="sitemap-item-path">/sales/dashboard.html#client</code>
-                  <div class="sitemap-item-badges">
-                    <span class="role-badge role-sales">営業</span>
-                    <span class="status-badge status implemented">実装済み</span>
-                  </div>
-                </div>
-                <div class="sitemap-children">
-                  <div class="sitemap-node">
-                    <div class="sitemap-item">
-                      <span class="sitemap-item-name">
-                        顧客登録タブ
-                        <span class="feature-badge">企業名・ブランド名・店舗名・住所・連絡先の新規登録</span>
-                      </span>
-                      <code class="sitemap-item-path">/sales/dashboard.html#client (registerタブ)</code>
-                      <div class="sitemap-item-badges">
-                        <span class="role-badge role-sales">営業</span>
-                        <span class="status-badge status implemented">実装済み</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="sitemap-node">
-                    <div class="sitemap-item">
                       <span class="sitemap-item-name">
                         顧客一覧タブ
                         <span class="feature-badge">検索・フィルター・統計表示・顧客詳細へのリンク</span>
                       </span>
                       <code class="sitemap-item-path">/sales/dashboard.html#client (listタブ)</code>
-                      <div class="sitemap-item-badges">
-                        <span class="role-badge role-sales">営業</span>
-                        <span class="status-badge status implemented">実装済み</span>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status implemented">実装済み</span>
                       </div>
                     </div>
                   </div>
@@ -1026,55 +1026,55 @@
                       <div class="sitemap-item-badges">
                         <span class="role-badge role-sales">営業</span>
                         <span class="status-badge status implemented">実装済み</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="sitemap-node">
-                    <div class="sitemap-item">
+              </div>
+            </div>
+          </div>
+          <div class="sitemap-node">
+            <div class="sitemap-item">
                       <span class="sitemap-item-name">
                         仮押さえタブ
                         <span class="feature-badge">新規スケジュール作成へのリンク</span>
                       </span>
                       <code class="sitemap-item-path">/sales/dashboard.html#case (scheduleタブ)</code>
-                      <div class="sitemap-item-badges">
-                        <span class="role-badge role-sales">営業</span>
+              <div class="sitemap-item-badges">
+                <span class="role-badge role-sales">営業</span>
                         <span class="status-badge status implemented">実装済み</span>
-                      </div>
-                    </div>
+              </div>
+            </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="sitemap-node">
-            <div class="sitemap-item">
-              <span class="sitemap-item-name">顧客詳細（顧客一覧から顧客を選択）</span>
-              <code class="sitemap-item-path">/sales/clients/[id].html</code>
-              <div class="sitemap-item-badges">
-                <span class="role-badge role-sales">営業</span>
-                <span class="status-badge status partial">部分実装</span>
-              </div>
-            </div>
-            <div class="sitemap-children">
               <div class="sitemap-node">
                 <div class="sitemap-item">
-                  <span class="sitemap-item-name">顧客情報編集（顧客詳細から編集）</span>
-                  <code class="sitemap-item-path">/sales/clients/[id]/edit.html</code>
+                  <span class="sitemap-item-name">顧客詳細（顧客一覧から顧客を選択）</span>
+                  <code class="sitemap-item-path">/sales/clients/[id].html</code>
                   <div class="sitemap-item-badges">
                     <span class="role-badge role-sales">営業</span>
                     <span class="status-badge status partial">部分実装</span>
                   </div>
                 </div>
+                <div class="sitemap-children">
+                  <div class="sitemap-node">
+                    <div class="sitemap-item">
+                      <span class="sitemap-item-name">顧客情報編集（顧客詳細から編集）</span>
+                      <code class="sitemap-item-path">/sales/clients/[id]/edit.html</code>
+                      <div class="sitemap-item-badges">
+                        <span class="role-badge role-sales">営業</span>
+                        <span class="status-badge status partial">部分実装</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <div class="sitemap-node">
-            <div class="sitemap-item">
-              <span class="sitemap-item-name">新規顧客登録</span>
-              <code class="sitemap-item-path">/sales/clients/new.html</code>
-              <div class="sitemap-item-badges">
-                <span class="role-badge role-sales">営業</span>
-                <span class="status-badge status partial">部分実装</span>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name">新規顧客登録</span>
+                  <code class="sitemap-item-path">/sales/clients/new.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status partial">部分実装</span>
               </div>
             </div>
           </div>
@@ -1150,13 +1150,13 @@
               </div>
             </div>
           </div>
-          <div class="sitemap-node">
-            <div class="sitemap-item">
-              <span class="sitemap-item-name"><a href="/sales/schedules/new.html">スケジュール作成</a><span class="system-badge">要システム</span></span>
-              <code class="sitemap-item-path">/sales/schedules/new.html</code>
-              <div class="sitemap-item-badges">
-                <span class="role-badge role-sales">営業</span>
-                <span class="status-badge status partial">部分実装</span>
+              <div class="sitemap-node">
+                <div class="sitemap-item">
+                  <span class="sitemap-item-name"><a href="/sales/schedules/new.html">スケジュール作成</a><span class="system-badge">要システム</span></span>
+                  <code class="sitemap-item-path">/sales/schedules/new.html</code>
+                  <div class="sitemap-item-badges">
+                    <span class="role-badge role-sales">営業</span>
+                    <span class="status-badge status partial">部分実装</span>
               </div>
             </div>
           </div>
