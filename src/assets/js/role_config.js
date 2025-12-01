@@ -180,11 +180,11 @@ const ROLE_CONFIG = {
     ],
     staff: [
       { href: '/staff/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
-      { href: '/staff/mypage.html', label: 'マイページ', icon: 'fa-user' },
       { href: '/staff/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
       { href: '/staff/assignments.html', label: '作業一覧', icon: 'fa-tasks' },
       { href: '/staff/reports/new.html', label: 'レポート作成', icon: 'fa-file-alt' },
       { href: '/staff/training.html', label: 'トレーニング', icon: 'fa-graduation-cap' }
+      // マイページはクイックアクションに配置
     ],
     office: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
@@ -230,6 +230,7 @@ const ROLE_CONFIG = {
       { href: '/sales/estimates/new.html', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },
       { href: '/sales/schedule.html', label: 'スケジュール', icon: 'fa-calendar' },
       { href: '/sales/orders.html', label: '発注管理', icon: 'fa-shopping-cart' }
+      // マイページはアクティビティ画面のヘッダーにリンクを配置
     ],
     admin: [
       { href: '/admin/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
