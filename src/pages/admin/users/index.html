@@ -1104,28 +1104,45 @@
       const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
       
       // 新しいデータ構造に対応
-      allUsers = workersArray.map(w => {
-        // roleの判定（role_codeやroleフィールドから）
-        let role = w.role || 'staff';
-        if (w.role_code !== undefined) {
-          role = getRoleFromCode(w.role_code);
-        }
-        
-        // IDを正規化（文字列として扱う）
-        const workerId = String(w.id || w.user_id || `user_${Date.now()}_${Math.random()}`);
-        
-        return {
-          id: workerId,
-          name: w.name || w.display_name || `ユーザー${w.id || ''}`,
-          email: w.email || w.email_address || '-',
-          phone: w.phone || w.phone_number || '-',
-          role: role,
-          department: w.department || w.team || '-',
-          team: w.team || '-',
-          status: w.status || (w.active !== undefined ? (w.active ? 'active' : 'inactive') : 'active'),
-          created_at: w.created_at || w.created_date
-        };
-      });
+      allUsers = workersArray
+        .filter(w => {
+          // 意味をなしていないユーザーを除外
+          const name = (w.name || w.display_name || '').trim();
+          if (!name) return false;
+          
+          // 「ユーザー1」「ユーザー2」などのパターンを除外
+          if (name.match(/^ユーザー\d+$/)) return false;
+          
+          // メールアドレスもなく、名前も短すぎる場合は除外
+          const email = (w.email || w.email_address || '').trim();
+          if (!email && name.length < 2) return false;
+          
+          return true;
+        })
+        .map(w => {
+          // roleの判定（role_codeやroleフィールドから）
+          let role = w.role || 'staff';
+          if (w.role_code !== undefined) {
+            role = getRoleFromCode(w.role_code);
+          }
+          
+          // IDを正規化（文字列として扱う）
+          // 新しいID形式（W + タイムスタンプ）を優先
+          const workerId = String(w.id || w.user_id || `W${Date.now()}`);
+          
+          return {
+            id: workerId,
+            name: w.name || w.display_name || '名前未設定',
+            email: w.email || w.email_address || '-',
+            phone: w.phone || w.phone_number || '-',
+            role: role,
+            department: w.department || w.team || '-',
+            team: w.team || '-',
+            status: w.status || (w.active !== undefined ? (w.active ? 'active' : 'inactive') : 'active'),
+            created_at: w.created_at || w.created_date,
+            updated_at: w.updated_at
+          };
+        });
       
       console.log('Users loaded:', allUsers.length);
       console.log('Sample user:', allUsers[0]);
