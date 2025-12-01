@@ -6,6 +6,10 @@ import uuid
 from datetime import datetime
 from boto3.dynamodb.conditions import Key, Attr
 
+# Cognitoクライアントの初期化
+cognito_client = boto3.client('cognito-idp', region_name='ap-northeast-1')
+COGNITO_USER_POOL_ID = 'ap-northeast-1_EDKElIGoC'
+
 # S3クライアントの初期化
 s3_client = boto3.client('s3')
 
@@ -190,6 +194,10 @@ def lambda_handler(event, context):
                 return update_worker(worker_id, event, headers)
             elif method == 'DELETE':
                 return delete_worker(worker_id, headers)
+        elif normalized_path.startswith('/admin/cognito/users'):
+            # Cognitoユーザー作成（管理者のみ）
+            if method == 'POST':
+                return create_cognito_user(event, headers)
         else:
             # デバッグ: パスが一致しなかった場合
             print(f"DEBUG: Path not matched. normalized_path={normalized_path}, original_path={path}")
@@ -2223,6 +2231,114 @@ def get_worker_detail(worker_id, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': '従業員詳細の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_cognito_user(event, headers):
+    """
+    AWS Cognitoにユーザーを作成（管理者のみ）
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        email = body_json.get('email')
+        password = body_json.get('password')
+        name = body_json.get('name', '')
+        role = body_json.get('role', 'staff')
+        department = body_json.get('department', '')
+        
+        if not email or not password:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'メールアドレスとパスワードは必須です'
+                }, ensure_ascii=False)
+            }
+        
+        # Cognitoにユーザーを作成
+        try:
+            response = cognito_client.admin_create_user(
+                UserPoolId=COGNITO_USER_POOL_ID,
+                Username=email,
+                UserAttributes=[
+                    {'Name': 'email', 'Value': email},
+                    {'Name': 'email_verified', 'Value': 'true'},
+                    {'Name': 'custom:name', 'Value': name},
+                    {'Name': 'custom:role', 'Value': role},
+                    {'Name': 'custom:department', 'Value': department}
+                ],
+                TemporaryPassword=password,
+                MessageAction='SUPPRESS'  # メール送信を抑制（管理者が通知）
+            )
+            
+            # パスワードを永続化（一時パスワードから通常パスワードに変更）
+            try:
+                cognito_client.admin_set_user_password(
+                    UserPoolId=COGNITO_USER_POOL_ID,
+                    Username=email,
+                    Password=password,
+                    Permanent=True
+                )
+            except Exception as e:
+                print(f"Warning: Could not set permanent password: {str(e)}")
+                # 一時パスワードのままでも動作する
+            
+            user_sub = response['User']['Username']
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'status': 'success',
+                    'message': 'Cognitoユーザーを作成しました',
+                    'sub': user_sub,
+                    'email': email
+                }, ensure_ascii=False)
+            }
+        except cognito_client.exceptions.UsernameExistsException:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'このメールアドレスは既に使用されています'
+                }, ensure_ascii=False)
+            }
+        except cognito_client.exceptions.InvalidPasswordException as e:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'パスワードが弱すぎます。8文字以上で、大文字・小文字・数字・特殊文字を含めてください'
+                }, ensure_ascii=False)
+            }
+        except Exception as e:
+            print(f"Error creating Cognito user: {str(e)}")
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'Cognitoユーザーの作成に失敗しました',
+                    'message': str(e)
+                }, ensure_ascii=False)
+            }
+    except Exception as e:
+        print(f"Error in create_cognito_user: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'リクエストの処理に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }

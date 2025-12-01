@@ -1336,36 +1336,44 @@
         }
         
         try {
-          document.getElementById('form-status').textContent = 'Firebaseユーザーを作成中...';
+          document.getElementById('form-status').textContent = 'AWS Cognitoユーザーを作成中...';
           
-          // Firebase Authenticationにユーザーを作成
-          const firebaseAuth = window.FirebaseAuth;
-          if (!firebaseAuth) {
-            throw new Error('Firebase Authenticationが利用できません');
+          // AWS Cognitoにユーザーを作成（Lambda関数経由）
+          const apiBaseUrl = API_BASE || 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+          const cognitoResponse = await fetch(`${apiBaseUrl}/admin/cognito/users`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email: data.email,
+              password: password,
+              name: data.name,
+              role: data.role,
+              department: data.department
+            })
+          });
+          
+          if (!cognitoResponse.ok) {
+            const errorData = await cognitoResponse.json();
+            throw new Error(errorData.error || 'Cognitoユーザーの作成に失敗しました');
           }
           
-          const userCredential = await firebaseAuth.createUserWithEmailAndPassword(
-            data.email,
-            password
-          );
-          
-          const firebaseUser = userCredential.user;
-          data.firebase_uid = firebaseUser.uid;
-          
-          // Custom Claimsにロールを設定（Firebase Admin SDKが必要なため、現時点ではスキップ）
-          // 注意: Custom Claimsの設定は、Firebase Admin SDKを使用する必要があります
-          // 現時点では、DynamoDBにロールを保存し、ログイン時にDynamoDBから取得します
+          const cognitoResult = await cognitoResponse.json();
+          data.cognito_sub = cognitoResult.sub;  // Cognito User Sub
           
           document.getElementById('form-status').textContent = 'ユーザー情報を保存中...';
-        } catch (firebaseError) {
-          console.error('Firebase user creation error:', firebaseError);
-          let errorMessage = 'Firebaseユーザーの作成に失敗しました。';
-          if (firebaseError.code === 'auth/email-already-in-use') {
+        } catch (cognitoError) {
+          console.error('Cognito user creation error:', cognitoError);
+          let errorMessage = 'AWS Cognitoユーザーの作成に失敗しました。';
+          if (cognitoError.message.includes('already exists') || cognitoError.message.includes('既に存在')) {
             errorMessage = 'このメールアドレスは既に使用されています。';
-          } else if (firebaseError.code === 'auth/invalid-email') {
+          } else if (cognitoError.message.includes('invalid') || cognitoError.message.includes('無効')) {
             errorMessage = '無効なメールアドレスです。';
-          } else if (firebaseError.code === 'auth/weak-password') {
-            errorMessage = 'パスワードが弱すぎます。6文字以上にしてください。';
+          } else if (cognitoError.message.includes('password') || cognitoError.message.includes('パスワード')) {
+            errorMessage = 'パスワードが弱すぎます。8文字以上で、大文字・小文字・数字・特殊文字を含めてください。';
+          } else {
+            errorMessage = cognitoError.message || 'AWS Cognitoユーザーの作成に失敗しました。';
           }
           document.getElementById('form-status').textContent = errorMessage;
           document.getElementById('form-status').style.color = 'red';
