@@ -17,7 +17,6 @@
     'report': ['report'],
     'info': ['info'],
     'stores': ['stores'],
-    'settings': ['settings'],
     'assignments': ['assignments'],
     'reports-new': ['reports', 'new'],
     'training': ['training'],

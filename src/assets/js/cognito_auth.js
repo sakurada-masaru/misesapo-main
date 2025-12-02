@@ -144,28 +144,72 @@
         const idToken = session.getIdToken();
         const payload = idToken.payload;
         const cognitoSub = payload.sub;
+        const userEmail = payload.email;
         
-        // DynamoDBからユーザー情報を取得（Cognito Subで検索）
+        // ユーザー情報を取得（ローカルJSONを優先、APIをフォールバック）
         let userInfo = null;
+        const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+        
         try {
-          const apiBaseUrl = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-          const response = await fetch(`${apiBaseUrl}/workers?cognito_sub=${encodeURIComponent(cognitoSub)}`);
-          if (response.ok) {
-            const workers = await response.json();
-            const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
-            if (workersArray.length > 0) {
-              userInfo = workersArray[0];
+          // まずローカルのworkers.jsonから検索（最新データ）
+          try {
+            const localResponse = await fetch('/data/workers.json');
+            if (localResponse.ok) {
+              const localWorkers = await localResponse.json();
+              if (Array.isArray(localWorkers) && localWorkers.length > 0) {
+                const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
+                if (matchingUser) {
+                  userInfo = matchingUser;
+                  console.log('[CognitoAuth] Found user from local data:', userInfo.name);
+                }
+              }
+            }
+          } catch (localError) {
+            console.log('[CognitoAuth] Local workers.json not available, trying API');
+          }
+          
+          // ローカルで見つからない場合、APIで検索
+          if (!userInfo && userEmail) {
+            const emailResponse = await fetch(`${apiBaseUrl}/workers?email=${encodeURIComponent(userEmail)}`);
+            if (emailResponse.ok) {
+              const workers = await emailResponse.json();
+              const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+              if (workersArray.length > 0) {
+                // APIがフィルタリングしない場合に備えてクライアント側でもフィルタリング
+                const matchingUser = workersArray.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
+                if (matchingUser) {
+                  userInfo = matchingUser;
+                  console.log('[CognitoAuth] Found user by email from API:', userInfo.name);
+                }
+              }
+            }
+          }
+          
+          // まだ見つからない場合、Cognito Subで検索
+          if (!userInfo && cognitoSub) {
+            const subResponse = await fetch(`${apiBaseUrl}/workers?cognito_sub=${encodeURIComponent(cognitoSub)}`);
+            if (subResponse.ok) {
+              const workers = await subResponse.json();
+              const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+              if (workersArray.length > 0) {
+                // クライアント側でフィルタリング
+                const matchingUser = workersArray.find(u => u.cognito_sub === cognitoSub);
+                if (matchingUser) {
+                  userInfo = matchingUser;
+                  console.log('[CognitoAuth] Found user by cognito_sub:', userInfo.name);
+                }
+              }
             }
           }
         } catch (error) {
-          console.warn('[CognitoAuth] Could not fetch user info from DynamoDB:', error);
+          console.warn('[CognitoAuth] Could not fetch user info:', error);
         }
         
         const user = {
           id: userInfo ? userInfo.id : cognitoSub,  // DynamoDBのID
           cognito_sub: cognitoSub,  // Cognito Sub
-          email: payload.email,
-          name: userInfo ? userInfo.name : (payload['custom:name'] || payload.email.split('@')[0]),
+          email: userEmail,
+          name: userInfo ? userInfo.name : (payload['custom:name'] || userEmail.split('@')[0]),
           role: userInfo ? userInfo.role : (payload['custom:role'] || 'staff'),
           department: userInfo ? userInfo.department : (payload['custom:department'] || '')
         };

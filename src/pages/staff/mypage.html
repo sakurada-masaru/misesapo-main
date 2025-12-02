@@ -1,14 +1,14 @@
 @layout('layouts.base')
 @json('data/meta/staff_mypage_title.json', $title)
 @json('data/meta/staff_mypage_body_class.json', $body_class)
-<link rel="stylesheet" href="/assets/css/admin-sidebar.css">
+<link rel="stylesheet" href="/css/admin-sidebar.css">
 <!-- AWS SDKの読み込み -->
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
 <script src="/js/cognito_config.js"></script>
 <script src="/js/cognito_auth.js"></script>
 <script src="/js/client_auth.js"></script>
-<script src="/assets/js/admin-sidebar.js"></script>
+<script src="/js/admin-sidebar.js"></script>
 
 <!-- サイドバー -->
 <aside class="sidebar" id="admin-sidebar">
@@ -29,9 +29,13 @@
       <i class="fas fa-user-circle"></i>
       <span class="nav-label">マイページ</span>
     </a>
-    <a href="/staff/dashboard.html" class="nav-item" data-page="dashboard">
-      <i class="fas fa-tachometer-alt"></i>
-      <span class="nav-label">ダッシュボード</span>
+    <a href="/staff/attendance-history.html" class="nav-item" data-page="attendance-history">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">出勤履歴</span>
+    </a>
+    <a href="/staff/daily-reports.html" class="nav-item" data-page="daily-reports">
+      <i class="fas fa-edit"></i>
+      <span class="nav-label">日報</span>
     </a>
     <a href="/staff/schedule.html" class="nav-item" data-page="schedule">
       <i class="fas fa-calendar-alt"></i>
@@ -42,16 +46,8 @@
       <span class="nav-label">作業一覧</span>
     </a>
     <a href="/staff/reports.html" class="nav-item" data-page="reports">
-      <i class="fas fa-file-alt"></i>
+      <i class="fas fa-clipboard-list"></i>
       <span class="nav-label">レポート一覧</span>
-    </a>
-    <a href="/staff/reports/new.html" class="nav-item" data-page="reports-new">
-      <i class="fas fa-plus-circle"></i>
-      <span class="nav-label">レポート作成</span>
-    </a>
-    <a href="/staff/training.html" class="nav-item" data-page="training">
-      <i class="fas fa-graduation-cap"></i>
-      <span class="nav-label">トレーニング</span>
     </a>
     <a href="/cleaning-manual.html" class="nav-item" data-page="cleaning-manual">
       <i class="fas fa-book"></i>
@@ -63,7 +59,7 @@
     </a>
     <div class="nav-divider"></div>
     <a href="/staff/mypage/settings.html" class="nav-item" data-page="settings">
-      <i class="fas fa-sliders-h"></i>
+      <i class="fas fa-cog"></i>
       <span class="nav-label">設定</span>
     </a>
     <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
@@ -94,63 +90,88 @@
             出退勤記録
           </h2>
           <div class="card attendance-card">
-            <div class="attendance-today">
-              <div class="attendance-status" id="attendance-status">
+            <!-- 今日の出退勤状況 -->
+            <div class="attendance-today-grid">
+              <div class="attendance-status-box" id="attendance-status">
                 <div class="status-indicator" id="status-indicator"></div>
-                <div class="status-text">
-                  <span class="status-label" id="status-label">出勤状況</span>
-                  <span class="status-time" id="status-time">-</span>
+                <div class="status-info">
+                  <span class="status-label" id="status-label">未出勤</span>
+                  <span class="status-time" id="status-time">--:--</span>
                 </div>
               </div>
-              <button class="btn btn-primary btn-round" id="attendance-toggle-btn" style="display: block !important; visibility: visible !important;">
-                <i class="fas fa-power-off"></i>
-                <span id="toggle-btn-text">出勤する</span>
-              </button>
-              <button class="btn btn-success btn-round" id="work-start-btn" style="display: none; margin-top: 12px;">
-                <i class="fas fa-play"></i>
-                <span>作業開始</span>
-              </button>
-            </div>
-            
-            <!-- 休憩時間セクション -->
-            <div id="break-section" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-              <div style="margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <span style="font-weight: 500; color: #374151;">休憩時間</span>
-                  <span id="break-time-display" style="font-size: 0.875rem; color: #6b7280;">-</span>
-                </div>
-                <div id="breaks-list" style="margin-bottom: 12px; font-size: 0.875rem; color: #6b7280;"></div>
-              </div>
-              <div style="display: flex; gap: 8px;">
-                <button class="btn btn-outline btn-sm" id="break-start-btn" style="flex: 1;">
-                  <i class="fas fa-coffee"></i> 休憩開始
-                </button>
-                <button class="btn btn-outline btn-sm" id="break-end-btn" style="flex: 1; display: none;">
-                  <i class="fas fa-undo"></i> 休憩終了
+              <div class="attendance-action-box">
+                <button class="btn-attendance btn-clock-in" id="attendance-toggle-btn">
+                  <i class="fas fa-sign-in-alt"></i>
+                  <span id="toggle-btn-text">出勤</span>
                 </button>
               </div>
             </div>
             
+            <!-- 休憩セクション（出勤中のみ表示） -->
+            <div id="break-section" class="break-section" style="display: none;">
+              <div class="break-header">
+                <span class="break-label"><i class="fas fa-coffee"></i> 休憩</span>
+                <span id="break-time-display" class="break-time">0分</span>
+              </div>
+              <div id="breaks-list" class="breaks-list"></div>
+              <div class="break-actions">
+                <button class="btn btn-outline btn-sm" id="break-start-btn">
+                  <i class="fas fa-pause"></i> 休憩開始
+                </button>
+                <button class="btn btn-warning btn-sm" id="break-end-btn" style="display: none;">
+                  <i class="fas fa-play"></i> 休憩終了
+                </button>
+              </div>
+            </div>
+            
+            <!-- 今月のサマリー -->
             <div class="attendance-summary">
               <div class="summary-item">
-                <span class="summary-label">今月の出勤日数</span>
-                <span class="summary-value" id="monthly-work-days">-</span>
+                <span class="summary-label">今月の出勤</span>
+                <span class="summary-value" id="monthly-work-days">0日</span>
               </div>
               <div class="summary-item">
-                <span class="summary-label">今月の総労働時間</span>
-                <span class="summary-value" id="monthly-work-hours">-</span>
+                <span class="summary-label">今月の労働時間</span>
+                <span class="summary-value" id="monthly-work-hours">0時間</span>
               </div>
             </div>
-            <div class="attendance-actions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-              <button class="btn btn-outline btn-sm" id="request-correction-btn" style="width: 100%;">
+            
+            <!-- アクション -->
+            <div class="attendance-footer">
+              <button class="btn btn-text btn-sm" id="request-correction-btn">
                 <i class="fas fa-edit"></i> 打刻修正を申請
               </button>
             </div>
           </div>
         </section>
 
-        <!-- 今週のスケジュール -->
+        <!-- TODOリスト -->
         <section class="section section-order-2">
+          <h2 class="section-title">
+            <i class="fas fa-tasks"></i>
+            TODOリスト
+            <span class="todo-count" id="todo-count">0</span>
+          </h2>
+          <div class="card todo-card">
+            <div class="todo-input-wrapper">
+              <input type="text" id="todo-input" class="todo-input" placeholder="新しいタスクを追加..." />
+              <button class="btn btn-primary btn-sm" id="add-todo-btn">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            <div id="todo-list" class="todo-list">
+              <!-- TODOアイテムが動的に生成される -->
+            </div>
+            <div class="todo-filters" id="todo-filters">
+              <button class="filter-btn active" data-filter="all">すべて</button>
+              <button class="filter-btn" data-filter="active">未完了</button>
+              <button class="filter-btn" data-filter="completed">完了</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 今週のスケジュール -->
+        <section class="section section-order-3">
           <h2 class="section-title">
             <i class="fas fa-calendar-alt"></i>
             今週のスケジュール
@@ -163,7 +184,7 @@
         </section>
 
         <!-- 最近のレポート -->
-        <section class="section section-order-3">
+        <section class="section section-order-4">
           <h2 class="section-title">
             <i class="fas fa-file-alt"></i>
             最近のレポート
@@ -294,65 +315,186 @@
     .attendance-card {
       padding: 20px;
     }
-    .attendance-today {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      background: #ffffff;
-      border-radius: 12px;
-      margin-bottom: 20px;
+    /* 出退勤セクション */
+    .attendance-card {
+      padding: 0;
     }
-    .attendance-status {
+    .attendance-today-grid {
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      background: linear-gradient(135deg, #fef3f2 0%, #fff1f2 100%);
+      border-radius: 12px 12px 0 0;
       gap: 16px;
     }
+    .attendance-status-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
     .status-indicator {
-      width: 16px;
-      height: 16px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: #9ca3af;
+      flex-shrink: 0;
     }
     .status-indicator.working {
       background: #10b981;
-      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+      animation: pulse 2s infinite;
     }
-    .status-text {
+    .status-indicator.break {
+      background: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .status-info {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
     .status-label {
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       color: #6b7280;
+      font-weight: 500;
     }
     .status-time {
-      font-size: 1.125rem;
-      font-weight: 600;
+      font-size: 1.25rem;
+      font-weight: 700;
       color: #111827;
+      font-family: 'SF Mono', 'Monaco', monospace;
     }
+    .attendance-action-box {
+      flex-shrink: 0;
+    }
+    .btn-attendance {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-clock-in {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-clock-in:hover {
+      background: #e11d48;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+    }
+    .btn-clock-out {
+      background: #6b7280;
+      color: #fff;
+    }
+    .btn-clock-out:hover {
+      background: #4b5563;
+    }
+    
+    /* 休憩セクション */
+    .break-section {
+      padding: 16px 20px;
+      background: #fefce8;
+      border-top: 1px solid #fef08a;
+    }
+    .break-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .break-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #854d0e;
+    }
+    .break-label i {
+      margin-right: 6px;
+    }
+    .break-time {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #a16207;
+    }
+    .breaks-list {
+      font-size: 0.8rem;
+      color: #a16207;
+      margin-bottom: 12px;
+    }
+    .break-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .break-actions .btn {
+      flex: 1;
+    }
+    
+    /* サマリー */
     .attendance-summary {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
+      gap: 1px;
+      background: #e5e7eb;
+      border-top: 1px solid #e5e7eb;
     }
     .summary-item {
       display: flex;
       flex-direction: column;
       gap: 4px;
-      padding: 16px;
-      background: #ffffff;
-      border-radius: 8px;
+      padding: 16px 20px;
+      background: #fff;
     }
     .summary-label {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     .summary-value {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: #111827;
+    }
+    
+    /* フッター */
+    .attendance-footer {
+      padding: 12px 20px;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      border-radius: 0 0 12px 12px;
+      text-align: center;
+    }
+    .btn-text {
+      background: transparent;
+      border: none;
+      color: #6b7280;
+      font-size: 0.875rem;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .btn-text:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    .btn-warning {
+      background: #f59e0b;
+      color: #fff;
+      border: none;
+    }
+    .btn-warning:hover {
+      background: #d97706;
     }
     .info-item {
       display: flex;
@@ -379,11 +521,19 @@
       color: #9ca3af;
       font-size: 0.95rem;
     }
+    .calendar-section {
+      overflow: hidden;
+    }
+    .calendar-section .card {
+      padding: 12px;
+      overflow: hidden;
+    }
     .calendar-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+      padding: 0 4px;
     }
     .calendar-title {
       font-size: 1.125rem;
@@ -410,15 +560,17 @@
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
+      gap: 2px;
+      width: 100%;
     }
     .calendar-cell {
       aspect-ratio: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       border-radius: 4px;
+      min-width: 0;
     }
     .calendar-day-name {
       font-weight: 600;
@@ -447,6 +599,154 @@
       color: #fff;
       font-weight: 700;
     }
+    /* TODOリスト */
+    .todo-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .todo-card {
+      padding: 16px;
+    }
+    .todo-input-wrapper {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .todo-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    .todo-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+    }
+    .todo-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+    .todo-item:hover {
+      background: #f3f4f6;
+    }
+    .todo-item.completed {
+      opacity: 0.6;
+    }
+    .todo-item.completed .todo-text {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+    .todo-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #d1d5db;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .todo-checkbox:hover {
+      border-color: var(--primary);
+    }
+    .todo-item.completed .todo-checkbox {
+      background: #10b981;
+      border-color: #10b981;
+      color: #fff;
+    }
+    .todo-text {
+      flex: 1;
+      font-size: 0.875rem;
+      color: #374151;
+    }
+    .todo-text-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 0.875rem;
+      color: #374151;
+      padding: 0;
+    }
+    .todo-text-input:focus {
+      outline: none;
+    }
+    .todo-delete {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s;
+      opacity: 0;
+    }
+    .todo-item:hover .todo-delete {
+      opacity: 1;
+    }
+    .todo-delete:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+    .todo-filters {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .filter-btn {
+      padding: 6px 12px;
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover {
+      background: #f3f4f6;
+    }
+    .filter-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .todo-empty {
+      text-align: center;
+      padding: 24px;
+      color: #9ca3af;
+      font-size: 0.875rem;
+    }
+
     @media (max-width: 767.98px) {
       .staff-mypage.main-content {
         margin-left: 0 !important;
@@ -459,10 +759,18 @@
       .mypage-grid {
         grid-template-columns: 1fr;
       }
-      .attendance-today {
+      .attendance-today-grid {
         flex-direction: column;
         gap: 16px;
-        align-items: flex-start;
+        align-items: stretch;
+        text-align: center;
+      }
+      .attendance-status-box {
+        justify-content: center;
+      }
+      .btn-attendance {
+        width: 100%;
+        justify-content: center;
       }
       .attendance-summary {
         grid-template-columns: 1fr;
@@ -507,11 +815,15 @@
           // Cognito認証を確認
           if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
             const cognitoUser = await window.CognitoAuth.getCurrentUser();
+            console.log('[Mypage] Cognito user:', cognitoUser);
             if (cognitoUser) {
-              if (cognitoUser.id) {
-                userId = cognitoUser.id;  // DynamoDBのID
-              } else if (cognitoUser.email) {
+              // メールアドレスを優先して使用（cognito_subでの検索がうまくいかない場合があるため）
+              if (cognitoUser.email) {
                 userEmail = cognitoUser.email;
+                console.log('[Mypage] Using email from Cognito:', userEmail);
+              } else if (cognitoUser.id) {
+                userId = cognitoUser.id;  // DynamoDBのID
+                console.log('[Mypage] Using ID from Cognito:', userId);
               }
             }
           }
@@ -533,58 +845,92 @@
           throw new Error('ログインしてください。');
         }
         
-        // APIからユーザー情報を取得
+        // ユーザー情報を取得（ローカルJSONを優先、APIをフォールバック）
         try {
-          let response = null;
-          
-          if (userId) {
-            // IDで取得を試みる
-            response = await fetch(`${API_BASE}/workers/${userId}`);
-            if (response.ok) {
-              currentUser = await response.json();
+          // まずローカルのworkers.jsonから検索（最新データ）
+          try {
+            const localResponse = await fetch('/data/workers.json');
+            if (localResponse.ok) {
+              const localWorkers = await localResponse.json();
+              if (Array.isArray(localWorkers) && localWorkers.length > 0) {
+                // メールアドレスで検索
+                if (userEmail) {
+                  const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
+                  if (matchingUser) {
+                    currentUser = matchingUser;
+                    console.log('[Mypage] Found user from local data:', matchingUser.name);
+                  }
+                }
+                // IDで検索
+                if (!currentUser && userId) {
+                  const matchingUser = localWorkers.find(u => u.id === userId);
+                  if (matchingUser) {
+                    currentUser = matchingUser;
+                    console.log('[Mypage] Found user by ID from local data:', matchingUser.name);
+                  }
+                }
+              }
             }
+          } catch (localError) {
+            console.log('[Mypage] Local workers.json not available, trying API');
           }
           
-          // IDで見つからない場合、またはメールアドレスで検索する場合
+          // ローカルで見つからない場合、APIで検索
           if (!currentUser || !currentUser.id) {
-            if (userEmail) {
-              // メールアドレスで検索
-              response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(userEmail)}`);
-              if (response && response.ok) {
-                const users = await response.json();
-                const items = users.items || users.workers || users;
-                if (Array.isArray(items) && items.length > 0) {
-                  currentUser = items[0];
-                }
+            let response = null;
+            
+            if (userId) {
+              // IDで取得を試みる
+              response = await fetch(`${API_BASE}/workers/${userId}`);
+              if (response.ok) {
+                currentUser = await response.json();
               }
             }
             
-            // まだ見つからない場合、Cognito SubまたはFirebase UIDで検索（フォールバック）
+            // IDで見つからない場合、メールアドレスで検索
             if (!currentUser || !currentUser.id) {
-              let fallbackResponse = null;
-              
-              // Cognito Subで検索
-              if (window.CognitoAuth) {
-                const cognitoUser = await window.CognitoAuth.getCurrentUser();
-                if (cognitoUser && cognitoUser.cognito_sub) {
-                  fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}`);
+              if (userEmail) {
+                response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(userEmail)}`);
+                if (response && response.ok) {
+                  const users = await response.json();
+                  const items = users.items || users.workers || users;
+                  if (Array.isArray(items) && items.length > 0) {
+                    const matchingUser = items.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
+                    if (matchingUser) {
+                      currentUser = matchingUser;
+                      console.log('[Mypage] Found user by email from API:', matchingUser.name);
+                    }
+                  }
                 }
               }
-              
-              // Firebase UIDで検索（フォールバック）
-              if (!fallbackResponse || !fallbackResponse.ok) {
-                const authData = window.Auth?.getAuthData?.();
-                if (authData && authData.user && authData.user.firebase_uid) {
-                  fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}`);
-                }
+            }
+          }
+          
+          // まだ見つからない場合、Cognito SubまたはFirebase UIDで検索（フォールバック）
+          if (!currentUser || !currentUser.id) {
+            let fallbackResponse = null;
+            
+            // Cognito Subで検索
+            if (window.CognitoAuth) {
+              const cognitoUser = await window.CognitoAuth.getCurrentUser();
+              if (cognitoUser && cognitoUser.cognito_sub) {
+                fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}`);
               }
-              
-              if (fallbackResponse && fallbackResponse.ok) {
-                const users = await fallbackResponse.json();
-                const items = users.items || users.workers || users;
-                if (Array.isArray(items) && items.length > 0) {
-                  currentUser = items[0];
-                }
+            }
+            
+            // Firebase UIDで検索（フォールバック）
+            if (!fallbackResponse || !fallbackResponse.ok) {
+              const authData = window.Auth?.getAuthData?.();
+              if (authData && authData.user && authData.user.firebase_uid) {
+                fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}`);
+              }
+            }
+            
+            if (fallbackResponse && fallbackResponse.ok) {
+              const users = await fallbackResponse.json();
+              const items = users.items || users.workers || users;
+              if (Array.isArray(items) && items.length > 0) {
+                currentUser = items[0];
               }
             }
           }
@@ -678,6 +1024,12 @@
       document.getElementById('info-phone').textContent = user.phone || '-';
       document.getElementById('info-department').textContent = user.department || '-';
       document.getElementById('info-created-at').textContent = formatDate(user.created_at);
+      
+      // サイドバーのロールバッジを更新
+      const roleBadge = document.getElementById('sidebar-role-badge');
+      if (roleBadge && user.department) {
+        roleBadge.textContent = user.department;
+      }
     }
 
     function formatDate(dateString) {
@@ -811,21 +1163,21 @@
       const statusTime = document.getElementById('status-time');
       const toggleBtn = document.getElementById('attendance-toggle-btn');
       const toggleBtnText = document.getElementById('toggle-btn-text');
-      const workStartBtn = document.getElementById('work-start-btn');
+      const breakSection = document.getElementById('break-section');
       
       if (todayRecord && todayRecord.clock_in && !todayRecord.clock_out) {
         // 出勤中
         statusIndicator.className = 'status-indicator working';
         statusLabel.textContent = '出勤中';
-        statusTime.textContent = `出勤時刻: ${formatTime(todayRecord.clock_in)}`;
-        toggleBtnText.textContent = '退勤する';
-        toggleBtn.classList.remove('btn-primary');
-        toggleBtn.classList.add('btn-danger');
-        // 作業開始ボタンを表示
-        if (workStartBtn) {
-          workStartBtn.style.display = 'block';
-        }
+        statusTime.textContent = formatTime(todayRecord.clock_in);
+        toggleBtnText.textContent = '退勤';
+        toggleBtn.classList.remove('btn-clock-in');
+        toggleBtn.classList.add('btn-clock-out');
+        toggleBtn.querySelector('i').className = 'fas fa-sign-out-alt';
         // 休憩セクションを表示
+        if (breakSection) {
+          breakSection.style.display = 'block';
+        }
         renderBreakSection(todayRecord);
       } else if (todayRecord && todayRecord.clock_out) {
         // 退勤済み
@@ -834,18 +1186,13 @@
         
         // 労働時間を表示
         const workHours = todayRecord.work_hours || calculateWorkHours(todayRecord.clock_in, todayRecord.clock_out, todayRecord.breaks || []);
-        const workHoursText = workHours ? formatWorkHours(workHours) : '';
-        statusTime.textContent = `出勤: ${formatTime(todayRecord.clock_in)} - 退勤: ${formatTime(todayRecord.clock_out)}${workHoursText ? ` (実働: ${workHoursText})` : ''}`;
+        statusTime.textContent = workHours ? formatWorkHours(workHours) : '--:--';
         
-        toggleBtnText.textContent = '再出勤';
-        toggleBtn.classList.remove('btn-danger');
-        toggleBtn.classList.add('btn-primary');
-        // 作業開始ボタンを非表示
-        if (workStartBtn) {
-          workStartBtn.style.display = 'none';
-        }
+        toggleBtnText.textContent = '出勤';
+        toggleBtn.classList.remove('btn-clock-out');
+        toggleBtn.classList.add('btn-clock-in');
+        toggleBtn.querySelector('i').className = 'fas fa-sign-in-alt';
         // 休憩セクションを非表示
-        const breakSection = document.getElementById('break-section');
         if (breakSection) {
           breakSection.style.display = 'none';
         }
@@ -853,16 +1200,12 @@
         // 未出勤
         statusIndicator.className = 'status-indicator';
         statusLabel.textContent = '未出勤';
-        statusTime.textContent = '-';
-        toggleBtnText.textContent = '出勤する';
-        toggleBtn.classList.remove('btn-danger');
-        toggleBtn.classList.add('btn-primary');
-        // 作業開始ボタンを非表示
-        if (workStartBtn) {
-          workStartBtn.style.display = 'none';
-        }
+        statusTime.textContent = '--:--';
+        toggleBtnText.textContent = '出勤';
+        toggleBtn.classList.remove('btn-clock-out');
+        toggleBtn.classList.add('btn-clock-in');
+        toggleBtn.querySelector('i').className = 'fas fa-sign-in-alt';
         // 休憩セクションを非表示
-        const breakSection = document.getElementById('break-section');
         if (breakSection) {
           breakSection.style.display = 'none';
         }
@@ -1982,12 +2325,182 @@
       return Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
     }
 
+    // ==================== TODOリスト機能 ====================
+    const TODO_STORAGE_KEY = 'staff_todos';
+    let todos = [];
+    let todoFilter = 'all';
+
+    function loadTodos() {
+      try {
+        const userId = currentUser?.id || 'default';
+        const stored = localStorage.getItem(`${TODO_STORAGE_KEY}_${userId}`);
+        if (stored) {
+          todos = JSON.parse(stored);
+        } else {
+          todos = [];
+        }
+      } catch (error) {
+        console.error('Error loading todos:', error);
+        todos = [];
+      }
+      renderTodos();
+    }
+
+    function saveTodos() {
+      try {
+        const userId = currentUser?.id || 'default';
+        localStorage.setItem(`${TODO_STORAGE_KEY}_${userId}`, JSON.stringify(todos));
+      } catch (error) {
+        console.error('Error saving todos:', error);
+      }
+    }
+
+    function addTodo(text) {
+      if (!text.trim()) return;
+      
+      const todo = {
+        id: `todo_${Date.now()}`,
+        text: text.trim(),
+        completed: false,
+        created_at: new Date().toISOString()
+      };
+      
+      todos.unshift(todo);
+      saveTodos();
+      renderTodos();
+    }
+
+    function toggleTodo(id) {
+      const todo = todos.find(t => t.id === id);
+      if (todo) {
+        todo.completed = !todo.completed;
+        saveTodos();
+        renderTodos();
+      }
+    }
+
+    function deleteTodo(id) {
+      todos = todos.filter(t => t.id !== id);
+      saveTodos();
+      renderTodos();
+    }
+
+    function updateTodoText(id, newText) {
+      const todo = todos.find(t => t.id === id);
+      if (todo && newText.trim()) {
+        todo.text = newText.trim();
+        saveTodos();
+      }
+    }
+
+    function renderTodos() {
+      const listEl = document.getElementById('todo-list');
+      const countEl = document.getElementById('todo-count');
+      
+      if (!listEl || !countEl) return;
+
+      // フィルタリング
+      let filteredTodos = todos;
+      if (todoFilter === 'active') {
+        filteredTodos = todos.filter(t => !t.completed);
+      } else if (todoFilter === 'completed') {
+        filteredTodos = todos.filter(t => t.completed);
+      }
+
+      // 未完了カウントを更新
+      const activeCount = todos.filter(t => !t.completed).length;
+      countEl.textContent = activeCount;
+
+      if (filteredTodos.length === 0) {
+        const message = todoFilter === 'all' ? 'タスクがありません' :
+                        todoFilter === 'active' ? '未完了のタスクはありません' :
+                        '完了したタスクはありません';
+        listEl.innerHTML = `<div class="todo-empty"><i class="fas fa-check-circle"></i> ${message}</div>`;
+        return;
+      }
+
+      let html = '';
+      filteredTodos.forEach(todo => {
+        html += `
+          <div class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+            <div class="todo-checkbox" onclick="toggleTodo('${todo.id}')">
+              ${todo.completed ? '<i class="fas fa-check"></i>' : ''}
+            </div>
+            <input type="text" class="todo-text-input" value="${escapeHtml(todo.text)}" 
+                   onblur="updateTodoText('${todo.id}', this.value)"
+                   onkeypress="if(event.key==='Enter') this.blur()">
+            <button class="todo-delete" onclick="deleteTodo('${todo.id}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `;
+      });
+
+      listEl.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function setupTodoListeners() {
+      const input = document.getElementById('todo-input');
+      const addBtn = document.getElementById('add-todo-btn');
+      const filters = document.getElementById('todo-filters');
+
+      if (input && addBtn) {
+        addBtn.addEventListener('click', () => {
+          addTodo(input.value);
+          input.value = '';
+          input.focus();
+        });
+
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            addTodo(input.value);
+            input.value = '';
+          }
+        });
+      }
+
+      if (filters) {
+        filters.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            todoFilter = btn.dataset.filter;
+            filters.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderTodos();
+          });
+        });
+      }
+    }
+
     // 初期化
     document.addEventListener('DOMContentLoaded', () => {
       loadCurrentUser();
       setupAttendanceToggleButton();
       setupCorrectionRequestButton();
       setupBreakButtons();
+      setupTodoListeners();
+      
+      // ユーザー読み込み後にTODOを読み込む
+      const originalLoadCurrentUser = loadCurrentUser;
+      const checkAndLoadTodos = setInterval(() => {
+        if (currentUser) {
+          loadTodos();
+          clearInterval(checkAndLoadTodos);
+        }
+      }, 500);
+      
+      // 5秒後にタイムアウト
+      setTimeout(() => {
+        clearInterval(checkAndLoadTodos);
+        if (!currentUser) {
+          loadTodos(); // ユーザーがなくてもデフォルトで読み込む
+        }
+      }, 5000);
     });
   </script>
 </main>
