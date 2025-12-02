@@ -118,25 +118,8 @@
             const base = document.querySelector('base');
             const basePath = base ? (base.getAttribute('href') || '/') : '/';
             
-            // ロールに応じて管理ページにリダイレクト（従業員ログインは常に管理ページへ）
-            const role = result.user.role || 'staff';
-            let redirectPath;
-            
-            // ロールに応じたデフォルトページを取得
-              if (window.RoleConfig && window.RoleConfig.getDefaultPageForRole) {
-                redirectPath = window.RoleConfig.getDefaultPageForRole(role);
-              } else if (window.RoleConfig && window.RoleConfig.ROLE_CONFIG && window.RoleConfig.ROLE_CONFIG.defaultPages) {
-                redirectPath = window.RoleConfig.ROLE_CONFIG.defaultPages[role] || window.RoleConfig.ROLE_CONFIG.defaultPages['staff'];
-              } else {
-              // フォールバック: ロールに応じた管理ページ
-              if (role === 'staff' || role === 'contractor') {
-                redirectPath = '/staff/mypage.html';
-              } else if (role === 'concierge' || role === 'sales') {
-                redirectPath = '/sales/dashboard.html';
-              } else {
-                redirectPath = '/admin/dashboard.html';
-              }
-            }
+            // 従業員ログイン後は全員管理ダッシュボードにリダイレクト
+            const redirectPath = '/admin/dashboard.html';
             
             // ベースパスを考慮したリダイレクトURL
             const redirectUrl = basePath === '/' 
