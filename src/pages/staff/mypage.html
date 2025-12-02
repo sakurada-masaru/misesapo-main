@@ -13,28 +13,6 @@
   <div id="error-message" class="error-message" style="display: none;"></div>
   
   <div id="mypage-content" style="display: none;">
-    <!-- ページヘッダー -->
-    <header class="mypage-header">
-      <div class="mypage-header-content">
-        <div class="mypage-header-left">
-          <div class="user-avatar-large" id="user-avatar-large">
-            <span id="user-avatar-text">?</span>
-          </div>
-          <div class="user-info-header">
-            <div class="user-name-header" id="user-name-header">-</div>
-            <div class="user-role-header" id="user-role-header">-</div>
-            <div class="user-department-header" id="user-department-header">-</div>
-          </div>
-        </div>
-        <div class="mypage-header-right">
-          <a class="btn btn-outline btn-sm" href="/staff/mypage/settings.html">アカウント設定</a>
-          <a class="btn btn-outline btn-sm" href="/staff/schedule.html">スケジュール</a>
-          <a class="btn btn-outline btn-sm" href="/staff/reports.html">レポート</a>
-        </div>
-      </div>
-      <hr class="mypage-header-divider" />
-    </header>
-
     <!-- メインコンテンツ -->
     <div class="mypage-grid stack-on-sm">
       <!-- メインカラム -->
@@ -683,16 +661,6 @@
 
     // ユーザー情報を表示
     function renderUser(user) {
-      // アバター
-      const avatarText = (user.name || '?')[0].toUpperCase();
-      document.getElementById('user-avatar-text').textContent = avatarText;
-      document.getElementById('user-avatar-large').style.background = getRoleColor(user.role);
-      
-      // ヘッダー情報
-      document.getElementById('user-name-header').textContent = user.name || '-';
-      document.getElementById('user-role-header').textContent = getRoleLabel(user.role);
-      document.getElementById('user-department-header').textContent = user.department || '-';
-      
       // 基本情報
       document.getElementById('info-user-id').textContent = user.id || '-';
       document.getElementById('info-email').textContent = user.email || '-';
