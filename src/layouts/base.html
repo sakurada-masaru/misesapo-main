@@ -13,10 +13,22 @@
         display: none !important;
       }
       
-      /* Staff mypage: hide global header */
+      /* Staff mypage: hide global header and footer */
       body[class*="page-staff-mypage"] #default-header-wrapper,
-      body[class*="page-staff-mypage"] #normal-header-wrapper {
+      body[class*="page-staff-mypage"] #normal-header-wrapper,
+      body[class*="page-staff-mypage"] footer {
         display: none !important;
+      }
+      
+      /* Staff mypage: ensure full height layout */
+      body[class*="page-staff-mypage"] {
+        margin: 0;
+        padding: 0;
+      }
+      
+      body[class*="page-staff-mypage"] #main {
+        margin: 0;
+        padding: 0;
       }
       
       /* Admin pages: hide global header while keeping auth buttons */
