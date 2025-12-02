@@ -917,6 +917,12 @@ def build_all() -> List[str]:
     copy_data_files(outputs)
     # generate images list JSON for client-side access
     generate_images_list(outputs)
+    # copy CNAME file for custom domain (GitHub Pages)
+    cname_src = ROOT / "CNAME"
+    if cname_src.exists():
+        cname_dst = PUBLIC / "CNAME"
+        shutil.copy2(cname_src, cname_dst)
+        outputs.append(str(cname_dst))
     return outputs
 
 
