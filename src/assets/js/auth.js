@@ -545,7 +545,25 @@
    * 認証チェック
    */
   function checkAuth() {
-    // Firebase Authenticationの認証状態をチェック
+    // 従業員ログインページでは、Firebase認証（顧客用）のチェックをスキップ
+    const currentPath = window.location.pathname;
+    if (currentPath.includes('/staff/signin.html')) {
+      // 従業員ログインページでは、AWS Cognito認証をチェック
+      const cognitoUser = localStorage.getItem('cognito_user');
+      if (cognitoUser) {
+        try {
+          const user = JSON.parse(cognitoUser);
+          if (user && user.role) {
+            return true;
+          }
+        } catch (e) {
+          // パースエラーは無視
+        }
+      }
+      return false;
+    }
+    
+    // Firebase Authenticationの認証状態をチェック（顧客用）
     if (window.FirebaseAuth) {
       const currentUser = window.FirebaseAuth.currentUser;
       if (currentUser) {
@@ -592,6 +610,11 @@
   function checkCurrentPageAccess() {
     const currentPath = window.location.pathname;
     const currentRole = getCurrentRole();
+    
+    // 従業員ログインページでは、顧客認証のチェックをスキップ（AWS Cognitoを使用するため）
+    if (currentPath.includes('/staff/signin.html')) {
+      return true;
+    }
     
     // マスター、管理者、開発者はすべてのページにアクセス可能
     if (currentRole === 'master' || currentRole === 'admin' || currentRole === 'developer') {
