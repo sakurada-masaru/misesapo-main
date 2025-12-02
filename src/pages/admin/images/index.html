@@ -270,29 +270,7 @@
       // 初期読み込み
       loadImages();
     })();
-  
-  // マイページリンクを設定
-  async 
-      }
-
-      // Firebase認証からメールアドレスを取得（フォールバック）
-      if (!email) {
-        const authData = window.Auth?.getAuthData?.();
-        if (authData) {
-          email = authData.user?.email || authData.email;
-        }
-      }
-
-      if (email) {
-        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
-        mypageLink.style.display = 'flex';
-      }
-    } catch (error) {
-      console.error('Error setting up mypage link:', error);
-    }
-  }
-
-</script>
+  </script>
 
   <style>
     :root {
