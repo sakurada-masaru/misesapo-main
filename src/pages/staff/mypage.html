@@ -78,7 +78,7 @@
   </button>
 </aside>
 
-<main id="main" class="container staff-mypage main-content">
+<main id="main" class="staff-mypage main-content">
   <div class="loading" id="loading">読み込み中...</div>
   <div id="error-message" class="error-message" style="display: none;"></div>
   
@@ -231,10 +231,13 @@
 
   <style>
     .staff-mypage {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 24px;
       background: #f9fafb;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
     .loading {
       text-align: center;
@@ -445,6 +448,11 @@
       font-weight: 700;
     }
     @media (max-width: 767.98px) {
+      .staff-mypage.main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+      }
+      
       .staff-mypage {
         padding: 12px;
       }
