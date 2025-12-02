@@ -545,10 +545,24 @@
    * 認証チェック
    */
   function checkAuth() {
-    // 従業員ログインページでは、Firebase認証（顧客用）のチェックをスキップ
     const currentPath = window.location.pathname;
-    if (currentPath.includes('/staff/signin.html')) {
-      // 従業員ログインページでは、AWS Cognito認証をチェック
+    const basePath = getBasePath();
+    let normalizedPath = currentPath;
+    if (basePath !== '/' && currentPath.startsWith(basePath)) {
+      normalizedPath = currentPath.substring(basePath.length - 1);
+    }
+    
+    // 従業員関連ページ（管理、営業、清掃）では、Firebase認証（顧客用）のチェックをスキップ
+    // これらのページはAWS Cognito認証のみを使用する
+    if (normalizedPath.startsWith('/admin/') || 
+        normalizedPath.startsWith('/sales/') || 
+        normalizedPath.startsWith('/staff/') ||
+        normalizedPath.startsWith('/wiki') ||
+        currentPath.includes('/admin/') || 
+        currentPath.includes('/sales/') || 
+        currentPath.includes('/staff/') ||
+        currentPath.includes('/wiki')) {
+      // 従業員関連ページでは、AWS Cognito認証をチェック
       const cognitoUser = localStorage.getItem('cognito_user');
       if (cognitoUser) {
         try {
@@ -560,10 +574,16 @@
           // パースエラーは無視
         }
       }
+      // Cognito認証がない場合でも、misesapo_authがあれば従業員として認証済みとみなす
+      const authData = getAuthData();
+      if (authData && authData.role && authData.role !== 'customer') {
+        return true;
+      }
       return false;
     }
     
-    // Firebase Authenticationの認証状態をチェック（顧客用）
+    // 顧客関連ページ（/mypage/*など）では、Firebase認証（顧客用）をチェック
+    // Firebase Authenticationの認証状態をチェック
     if (window.FirebaseAuth) {
       const currentUser = window.FirebaseAuth.currentUser;
       if (currentUser) {
@@ -609,28 +629,30 @@
    */
   function checkCurrentPageAccess() {
     const currentPath = window.location.pathname;
-    const currentRole = getCurrentRole();
-    
-    // 従業員ログインページでは、顧客認証のチェックをスキップ（AWS Cognitoを使用するため）
-    if (currentPath.includes('/staff/signin.html')) {
-      return true;
-    }
-    
-    // マスター、管理者、開発者はすべてのページにアクセス可能
-    if (currentRole === 'master' || currentRole === 'admin' || currentRole === 'developer') {
-      return true;
-    }
-    
-    // ログインページとサインアップページは常にアクセス可能
-    if (currentPath.includes('/signin.html') || currentPath.includes('/signup')) {
-      return true;
-    }
-    
-    // ベースパスを除去したパスでチェック（GitHub Pages対応）
     const basePath = getBasePath();
     let normalizedPath = currentPath;
     if (basePath !== '/' && currentPath.startsWith(basePath)) {
       normalizedPath = currentPath.substring(basePath.length - 1); // 先頭の/を残す
+    }
+    
+    // 従業員関連ページ（管理、営業、清掃）では、顧客認証（Firebase）のチェックをスキップ
+    // これらのページはAWS Cognito認証のみを使用する
+    if (normalizedPath.startsWith('/admin/') || 
+        normalizedPath.startsWith('/sales/') || 
+        normalizedPath.startsWith('/staff/') ||
+        normalizedPath.startsWith('/wiki') ||
+        currentPath.includes('/admin/') || 
+        currentPath.includes('/sales/') || 
+        currentPath.includes('/staff/') ||
+        currentPath.includes('/wiki')) {
+      // 従業員関連ページでは、顧客認証のチェックをスキップ
+      return true;
+    }
+    
+    // ログインページとサインアップページは常にアクセス可能
+    if (normalizedPath.includes('/signin.html') || normalizedPath.includes('/signup') ||
+        currentPath.includes('/signin.html') || currentPath.includes('/signup')) {
+      return true;
     }
     
     // パブリックページ（index.html, service.html, recruit.html）は常にアクセス可能
@@ -639,7 +661,15 @@
       return true;
     }
     
-    // ページアクセス権限をチェック
+    // 以下は顧客関連ページ（/mypage/*など）のみFirebase認証をチェック
+    const currentRole = getCurrentRole();
+    
+    // マスター、管理者、開発者はすべてのページにアクセス可能
+    if (currentRole === 'master' || currentRole === 'admin' || currentRole === 'developer') {
+      return true;
+    }
+    
+    // ページアクセス権限をチェック（顧客関連ページのみ）
     if (typeof checkPageAccess === 'function' && !checkPageAccess(normalizedPath, currentRole)) {
       // アクセス権限がない場合、ログインページにリダイレクト
       const redirectUrl = encodeURIComponent(window.location.href);
