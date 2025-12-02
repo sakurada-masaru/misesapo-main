@@ -530,17 +530,23 @@
 
     /* メインコンテンツ */
     .main-content {
-      margin-left: var(--sidebar-width);
+      margin-left: var(--sidebar-width) !important;
       padding: 24px;
       background: #f9fafb;
-    
-      transition: margin-left 0.3s ease;}
+      width: calc(100% - var(--sidebar-width)) !important;
+      max-width: none !important;
+      box-sizing: border-box;
+      transition: margin-left 0.3s ease, width 0.3s ease;
+    }
     .sidebar.collapsed ~ .main-content {
-      margin-left: var(--sidebar-width);
+      margin-left: var(--sidebar-width-collapsed) !important;
       padding: 24px;
       background: #f9fafb;
-    
-      transition: margin-left 0.3s ease;}
+      width: calc(100% - var(--sidebar-width-collapsed)) !important;
+      max-width: none !important;
+      box-sizing: border-box;
+      transition: margin-left 0.3s ease, width 0.3s ease;
+    }
     main.admin-services-v2 > .main-content > .container {
       max-width: 100%;
       margin: 0;

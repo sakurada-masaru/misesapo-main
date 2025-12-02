@@ -187,12 +187,26 @@
 /* メインコンテンツ */
 .main-content {
   margin-left: var(--sidebar-width) !important;
-  transition: margin-left 0.3s ease;
+  width: calc(100% - var(--sidebar-width)) !important;
+  max-width: none !important;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+  box-sizing: border-box;
 }
 
 .sidebar.collapsed ~ .main-content,
 .sidebar.collapsed + .main-content {
   margin-left: var(--sidebar-width-collapsed) !important;
+  width: calc(100% - var(--sidebar-width-collapsed)) !important;
+}
+
+/* メインコンテンツ内のコンテナを全幅に */
+.main-content > .container,
+.main-content .container {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* レスポンシブ */

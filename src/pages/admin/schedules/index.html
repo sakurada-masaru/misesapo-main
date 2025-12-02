@@ -269,19 +269,21 @@
   /* メインコンテンツ */
   .main-content {
       flex: 1;
-      margin-left: var(--sidebar-width);
+      margin-left: var(--sidebar-width) !important;
       padding: 24px;
       background: #f9fafb;
       min-width: 0;
-      width: calc(100% - var(--sidebar-width));
+      width: calc(100% - var(--sidebar-width)) !important;
+      max-width: none !important;
       box-sizing: border-box;
       transition: margin-left 0.3s ease, width 0.3s ease;
     }
   
   .sidebar.collapsed ~ .main-content,
   .sidebar.collapsed + .main-content {
-      margin-left: var(--sidebar-width-collapsed);
-      width: calc(100% - var(--sidebar-width-collapsed));
+      margin-left: var(--sidebar-width-collapsed) !important;
+      width: calc(100% - var(--sidebar-width-collapsed)) !important;
+      max-width: none !important;
     }
 
   /* トップバー */
