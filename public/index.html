@@ -2825,7 +2825,7 @@
         <img id="splash-logo-img" src="" alt="ミセサポ" class="splash-logo" />
     </div>
     <script>
-        // スプラッシュロゴのパスを設定（GitHub Pages/カスタムドメイン対応）
+        // スプラッシュスクリーンの制御（最優先で実行）
         (function() {
             // 簡易版resolvePath関数を先に定義（絶対URLを返す）
             function resolveLogoPath(path) {
@@ -2858,10 +2858,44 @@
                 return resolvedPath;
             }
             
-            // 即座にロゴパスを設定
+            var splash = document.getElementById('splash-screen');
             var logoImg = document.getElementById('splash-logo-img');
+            
+            // ロゴパスを設定
             if (logoImg) {
                 logoImg.src = resolveLogoPath('/images-material/logo_144x144.png');
+            }
+            
+            // PC/SPの判定（768px未満をモバイルとする）
+            var isMobile = window.innerWidth < 768;
+            
+            // PCの場合はスプラッシュスクリーンを即座に非表示
+            if (!isMobile) {
+                if (splash) {
+                    splash.style.display = 'none';
+                    splash.classList.add('hidden');
+                }
+            } else {
+                // SP: スプラッシュを表示
+                if (splash) {
+                    splash.style.display = 'flex';
+                    splash.style.opacity = '1';
+                }
+                document.body.classList.add('splash-active');
+                
+                // 2秒後にフェードアウト開始
+                setTimeout(function() {
+                    if (splash) {
+                        splash.classList.add('fade-out');
+                        // フェードアウト完了後に非表示
+                        setTimeout(function() {
+                            splash.classList.add('hidden');
+                            document.body.classList.remove('splash-active');
+                            document.body.classList.add('splash-inactive');
+                            splash.remove();
+                        }, 800);
+                    }
+                }, 2000);
             }
         })();
     </script>
@@ -4705,69 +4739,6 @@
                 }
             })();
         </script>
-        <script>
-            // スプラッシュスクリーンの制御（最優先で実行）
-            (function() {
-                // PC/SPの判定（768px未満をモバイルとする）
-                var isMobile = window.innerWidth < 768;
-                
-                // PCの場合はスプラッシュスクリーンを表示しない
-                if (!isMobile) {
-                    var splash = document.getElementById('splash-screen');
-                    if (splash) {
-                        splash.style.display = 'none';
-                        splash.classList.add('hidden');
-                    }
-                    return;
-                }
-                
-                // SP: bodyのoverflowをhiddenに
-                if (document.body) {
-                    document.body.classList.add('splash-active');
-                } else {
-                    document.addEventListener('DOMContentLoaded', function() {
-                        document.body.classList.add('splash-active');
-                    });
-                }
-
-                function initSplash() {
-                    var splash = document.getElementById('splash-screen');
-                    if (!splash) {
-                        // 要素が見つからない場合は少し待って再試行
-                        setTimeout(initSplash, 100);
-                        return;
-                    }
-
-                    // スプラッシュスクリーンが確実に表示されるように
-                    splash.style.display = 'flex';
-                    splash.style.opacity = '1';
-
-                    // フェードインアップはCSSアニメーションで自動実行
-                    // 2秒後にフェードアウト開始（app.jsと統一）
-                    setTimeout(function() {
-                        splash.classList.add('fade-out');
-                        // フェードアウト完了後に非表示
-                        setTimeout(function() {
-                            splash.classList.add('hidden');
-                            if (document.body) {
-                                document.body.classList.remove('splash-active');
-                                document.body.classList.add('splash-inactive');
-                            }
-                            // DOMから削除
-                            splash.remove();
-                        }, 800); // フェードアウトの時間（0.8s）に合わせる
-                    }, 2000); // 2秒表示（app.jsと統一）
-                }
-
-                // DOMContentLoadedまたは即座に実行
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', initSplash);
-                } else {
-                    initSplash();
-                }
-            })();
-        </script>
-
         <!-- キャンペーンスライダーJavaScript -->
         <script>
             // スライダー機能（コンテナ内で完結）
