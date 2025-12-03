@@ -664,6 +664,7 @@
       '/recruit/',           // /recruit/apply/cleaning.html など
       '/customers.html',
       '/customers-support-desk.html',
+      '/tokushoho.html',
       '/signin.html',
       '/signup.html',
       '/signup/',            // /signup/2.html など
