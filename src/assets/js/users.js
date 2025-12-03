@@ -133,6 +133,43 @@
       status: 'active',
       created_at: '2025-01-20T00:00:00Z',
       last_login_at: null
+    },
+    // ========== お客様アカウント ==========
+    {
+      id: 101,
+      email: 'customer@misesapo.co.jp',
+      passwordHash: '16a99bd9df58d2774a902f56aaaaa8276d4ba2b75a55b0bc13af7c8b9368368f', // SHA-256ハッシュ (Customer1234)
+      role: 'customer',
+      name: 'テスト顧客',
+      customer_id: 'CUS001',
+      store_name: 'テスト店舗',
+      status: 'active',
+      created_at: '2025-12-03T00:00:00Z',
+      last_login_at: null
+    },
+    {
+      id: 102,
+      email: 'demo@misesapo.co.jp',
+      passwordHash: '16a99bd9df58d2774a902f56aaaaa8276d4ba2b75a55b0bc13af7c8b9368368f', // SHA-256ハッシュ (Customer1234)
+      role: 'customer',
+      name: 'デモ顧客',
+      customer_id: 'CUS002',
+      store_name: 'デモ店舗',
+      status: 'active',
+      created_at: '2025-12-03T00:00:00Z',
+      last_login_at: null
+    },
+    {
+      id: 103,
+      email: 'sample@misesapo.co.jp',
+      passwordHash: '16a99bd9df58d2774a902f56aaaaa8276d4ba2b75a55b0bc13af7c8b9368368f', // SHA-256ハッシュ (Customer1234)
+      role: 'customer',
+      name: 'サンプル顧客',
+      customer_id: 'CUS003',
+      store_name: 'サンプル店舗',
+      status: 'active',
+      created_at: '2025-12-03T00:00:00Z',
+      last_login_at: null
     }
   ];
   
