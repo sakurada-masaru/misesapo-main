@@ -178,6 +178,40 @@
     </div>
   </dialog>
 
+  <!-- URL発行モーダル -->
+  <dialog id="share-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>レポート共有URL発行</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('share-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="share-info">
+          <p>このURLを顧客に送信すると、レポートを閲覧できます。</p>
+          <div class="url-display-container">
+            <input type="text" id="share-url-input" class="url-input" readonly>
+            <button type="button" class="btn btn-primary" id="btn-copy-url">
+              <i class="fas fa-copy"></i> コピー
+            </button>
+          </div>
+          <div class="copy-success-message" id="copy-success" style="display: none;">
+            <i class="fas fa-check-circle"></i> URLをコピーしました
+          </div>
+          <div class="share-actions">
+            <a id="share-preview-link" href="#" target="_blank" class="btn btn-outline">
+              <i class="fas fa-external-link-alt"></i> プレビューで開く
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('share-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+
   <style>
     :root {
       --primary: #FF6BA6;
@@ -428,8 +462,58 @@
     }
     .action-btn.view { background: #e0f2fe; color: #0284c7; }
     .action-btn.edit { background: #fef3c7; color: #d97706; }
+    .action-btn.share { background: #dbeafe; color: #2563eb; }
     .action-btn.delete { background: #fee2e2; color: #dc2626; }
     .action-btn:hover { transform: scale(1.1); }
+    
+    /* URL発行モーダル */
+    .share-info {
+      padding: 20px 0;
+    }
+    .share-info p {
+      margin-bottom: 20px;
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+    .url-display-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .url-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #f9fafb;
+      color: #1e293b;
+    }
+    .url-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #fff;
+    }
+    .copy-success-message {
+      padding: 12px;
+      background: #d1fae5;
+      color: #065f46;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .share-actions {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .share-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
 
     /* ボタン */
     .btn {
@@ -1014,6 +1098,7 @@
               <div class="action-btns">
                 <button class="action-btn view" title="詳細" onclick="viewReport('${r.id}')"><i class="fas fa-eye"></i></button>
                 <button class="action-btn edit" title="編集" onclick="editReport('${r.id}')"><i class="fas fa-edit"></i></button>
+                <button class="action-btn share" title="URL発行" onclick="shareReport('${r.id}')"><i class="fas fa-share-alt"></i></button>
                 <button class="action-btn delete" title="削除" onclick="deleteReport('${r.id}')"><i class="fas fa-trash"></i></button>
               </div>
             </td>
@@ -1257,6 +1342,60 @@
 
       document.getElementById('new-dialog').showModal();
     };
+
+    // URL発行
+    window.shareReport = function(id) {
+      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+      if (!report) {
+        alert('レポートが見つかりませんでした');
+        return;
+      }
+
+      // 共有URLを生成
+      const reportId = report.report_id || report.id;
+      const baseUrl = window.location.origin;
+      const shareUrl = `${baseUrl}/reports/shared/${reportId}`;
+
+      // URLを表示
+      document.getElementById('share-url-input').value = shareUrl;
+      
+      // プレビューリンクを設定
+      const previewLink = document.getElementById('share-preview-link');
+      previewLink.href = shareUrl;
+      
+      // コピー成功メッセージを非表示
+      document.getElementById('copy-success').style.display = 'none';
+      
+      // モーダルを表示
+      document.getElementById('share-dialog').showModal();
+    };
+
+    // URLコピー機能
+    document.addEventListener('DOMContentLoaded', function() {
+      const copyBtn = document.getElementById('btn-copy-url');
+      const urlInput = document.getElementById('share-url-input');
+      const copySuccess = document.getElementById('copy-success');
+      
+      if (copyBtn && urlInput) {
+        copyBtn.addEventListener('click', async function() {
+          try {
+            await navigator.clipboard.writeText(urlInput.value);
+            copySuccess.style.display = 'flex';
+            setTimeout(() => {
+              copySuccess.style.display = 'none';
+            }, 3000);
+          } catch (err) {
+            // フォールバック: テキストエリアを使用
+            urlInput.select();
+            document.execCommand('copy');
+            copySuccess.style.display = 'flex';
+            setTimeout(() => {
+              copySuccess.style.display = 'none';
+            }, 3000);
+          }
+        });
+      }
+    });
 
     // 削除
     window.deleteReport = async function(id) {
