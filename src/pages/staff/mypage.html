@@ -833,8 +833,25 @@
         
         // URLパラメータがない場合、認証情報から個人のIDまたはメールアドレスを取得（Cognito認証を優先）
         if (!userId && !userEmail) {
-          // Cognito認証を確認
-          if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+          // まずローカルストレージのcognito_userを確認（最も信頼性が高い）
+          try {
+            const storedCognitoUser = localStorage.getItem('cognito_user');
+            if (storedCognitoUser) {
+              const parsedUser = JSON.parse(storedCognitoUser);
+              if (parsedUser.email) {
+                userEmail = parsedUser.email;
+                console.log('[Mypage] Using email from stored cognito_user:', userEmail);
+              } else if (parsedUser.id) {
+                userId = parsedUser.id;
+                console.log('[Mypage] Using ID from stored cognito_user:', userId);
+              }
+            }
+          } catch (e) {
+            console.warn('[Mypage] Error parsing stored cognito_user:', e);
+          }
+          
+          // ローカルストレージになければCognito認証を確認
+          if (!userId && !userEmail && window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
             const cognitoUser = await window.CognitoAuth.getCurrentUser();
             console.log('[Mypage] Cognito user:', cognitoUser);
             if (cognitoUser) {
@@ -846,6 +863,25 @@
                 userId = cognitoUser.id;  // DynamoDBのID
                 console.log('[Mypage] Using ID from Cognito:', userId);
               }
+            }
+          }
+          
+          // misesapo_authも確認（フォールバック）
+          if (!userId && !userEmail) {
+            try {
+              const storedAuth = localStorage.getItem('misesapo_auth');
+              if (storedAuth) {
+                const parsedAuth = JSON.parse(storedAuth);
+                if (parsedAuth.email) {
+                  userEmail = parsedAuth.email;
+                  console.log('[Mypage] Using email from misesapo_auth:', userEmail);
+                } else if (parsedAuth.user && parsedAuth.user.email) {
+                  userEmail = parsedAuth.user.email;
+                  console.log('[Mypage] Using email from misesapo_auth.user:', userEmail);
+                }
+              }
+            } catch (e) {
+              console.warn('[Mypage] Error parsing misesapo_auth:', e);
             }
           }
           
