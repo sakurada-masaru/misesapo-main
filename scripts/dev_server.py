@@ -75,6 +75,7 @@ class DevServerHandler(SimpleHTTPRequestHandler):
     def translate_path(self, path):
         """パスを変換（動的ルーティング対応）"""
         # クエリパラメータを除去
+        original_path = path
         path = path.split('?')[0]
         
         # 動的ルーティング: /admin/reports/{report_id}/edit.html を /admin/reports/[id]/edit.html にマッピング
@@ -85,23 +86,12 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 return str(edit_template)
         
         # 動的ルーティング: /reports/{report_id}.html を /reports/[id].html にマッピング
-        if path.startswith('/reports/') and path.endswith('.html'):
+        if path.startswith('/reports/') and path.endswith('.html') and not path.startswith('/reports/shared/'):
             report_id_template = PUBLIC / "reports" / "[id].html"
             if report_id_template.exists():
                 return str(report_id_template)
         
-        # 動的ルーティング: /reports/shared/{id} を /reports/shared/[id].html にマッピング
-        if path.startswith('/reports/shared/'):
-            parts = [p for p in path.split('/') if p]  # 空文字列を除去
-            # /reports/shared/{id} または /reports/shared/{id}/ の場合
-            if len(parts) >= 3 and parts[2] and parts[2] != 'view':
-                # /reports/shared/{id}/view の場合は除外
-                if len(parts) < 4 or parts[3] != 'view':
-                    shared_template = PUBLIC / "reports" / "shared" / "[id].html"
-                    if shared_template.exists():
-                        return str(shared_template)
-        
-        # 動的ルーティング: /reports/shared/{id}/view を /reports/shared/[id]/view.html にマッピング
+        # 動的ルーティング: /reports/shared/{id}/view を /reports/shared/[id]/view.html にマッピング（先にチェック）
         if path.startswith('/reports/shared/'):
             parts = [p for p in path.split('/') if p]  # 空文字列を除去
             # /reports/shared/{id}/view または /reports/shared/{id}/view/ の場合
@@ -110,8 +100,18 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 if view_template.exists():
                     return str(view_template)
         
+        # 動的ルーティング: /reports/shared/{id} を /reports/shared/[id].html にマッピング
+        if path.startswith('/reports/shared/'):
+            parts = [p for p in path.split('/') if p]  # 空文字列を除去
+            # /reports/shared/{id} または /reports/shared/{id}/ の場合
+            # parts[0] = 'reports', parts[1] = 'shared', parts[2] = '{id}'
+            if len(parts) >= 3 and parts[2] and parts[2] != 'view':
+                shared_template = PUBLIC / "reports" / "shared" / "[id].html"
+                if shared_template.exists():
+                    return str(shared_template)
+        
         # 通常のパス変換
-        return super().translate_path(path)
+        return super().translate_path(original_path)
     
     def do_GET(self):
         """GETリクエスト: 静的ファイル配信またはAPI"""
