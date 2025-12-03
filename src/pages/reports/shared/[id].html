@@ -22,31 +22,35 @@
             color: #333;
         }
         .shared-report-container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
-            padding: 20px;
-        }
-        .form-card {
             background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            padding: 40px;
-            margin-top: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
         }
         .form-header {
-            text-align: center;
-            margin-bottom: 32px;
+            background: #FF679C;
+            color: #fff;
+            padding: 16px 24px;
+        }
+        .form-header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
         .form-header h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #333;
-            margin: 0 0 8px 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
         }
         .form-header p {
-            font-size: 0.95rem;
-            color: #666;
+            font-size: 1rem;
+            opacity: 0.9;
             margin: 0;
+        }
+        .form-card {
+            padding: 40px;
         }
         .form-section {
             margin-bottom: 24px;
@@ -183,14 +187,20 @@
         }
         @media (max-width: 768px) {
             .shared-report-container {
-                padding: 16px;
+                margin: 0;
+                border-radius: 0;
             }
             .form-card {
                 padding: 24px;
-                margin-top: 20px;
+            }
+            .form-header {
+                padding: 12px 16px;
             }
             .form-header h1 {
-                font-size: 1.5rem;
+                font-size: 1.1rem;
+            }
+            .form-header p {
+                font-size: 0.9rem;
             }
             .form-row {
                 grid-template-columns: 1fr;
@@ -203,11 +213,13 @@
 </head>
 <body>
     <div class="shared-report-container">
-        <div class="form-card">
-            <div class="form-header">
+        <div class="form-header">
+            <div class="form-header-content">
                 <h1>レポート閲覧</h1>
                 <p>以下の情報をご入力ください</p>
             </div>
+        </div>
+        <div class="form-card">
 
             <form id="viewer-info-form">
                 <div class="privacy-notice">
@@ -375,7 +387,7 @@
             // レポート表示ページに遷移
             // reportIdから.htmlを削除（もし含まれている場合）
             const cleanId = reportId.replace('.html', '');
-            window.location.href = `/reports/shared/${cleanId}/view.html`;
+            window.location.href = `/reports/shared/${cleanId}/view`;
         });
 
         // 入力済み情報があれば復元
