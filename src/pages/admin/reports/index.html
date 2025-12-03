@@ -1630,7 +1630,7 @@
       }
 
       // モーダル用: 清掃項目リストを更新
-      function updateCleaningItemsListModal() {
+      window.updateCleaningItemsListModal = function() {
         const container = document.getElementById('cleaning-items-list-modal');
         const items = document.querySelectorAll('.cleaning-section-modal');
         
@@ -1652,10 +1652,10 @@
         container.innerHTML = itemNames.map(name => 
           `<span class="items-list-item-modal">${name}</span>`
         ).join('');
-      }
+      };
 
       // モーダル用: 清掃項目を追加
-      function addWorkItemModal(itemData = null) {
+      window.addWorkItemModal = function(itemData = null) {
         modalWorkItemCounter++;
         const container = document.getElementById('work-items-container-modal');
         const itemIdValue = itemData?.item_id || `work-item-modal-${modalWorkItemCounter}`;
@@ -1750,7 +1750,7 @@
         
         // タイトル入力のイベントリスナー（リスト更新用）
         const titleInput = workItemSection.querySelector('.item-title-input-modal');
-        titleInput.addEventListener('input', updateCleaningItemsListModal);
+        titleInput.addEventListener('input', window.updateCleaningItemsListModal);
         
         // 写真アップロードのイベントリスナー
         workItemSection.querySelectorAll('input[type="file"]').forEach(input => {
@@ -1773,15 +1773,15 @@
           }
         });
         
-        updateCleaningItemsListModal();
-      }
+        window.updateCleaningItemsListModal();
+      };
 
       // モーダル用: 清掃項目を削除
       window.removeWorkItemModal = function(itemId) {
         const section = document.querySelector(`[data-item-id="${itemId}"].cleaning-section-modal`);
         if (section && confirm('この清掃項目を削除しますか？')) {
           section.remove();
-          updateCleaningItemsListModal();
+          window.updateCleaningItemsListModal();
         }
       };
 
@@ -1851,7 +1851,7 @@
 
       // モーダル用: 項目を追加ボタン
       document.getElementById('add-work-item-modal')?.addEventListener('click', function() {
-        addWorkItemModal();
+        window.addWorkItemModal();
       });
 
       // モーダル用: 店舗選択の変更
