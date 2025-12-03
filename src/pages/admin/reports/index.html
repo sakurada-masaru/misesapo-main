@@ -262,11 +262,6 @@
       font-weight: 500;
       white-space: nowrap;
     }
-
-          width: 18px;
-      text-align: center;
-      flex-shrink: 0;
-    }
     .nav-label {
       transition: opacity 0.3s ease;
       white-space: nowrap;
@@ -1006,6 +1001,7 @@
 
     function populateWorkerSelect() {
       const select = document.getElementById('report-worker');
+      if (!select) return; // 新しいモーダルには存在しないので、nullチェック
       const staffWorkers = allWorkers.filter(w => w.role === 'staff');
       select.innerHTML = '<option value="">選択してください</option>' + 
         staffWorkers.map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('');
@@ -1327,18 +1323,53 @@
 
     // 編集
     window.editReport = function(id) {
-      const report = allReports.find(r => String(r.id) === String(id));
-      if (!report) return;
+      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+      if (!report) {
+        alert('レポートが見つかりませんでした');
+        return;
+      }
 
       document.getElementById('form-title').textContent = 'レポート編集';
-      document.getElementById('report-id').value = id;
-      document.getElementById('report-store').value = report.store_id || '';
-      document.getElementById('report-worker').value = report.worker_id || '';
-      document.getElementById('report-date').value = report.work_date || '';
-      document.getElementById('report-start').value = report.start_time || '';
-      document.getElementById('report-end').value = report.end_time || '';
-      document.getElementById('report-content').value = report.content || '';
-      document.getElementById('report-notes').value = report.notes || '';
+      document.getElementById('report-id').value = report.report_id || report.id;
+      
+      // 基本情報を設定
+      const storeSelect = document.getElementById('report-store');
+      if (storeSelect) {
+        storeSelect.value = report.store_id || '';
+        const selectedOption = storeSelect.options[storeSelect.selectedIndex];
+        if (selectedOption) {
+          document.getElementById('report-store-name').value = selectedOption.text;
+        }
+      }
+      
+      document.getElementById('report-date').value = report.cleaning_date || report.work_date || '';
+      document.getElementById('report-start').value = report.cleaning_start_time || report.start_time || '';
+      document.getElementById('report-end').value = report.cleaning_end_time || report.end_time || '';
+
+      // 清掃項目をクリア
+      const workItemsContainer = document.getElementById('work-items-container-modal');
+      if (workItemsContainer) {
+        workItemsContainer.innerHTML = '';
+      }
+      modalWorkItemCounter = 0;
+
+      // 新しい形式（work_items配列）の場合
+      if (report.work_items && Array.isArray(report.work_items) && report.work_items.length > 0) {
+        // 各清掃項目を追加
+        report.work_items.forEach(item => {
+          addWorkItemModal(item);
+        });
+      } else {
+        // 古い形式の場合、1つの項目として追加
+        addWorkItemModal({
+          item_id: `work-item-${Date.now()}`,
+          item_name: report.content || '',
+          work_content: report.content || '',
+          work_memo: report.notes || '',
+          details: {},
+          photos: report.photos || { before: [], after: [] }
+        });
+      }
 
       document.getElementById('new-dialog').showModal();
     };
@@ -1624,21 +1655,53 @@
       }
 
       // モーダル用: 清掃項目を追加
-      function addWorkItemModal(itemId = null, itemName = null) {
+      function addWorkItemModal(itemData = null) {
         modalWorkItemCounter++;
         const container = document.getElementById('work-items-container-modal');
-        const itemIdValue = itemId || `work-item-modal-${modalWorkItemCounter}`;
-        const itemNameValue = itemName || '';
+        const itemIdValue = itemData?.item_id || `work-item-modal-${modalWorkItemCounter}`;
+        const itemNameValue = itemData?.item_name || '';
+        const details = itemData?.details || {};
+        const workContent = itemData?.work_content || '';
+        const workMemo = itemData?.work_memo || '';
+        const beforePhotos = itemData?.photos?.before || [];
+        const afterPhotos = itemData?.photos?.after || [];
         
         const workItemSection = document.createElement('section');
         workItemSection.className = 'cleaning-section-modal';
         workItemSection.dataset.itemId = itemIdValue;
+        
+        // 作業前の写真HTML
+        const beforePhotosHtml = beforePhotos.map((url, idx) => {
+          const isBase64 = url.startsWith('data:');
+          return `
+            <div class="image-item-modal" data-base64="${isBase64 ? url : ''}" data-url="${!isBase64 ? url : ''}">
+              <img src="${url}" alt="作業前" loading="lazy">
+              <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+        }).join('');
+        
+        // 作業後の写真HTML
+        const afterPhotosHtml = afterPhotos.map((url, idx) => {
+          const isBase64 = url.startsWith('data:');
+          return `
+            <div class="image-item-modal" data-base64="${isBase64 ? url : ''}" data-url="${!isBase64 ? url : ''}">
+              <img src="${url}" alt="作業後" loading="lazy">
+              <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+        }).join('');
+        
         workItemSection.innerHTML = `
           <div class="item-header-modal">
-            <input type="text" class="item-title-input-modal" placeholder="清掃項目名（例: グリストラップ）" value="${itemNameValue}" data-item-id="${itemIdValue}">
+            <input type="text" class="item-title-input-modal" placeholder="清掃項目名（例: グリストラップ）" value="${escapeHtml(itemNameValue)}" data-item-id="${itemIdValue}">
             <div class="item-details-modal">
-              <input type="text" class="detail-tag-input-modal" placeholder="タイプ（例: 床置き型）" style="width: 150px;">
-              <input type="text" class="detail-tag-input-modal" placeholder="個数（例: 2個）" style="width: 100px;">
+              <input type="text" class="detail-tag-input-modal" placeholder="タイプ（例: 床置き型）" style="width: 150px;" value="${escapeHtml(details.type || '')}">
+              <input type="text" class="detail-tag-input-modal" placeholder="個数（例: 2個）" style="width: 100px;" value="${escapeHtml(details.count || '')}">
             </div>
             <button type="button" class="item-remove-btn-modal" onclick="removeWorkItemModal('${itemIdValue}')">
               <i class="fas fa-trash"></i>
@@ -1647,12 +1710,13 @@
           </div>
           <div class="subsection-modal">
             <h4 class="subsection-title-modal">作業内容</h4>
-            <textarea class="work-item-content-modal" placeholder="作業内容を入力してください"></textarea>
+            <textarea class="work-item-content-modal" placeholder="作業内容を入力してください">${escapeHtml(workContent)}</textarea>
           </div>
           <div class="image-grid-modal">
             <div class="image-category-modal">
               <h4 class="image-category-title-modal">作業前</h4>
               <div class="image-list-modal" data-category="before" data-item-id="${itemIdValue}">
+                ${beforePhotosHtml}
                 <div class="image-item-modal">
                   <label class="image-upload-btn-modal">
                     <input type="file" accept="image/*" multiple data-category="before" data-item-id="${itemIdValue}" />
@@ -1665,6 +1729,7 @@
             <div class="image-category-modal">
               <h4 class="image-category-title-modal">作業後</h4>
               <div class="image-list-modal" data-category="after" data-item-id="${itemIdValue}">
+                ${afterPhotosHtml}
                 <div class="image-item-modal">
                   <label class="image-upload-btn-modal">
                     <input type="file" accept="image/*" multiple data-category="after" data-item-id="${itemIdValue}" />
@@ -1677,7 +1742,7 @@
           </div>
           <div class="subsection-modal">
             <h4 class="subsection-title-modal">作業メモ</h4>
-            <textarea class="work-item-memo-modal" placeholder="特記事項を入力してください"></textarea>
+            <textarea class="work-item-memo-modal" placeholder="特記事項を入力してください">${escapeHtml(workMemo)}</textarea>
           </div>
         `;
         
@@ -1838,19 +1903,23 @@
               }
             };
             
-            // 作業前の写真
+            // 作業前の写真（Base64またはURL）
             section.querySelectorAll('[data-category="before"] .image-item-modal img').forEach(img => {
               const photoItem = img.closest('.image-item-modal');
               if (photoItem.dataset.base64) {
                 workItem.photos.before.push(photoItem.dataset.base64);
+              } else if (photoItem.dataset.url) {
+                workItem.photos.before.push(photoItem.dataset.url);
               }
             });
             
-            // 作業後の写真
+            // 作業後の写真（Base64またはURL）
             section.querySelectorAll('[data-category="after"] .image-item-modal img').forEach(img => {
               const photoItem = img.closest('.image-item-modal');
               if (photoItem.dataset.base64) {
                 workItem.photos.after.push(photoItem.dataset.base64);
+              } else if (photoItem.dataset.url) {
+                workItem.photos.after.push(photoItem.dataset.url);
               }
             });
             
@@ -1873,10 +1942,19 @@
             return;
           }
           
+          // 編集モードかどうかを判定
+          const reportId = document.getElementById('report-id').value;
+          const isEditMode = reportId && reportId.trim() !== '';
+          
           // APIに送信
           const idToken = await getFirebaseIdToken();
-          const response = await fetch(`${REPORT_API}/staff/reports`, {
-            method: 'POST',
+          const url = isEditMode 
+            ? `${REPORT_API}/staff/reports/${reportId}`
+            : `${REPORT_API}/staff/reports`;
+          const method = isEditMode ? 'PUT' : 'POST';
+          
+          const response = await fetch(url, {
+            method: method,
             headers: {
               'Authorization': `Bearer ${idToken}`,
               'Content-Type': 'application/json'
@@ -1886,12 +1964,21 @@
           
           if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'レポートの作成に失敗しました');
+            throw new Error(error.message || (isEditMode ? 'レポートの更新に失敗しました' : 'レポートの作成に失敗しました'));
           }
           
           const result = await response.json();
-          alert('レポートを作成しました');
+          alert(isEditMode ? 'レポートを更新しました' : 'レポートを作成しました');
           document.getElementById('new-dialog').close();
+          
+          // フォームをリセット
+          document.getElementById('report-form-modal').reset();
+          document.getElementById('report-id').value = '';
+          document.getElementById('work-items-container-modal').innerHTML = '';
+          document.getElementById('cleaning-items-list-modal').innerHTML = '<span class="items-list-empty-modal">項目を追加してください</span>';
+          modalWorkItemCounter = 0;
+          document.getElementById('form-title').textContent = '新規レポート作成';
+          
           await loadReports();
         } catch (error) {
           console.error('Error submitting report:', error);
