@@ -5,7 +5,7 @@
 
 <main id="main" class="container sales-clients-edit">
   <div class="page-header">
-    <a href="/sales/clients/{{ id }}.html" class="back-btn">
+    <a href="/sales/clients/{{ id }}" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
     <h1 class="page-title">顧客情報編集</h1>
@@ -129,7 +129,7 @@
 
     <!-- フォームアクション -->
     <div class="form-actions">
-      <button type="button" class="btn btn-outline" onclick="window.location.href='/sales/clients/{{ id }}.html'">
+      <button type="button" class="btn btn-outline" onclick="window.location.href='/sales/clients/{{ id }}'">
         <i class="fas fa-times"></i>
         キャンセル
       </button>
@@ -368,7 +368,7 @@
           
           // Redirect to client detail page
           const clientId = formData.get('id');
-          window.location.href = `/sales/clients/${clientId}.html`;
+          window.location.href = `/sales/clients/${clientId}`;
         });
       }
 

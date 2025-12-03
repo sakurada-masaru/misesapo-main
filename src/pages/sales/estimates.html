@@ -5,11 +5,11 @@
 
 <main id="main" class="container sales-estimates">
   <div class="page-header">
-    <a href="/sales/dashboard.html" class="back-btn">
+    <a href="/sales/dashboard" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
     <h1 class="page-title">見積もり一覧</h1>
-    <a href="/sales/estimates/new.html" class="btn btn-primary btn-sm">
+    <a href="/sales/estimates/new" class="btn btn-primary btn-sm">
       <i class="fas fa-plus"></i> 新規作成
     </a>
   </div>
@@ -259,12 +259,12 @@
           let actionButtons = '';
           if (status === 'draft') {
             actionButtons = `
-              <a href="/sales/estimates/${estimate.id}.html" class="btn btn-outline btn-sm">編集</a>
+              <a href="/sales/estimates/${estimate.id}" class="btn btn-outline btn-sm">編集</a>
               <button class="btn btn-primary btn-sm" onclick="sendEstimate('${estimate.id}')">送付する</button>
             `;
           } else if (status === 'sent') {
             actionButtons = `
-              <a href="/sales/estimates/${estimate.id}.html" class="btn btn-outline btn-sm">詳細</a>
+              <a href="/sales/estimates/${estimate.id}" class="btn btn-outline btn-sm">詳細</a>
               <button class="btn btn-outline btn-sm" onclick="exportPDF('${estimate.id}')">
                 <i class="fas fa-file-pdf"></i> PDF出力
               </button>
@@ -272,12 +272,12 @@
             `;
           } else if (status === 'approved') {
             actionButtons = `
-              <a href="/sales/estimates/${estimate.id}.html" class="btn btn-outline btn-sm">詳細</a>
-              <a href="/sales/orders.html?estimate=${estimate.id}" class="btn btn-primary btn-sm">発注へ</a>
+              <a href="/sales/estimates/${estimate.id}" class="btn btn-outline btn-sm">詳細</a>
+              <a href="/sales/orders?estimate=${estimate.id}" class="btn btn-primary btn-sm">発注へ</a>
             `;
           } else if (status === 'rejected') {
             actionButtons = `
-              <a href="/sales/estimates/${estimate.id}.html" class="btn btn-outline btn-sm">詳細</a>
+              <a href="/sales/estimates/${estimate.id}" class="btn btn-outline btn-sm">詳細</a>
             `;
           }
           

@@ -266,8 +266,8 @@
       }
     }
     
-    const loginLink = currentHeader.querySelector('a[href="/signin.html"]');
-    const signupLink = currentHeader.querySelector('a[href="/signup.html"]');
+    const loginLink = currentHeader.querySelector('a[href="/signin.html"], a[href="/signin"]');
+    const signupLink = currentHeader.querySelector('a[href="/signup.html"], a[href="/signup"]');
     
     if (role === 'guest') {
       // ゲストの場合はログイン・新規登録リンクを表示

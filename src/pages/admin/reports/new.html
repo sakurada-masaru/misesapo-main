@@ -72,7 +72,7 @@
 
     <!-- 送信ボタン -->
     <div class="form-actions">
-      <button type="button" class="btn btn-outline btn-block" onclick="window.location.href='/admin/reports.html'">キャンセル</button>
+      <button type="button" class="btn btn-outline btn-block" onclick="window.location.href='/admin/reports'">キャンセル</button>
       <button type="submit" class="btn btn-primary btn-block">
         <i class="fas fa-check-circle"></i>
         レポートを作成
@@ -740,10 +740,10 @@
         alert('レポートを作成しました');
         // 作成したレポートの詳細ページにリダイレクト
         if (result.report_id) {
-          window.location.href = `/reports/${result.report_id}.html`;
+          window.location.href = `/reports/${result.report_id}`;
         } else {
           // report_idが取得できない場合はレポート一覧にリダイレクト
-          window.location.href = '/admin/reports.html';
+          window.location.href = '/admin/reports';
         }
       } catch (error) {
         console.error('Error submitting report:', error);

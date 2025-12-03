@@ -13,7 +13,7 @@
 <!-- サイドバー -->
 <aside class="sidebar" id="admin-sidebar">
   <div class="sidebar-header">
-    <a href="/staff/mypage.html" class="logo-link">
+    <a href="/staff/mypage" class="logo-link">
       <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
       <span class="logo-text">ミセサポ</span>
     </a>
@@ -24,40 +24,40 @@
   </div>
 
   <nav class="sidebar-nav">
-    <a href="/staff/mypage.html" class="nav-item" data-page="mypage">
+    <a href="/staff/mypage" class="nav-item" data-page="mypage">
       <i class="fas fa-user-circle"></i>
       <span class="nav-label">マイページ</span>
     </a>
-    <a href="/staff/attendance-history.html" class="nav-item" data-page="attendance-history">
+    <a href="/staff/attendance-history" class="nav-item" data-page="attendance-history">
       <i class="fas fa-history"></i>
       <span class="nav-label">出勤履歴</span>
     </a>
-    <a href="/staff/daily-reports.html" class="nav-item" data-page="daily-reports">
+    <a href="/staff/daily-reports" class="nav-item" data-page="daily-reports">
       <i class="fas fa-edit"></i>
       <span class="nav-label">日報</span>
     </a>
-    <a href="/staff/schedule.html" class="nav-item" data-page="schedule">
+    <a href="/staff/schedule" class="nav-item" data-page="schedule">
       <i class="fas fa-calendar-alt"></i>
       <span class="nav-label">スケジュール</span>
     </a>
-    <a href="/staff/assignments.html" class="nav-item" data-page="assignments">
+    <a href="/staff/assignments" class="nav-item" data-page="assignments">
       <i class="fas fa-tasks"></i>
       <span class="nav-label">作業一覧</span>
     </a>
-    <a href="/staff/reports.html" class="nav-item" data-page="reports">
+    <a href="/staff/reports" class="nav-item" data-page="reports">
       <i class="fas fa-clipboard-list"></i>
       <span class="nav-label">レポート一覧</span>
     </a>
-    <a href="/cleaning-manual.html" class="nav-item" data-page="cleaning-manual">
+    <a href="/cleaning-manual" class="nav-item" data-page="cleaning-manual">
       <i class="fas fa-book"></i>
       <span class="nav-label">清掃マニュアル</span>
     </a>
-    <a href="/announcements.html" class="nav-item" data-page="announcements">
+    <a href="/announcements" class="nav-item" data-page="announcements">
       <i class="fas fa-bullhorn"></i>
       <span class="nav-label">お知らせ</span>
     </a>
     <div class="nav-divider"></div>
-    <a href="/staff/mypage/settings.html" class="nav-item active" data-page="settings">
+    <a href="/staff/mypage/settings" class="nav-item active" data-page="settings">
       <i class="fas fa-cog"></i>
       <span class="nav-label">設定</span>
     </a>
@@ -269,7 +269,7 @@
               <span class="setting-label">ヘルプ・サポート</span>
               <span class="setting-description">よくある質問やお問い合わせ</span>
             </div>
-            <a href="/help.html" class="btn btn-outline btn-sm">
+            <a href="/help" class="btn btn-outline btn-sm">
               <i class="fas fa-question-circle"></i> 開く
             </a>
           </div>
@@ -808,7 +808,7 @@
       if (window.CognitoAuth) {
         await window.CognitoAuth.signOut();
       }
-      window.location.href = '/staff/signin.html';
+      window.location.href = '/signin';
     });
 
     // システムテーマ変更を監視

@@ -81,7 +81,7 @@
 
     <!-- 送信ボタン -->
     <div class="form-actions">
-      <button type="button" class="btn btn-outline btn-block" onclick="window.location.href='/admin/reports.html'">キャンセル</button>
+      <button type="button" class="btn btn-outline btn-block" onclick="window.location.href='/admin/reports'">キャンセル</button>
       <button type="submit" class="btn btn-primary btn-block">
         <i class="fas fa-check-circle"></i>
         レポートを更新
@@ -845,10 +845,10 @@
         // 更新したレポートの詳細ページにリダイレクト
         const reportId = document.getElementById('report-id').value;
         if (reportId) {
-          window.location.href = `/reports/${reportId}.html`;
+          window.location.href = `/reports/${reportId}`;
         } else {
           // report_idが取得できない場合はレポート一覧にリダイレクト
-          window.location.href = '/admin/reports.html';
+          window.location.href = '/admin/reports';
         }
       } catch (error) {
         console.error('Error updating report:', error);

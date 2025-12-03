@@ -4,7 +4,7 @@
 
 <main id="main" class="container admin-partners-new">
   <div class="page-header">
-    <a href="/admin/partners.html" class="back-btn">
+    <a href="/admin/partners" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
     <h1 class="page-title">新規パートナー企業登録</h1>
@@ -112,7 +112,7 @@
 
     <!-- フォームアクション -->
     <div class="form-actions">
-      <button type="button" class="btn btn-outline" onclick="window.location.href='/admin/partners.html'">
+      <button type="button" class="btn btn-outline" onclick="window.location.href='/admin/partners'">
         <i class="fas fa-times"></i>
         キャンセル
       </button>
@@ -327,7 +327,7 @@
         if (confirm('パートナー企業を登録しますか？\n\n（現在はモック実装です。実際の登録は今後実装予定です）')) {
           alert('パートナー企業の登録が完了しました。\n\n（現在はモック実装です）');
           // 一覧ページに戻る
-          window.location.href = '/admin/partners.html';
+          window.location.href = '/admin/partners';
         }
       });
     })();

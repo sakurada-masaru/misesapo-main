@@ -42,7 +42,7 @@
 <!-- Cart and Categories -->
 <section class="container section-gap-lg">
   <div class="cart-row">
-    <a class="btn btn-primary cart-button" href="/cart.html">
+    <a class="btn btn-primary cart-button" href="/cart">
       <i class="fas fa-shopping-cart"></i>
       <span>カートを見る</span>
       <span class="cart-badge">0</span>
@@ -60,7 +60,7 @@
     <!-- Service Items (generated) -->
     @foreach $service_items
     <article class="card-service" data-id="{{ id }}" data-category="{{ category }}">
-      <a href="/service/{{ id }}.html" class="card-service-link">
+      <a href="/service/{{ id }}" class="card-service-link">
         <div class="thumb">
           <img src="{{ image }}" alt="{{ title }}" loading="lazy" decoding="async" />
         </div>

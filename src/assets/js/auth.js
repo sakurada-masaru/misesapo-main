@@ -17,7 +17,7 @@
   const getRoleDisplayName = window.RoleConfig?.getRoleDisplayName || function(role) { return role; };
   const getNavigationForRole = window.RoleConfig?.getNavigationForRole || function(role) { return []; };
   const getMasterNavigation = window.RoleConfig?.getMasterNavigation || function() { return {}; };
-  const getDefaultPageForRole = window.RoleConfig?.getDefaultPageForRole || function(role) { return '/index.html'; };
+  const getDefaultPageForRole = window.RoleConfig?.getDefaultPageForRole || function(role) { return '/'; };
   
   // 認証設定
   const AUTH_KEY = 'misesapo_auth';
@@ -416,7 +416,7 @@
     
     // ログインページにリダイレクト
     const basePath = getBasePath();
-    window.location.href = basePath === '/' ? '/signin.html' : basePath + 'signin.html';
+    window.location.href = basePath === '/' ? '/signin' : basePath + 'signin';
   }
   
   /**
@@ -653,10 +653,15 @@
       '/voice.html',
       '/announcements.html',
       '/privacy-policy.html',
+      '/privacy-policy',
       '/service-terms.html',
+      '/service-terms',
       '/security-policy.html',
+      '/security-policy',
       '/workplace-policy.html',
+      '/workplace-policy',
       '/antisocial-declaration.html',
+      '/antisocial-declaration',
       '/cleaning-manual.html',
       '/teikiseisou.html',
       '/lp.html',
@@ -665,6 +670,7 @@
       '/customers.html',
       '/customers-support-desk.html',
       '/tokushoho.html',
+      '/tokushoho',
       '/signin.html',
       '/signup.html',
       '/signup/',            // /signup/2.html など
@@ -672,13 +678,27 @@
     ];
     
     // パブリックページかどうかをチェック
+    // .htmlを削除して比較（.htmlあり/なしの両方に対応）
+    const normalizePathForCheck = (path) => {
+      if (path.endsWith('.html')) {
+        return path.slice(0, -5); // .htmlを削除
+      }
+      return path;
+    };
+    const normalizedPathWithoutHtml = normalizePathForCheck(normalizedPath);
+    
     const isPublicPage = publicPages.some(page => {
       if (page.endsWith('/')) {
         // ディレクトリパスの場合は前方一致
         return normalizedPath.startsWith(page) || currentPath.includes(page);
       }
-      // 完全一致
-      return normalizedPath === page || currentPath.endsWith(page);
+      // .htmlを削除して比較
+      const pageWithoutHtml = normalizePathForCheck(page);
+      // 完全一致（.htmlあり/なしの両方に対応）
+      return normalizedPath === page || 
+             normalizedPathWithoutHtml === pageWithoutHtml ||
+             currentPath.endsWith(page) ||
+             currentPath.endsWith(pageWithoutHtml);
     });
     
     if (isPublicPage) {

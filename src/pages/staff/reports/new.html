@@ -8,13 +8,13 @@
   <!-- パンくずリスト -->
   <nav class="breadcrumb" aria-label="パンくずリスト">
     <ol class="breadcrumb-list">
-      <li class="breadcrumb-item"><a href="/staff/dashboard.html">ダッシュボード</a></li>
+      <li class="breadcrumb-item"><a href="/staff/dashboard">ダッシュボード</a></li>
       <li class="breadcrumb-item" aria-current="page">レポート作成</li>
     </ol>
   </nav>
   
   <div class="page-header">
-    <a href="/staff/dashboard.html" class="back-btn">
+    <a href="/staff/dashboard" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
     <h1 class="page-title">レポート作成</h1>
@@ -183,7 +183,7 @@
 
     <!-- 送信ボタン -->
     <div class="form-actions">
-      <button type="button" class="btn btn-outline btn-block btn-large" onclick="window.location.href='/staff/dashboard.html'">キャンセル</button>
+      <button type="button" class="btn btn-outline btn-block btn-large" onclick="window.location.href='/staff/dashboard'">キャンセル</button>
       <button type="submit" class="btn btn-primary btn-block btn-large" id="submit-btn">
         <i class="fas fa-check-circle"></i>
         作業完了を報告
@@ -893,7 +893,7 @@
       if (!navigator.onLine) {
         localStorage.setItem('pending-report', JSON.stringify(reportData));
         alert('オフラインのため、データを保存しました。オンラインになったら自動的に送信されます。');
-        window.location.href = '/staff/dashboard.html';
+        window.location.href = '/staff/dashboard';
         return;
       }
 
@@ -933,7 +933,7 @@
           alert('レポートを送信しました。\n\n注意: スケジュールの更新に失敗しました。管理者に連絡してください。');
         }
         
-        window.location.href = '/staff/dashboard.html';
+        window.location.href = '/staff/dashboard';
 
       } catch (error) {
         console.error('Submit error:', error);

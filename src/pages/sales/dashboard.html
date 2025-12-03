@@ -20,7 +20,7 @@
             <div class="greeting">こんにちは</div>
             <div class="user-name" id="user-name">営業担当</div>
           </div>
-          <a href="/index.html" class="header-action">
+          <a href="/" class="header-action">
             <i class="fas fa-sign-out-alt"></i>
       </a>
         </header>
@@ -422,7 +422,7 @@
               顧客・店舗情報、清掃希望日、時間、作業内容（例: グリストラップ清掃・窓拭き）をまとめて登録できます。
             </p>
 
-            <a class="btn-primary" href="/sales/schedules/new.html" style="width:100%; text-align:center; text-decoration:none;">
+            <a class="btn-primary" href="/sales/schedules/new" style="width:100%; text-align:center; text-decoration:none;">
               <i class="fas fa-calendar-plus"></i> 新規スケジュールを作成
             </a>
         </div>
@@ -2726,11 +2726,11 @@
           <div class="client-detail-actions">
             <h4 class="client-detail-section-title">クイックアクション</h4>
             <div class="client-detail-action-buttons">
-              <a href="/sales/estimates/new.html?client_id=${id}" class="client-detail-action-btn">
+              <a href="/sales/estimates/new?client_id=${id}" class="client-detail-action-btn">
                 <i class="fas fa-file-invoice"></i>
                 <span>見積もり作成</span>
               </a>
-              <a href="/sales/orders.html?client_id=${id}" class="client-detail-action-btn">
+              <a href="/sales/orders?client_id=${id}" class="client-detail-action-btn">
                 <i class="fas fa-shopping-cart"></i>
                 <span>発注履歴</span>
               </a>

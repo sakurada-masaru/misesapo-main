@@ -16,7 +16,7 @@
           <button type="button" class="btn btn-help" id="btn-help" title="使い方を確認">
             <i class="fas fa-question-circle"></i>
           </button>
-          <a href="/admin/services/new.html" class="btn btn-primary">
+          <a href="/admin/services/new" class="btn btn-primary">
             <i class="fas fa-plus"></i> 新規サービス登録
           </a>
         </div>
@@ -184,7 +184,7 @@
               <i class="fas fa-inbox" style="font-size: 3rem; color: #9ca3af; margin-bottom: 16px;"></i>
               <h3 style="font-size: 1.25rem; color: #374151; margin-bottom: 8px;">サービスがありません</h3>
               <p style="color: #6b7280; margin-bottom: 24px;">新規サービスを登録してください。</p>
-              <a href="/admin/services/new.html" class="btn btn-primary">
+              <a href="/admin/services/new" class="btn btn-primary">
                 <i class="fas fa-plus"></i> 新規サービス登録
               </a>
             </div>
@@ -264,7 +264,7 @@
                 <div class="service-header">
                 <div class="service-info">
                   <h3 class="service-name">
-                    <a href="${resolvePath('/admin/services/' + service.id + '.html')}" class="service-name-link">${service.title || ''}</a>
+                    <a href="${resolvePath('/admin/services/' + service.id)}" class="service-name-link">${service.title || ''}</a>
                   </h3>
                   <div class="service-meta">
                     <span class="service-category">${category}</span>
@@ -287,10 +287,10 @@
                 ` : '<div class="service-problems placeholder"><strong>問題点:</strong> <span class="placeholder-text">未設定</span></div>'}
               </div>
               <div class="service-actions">
-              <a href="${resolvePath('/admin/services/' + service.id + '.html')}" class="btn btn-outline btn-sm">
+              <a href="${resolvePath('/admin/services/' + service.id)}" class="btn btn-outline btn-sm">
                 <i class="fas fa-eye"></i> 詳細
               </a>
-              <a href="${resolvePath('/admin/services/' + service.id + '/edit.html')}" class="btn btn-outline btn-sm">
+              <a href="${resolvePath('/admin/services/' + service.id + '/edit')}" class="btn btn-outline btn-sm">
                 <i class="fas fa-edit"></i> 編集
               </a>
                 <button class="btn btn-outline btn-sm" onclick="deleteService(${service.id})">

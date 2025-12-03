@@ -98,21 +98,21 @@ const ROLE_CONFIG = {
   
   // ロールごとのログイン後リダイレクト先
   defaultPages: {
-    'customer': '/mypage.html',
-    'staff': '/staff/mypage.html',  // 清掃員はマイページ（勤怠機能使用）
-    'office': '/admin/dashboard.html',  // 事務は管理ダッシュボード
-    'designer': '/admin/dashboard.html',  // デザイナーは管理ダッシュボード
-    'general_affairs': '/admin/dashboard.html',  // 総務は管理ダッシュボード
-    'operation': '/admin/dashboard.html',  // 運営は管理ダッシュボード
-    'accounting': '/admin/dashboard.html',  // 経理は管理ダッシュボード
-    'human_resources': '/admin/dashboard.html',  // 人事は管理ダッシュボード
-    'contractor': '/staff/mypage.html',  // 外部委託はマイページ（勤怠機能使用）
-    'concierge': '/sales/dashboard.html',  // コンシェルジュは営業ダッシュボード
-    'sales': '/sales/dashboard.html',  // 営業は営業ダッシュボード
-    'admin': '/admin/dashboard.html',  // 管理者は管理ダッシュボード
-    'developer': '/admin/dashboard.html',  // 開発者は管理ダッシュボード
-    'master': '/admin/sitemap.html',  // マスターはサイトマップ
-    'guest': '/index.html'
+    'customer': '/mypage',
+    'staff': '/staff/mypage',  // 清掃員はマイページ（勤怠機能使用）
+    'office': '/admin/dashboard',  // 事務は管理ダッシュボード
+    'designer': '/admin/dashboard',  // デザイナーは管理ダッシュボード
+    'general_affairs': '/admin/dashboard',  // 総務は管理ダッシュボード
+    'operation': '/admin/dashboard',  // 運営は管理ダッシュボード
+    'accounting': '/admin/dashboard',  // 経理は管理ダッシュボード
+    'human_resources': '/admin/dashboard',  // 人事は管理ダッシュボード
+    'contractor': '/staff/mypage',  // 外部委託はマイページ（勤怠機能使用）
+    'concierge': '/sales/dashboard',  // コンシェルジュは営業ダッシュボード
+    'sales': '/sales/dashboard',  // 営業は営業ダッシュボード
+    'admin': '/admin/dashboard',  // 管理者は管理ダッシュボード
+    'developer': '/admin/dashboard',  // 開発者は管理ダッシュボード
+    'master': '/admin/sitemap',  // マスターはサイトマップ
+    'guest': '/'
   },
   
   // ページ別アクセス制御（パスパターン）
@@ -133,7 +133,18 @@ const ROLE_CONFIG = {
     '/customers.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/customers-support-desk.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/support/': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/privacy-policy.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/privacy-policy': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/service-terms.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/service-terms': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/security-policy.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/security-policy': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/workplace-policy.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/workplace-policy': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/antisocial-declaration.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/antisocial-declaration': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/tokushoho.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
+    '/tokushoho': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/about.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     '/lp.html': ['guest', 'customer', 'staff', 'office', 'designer', 'concierge', 'admin', 'developer', 'master'],
     
@@ -205,7 +216,7 @@ const ROLE_CONFIG = {
     ],
     concierge: [
       { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
-      { href: '/sales/dashboard.html#client', label: '顧客管理', icon: 'fa-users' },
+      { href: '/sales/dashboard#client', label: '顧客管理', icon: 'fa-users' },
       { href: '/sales/clients/new.html', label: '新規顧客登録', icon: 'fa-user-plus' },
       { href: '/sales/estimates.html', label: '見積もり一覧', icon: 'fa-file-invoice' },
       { href: '/sales/estimates/new.html', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },
@@ -279,7 +290,7 @@ const ROLE_CONFIG = {
     ],
     '営業マン（コンシェルジュ）': [
       { href: '/sales/dashboard.html', label: 'ダッシュボード', icon: 'fa-tachometer-alt' },
-      { href: '/sales/dashboard.html#client', label: '顧客管理', icon: 'fa-users' },
+      { href: '/sales/dashboard#client', label: '顧客管理', icon: 'fa-users' },
       { href: '/sales/clients/new.html', label: '新規顧客登録', icon: 'fa-user-plus' },
       { href: '/sales/estimates.html', label: '見積もり一覧', icon: 'fa-file-invoice' },
       { href: '/sales/estimates/new.html', label: '見積もり作成', icon: 'fa-file-invoice-dollar' },

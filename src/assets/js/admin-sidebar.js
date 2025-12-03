@@ -173,7 +173,7 @@
       }
 
       if (email) {
-        mypageLink.href = `/staff/mypage.html?email=${encodeURIComponent(email)}`;
+        mypageLink.href = `/staff/mypage?email=${encodeURIComponent(email)}`;
         mypageLink.style.display = 'flex';
       }
     } catch (error) {

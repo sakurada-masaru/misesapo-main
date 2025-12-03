@@ -25,11 +25,6 @@ function resolvePath(path) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  const normalHeader = document.querySelector('.normal-header');
-  if (normalHeader) {
-    normalHeader.classList.add('visible');
-  }
-
   document.querySelectorAll('a[href^="/"]').forEach(link => {
     const href = link.getAttribute('href');
     if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {

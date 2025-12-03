@@ -28,20 +28,7 @@ function resolvePath(path) {
     return window.location.origin + resolvedPath;
 }
 
-// 職場環境改善に向けた方針ページでは通常ヘッダーを常時表示
 document.addEventListener('DOMContentLoaded', function() {
-    const normalHeader = document.querySelector('.normal-header');
-    if (normalHeader) {
-        normalHeader.classList.add('visible');
-        // スクロールイベントでクラスを削除しないようにする
-        const originalRemove = normalHeader.classList.remove;
-        normalHeader.classList.remove = function(...args) {
-            if (args[0] !== 'visible') {
-                originalRemove.apply(this, args);
-            }
-        };
-    }
-    
     // リンクを解決
     document.querySelectorAll('a[href^="/"]').forEach(link => {
         const href = link.getAttribute('href');

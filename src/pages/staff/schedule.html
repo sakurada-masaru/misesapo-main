@@ -1248,12 +1248,12 @@
                 <button class="action-btn btn-start" onclick="startWork('${schedule.id}')">
                   <i class="fas fa-play-circle"></i> 作業開始
                 </button>
-                <a href="/staff/reports/new.html?schedule=${schedule.id}" class="action-btn btn-report">
+                <a href="/staff/reports/new?schedule=${schedule.id}" class="action-btn btn-report">
                   <i class="fas fa-file-alt"></i> レポート作成
                 </a>
               ` : ''}
               ${isCompleted ? `
-                <a href="/staff/reports/new.html?schedule=${schedule.id}" class="action-btn btn-report">
+                <a href="/staff/reports/new?schedule=${schedule.id}" class="action-btn btn-report">
                   <i class="fas fa-file-alt"></i> レポート確認
                 </a>
               ` : ''}

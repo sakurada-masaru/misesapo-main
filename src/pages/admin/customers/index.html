@@ -1698,10 +1698,10 @@
       // リンク生成（データがない場合はテキストのみ）
       const storeLink = `/admin/customers/stores/detail.html?id=${store.id}`;
       const brandCell = brand 
-        ? `<a href="/admin/customers/brands/detail.html?id=${brand.id}" class="table-link brand-link">${escapeHtml(brandName)}</a>`
+        ? `<a href="/admin/customers/brands/detail?id=${brand.id}" class="table-link brand-link">${escapeHtml(brandName)}</a>`
         : `<span class="text-muted">${escapeHtml(brandName || '-')}</span>`;
       const clientCell = client 
-        ? `<a href="/admin/customers/clients/detail.html?id=${client.id}" class="table-link client-link">${escapeHtml(client.name || client.company_name || '-')}</a>`
+        ? `<a href="/admin/customers/clients/detail?id=${client.id}" class="table-link client-link">${escapeHtml(client.name || client.company_name || '-')}</a>`
         : `<span class="text-muted">-</span>`;
       
       return `
