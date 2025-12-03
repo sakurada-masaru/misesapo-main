@@ -9,50 +9,178 @@
 <script src="/js/cognito_auth.js"></script>
 <!-- role_config.jsはbase.htmlレイアウトで読み込まれるため、ここでは読み込まない -->
 
-<main id="main" class="container max-720">
-  <div class="text-center mt-24 mb-8">
-    <img src="/images/logo_144x144.png" alt="ミセサポ" class="h-48" />
-    <h2 class="fw-700 text-20 text-gray-900 mt-16">従業員ログイン</h2>
-  </div>
-  <hr class="divider" />
+<style>
+  .signin-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
+  }
+  .signin-container {
+    width: 100%;
+    max-width: 420px;
+  }
+  .signin-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px 32px;
+  }
+  .signin-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .signin-logo img {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 16px;
+  }
+  .signin-logo h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+  .signin-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 24px 0;
+  }
+  .signin-description {
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .signin-form .form-group {
+    margin-bottom: 20px;
+  }
+  .signin-form .label {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+  .signin-form .input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    box-sizing: border-box;
+  }
+  .signin-form .input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+  }
+  .signin-form .field {
+    position: relative;
+  }
+  .signin-form .toggle-visibility {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .signin-form .toggle-visibility:hover {
+    color: #6b7280;
+  }
+  .signin-form .btn-signin {
+    width: 100%;
+    padding: 14px 24px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .signin-form .btn-signin:hover {
+    background: var(--primary-600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+  }
+  .signin-form .btn-signin:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .signin-error {
+    padding: 12px 16px;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    color: #991b1b;
+    font-size: 0.875rem;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 480px) {
+    .signin-card {
+      padding: 32px 24px;
+    }
+  }
+</style>
 
-  <section class="card p-24">
-    <p class="small text-center mb-16">
-      メールアドレスとパスワードを入力してログインしてください。<br />
-      <span class="text-gray-600">※従業員の新規登録は管理者が行います。</span>
-    </p>
-
-    <form id="staff-signin-form" action="#" method="post" class="stack lg mt-8">
-      <div>
-        <label for="email" class="label">
-          メールアドレス
-          <span class="pill pill-required" style="margin-left: 8px;">必須</span>
-        </label>
-        <input type="email" id="email" name="email" class="input" placeholder="name@example.com" required />
+<div class="signin-wrapper">
+  <div class="signin-container">
+    <div class="signin-card">
+      <div class="signin-logo">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+        <h2>従業員ログイン</h2>
       </div>
+      
+      <div class="signin-divider"></div>
 
-      <div>
-        <label for="password" class="label">
-          パスワード
-          <span class="pill pill-required" style="margin-left: 8px;">必須</span>
-        </label>
-        <div class="field">
-          <input type="password" id="password" name="password" class="input" required />
-          <button type="button" class="toggle-visibility" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password')">
-            <i class="fas fa-eye"></i>
-          </button>
+      <p class="signin-description">
+        メールアドレスとパスワードを入力してログインしてください。<br />
+        <span style="color: #9ca3af;">※従業員の新規登録は管理者が行います。</span>
+      </p>
+
+      <form id="staff-signin-form" action="#" method="post" class="signin-form">
+        <div class="form-group">
+          <label for="email" class="label">
+            メールアドレス
+            <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+          </label>
+          <input type="email" id="email" name="email" class="input" placeholder="name@example.com" required />
         </div>
-      </div>
 
-      <div id="signin-error" class="error-message" style="display: none; padding: 12px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; color: #991b1b; margin-bottom: 16px;"></div>
+        <div class="form-group">
+          <label for="password" class="label">
+            パスワード
+            <span class="pill pill-required" style="margin-left: 8px;">必須</span>
+          </label>
+          <div class="field">
+            <input type="password" id="password" name="password" class="input" required />
+            <button type="button" class="toggle-visibility" aria-label="パスワードを表示" onclick="togglePasswordVisibility('password')">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
 
-      <div>
-        <button type="submit" class="btn btn-primary btn-round btn-full btn-lg fw-700">ログイン</button>
-      </div>
-    </form>
+        <div id="signin-error" class="signin-error" style="display: none;"></div>
 
-  </section>
-</main>
+        <button type="submit" class="btn-signin">ログイン</button>
+      </form>
+    </div>
+  </div>
+</div>
 
 <script>
   function togglePasswordVisibility(id) {
