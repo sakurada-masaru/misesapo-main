@@ -1104,7 +1104,105 @@
             }
         }
 
-        /* レスポンシブ対応 */
+        /* レスポンシブ対応 - タブレット（768px〜1024px） */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            /* ヒーローセクション */
+            .hero-headings {
+                left: 10%;
+                top: calc(50% + 30px);
+                transform: translate(calc(-50% - 30px), -50%);
+                gap: 15px;
+            }
+
+            .hero-headings .hero-heading img {
+                height: 120px;
+            }
+
+            /* 固定バナー */
+            .fixed-banner {
+                top: 350px;
+                right: 30px;
+                width: 280px;
+                max-width: 280px;
+            }
+
+            /* ニュースセクション */
+            .news-section-wrapper {
+                top: 80px;
+                right: 30px;
+                width: 300px;
+            }
+
+            /* サービスセクション */
+            .service-sections .container {
+                padding: 0 20px;
+            }
+
+            .service-sections-title {
+                font-size: 28px;
+            }
+
+            /* プランカード */
+            .plan-cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+            }
+
+            .plan-card {
+                padding: 20px 15px;
+            }
+
+            .plan-card__period {
+                font-size: 28px;
+            }
+
+            /* サービスセクションアイテム */
+            .service-section-item__content {
+                padding: 40px 30px;
+            }
+
+            .service-section-item__title {
+                font-size: 32px;
+            }
+
+            .service-section-item__features {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            /* ご利用イメージ */
+            .use-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+
+            /* お客様の声 */
+            .voice-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+
+            /* FAQ */
+            .faq-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* メガメニュー調整 */
+            .mega-menu-submenu-inner {
+                flex-wrap: wrap;
+            }
+
+            .mega-menu-column {
+                min-width: 200px;
+            }
+
+            /* フッター */
+            .footer-content {
+                flex-direction: column;
+                gap: 30px;
+            }
+        }
+
+        /* レスポンシブ対応 - スマートフォン */
         @media (max-width: 768px) {
             .hero-headings {
                 display: none;
