@@ -4748,14 +4748,14 @@
             })();
         </script>
         <script>
-            // 発注ボタンの制御
+            // ログインボタンの制御
             (function() {
-                const orderButton = document.querySelector('.fixed-order-button');
-                if (!orderButton) return;
+                const loginButton = document.querySelector('.fixed-order-button');
+                if (!loginButton) return;
                 
-                orderButton.addEventListener('click', function(e) {
+                loginButton.addEventListener('click', function(e) {
                     e.preventDefault();
-                    window.location.href = '/service.html';
+                    window.location.href = '/signin.html';
                 });
             })();
         </script>
