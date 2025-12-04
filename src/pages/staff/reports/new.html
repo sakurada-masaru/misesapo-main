@@ -1825,6 +1825,9 @@
         const idToken = await getFirebaseIdToken();
         console.log('[Submit] Firebase token:', idToken ? 'Got token' : 'No token');
         
+        console.log('[Submit] Sending request to:', `${REPORT_API}/staff/reports`);
+        console.log('[Submit] Request body size:', JSON.stringify(reportData).length, 'bytes');
+        
         const response = await fetch(`${REPORT_API}/staff/reports`, {
           method: 'POST',
           headers: {
@@ -1834,8 +1837,13 @@
           body: JSON.stringify(reportData)
         });
         
-        console.log('[Submit] Response status:', response.status);
-        const responseData = await response.json().catch(() => ({}));
+        console.log('[Submit] Response received, status:', response.status);
+        const responseData = await response.json().catch(async (e) => {
+          console.error('[Submit] Failed to parse JSON:', e);
+          const text = await response.text();
+          console.error('[Submit] Response text:', text);
+          return {};
+        });
         console.log('[Submit] Response data:', responseData);
         
         if (!response.ok) {
@@ -1847,7 +1855,8 @@
         window.location.href = '/staff/dashboard';
         
       } catch (error) {
-        console.error('Submit error:', error);
+        console.error('[Submit] Error caught:', error);
+        console.error('[Submit] Error stack:', error.stack);
         alert('送信に失敗しました: ' + error.message);
         const submitBtn = document.getElementById('ind-submit-btn');
         submitBtn.disabled = false;
