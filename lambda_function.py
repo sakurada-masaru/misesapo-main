@@ -216,6 +216,12 @@ def lambda_handler(event, context):
             report_id = normalized_path.split('/')[-1]
             if method == 'GET':
                 return get_public_report(report_id, headers)
+        elif normalized_path == '/staff/report-images':
+            # レポート用画像のアップロード・一覧取得
+            if method == 'POST':
+                return upload_report_image(event, headers)
+            elif method == 'GET':
+                return get_report_images(event, headers)
         elif normalized_path == '/admin/dashboard/stats':
             # 管理ダッシュボードの統計データを取得
             if method == 'GET':
@@ -1153,6 +1159,25 @@ def check_admin_permission(user_info):
     """
     return user_info.get('role') == 'admin'
 
+def convert_to_s3_url(path):
+    """
+    相対パスをS3の完全URLに変換
+    - /images-public/xxx.png → https://bucket.s3.region.amazonaws.com/images-public/xxx.png
+    - すでにhttpで始まる場合はそのまま返す
+    """
+    if not path:
+        return path
+    
+    # すでに完全なURLの場合はそのまま返す
+    if path.startswith('http://') or path.startswith('https://'):
+        return path
+    
+    # 先頭のスラッシュを除去
+    clean_path = path.lstrip('/')
+    
+    # S3の完全URLを生成
+    return f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{clean_path}"
+
 def upload_photo_to_s3(base64_image, s3_key):
     """
     Base64エンコードされた画像をS3にアップロード
@@ -1163,13 +1188,12 @@ def upload_photo_to_s3(base64_image, s3_key):
             base64_image = base64_image.split(',')[-1]
         image_data = base64.b64decode(base64_image)
         
-        # S3にアップロード
+        # S3にアップロード（ACLなし - バケットポリシーで公開設定）
         s3_client.put_object(
             Bucket=S3_BUCKET_NAME,
             Key=s3_key,
             Body=image_data,
-            ContentType='image/jpeg',
-            ACL='public-read'  # 公開読み取り可能
+            ContentType='image/jpeg'
         )
         
         # 公開URLを生成
@@ -1178,6 +1202,204 @@ def upload_photo_to_s3(base64_image, s3_key):
     except Exception as e:
         print(f"Error uploading photo to S3: {str(e)}")
         raise
+
+def upload_report_photo_with_metadata(base64_image, category, cleaning_date, staff_id=None):
+    """
+    レポート用画像を日付単位でS3に保存し、メタデータをDynamoDBに保存
+    
+    Args:
+        base64_image: Base64エンコードされた画像
+        category: 'before' または 'after'
+        cleaning_date: 清掃日 (YYYY-MM-DD形式)
+        staff_id: 清掃員ID（オプション）
+    
+    Returns:
+        dict: { image_id, url, category, date }
+    """
+    try:
+        # 画像IDを生成（ユニークなUUID）
+        image_id = str(uuid.uuid4())[:8]
+        
+        # 日付をパース
+        date_parts = cleaning_date.split('-')
+        year = date_parts[0]
+        month = date_parts[1]
+        day = date_parts[2]
+        
+        # S3キーを生成（日付単位のパス）
+        # before/2025/12/04/abc12345.jpg
+        s3_key = f"{category}/{year}/{month}/{day}/{image_id}.jpg"
+        
+        # S3にアップロード
+        if ',' in base64_image:
+            base64_image = base64_image.split(',')[-1]
+        image_data = base64.b64decode(base64_image)
+        
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=s3_key,
+            Body=image_data,
+            ContentType='image/jpeg'
+        )
+        
+        # 公開URLを生成
+        photo_url = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
+        
+        # メタデータをDynamoDBに保存
+        report_images_table = dynamodb.Table('report-images')
+        metadata = {
+            'image_id': image_id,
+            'url': photo_url,
+            's3_key': s3_key,
+            'category': category,
+            'cleaning_date': cleaning_date,
+            'staff_id': staff_id or 'unknown',
+            'uploaded_at': datetime.now(timezone(timedelta(hours=9))).isoformat(),
+            'used_in_reports': []  # このカラムに使用されたレポートIDを追加
+        }
+        report_images_table.put_item(Item=metadata)
+        
+        print(f"[upload_report_photo] Saved: {s3_key}")
+        
+        return {
+            'image_id': image_id,
+            'url': photo_url,
+            'category': category,
+            'date': cleaning_date
+        }
+    except Exception as e:
+        print(f"Error uploading report photo: {str(e)}")
+        raise
+
+def get_report_images_by_date(cleaning_date, category=None):
+    """
+    日付で画像を取得
+    
+    Args:
+        cleaning_date: 清掃日 (YYYY-MM-DD形式)
+        category: 'before', 'after', または None（両方）
+    
+    Returns:
+        list: 画像メタデータのリスト
+    """
+    try:
+        report_images_table = dynamodb.Table('report-images')
+        
+        # 日付でフィルタ
+        if category:
+            response = report_images_table.scan(
+                FilterExpression=Attr('cleaning_date').eq(cleaning_date) & Attr('category').eq(category)
+            )
+        else:
+            response = report_images_table.scan(
+                FilterExpression=Attr('cleaning_date').eq(cleaning_date)
+            )
+        
+        images = response.get('Items', [])
+        
+        # uploaded_atでソート（新しい順）
+        images.sort(key=lambda x: x.get('uploaded_at', ''), reverse=True)
+        
+        return images
+    except Exception as e:
+        print(f"Error getting report images: {str(e)}")
+        return []
+
+def upload_report_image(event, headers):
+    """
+    レポート用画像をアップロード（清掃員用API）
+    
+    Request Body:
+        - image: Base64エンコードされた画像
+        - category: 'before' または 'after'
+        - cleaning_date: 清掃日 (YYYY-MM-DD形式)
+    """
+    try:
+        body = json.loads(event.get('body', '{}'))
+        
+        image_data = body.get('image')
+        category = body.get('category')
+        cleaning_date = body.get('cleaning_date')
+        staff_id = body.get('staff_id', 'unknown')
+        
+        # バリデーション
+        if not image_data:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': '画像データが必要です'}, ensure_ascii=False)
+            }
+        
+        if category not in ['before', 'after']:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'categoryは"before"または"after"を指定してください'}, ensure_ascii=False)
+            }
+        
+        if not cleaning_date:
+            # 清掃日が指定されていない場合は今日の日付を使用
+            cleaning_date = datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d')
+        
+        # 画像をアップロード
+        result = upload_report_photo_with_metadata(image_data, category, cleaning_date, staff_id)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'success': True,
+                'image': result
+            }, ensure_ascii=False)
+        }
+        
+    except Exception as e:
+        print(f"Error uploading report image: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
+
+def get_report_images(event, headers):
+    """
+    レポート用画像一覧を取得（画像倉庫API）
+    
+    Query Parameters:
+        - date: 清掃日 (YYYY-MM-DD形式)
+        - category: 'before', 'after', または指定なし（両方）
+    """
+    try:
+        # クエリパラメータを取得
+        params = event.get('queryStringParameters') or {}
+        cleaning_date = params.get('date')
+        category = params.get('category')
+        
+        if not cleaning_date:
+            # 日付が指定されていない場合は今日の日付を使用
+            cleaning_date = datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d')
+        
+        # 画像を取得
+        images = get_report_images_by_date(cleaning_date, category)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'date': cleaning_date,
+                'category': category,
+                'images': images,
+                'count': len(images)
+            }, ensure_ascii=False, default=str)
+        }
+        
+    except Exception as e:
+        print(f"Error getting report images: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
 
 def create_report(event, headers):
     """
@@ -1222,17 +1444,23 @@ def create_report(event, headers):
         
         # 写真をS3にアップロード
         photo_urls = {}
+        print(f"[DEBUG] work_items count: {len(body_json.get('work_items', []))}")
         for item in body_json.get('work_items', []):
             item_id = item['item_id']
+            print(f"[DEBUG] Processing item: {item_id}")
+            print(f"[DEBUG] Item photos: {item.get('photos', {})}")
             photo_urls[item_id] = {
                 'before': [],
                 'after': []
             }
             
             # 作業前の写真
+            before_photos = item.get('photos', {}).get('before', [])
+            print(f"[DEBUG] Before photos count: {len(before_photos)}")
             base64_counter_before = 0
-            for photo_data in item.get('photos', {}).get('before', []):
+            for photo_data in before_photos:
                 if photo_data:
+                    print(f"[DEBUG] Processing before photo: {photo_data[:100] if len(str(photo_data)) > 100 else photo_data}")
                     # Base64画像の場合はS3にアップロード
                     if isinstance(photo_data, str) and photo_data.startswith('data:image'):
                         base64_counter_before += 1
@@ -1240,16 +1468,20 @@ def create_report(event, headers):
                         try:
                             photo_url = upload_photo_to_s3(photo_data, photo_key)
                             photo_urls[item_id]['before'].append(photo_url)
+                            print(f"[DEBUG] Uploaded to S3: {photo_url}")
                         except Exception as e:
                             print(f"Error uploading before photo: {str(e)}")
                     else:
-                        # URLの場合はそのまま保持
-                        photo_urls[item_id]['before'].append(photo_data)
+                        # 相対パスまたはURLをS3の完全URLに変換
+                        s3_url = convert_to_s3_url(photo_data)
+                        photo_urls[item_id]['before'].append(s3_url)
+                        print(f"[DEBUG] Converted to S3 URL: {s3_url}")
             
             # 作業後の写真
             base64_counter_after = 0
             for photo_data in item.get('photos', {}).get('after', []):
                 if photo_data:
+                    print(f"[DEBUG] Processing after photo: {photo_data[:100] if len(str(photo_data)) > 100 else photo_data}")
                     # Base64画像の場合はS3にアップロード
                     if isinstance(photo_data, str) and photo_data.startswith('data:image'):
                         base64_counter_after += 1
@@ -1257,11 +1489,14 @@ def create_report(event, headers):
                         try:
                             photo_url = upload_photo_to_s3(photo_data, photo_key)
                             photo_urls[item_id]['after'].append(photo_url)
+                            print(f"[DEBUG] Uploaded to S3: {photo_url}")
                         except Exception as e:
                             print(f"Error uploading after photo: {str(e)}")
                     else:
-                        # URLの場合はそのまま保持
-                        photo_urls[item_id]['after'].append(photo_data)
+                        # 相対パスまたはURLをS3の完全URLに変換
+                        s3_url = convert_to_s3_url(photo_data)
+                        photo_urls[item_id]['after'].append(s3_url)
+                        print(f"[DEBUG] Converted to S3 URL: {s3_url}")
         
         # staff_idが指定されていない場合は、created_byを使用
         staff_id = body_json.get('staff_id') or user_info.get('uid', 'admin-uid')

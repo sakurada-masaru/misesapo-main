@@ -20,8 +20,22 @@
     <h1 class="page-title">レポート作成</h1>
   </div>
 
-  <!-- スケジュール選択（未選択時） -->
-  <div id="schedule-selector" class="form-section">
+  <!-- タブ切り替え -->
+  <div class="report-tabs">
+    <button type="button" class="tab-btn active" data-tab="schedule">
+      <i class="fas fa-calendar-check"></i>
+      スケジュール連携
+    </button>
+    <button type="button" class="tab-btn" data-tab="individual">
+      <i class="fas fa-plus-circle"></i>
+      個別レポート作成
+    </button>
+  </div>
+
+  <!-- タブ1: スケジュール連携 -->
+  <div id="tab-schedule" class="tab-content active">
+    <!-- スケジュール選択（未選択時） -->
+    <div id="schedule-selector" class="form-section">
     <h2 class="section-title">スケジュールを選択</h2>
     <p class="section-desc">レポートを作成するスケジュールを選択してください</p>
     <div id="schedule-list" class="schedule-list">
@@ -198,6 +212,84 @@
       </div>
     </div>
   </form>
+  </div><!-- /tab-schedule -->
+
+  <!-- タブ2: 個別レポート作成 -->
+  <div id="tab-individual" class="tab-content">
+    <form id="individual-report-form" class="report-form">
+      <!-- 店舗選択 -->
+      <div class="form-section">
+        <h2 class="section-title">店舗情報</h2>
+        <div class="form-group">
+          <label class="form-label">店舗を選択 <span class="required-badge">必須</span></label>
+          <div class="searchable-select" id="store-searchable-select">
+            <div class="searchable-select-input" id="store-select-display">
+              <span class="selected-text">店舗を検索...</span>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="searchable-select-dropdown" id="store-dropdown" style="display: none;">
+              <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" id="store-search-input" placeholder="店舗名で検索...">
+              </div>
+              <div class="select-options" id="store-options">
+                <!-- 動的に追加 -->
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="ind-store-id" name="store_id">
+          <input type="hidden" id="ind-store-name" name="store_name">
+        </div>
+      </div>
+
+      <!-- 作業日時 -->
+      <div class="form-section">
+        <h2 class="section-title">作業日時</h2>
+        <div class="form-group">
+          <label class="form-label">清掃日 <span class="required-badge">必須</span></label>
+          <input type="date" id="ind-cleaning-date" class="form-input" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">開始時刻</label>
+            <input type="time" id="ind-start-time" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">終了時刻</label>
+            <input type="time" id="ind-end-time" class="form-input">
+          </div>
+        </div>
+      </div>
+
+      <!-- 清掃項目 -->
+      <div class="form-section">
+        <h2 class="section-title">清掃項目</h2>
+        <div id="ind-work-items-container">
+          <!-- 動的に追加される -->
+        </div>
+        <button type="button" class="btn btn-outline btn-block" id="ind-add-work-item">
+          <i class="fas fa-plus"></i> 清掃項目を追加
+        </button>
+      </div>
+
+      <!-- 進捗 -->
+      <div class="form-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" id="ind-progress-fill" style="width: 0%;"></div>
+        </div>
+        <p class="progress-text" id="ind-progress-text">進捗: 0%</p>
+      </div>
+
+      <!-- 送信ボタン -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline btn-block btn-large" onclick="window.location.href='/staff/dashboard'">キャンセル</button>
+        <button type="submit" class="btn btn-primary btn-block btn-large" id="ind-submit-btn">
+          <i class="fas fa-check-circle"></i>
+          レポートを作成
+        </button>
+      </div>
+    </form>
+  </div><!-- /tab-individual -->
 
   <style>
     .staff-report-new {
@@ -257,6 +349,317 @@
       color: #6b7280;
       font-size: 0.9rem;
       margin: 0 0 16px;
+    }
+
+    /* タブUI */
+    .report-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: #f3f4f6;
+      padding: 4px;
+      border-radius: 12px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #6b7280;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      color: #374151;
+    }
+    .tab-btn.active {
+      background: #fff;
+      color: var(--primary, #FF6BA6);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .tab-btn i {
+      font-size: 1rem;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* フォーム要素追加 */
+    .form-select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary, #FF6BA6);
+    }
+
+    /* 検索可能セレクト */
+    .searchable-select {
+      position: relative;
+      width: 100%;
+    }
+    .searchable-select-input {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .searchable-select-input:hover {
+      border-color: #d1d5db;
+    }
+    .searchable-select-input.active {
+      border-color: var(--primary, #FF6BA6);
+      box-shadow: 0 0 0 3px rgba(255, 107, 166, 0.1);
+    }
+    .searchable-select-input .selected-text {
+      color: #6b7280;
+      font-size: 1rem;
+    }
+    .searchable-select-input .selected-text.has-value {
+      color: #111827;
+      font-weight: 500;
+    }
+    .searchable-select-input i {
+      color: #9ca3af;
+      transition: transform 0.2s;
+    }
+    .searchable-select-input.active i {
+      transform: rotate(180deg);
+    }
+    .searchable-select-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      max-height: 320px;
+      overflow: hidden;
+    }
+    .search-input-wrapper {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    .search-input-wrapper i {
+      color: #9ca3af;
+      margin-right: 10px;
+    }
+    .search-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 1rem;
+      outline: none;
+    }
+    .search-input::placeholder {
+      color: #9ca3af;
+    }
+    .select-options {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .select-option {
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .select-option:last-child {
+      border-bottom: none;
+    }
+    .select-option:hover {
+      background: #fdf2f8;
+    }
+    .select-option.selected {
+      background: #fce7f3;
+      color: var(--primary, #FF6BA6);
+      font-weight: 600;
+    }
+    .select-option-empty {
+      padding: 20px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 0.9rem;
+    }
+    .select-option .store-name {
+      font-weight: 500;
+      color: #111827;
+    }
+    .select-option.selected .store-name {
+      color: var(--primary, #FF6BA6);
+    }
+
+    /* 清掃項目カード */
+    .work-item-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .work-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .work-item-title {
+      font-weight: 600;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .work-item-remove {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .work-item-photos {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .work-item-photo-section {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .work-item-photo-section.before {
+      border-left: 3px solid #3b82f6;
+    }
+    .work-item-photo-section.after {
+      border-left: 3px solid #10b981;
+    }
+    .photo-section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .photo-section-title.before { color: #3b82f6; }
+    .photo-section-title.after { color: #10b981; }
+    .photo-mini-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .photo-mini-item {
+      width: 60px;
+      height: 60px;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .photo-mini-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .photo-mini-add {
+      width: 60px;
+      height: 60px;
+      border: 2px dashed #d1d5db;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #6b7280;
+      font-size: 1.4rem;
+      background: #f9fafb;
+      transition: all 0.2s;
+    }
+    .photo-mini-add:hover, .photo-mini-add:active {
+      border-color: var(--primary, #FF6BA6);
+      color: var(--primary, #FF6BA6);
+      background: #fdf2f8;
+    }
+    .photo-mini-add input { display: none; }
+    .photo-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+      color: var(--primary, #FF6BA6);
+      font-size: 1.2rem;
+    }
+    
+    /* フリーテキスト入力 */
+    .work-item-freetext-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    .work-item-freetext-input:focus {
+      outline: none;
+      border-color: var(--primary, #FF6BA6);
+    }
+    .photo-mini-remove {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 18px;
+      height: 18px;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 0.6rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .work-item-memo {
+      margin-top: 12px;
+    }
+    .work-item-memo textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      resize: vertical;
+      min-height: 60px;
     }
 
     /* スケジュール選択 */
@@ -613,15 +1016,63 @@
     
     let allSchedules = [];
     let allStores = [];
+    let allServiceItems = [];
     let selectedSchedule = null;
     let photoData = { before: [], after: [] };
+    
+    // 個別レポート用
+    let indWorkItemCounter = 0;
+    let indWorkItems = {}; // { itemId: { before: [], after: [] } }
 
     // 初期化
     document.addEventListener('DOMContentLoaded', async () => {
-      await Promise.all([loadSchedules(), loadStores()]);
+      await Promise.all([loadSchedules(), loadStores(), loadServiceItems()]);
       setupEventListeners();
+      setupTabSwitching();
+      setupIndividualReport();
       checkUrlParams();
+      
+      // 今日の日付をセット
+      document.getElementById('ind-cleaning-date').value = new Date().toISOString().split('T')[0];
     });
+
+    // タブ切り替え
+    function setupTabSwitching() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.dataset.tab;
+          
+          // ボタンのアクティブ状態
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          // コンテンツの表示
+          document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+          document.getElementById(`tab-${tabId}`).classList.add('active');
+        });
+      });
+    }
+
+    // サービス項目読み込み
+    async function loadServiceItems() {
+      try {
+        const res = await fetch('/data/service_items.json');
+        const data = await res.json();
+        allServiceItems = data.items || data || [];
+      } catch (e) {
+        console.error('Failed to load service items:', e);
+        // デフォルトの項目
+        allServiceItems = [
+          { title: 'グリストラップ' },
+          { title: 'レンジフード洗浄' },
+          { title: 'ダクト洗浄' },
+          { title: 'エアコン分解洗浄' },
+          { title: '床清掃' },
+          { title: '窓清掃' },
+          { title: 'トイレ清掃' }
+        ];
+      }
+    }
 
     // URLパラメータからスケジュールIDを取得
     function checkUrlParams() {
@@ -955,6 +1406,452 @@
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
+    }
+
+    // ==========================================
+    // 個別レポート作成機能
+    // ==========================================
+    
+    function setupIndividualReport() {
+      // 検索可能な店舗セレクトをセットアップ
+      setupSearchableStoreSelect();
+      
+      // 項目追加ボタン
+      document.getElementById('ind-add-work-item').addEventListener('click', addIndWorkItem);
+      
+      // 最初の項目を追加
+      addIndWorkItem();
+      
+      // フォーム送信
+      document.getElementById('individual-report-form').addEventListener('submit', handleIndSubmit);
+    }
+    
+    // 検索可能な店舗セレクト
+    function setupSearchableStoreSelect() {
+      const display = document.getElementById('store-select-display');
+      const dropdown = document.getElementById('store-dropdown');
+      const searchInput = document.getElementById('store-search-input');
+      const optionsContainer = document.getElementById('store-options');
+      const selectedText = display.querySelector('.selected-text');
+      
+      let selectedStoreId = null;
+      
+      // オプションを描画
+      function renderOptions(filter = '') {
+        const filterLower = filter.toLowerCase();
+        const filtered = allStores.filter(store => {
+          const name = (store.store_name || store.name || '').toLowerCase();
+          return name.includes(filterLower);
+        });
+        
+        if (filtered.length === 0) {
+          optionsContainer.innerHTML = '<div class="select-option-empty">該当する店舗がありません</div>';
+          return;
+        }
+        
+        optionsContainer.innerHTML = filtered.map(store => {
+          const storeId = store.store_id || store.id;
+          const storeName = store.store_name || store.name;
+          const isSelected = storeId === selectedStoreId;
+          return `
+            <div class="select-option ${isSelected ? 'selected' : ''}" data-store-id="${escapeHtml(storeId)}" data-store-name="${escapeHtml(storeName)}">
+              <span class="store-name">${escapeHtml(storeName)}</span>
+            </div>
+          `;
+        }).join('');
+        
+        // オプションクリックイベント
+        optionsContainer.querySelectorAll('.select-option').forEach(opt => {
+          opt.addEventListener('click', () => {
+            const storeId = opt.dataset.storeId;
+            const storeName = opt.dataset.storeName;
+            
+            selectedStoreId = storeId;
+            document.getElementById('ind-store-id').value = storeId;
+            document.getElementById('ind-store-name').value = storeName;
+            
+            selectedText.textContent = storeName;
+            selectedText.classList.add('has-value');
+            
+            closeDropdown();
+            updateIndProgress();
+          });
+        });
+      }
+      
+      // ドロップダウンを開く
+      function openDropdown() {
+        dropdown.style.display = 'block';
+        display.classList.add('active');
+        searchInput.focus();
+        renderOptions();
+      }
+      
+      // ドロップダウンを閉じる
+      function closeDropdown() {
+        dropdown.style.display = 'none';
+        display.classList.remove('active');
+        searchInput.value = '';
+      }
+      
+      // トグル
+      display.addEventListener('click', () => {
+        if (dropdown.style.display === 'none') {
+          openDropdown();
+        } else {
+          closeDropdown();
+        }
+      });
+      
+      // 検索入力
+      searchInput.addEventListener('input', (e) => {
+        renderOptions(e.target.value);
+      });
+      
+      // 外側クリックで閉じる
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#store-searchable-select')) {
+          closeDropdown();
+        }
+      });
+      
+      // ESCで閉じる
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeDropdown();
+        }
+      });
+      
+      // 初期描画
+      renderOptions();
+    }
+    
+    // 清掃項目を追加
+    function addIndWorkItem() {
+      indWorkItemCounter++;
+      const itemId = `ind-item-${indWorkItemCounter}`;
+      indWorkItems[itemId] = { before: [], after: [] };
+      
+      const container = document.getElementById('ind-work-items-container');
+      
+      // サービス項目のオプションを生成
+      const serviceOptions = allServiceItems.map(item => 
+        `<option value="${escapeHtml(item.title)}">${escapeHtml(item.title)}</option>`
+      ).join('');
+      
+      const card = document.createElement('div');
+      card.className = 'work-item-card';
+      card.dataset.itemId = itemId;
+      card.innerHTML = `
+        <div class="work-item-header">
+          <div class="work-item-title">
+            <i class="fas fa-broom"></i>
+            <select class="form-select work-item-select" style="flex:1;">
+              <option value="">-- 清掃項目を選択 --</option>
+              ${serviceOptions}
+              <option value="__other__">その他（自由入力）</option>
+            </select>
+          </div>
+          <button type="button" class="work-item-remove">
+            <i class="fas fa-trash"></i> 削除
+          </button>
+        </div>
+        <div class="work-item-freetext" style="display:none; margin-bottom:12px;">
+          <input type="text" class="form-input work-item-freetext-input" placeholder="清掃項目名を入力...">
+        </div>
+        <div class="work-item-photos">
+          <div class="work-item-photo-section before">
+            <div class="photo-section-title before">
+              <i class="fas fa-clock"></i> 作業前
+            </div>
+            <div class="photo-mini-grid" data-category="before" data-item-id="${itemId}">
+              <label class="photo-mini-add">
+                <input type="file" accept="image/*" capture="environment" multiple data-category="before" data-item-id="${itemId}" />
+                <i class="fas fa-camera"></i>
+              </label>
+            </div>
+          </div>
+          <div class="work-item-photo-section after">
+            <div class="photo-section-title after">
+              <i class="fas fa-check-circle"></i> 作業後
+            </div>
+            <div class="photo-mini-grid" data-category="after" data-item-id="${itemId}">
+              <label class="photo-mini-add">
+                <input type="file" accept="image/*" capture="environment" multiple data-category="after" data-item-id="${itemId}" />
+                <i class="fas fa-camera"></i>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="work-item-memo">
+          <textarea placeholder="作業メモを入力（任意）" class="work-item-memo-input"></textarea>
+        </div>
+      `;
+      
+      container.appendChild(card);
+      
+      // イベントリスナー
+      card.querySelector('.work-item-remove').addEventListener('click', () => {
+        delete indWorkItems[itemId];
+        card.remove();
+        updateIndProgress();
+      });
+      
+      // 画像アップロード
+      card.querySelectorAll('input[type="file"]').forEach(input => {
+        input.addEventListener('change', handleIndPhotoUpload);
+      });
+      
+      // 清掃項目選択（その他の場合はフリーテキスト表示）
+      const selectEl = card.querySelector('.work-item-select');
+      const freetextWrapper = card.querySelector('.work-item-freetext');
+      const freetextInput = card.querySelector('.work-item-freetext-input');
+      
+      selectEl.addEventListener('change', function() {
+        if (this.value === '__other__') {
+          freetextWrapper.style.display = 'block';
+          freetextInput.focus();
+        } else {
+          freetextWrapper.style.display = 'none';
+          freetextInput.value = '';
+        }
+        updateIndProgress();
+      });
+      
+      freetextInput.addEventListener('input', updateIndProgress);
+    }
+    
+    // 個別レポート用写真アップロード（S3に直接保存）
+    async function handleIndPhotoUpload(e) {
+      const file = e.target.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+      
+      const category = e.target.dataset.category;
+      const itemId = e.target.dataset.itemId;
+      const cleaningDate = document.getElementById('ind-cleaning-date').value || new Date().toISOString().split('T')[0];
+      
+      const grid = document.querySelector(`.photo-mini-grid[data-category="${category}"][data-item-id="${itemId}"]`);
+      const addBtn = grid.querySelector('.photo-mini-add');
+      
+      // ローディング表示
+      const loadingItem = document.createElement('div');
+      loadingItem.className = 'photo-mini-item photo-loading';
+      loadingItem.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      grid.insertBefore(loadingItem, addBtn);
+      
+      try {
+        // ファイルをBase64に変換
+        const base64 = await fileToBase64(file);
+        
+        // S3にアップロード
+        const response = await fetch(`${REPORT_API}/staff/report-images`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: base64,
+            category: category,
+            cleaning_date: cleaningDate
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('アップロードに失敗しました');
+        }
+        
+        const result = await response.json();
+        const imageUrl = result.image.url;
+        const imageId = result.image.image_id;
+        
+        // ローディングを削除
+        loadingItem.remove();
+        
+        // 画像プレビューを追加
+        const photoItem = document.createElement('div');
+        photoItem.className = 'photo-mini-item';
+        photoItem.dataset.imageId = imageId;
+        photoItem.dataset.imageUrl = imageUrl;
+        photoItem.innerHTML = `
+          <img src="${imageUrl}" alt="写真">
+          <button type="button" class="photo-mini-remove" data-category="${category}" data-item-id="${itemId}">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        
+        photoItem.querySelector('.photo-mini-remove').addEventListener('click', function() {
+          const idx = indWorkItems[itemId][category].findIndex(img => img.url === imageUrl);
+          if (idx > -1) indWorkItems[itemId][category].splice(idx, 1);
+          photoItem.remove();
+          updateIndProgress();
+        });
+        
+        grid.insertBefore(photoItem, addBtn);
+        
+        // URLを保存（レポート送信時に使用）
+        indWorkItems[itemId][category].push({
+          image_id: imageId,
+          url: imageUrl
+        });
+        
+        updateIndProgress();
+        
+      } catch (error) {
+        console.error('Upload error:', error);
+        loadingItem.remove();
+        alert('画像のアップロードに失敗しました: ' + error.message);
+      }
+      
+      e.target.value = '';
+    }
+    
+    // ファイルをBase64に変換
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    // 進捗更新
+    function updateIndProgress() {
+      let completed = 0;
+      const total = 3;
+      
+      // 店舗選択
+      if (document.getElementById('ind-store-id').value) completed++;
+      
+      // 清掃項目（少なくとも1つ選択または入力されている）
+      let hasWorkItem = false;
+      document.querySelectorAll('.work-item-card').forEach(card => {
+        const selectValue = card.querySelector('.work-item-select').value;
+        const freetextValue = card.querySelector('.work-item-freetext-input').value.trim();
+        if (selectValue && selectValue !== '__other__') {
+          hasWorkItem = true;
+        } else if (selectValue === '__other__' && freetextValue) {
+          hasWorkItem = true;
+        }
+      });
+      if (hasWorkItem) completed++;
+      
+      // 写真（少なくとも1枚）
+      let hasPhoto = false;
+      Object.values(indWorkItems).forEach(item => {
+        if (item.before.length > 0 || item.after.length > 0) hasPhoto = true;
+      });
+      if (hasPhoto) completed++;
+      
+      const progress = (completed / total) * 100;
+      document.getElementById('ind-progress-fill').style.width = progress + '%';
+      document.getElementById('ind-progress-text').textContent = `進捗: ${Math.round(progress)}%`;
+    }
+    
+    // 個別レポート送信
+    async function handleIndSubmit(e) {
+      e.preventDefault();
+      
+      const storeId = document.getElementById('ind-store-id').value;
+      const storeName = document.getElementById('ind-store-name').value;
+      const cleaningDate = document.getElementById('ind-cleaning-date').value;
+      
+      if (!storeId) {
+        alert('店舗を選択してください');
+        return;
+      }
+      
+      if (!cleaningDate) {
+        alert('清掃日を入力してください');
+        return;
+      }
+      
+      // 作業項目を収集
+      const workItems = [];
+      document.querySelectorAll('.work-item-card').forEach(card => {
+        const itemId = card.dataset.itemId;
+        const selectValue = card.querySelector('.work-item-select').value;
+        const freetextValue = card.querySelector('.work-item-freetext-input').value.trim();
+        const memo = card.querySelector('.work-item-memo-input').value;
+        
+        // その他（自由入力）の場合はフリーテキストから取得
+        const itemName = selectValue === '__other__' ? freetextValue : selectValue;
+        
+        if (itemName) {
+          // 画像URLのみを抽出（オブジェクト配列からURL文字列配列に変換）
+          const beforePhotos = (indWorkItems[itemId]?.before || []).map(img => img.url || img);
+          const afterPhotos = (indWorkItems[itemId]?.after || []).map(img => img.url || img);
+          
+          workItems.push({
+            item_id: itemId,
+            item_name: itemName,
+            details: {},
+            work_content: '',
+            work_memo: memo,
+            photos: {
+              before: beforePhotos,
+              after: afterPhotos
+            }
+          });
+        }
+      });
+      
+      if (workItems.length === 0) {
+        alert('少なくとも1つの清掃項目を選択してください');
+        return;
+      }
+      
+      const reportData = {
+        store_id: storeId,
+        store_name: storeName,
+        cleaning_date: cleaningDate,
+        cleaning_start_time: document.getElementById('ind-start-time').value || '',
+        cleaning_end_time: document.getElementById('ind-end-time').value || '',
+        work_items: workItems,
+        status: 'published'
+      };
+      
+      try {
+        const submitBtn = document.getElementById('ind-submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
+        
+        const idToken = await getFirebaseIdToken();
+        
+        const response = await fetch(`${REPORT_API}/staff/reports`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify(reportData)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || '送信に失敗しました');
+        }
+        
+        alert('レポートを作成しました！');
+        window.location.href = '/staff/dashboard';
+        
+      } catch (error) {
+        console.error('Submit error:', error);
+        alert('送信に失敗しました: ' + error.message);
+        const submitBtn = document.getElementById('ind-submit-btn');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> レポートを作成';
+      }
+    }
+    
+    // Firebase IDトークン取得
+    async function getFirebaseIdToken() {
+      if (typeof firebase !== 'undefined' && firebase.auth) {
+        const user = firebase.auth().currentUser;
+        if (user) {
+          return await user.getIdToken();
+        }
+      }
+      // 開発用フォールバック
+      return 'dev-token';
     }
   })();
   </script>
