@@ -230,6 +230,43 @@
     </div>
   </dialog>
 
+  <!-- 画像倉庫モーダル -->
+  <dialog id="warehouse-dialog" class="modal-dialog modal-dialog-large">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>画像倉庫から選択</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('warehouse-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body modal-body-scrollable">
+        <div class="warehouse-filters">
+          <div class="form-group">
+            <label class="form-label">日付で絞り込み</label>
+            <input type="date" id="warehouse-date-filter" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">カテゴリ</label>
+            <select id="warehouse-category-filter" class="form-select">
+              <option value="">すべて</option>
+              <option value="before">作業前</option>
+              <option value="after">作業後</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary" id="warehouse-search-btn">
+            <i class="fas fa-search"></i> 検索
+          </button>
+        </div>
+        <div id="warehouse-images-container" class="warehouse-images-grid">
+          <div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('warehouse-dialog').close()">キャンセル</button>
+      </div>
+    </div>
+  </dialog>
+
   <style>
     :root {
       --primary: #FF6BA6;
@@ -927,12 +964,14 @@
       background: transparent;
     }
     .image-add-btns-modal .image-upload-btn-modal,
-    .image-add-btns-modal .image-media-btn-modal {
+    .image-add-btns-modal .image-media-btn-modal,
+    .image-add-btns-modal .image-warehouse-btn-modal {
       flex: 1;
       min-height: 50px;
       border-radius: 6px;
     }
-    .image-media-btn-modal {
+    .image-media-btn-modal,
+    .image-warehouse-btn-modal {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -956,6 +995,88 @@
     .image-media-btn-modal span {
       font-size: 0.75rem;
       color: #0369a1;
+    }
+    .image-warehouse-btn-modal {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      background: #f0fdf4;
+      border: 2px dashed #22c55e;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .image-warehouse-btn-modal:hover {
+      background: #dcfce7;
+      border-color: #16a34a;
+    }
+    .image-warehouse-btn-modal i {
+      font-size: 1.5rem;
+      color: #16a34a;
+      margin-bottom: 4px;
+    }
+    .image-warehouse-btn-modal span {
+      font-size: 0.75rem;
+      color: #15803d;
+    }
+    
+    /* 画像倉庫モーダル */
+    .warehouse-filters {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .warehouse-filters .form-group {
+      flex: 1;
+      margin: 0;
+    }
+    .warehouse-images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .warehouse-image-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid #e5e7eb;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .warehouse-image-item:hover {
+      border-color: var(--primary, #FF6BA6);
+      transform: scale(1.05);
+    }
+    .warehouse-image-item.selected {
+      border-color: var(--primary, #FF6BA6);
+      border-width: 3px;
+      box-shadow: 0 0 0 3px rgba(255, 107, 166, 0.2);
+    }
+    .warehouse-image-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .warehouse-image-item .image-check {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: var(--primary, #FF6BA6);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
     }
     .image-remove-modal {
       position: absolute;
@@ -1860,6 +1981,10 @@
                     <i class="fas fa-images"></i>
                     <span>メディアから</span>
                   </button>
+                  <button type="button" class="image-warehouse-btn-modal" data-category="before" data-item-id="${itemIdValue}">
+                    <i class="fas fa-warehouse"></i>
+                    <span>画像倉庫から</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1876,6 +2001,10 @@
                   <button type="button" class="image-media-btn-modal" data-category="after" data-item-id="${itemIdValue}">
                     <i class="fas fa-images"></i>
                     <span>メディアから</span>
+                  </button>
+                  <button type="button" class="image-warehouse-btn-modal" data-category="after" data-item-id="${itemIdValue}">
+                    <i class="fas fa-warehouse"></i>
+                    <span>画像倉庫から</span>
                   </button>
                 </div>
               </div>
@@ -1920,6 +2049,15 @@
             const category = this.dataset.category;
             const itemId = this.dataset.itemId;
             openMediaSelector(category, itemId);
+          });
+        });
+        
+        // 画像倉庫ボタンのイベントリスナー
+        workItemSection.querySelectorAll('.image-warehouse-btn-modal').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const category = this.dataset.category;
+            const itemId = this.dataset.itemId;
+            openImageWarehouse(category, itemId);
           });
         });
         
@@ -2039,6 +2177,151 @@
         photoItem.dataset.url = resolvedPath;
         photoItem.innerHTML = `
           <img src="${resolvedPath}" alt="Selected from media">
+          <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        
+        // アップロードボタンの前に挿入
+        const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+        if (addBtns) {
+          photoGrid.insertBefore(photoItem, addBtns);
+        } else {
+          photoGrid.appendChild(photoItem);
+        }
+      }
+
+      // 画像倉庫用の変数
+      let currentWarehouseCategory = null;
+      let currentWarehouseItemId = null;
+      let selectedWarehouseImages = new Set();
+
+      // 画像倉庫を開く
+      window.openImageWarehouse = function(category, itemId) {
+        currentWarehouseCategory = category;
+        currentWarehouseItemId = itemId;
+        selectedWarehouseImages.clear();
+        
+        // レポートの日付を取得（デフォルト値として使用）
+        const reportDate = document.getElementById('report-date').value || new Date().toISOString().split('T')[0];
+        document.getElementById('warehouse-date-filter').value = reportDate;
+        document.getElementById('warehouse-category-filter').value = category;
+        
+        // 画像を読み込み
+        loadWarehouseImages(reportDate, category);
+        
+        // モーダルを開く
+        document.getElementById('warehouse-dialog').showModal();
+      };
+
+      // 画像倉庫の画像を読み込み
+      async function loadWarehouseImages(date, category) {
+        const container = document.getElementById('warehouse-images-container');
+        container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</div>';
+        
+        try {
+          const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+          const params = new URLSearchParams({ date, ...(category && { category }) });
+          const response = await fetch(`${REPORT_API}/staff/report-images?${params}`);
+          
+          if (!response.ok) {
+            throw new Error('画像の読み込みに失敗しました');
+          }
+          
+          const data = await response.json();
+          const images = data.images || [];
+          
+          if (images.length === 0) {
+            container.innerHTML = '<div class="loading">該当する画像がありません</div>';
+            return;
+          }
+          
+          container.innerHTML = images.map(img => {
+            const imageUrl = img.url || img.s3_key;
+            const isSelected = selectedWarehouseImages.has(imageUrl);
+            return `
+              <div class="warehouse-image-item ${isSelected ? 'selected' : ''}" 
+                   data-url="${escapeHtml(imageUrl)}"
+                   onclick="toggleWarehouseImage('${escapeHtml(imageUrl)}')">
+                <img src="${escapeHtml(imageUrl)}" alt="画像" loading="lazy">
+                ${isSelected ? '<div class="image-check"><i class="fas fa-check"></i></div>' : ''}
+              </div>
+            `;
+          }).join('');
+          
+        } catch (error) {
+          console.error('Error loading warehouse images:', error);
+          container.innerHTML = '<div class="loading">エラー: ' + error.message + '</div>';
+        }
+      }
+
+      // 画像倉庫の画像を選択/解除
+      window.toggleWarehouseImage = function(imageUrl) {
+        const item = document.querySelector(`.warehouse-image-item[data-url="${escapeHtml(imageUrl)}"]`);
+        if (!item) return;
+        
+        if (selectedWarehouseImages.has(imageUrl)) {
+          selectedWarehouseImages.delete(imageUrl);
+          item.classList.remove('selected');
+          item.querySelector('.image-check')?.remove();
+        } else {
+          selectedWarehouseImages.add(imageUrl);
+          item.classList.add('selected');
+          item.innerHTML = `
+            <img src="${escapeHtml(imageUrl)}" alt="画像" loading="lazy">
+            <div class="image-check"><i class="fas fa-check"></i></div>
+          `;
+        }
+      };
+
+      // 画像倉庫の検索ボタン
+      document.addEventListener('DOMContentLoaded', function() {
+        const searchBtn = document.getElementById('warehouse-search-btn');
+        if (searchBtn) {
+          searchBtn.addEventListener('click', function() {
+            const date = document.getElementById('warehouse-date-filter').value;
+            const category = document.getElementById('warehouse-category-filter').value;
+            if (date) {
+              loadWarehouseImages(date, category || null);
+            } else {
+              alert('日付を選択してください');
+            }
+          });
+        }
+        
+        // 画像倉庫モーダルが閉じられた時に選択した画像を追加
+        const warehouseDialog = document.getElementById('warehouse-dialog');
+        if (warehouseDialog) {
+          warehouseDialog.addEventListener('close', function() {
+            if (selectedWarehouseImages.size > 0 && currentWarehouseCategory && currentWarehouseItemId) {
+              selectedWarehouseImages.forEach(imageUrl => {
+                addWarehouseImageToReport(imageUrl, currentWarehouseCategory, currentWarehouseItemId);
+              });
+              selectedWarehouseImages.clear();
+            }
+          });
+        }
+      });
+
+      // 画像倉庫から選択した画像をレポートに追加
+      function addWarehouseImageToReport(imageUrl, category, itemId) {
+        const photoGrid = document.querySelector(`.image-list-modal[data-category="${category}"][data-item-id="${itemId}"]`);
+        if (!photoGrid) {
+          console.error('Could not find photo grid for', category, itemId);
+          return;
+        }
+        
+        // 既に同じ画像が追加されていないか確認
+        const existingImages = photoGrid.querySelectorAll(`.image-item-modal[data-url="${escapeHtml(imageUrl)}"]`);
+        if (existingImages.length > 0) {
+          return; // 既に追加されている
+        }
+        
+        const photoItem = document.createElement('div');
+        photoItem.className = 'image-item-modal';
+        photoItem.dataset.url = imageUrl;
+        photoItem.innerHTML = `
+          <img src="${escapeHtml(imageUrl)}" alt="Selected from warehouse">
           <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
             <i class="fas fa-times"></i>
           </button>
