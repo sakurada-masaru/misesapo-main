@@ -1726,6 +1726,7 @@ def get_public_report(report_id, headers):
             'cleaning_start_time': report.get('cleaning_start_time'),
             'cleaning_end_time': report.get('cleaning_end_time'),
             'work_items': report.get('work_items', []),
+            'sections': report.get('sections', []),  # 画像・コメント・作業内容セクション
             'satisfaction': report.get('satisfaction', {})
         }
         
