@@ -3,8 +3,12 @@
 .staff-report-page {
   min-height: 100vh;
   background: #f5f5f5;
-  padding-top: 80px; /* 固定ヘッダー分 + 余白 */
+  padding-top: 60px; /* 固定ヘッダーの高さ分 */
   padding-bottom: 160px; /* 固定フッター分（4ボタン + 送信 + 余白） */
+}
+
+.report-form {
+  margin-top: 0;
 }
 
 /* 固定ヘッダー */
@@ -61,6 +65,7 @@
   background: linear-gradient(135deg, #FF679C 0%, #FF8FB1 100%);
   padding: 16px;
   color: #fff;
+  margin-top: 10px;
 }
 
 .form-row {
