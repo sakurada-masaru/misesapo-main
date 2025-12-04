@@ -1808,18 +1808,9 @@
         window.addWorkItemModal();
       });
       
-      // 2. 画像を追加（画像セクションタイプ選択モーダルを表示）
+      // 2. 画像を追加（作業前・作業後のセクションを直接追加）
       document.getElementById('add-image-modal')?.addEventListener('click', function() {
-        document.getElementById('image-section-type-dialog').showModal();
-      });
-      
-      // 画像セクションタイプ選択ボタン
-      document.querySelectorAll('.btn-image-type').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const type = this.dataset.type; // 'work' or 'installation'
-          document.getElementById('image-section-type-dialog').close();
-          window.addImageSectionModal(type);
-        });
+        window.addImageSectionModal('work');
       });
       
       // 3. コメントを追加（コメントセクションを追加）
