@@ -9,24 +9,17 @@ function getReportIdFromUrl() {
     return match ? match[1] : null;
 }
 
-// 日付フォーマット（YYYY年MM月DD日形式）
+// 日付フォーマット
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    return `${year}年${month}月${day}日`;
-}
-
-// 時刻フォーマット（HH:MM形式）
-function formatTime(timeString) {
-    if (!timeString) return '';
-    // HH:MM形式の場合はそのまま返す
-    if (timeString.match(/^\d{2}:\d{2}$/)) {
-        return timeString;
-    }
-    return timeString;
+    return date.toLocaleDateString('ja-JP', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 
 // レポート詳細を取得
@@ -120,25 +113,13 @@ async function loadReportDetail() {
 
 // レポートを表示
 function renderReport(report) {
-    // ヘッダー部分
+    // ヘッダー
     const dateStr = formatDate(report.cleaning_date);
-    const startTime = formatTime(report.cleaning_start_time);
-    const endTime = formatTime(report.cleaning_end_time);
-    const timeStr = startTime && endTime ? ` ${startTime}-${endTime}` : '';
-    
-    // タイトルに日付を追加
-    document.getElementById('report-title').textContent = `作業報告書 - ${dateStr}`;
-    
-    // 作業日時
-    document.getElementById('report-date').textContent = `${dateStr}${timeStr}`;
-    
-    // 作業場所
+    const timeStr = report.cleaning_start_time && report.cleaning_end_time 
+        ? `${report.cleaning_start_time} - ${report.cleaning_end_time}`
+        : '';
+    document.getElementById('report-date').textContent = `清掃日時: ${dateStr} ${timeStr}`;
     document.getElementById('report-store').textContent = report.store_name || '店舗名不明';
-    
-    // 業者名・担当名
-    const staffName = report.staff_name || '担当者名不明';
-    const companyName = 'ミセサポ';
-    document.getElementById('report-staff').textContent = `${companyName} / 担当：${staffName}`;
     
     // 清掃項目リスト
     const cleaningItemsEl = document.getElementById('cleaning-items');
@@ -151,53 +132,64 @@ function renderReport(report) {
     // 清掃項目の詳細
     const reportMainEl = document.getElementById('report-main');
     reportMainEl.innerHTML = items.map(item => {
-        // 写真の表示（複数ある場合は連続表示）
+        const details = item.details || {};
+        const tags = [];
+        if (details.type) tags.push(details.type);
+        if (details.count) tags.push(`${details.count}個`);
+        const tagsHtml = tags.map(tag => `<span class="detail-tag">${tag}</span>`).join('');
+        
+        // 写真の表示
         const beforePhotos = item.photos?.before || [];
         const afterPhotos = item.photos?.after || [];
         
-        // 作業前写真（複数ある場合は連続表示）
         const beforePhotosHtml = beforePhotos.length > 0
-            ? `<div class="photos-section">
-                 <div class="photos-label">作業前:</div>
-                 <div class="photos-grid">
-                   ${beforePhotos.map(url => `
-                     <div class="photo-item">
-                       <img src="${url}" alt="作業前" loading="lazy" />
-                     </div>
-                   `).join('')}
-                 </div>
+            ? `<div class="image-list">
+                 ${beforePhotos.map(url => `
+                   <div class="image-item">
+                     <img src="${url}" alt="作業前" loading="lazy" />
+                   </div>
+                 `).join('')}
                </div>`
-            : '';
+            : '<p style="color: #999; font-style: italic;">写真なし</p>';
         
-        // 作業後写真（複数ある場合は連続表示）
         const afterPhotosHtml = afterPhotos.length > 0
-            ? `<div class="photos-section">
-                 <div class="photos-label">作業後:</div>
-                 <div class="photos-grid">
-                   ${afterPhotos.map(url => `
-                     <div class="photo-item">
-                       <img src="${url}" alt="作業後" loading="lazy" />
-                     </div>
-                   `).join('')}
-                 </div>
+            ? `<div class="image-list">
+                 ${afterPhotos.map(url => `
+                   <div class="image-item">
+                     <img src="${url}" alt="作業後" loading="lazy" />
+                   </div>
+                 `).join('')}
                </div>`
-            : '';
-        
-        // コメント（work_memoまたはwork_content）
-        const comment = item.work_memo || item.work_content || '';
-        const commentHtml = comment
-            ? `<div class="comment-section">
-                 <div class="comment-label">コメント</div>
-                 <div class="comment-text">${comment}</div>
-               </div>`
-            : '';
+            : '<p style="color: #999; font-style: italic;">写真なし</p>';
         
         return `
-          <section class="work-item-section">
-            <h2 class="work-item-title">${item.item_name || item.item_id}</h2>
-            ${beforePhotosHtml}
-            ${afterPhotosHtml}
-            ${commentHtml}
+          <section class="cleaning-section">
+            <div class="item-header">
+              <h3 class="item-title">${item.item_name || item.item_id}</h3>
+              <div class="item-details">${tagsHtml}</div>
+            </div>
+            ${item.work_content ? `
+              <div class="subsection">
+                <h4 class="subsection-title">作業内容</h4>
+                <p>${item.work_content}</p>
+              </div>
+            ` : ''}
+            <div class="image-grid">
+              <div class="image-category">
+                <h4 class="image-category-title">作業前</h4>
+                ${beforePhotosHtml}
+              </div>
+              <div class="image-category">
+                <h4 class="image-category-title">作業後</h4>
+                ${afterPhotosHtml}
+              </div>
+            </div>
+            ${item.work_memo ? `
+              <div class="subsection">
+                <h4 class="subsection-title">作業メモ</h4>
+                <p>${item.work_memo}</p>
+              </div>
+            ` : ''}
           </section>
         `;
     }).join('');
