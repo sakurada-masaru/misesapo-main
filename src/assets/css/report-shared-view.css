@@ -339,9 +339,8 @@ body {
     .work-content-section {
         padding: 10px;
     }
-    /* 画像セクションは余白を極限まで削減 */
     .image-section {
-        padding: 8px 4px;
+        padding: 10px 8px;
     }
     .item-header {
         flex-direction: column;
@@ -355,48 +354,49 @@ body {
     .section-title {
         font-size: 0.85rem;
         padding-bottom: 4px;
-        margin-left: 4px;
     }
-    /* 作業前・作業後を水平に並べる（SP対応） */
+    /* 作業前・作業後を水平に並べる */
     .image-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 2px;
+        gap: 8px;
         margin-top: 8px;
     }
+    /* 背景を削除してシンプルに */
     .before-category,
     .after-category {
-        padding: 4px;
-        border-radius: 4px;
+        background: none;
+        padding: 0;
+        border-radius: 0;
     }
     .image-category-title {
-        font-size: 0.65rem;
-        margin-bottom: 4px;
-        padding: 2px 0;
+        font-size: 0.75rem;
+        margin-bottom: 6px;
+        text-align: center;
     }
-    /* 画像は1列で表示 */
     .image-list {
         grid-template-columns: 1fr;
-        gap: 2px;
+        gap: 4px;
     }
     .image-item {
         aspect-ratio: 4/3;
-        border-radius: 4px;
+        border-radius: 6px;
     }
     .no-photo {
-        font-size: 0.7rem;
-        padding: 8px 4px;
+        font-size: 0.75rem;
+        padding: 10px;
+        background: #f5f5f5;
     }
     .satisfaction-form {
-        padding: 14px 10px;
+        padding: 16px 10px;
     }
     .form-question {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
     .star {
-        font-size: 1.4rem;
+        font-size: 1.5rem;
     }
     .comment-textarea {
-        min-height: 60px;
+        min-height: 70px;
     }
 }
 
