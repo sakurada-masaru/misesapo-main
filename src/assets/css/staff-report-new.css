@@ -3,8 +3,8 @@
 .staff-report-page {
   min-height: 100vh;
   background: #f5f5f5;
-  padding-top: 56px; /* 固定ヘッダーの高さと同じ */
-  padding-bottom: 200px; /* 固定フッター分（4ボタン + 送信 + 余白） */
+  padding-top: 80px; /* 固定ヘッダー分 + 余白 */
+  padding-bottom: 160px; /* 固定フッター分（4ボタン + 送信 + 余白） */
 }
 
 /* 固定ヘッダー */
@@ -13,7 +13,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 56px;
+  height: 50px;
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
