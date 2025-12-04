@@ -386,7 +386,7 @@
     }
     .modal-footer {
       display: flex;
-      justify-content: flex-end;
+      justify-content: center;
       gap: 12px;
       padding: 16px 24px;
       border-top: 1px solid #e2e8f0;
@@ -500,10 +500,19 @@
       color: #999;
       font-style: italic;
     }
+    .action-buttons-group-modal {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
     .add-buttons-group-modal {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+    }
+    .modal-footer .add-buttons-group-modal {
+      width: 100%;
+      justify-content: center;
     }
     .btn-add-item-modal {
       padding: 8px 16px;
