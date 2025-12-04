@@ -860,40 +860,10 @@
         const itemIdValue = itemData?.item_id || `work-item-modal-${modalWorkItemCounter}`;
         const itemNameValue = itemData?.item_name || '';
         const details = itemData?.details || {};
-        const workContent = itemData?.work_content || '';
-        const workMemo = itemData?.work_memo || '';
-        const beforePhotos = itemData?.photos?.before || [];
-        const afterPhotos = itemData?.photos?.after || [];
         
         const workItemSection = document.createElement('section');
         workItemSection.className = 'cleaning-section-modal';
         workItemSection.dataset.itemId = itemIdValue;
-        
-        // 作業前の写真HTML
-        const beforePhotosHtml = beforePhotos.map((url, idx) => {
-          const isBase64 = url.startsWith('data:');
-          return `
-            <div class="image-item-modal" data-base64="${isBase64 ? url : ''}" data-url="${!isBase64 ? url : ''}">
-              <img src="${url}" alt="作業前" loading="lazy">
-              <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          `;
-        }).join('');
-        
-        // 作業後の写真HTML
-        const afterPhotosHtml = afterPhotos.map((url, idx) => {
-          const isBase64 = url.startsWith('data:');
-          return `
-            <div class="image-item-modal" data-base64="${isBase64 ? url : ''}" data-url="${!isBase64 ? url : ''}">
-              <img src="${url}" alt="作業後" loading="lazy">
-              <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          `;
-        }).join('');
         
         // サービス項目のドロップリストオプションを生成
         const isCustomItem = itemNameValue && !allServiceItems.find(item => item.title === itemNameValue);
@@ -921,58 +891,6 @@
               削除
             </button>
           </div>
-          <div class="subsection-modal">
-            <h4 class="subsection-title-modal">作業内容</h4>
-            <textarea class="work-item-content-modal" placeholder="作業内容を入力してください">${escapeHtml(workContent)}</textarea>
-          </div>
-          <div class="image-grid-modal">
-            <div class="image-category-modal before-category">
-              <h4 class="image-category-title-modal"><i class="fas fa-clock"></i> 作業前（Before）</h4>
-              <div class="image-list-modal" data-category="before" data-item-id="${itemIdValue}">
-                ${beforePhotosHtml}
-                <div class="image-item-modal image-add-btns-modal">
-                  <label class="image-upload-btn-modal">
-                    <input type="file" accept="image/*" multiple data-category="before" data-item-id="${itemIdValue}" />
-                    <i class="fas fa-camera"></i>
-                    <span>ファイルから</span>
-                  </label>
-                  <button type="button" class="image-media-btn-modal" data-category="before" data-item-id="${itemIdValue}">
-                    <i class="fas fa-images"></i>
-                    <span>メディアから</span>
-                  </button>
-                  <button type="button" class="image-warehouse-btn-modal" data-category="before" data-item-id="${itemIdValue}">
-                    <i class="fas fa-warehouse"></i>
-                    <span>画像倉庫から</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="image-category-modal after-category">
-              <h4 class="image-category-title-modal"><i class="fas fa-check-circle"></i> 作業後（After）</h4>
-              <div class="image-list-modal" data-category="after" data-item-id="${itemIdValue}">
-                ${afterPhotosHtml}
-                <div class="image-item-modal image-add-btns-modal">
-                  <label class="image-upload-btn-modal">
-                    <input type="file" accept="image/*" multiple data-category="after" data-item-id="${itemIdValue}" />
-                    <i class="fas fa-camera"></i>
-                    <span>ファイルから</span>
-                  </label>
-                  <button type="button" class="image-media-btn-modal" data-category="after" data-item-id="${itemIdValue}">
-                    <i class="fas fa-images"></i>
-                    <span>メディアから</span>
-                  </button>
-                  <button type="button" class="image-warehouse-btn-modal" data-category="after" data-item-id="${itemIdValue}">
-                    <i class="fas fa-warehouse"></i>
-                    <span>画像倉庫から</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="subsection-modal">
-            <h4 class="subsection-title-modal">作業メモ</h4>
-            <textarea class="work-item-memo-modal" placeholder="特記事項を入力してください">${escapeHtml(workMemo)}</textarea>
-          </div>
         `;
         
         container.appendChild(workItemSection);
@@ -998,43 +916,6 @@
             window.updateCleaningItemsListModal();
           });
         }
-        
-        // 写真アップロードのイベントリスナー
-        workItemSection.querySelectorAll('input[type="file"]').forEach(input => {
-          // changeイベントを直接設定
-          input.addEventListener('change', function(e) {
-            handlePhotoUploadModal(e);
-          });
-          // labelクリックでも確実に動作するように
-          const label = input.closest('label');
-          if (label) {
-            label.addEventListener('click', function(e) {
-              // label内のinput以外をクリックした場合は、inputをクリック
-              if (e.target !== input && !input.contains(e.target)) {
-                e.preventDefault();
-                input.click();
-              }
-            });
-          }
-        });
-        
-        // メディア選択ボタンのイベントリスナー
-        workItemSection.querySelectorAll('.image-media-btn-modal').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const category = this.dataset.category;
-            const itemId = this.dataset.itemId;
-            openMediaSelector(category, itemId);
-          });
-        });
-        
-        // 画像倉庫ボタンのイベントリスナー
-        workItemSection.querySelectorAll('.image-warehouse-btn-modal').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const category = this.dataset.category;
-            const itemId = this.dataset.itemId;
-            openImageWarehouse(category, itemId);
-          });
-        });
         
         window.updateCleaningItemsListModal();
       };
@@ -1943,6 +1824,11 @@
         window.addWorkContentSectionModal();
       });
 
+      // ヘルプボタン
+      document.getElementById('btn-help-report')?.addEventListener('click', function() {
+        document.getElementById('help-dialog').showModal();
+      });
+
       // モーダル用: 店舗選択の変更
       document.getElementById('report-store')?.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
@@ -1996,55 +1882,14 @@
             const type = detailInputs[0]?.value?.trim() || '';
             const count = detailInputs[1]?.value?.trim() || '';
             
-            const workContentEl = section.querySelector('.work-item-content-modal');
-            const workMemoEl = section.querySelector('.work-item-memo-modal');
-            
             const workItem = {
               item_id: itemId,
               item_name: itemName,
               details: {
                 type: type,
                 count: count
-              },
-              work_content: workContentEl ? workContentEl.value.trim() : '',
-              work_memo: workMemoEl ? workMemoEl.value.trim() : '',
-              photos: {
-                before: [],
-                after: []
               }
             };
-            
-            // 作業前の写真（Base64またはURL）- アップロードボタンを除外
-            const beforeItems = section.querySelectorAll('[data-category="before"] .image-item-modal:not(.image-add-btns-modal)');
-            beforeItems.forEach(photoItem => {
-              if (photoItem.dataset.base64) {
-                workItem.photos.before.push(photoItem.dataset.base64);
-              } else if (photoItem.dataset.url) {
-                workItem.photos.before.push(photoItem.dataset.url);
-              } else {
-                // img srcから直接取得（フォールバック）
-                const img = photoItem.querySelector('img');
-                if (img && img.src) {
-                  workItem.photos.before.push(img.src);
-                }
-              }
-            });
-            
-            // 作業後の写真（Base64またはURL）- アップロードボタンを除外
-            const afterItems = section.querySelectorAll('[data-category="after"] .image-item-modal:not(.image-add-btns-modal)');
-            afterItems.forEach(photoItem => {
-              if (photoItem.dataset.base64) {
-                workItem.photos.after.push(photoItem.dataset.base64);
-              } else if (photoItem.dataset.url) {
-                workItem.photos.after.push(photoItem.dataset.url);
-              } else {
-                // img srcから直接取得（フォールバック）
-                const img = photoItem.querySelector('img');
-                if (img && img.src) {
-                  workItem.photos.after.push(img.src);
-                }
-              }
-            });
             
             formData.work_items.push(workItem);
           });

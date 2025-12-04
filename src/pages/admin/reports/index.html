@@ -114,7 +114,12 @@
   <dialog id="new-dialog" class="modal-dialog modal-dialog-large">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="form-title">新規レポート作成</h3>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <h3 id="form-title">新規レポート作成</h3>
+          <button type="button" class="btn-help-modal" id="btn-help-report" title="ヘルプ">
+            <i class="fas fa-question-circle"></i>
+          </button>
+        </div>
         <button type="button" class="modal-close" onclick="document.getElementById('new-dialog').close()">
           <i class="fas fa-times"></i>
         </button>
@@ -324,6 +329,115 @@
         <button type="button" class="btn btn-primary" id="warehouse-save-btn" onclick="window.saveWarehouseImages()">
           <i class="fas fa-check"></i> 選択した画像を追加
         </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ヘルプモーダル -->
+  <dialog id="help-dialog" class="modal-dialog modal-dialog-medium">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>レポート編集のヘルプ</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('help-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body modal-body-scrollable">
+        <div class="help-content">
+          <section class="help-section">
+            <h4><i class="fas fa-list"></i> ボタン操作の概要</h4>
+            <div class="help-item">
+              <h5>1. 清掃項目を追加</h5>
+              <p>清掃項目を選択または自由入力で追加します。タイプ（例: 床置き型）や個数（例: 2個）を指定できます。</p>
+              <ul>
+                <li>ドロップダウンから既存の清掃項目を選択</li>
+                <li>「その他（自由入力）」を選択すると、自由に項目名を入力できます</li>
+                <li>未入力の清掃項目は保存時に除外されます</li>
+              </ul>
+            </div>
+            <div class="help-item">
+              <h5>2. 画像を追加</h5>
+              <p>画像セクションを追加します。2つのパターンから選択できます：</p>
+              <ul>
+                <li><strong>作業前・作業後</strong>：清掃作業の前後の写真を追加</li>
+                <li><strong>設置前・設置後</strong>：設備の設置前後の写真を追加</li>
+              </ul>
+              <p>各画像セクションでは、以下の方法で画像を追加できます：</p>
+              <ul>
+                <li><strong>ファイルから</strong>：PCやスマートフォンから画像を直接アップロード</li>
+                <li><strong>メディアから</strong>：メディアライブラリから画像を選択</li>
+                <li><strong>画像倉庫から</strong>：過去にアップロードした画像を日付やカテゴリで検索して選択</li>
+              </ul>
+            </div>
+            <div class="help-item">
+              <h5>3. コメントを追加</h5>
+              <p>自由形式のコメントを追加します。特記事項や補足情報を記載できます。</p>
+              <ul>
+                <li>空のコメントセクションは保存時に除外されます</li>
+              </ul>
+            </div>
+            <div class="help-item">
+              <h5>4. 作業内容を追加</h5>
+              <p>作業内容の詳細を追加します。実施した作業の詳細を記載できます。</p>
+              <ul>
+                <li>空の作業内容セクションは保存時に除外されます</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="help-section">
+            <h4><i class="fas fa-exclamation-triangle"></i> 注意事項</h4>
+            <ul class="help-warnings">
+              <li>店舗と清掃日は必須項目です</li>
+              <li>少なくとも1つの項目（清掃項目、画像、コメント、作業内容のいずれか）を追加する必要があります</li>
+              <li>各セクションは右上の「削除」ボタンで個別に削除できます</li>
+              <li>画像は最大800px幅に自動リサイズされます</li>
+              <li>画像倉庫から選択した画像は、日付とカテゴリ（作業前/作業後）で検索できます</li>
+              <li>レポートを保存すると、画像は自動的にS3にアップロードされます</li>
+            </ul>
+          </section>
+
+          <section class="help-section">
+            <h4><i class="fas fa-cogs"></i> レポートが生成される仕組み</h4>
+            <div class="help-item">
+              <h5>1. レポート作成の流れ</h5>
+              <ol>
+                <li>基本情報（店舗、清掃日、開始時刻、終了時刻、担当者）を入力</li>
+                <li>各種セクション（清掃項目、画像、コメント、作業内容）を追加</li>
+                <li>「レポートを作成」ボタンをクリック</li>
+                <li>データがバリデーションされ、APIに送信されます</li>
+              </ol>
+            </div>
+            <div class="help-item">
+              <h5>2. データの保存先</h5>
+              <ul>
+                <li><strong>テキストデータ</strong>：DynamoDBに保存されます</li>
+                <li><strong>画像データ</strong>：AWS S3に保存されます（日付ベースのフォルダ構造）</li>
+                <li>画像のメタデータ（URL、日付、カテゴリ）もDynamoDBに保存されます</li>
+              </ul>
+            </div>
+            <div class="help-item">
+              <h5>3. レポートの共有</h5>
+              <ul>
+                <li>レポート一覧から「URL発行」ボタンをクリック</li>
+                <li>生成されたURLを顧客に送信すると、顧客はレポートを直接閲覧できます</li>
+                <li>共有URLは認証不要でアクセス可能です</li>
+              </ul>
+            </div>
+            <div class="help-item">
+              <h5>4. 画像の管理</h5>
+              <ul>
+                <li>アップロードされた画像は「画像倉庫」に保存されます</li>
+                <li>画像倉庫では、日付とカテゴリ（作業前/作業後）で検索できます</li>
+                <li>過去のレポートで使用した画像を再利用できます</li>
+                <li>画像は日付ベースのフォルダ構造で整理されます（例: <code>before/2025/12/01/ID0001.jpg</code>）</li>
+              </ul>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('help-dialog').close()">閉じる</button>
       </div>
     </div>
   </dialog>

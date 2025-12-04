@@ -348,6 +348,24 @@
       border-bottom: 1px solid #e2e8f0;
     }
     .modal-header h3 { margin: 0; font-size: 1.25rem; color: #1e293b; }
+    .btn-help-modal {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s;
+      font-size: 1.2rem;
+    }
+    .btn-help-modal:hover {
+      background: #f1f5f9;
+      color: #FF6BA6;
+    }
     .modal-close {
       background: none;
       border: none;
@@ -937,6 +955,90 @@
     @media (max-width: 1024px) {
       .stats-row { grid-template-columns: repeat(2, 1fr); }
     }
+    /* ヘルプコンテンツ */
+    .help-content {
+      padding: 8px 0;
+    }
+    .help-section {
+      margin-bottom: 32px;
+    }
+    .help-section:last-child {
+      margin-bottom: 0;
+    }
+    .help-section h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .help-section h4 i {
+      color: #FF6BA6;
+    }
+    .help-item {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border-left: 3px solid #FF6BA6;
+    }
+    .help-item:last-child {
+      margin-bottom: 0;
+    }
+    .help-item h5 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #334155;
+      margin: 0 0 8px 0;
+    }
+    .help-item p {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin: 0 0 12px 0;
+      line-height: 1.6;
+    }
+    .help-item ul,
+    .help-item ol {
+      margin: 8px 0 0 0;
+      padding-left: 24px;
+      font-size: 0.9rem;
+      color: #475569;
+      line-height: 1.8;
+    }
+    .help-item li {
+      margin-bottom: 6px;
+    }
+    .help-item code {
+      background: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-family: 'Courier New', monospace;
+      color: #1e293b;
+    }
+    .help-warnings {
+      list-style: none;
+      padding-left: 0;
+    }
+    .help-warnings li {
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      color: #92400e;
+      line-height: 1.6;
+    }
+    .help-warnings li:before {
+      content: "⚠️ ";
+      margin-right: 8px;
+    }
+
     @media (max-width: 768px) {
       .container { padding: 0 16px; }
       .page-header { flex-wrap: wrap; }
