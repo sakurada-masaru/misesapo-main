@@ -184,6 +184,7 @@
               <div class="action-btns">
                 <button class="action-btn view" title="詳細" onclick="viewReport('${r.id}')"><i class="fas fa-eye"></i></button>
                 <button class="action-btn edit" title="編集" onclick="editReport('${r.id}')"><i class="fas fa-edit"></i></button>
+                <button class="action-btn comment" title="コメント" onclick="viewFeedback('${r.id}')"><i class="fas fa-comment"></i></button>
                 <button class="action-btn share" title="URL発行" onclick="shareReport('${r.id}')"><i class="fas fa-share-alt"></i></button>
                 <button class="action-btn delete" title="削除" onclick="deleteReport('${r.id}')"><i class="fas fa-trash"></i></button>
               </div>
@@ -226,6 +227,57 @@
       currentPage = page;
       renderTable();
       renderPagination();
+    };
+
+    // フィードバック表示
+    window.viewFeedback = async function(id) {
+        const dialog = document.getElementById('feedback-dialog');
+        const content = document.getElementById('feedback-content');
+        
+        content.innerHTML = '<p class="loading">読み込み中...</p>';
+        dialog.showModal();
+        
+        try {
+            const idToken = await firebase.auth().currentUser.getIdToken();
+            const response = await fetch(`https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod/staff/reports/${id}/feedback`, {
+                headers: { 'Authorization': `Bearer ${idToken}` }
+            });
+            
+            if (!response.ok) throw new Error('取得に失敗しました');
+            
+            const data = await response.json();
+            const feedback = data.feedback || {};
+            
+            if (!feedback.rating && !feedback.comment) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <i class="fas fa-comment-slash" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                        <p>まだコメントがありません</p>
+                    </div>
+                `;
+            } else {
+                const stars = '★'.repeat(feedback.rating || 0) + '☆'.repeat(5 - (feedback.rating || 0));
+                const date = feedback.submitted_at ? new Date(feedback.submitted_at).toLocaleString('ja-JP') : '-';
+                content.innerHTML = `
+                    <div class="feedback-detail">
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: 600; display: block; margin-bottom: 5px;">評価</label>
+                            <span style="font-size: 1.5rem; color: #FF679C;">${stars}</span>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: 600; display: block; margin-bottom: 5px;">コメント</label>
+                            <p style="background: #f5f5f5; padding: 12px; border-radius: 8px; white-space: pre-wrap;">${feedback.comment || 'コメントなし'}</p>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #666;">
+                            <i class="fas fa-clock"></i> 送信日時: ${date}
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error fetching feedback:', error);
+            content.innerHTML = `<p style="color: #dc3545; text-align: center;">コメントの取得に失敗しました</p>`;
+        }
     };
 
     // 詳細表示 - モーダルで表示

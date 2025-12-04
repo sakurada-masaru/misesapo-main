@@ -243,6 +243,7 @@
     .action-btn.view { background: #e0f2fe; color: #0284c7; }
     .action-btn.edit { background: #fef3c7; color: #d97706; }
     .action-btn.share { background: #dbeafe; color: #2563eb; }
+    .action-btn.comment { background: #fef3c7; color: #d97706; }
     .action-btn.delete { background: #fee2e2; color: #dc2626; }
     .action-btn:hover { transform: scale(1.1); }
     

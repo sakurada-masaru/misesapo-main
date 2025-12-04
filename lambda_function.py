@@ -206,18 +206,33 @@ def lambda_handler(event, context):
                 return update_report(event, headers)
         elif normalized_path.startswith('/staff/reports/'):
             # レポート詳細の取得・更新・削除
-            report_id = normalized_path.split('/')[-1]
-            if method == 'GET':
-                return get_report_detail(report_id, event, headers)
-            elif method == 'PUT':
-                return update_report_by_id(report_id, event, headers)
-            elif method == 'DELETE':
-                return delete_report(report_id, event, headers)
+            parts = normalized_path.split('/')
+            if len(parts) >= 4 and parts[-1] == 'feedback':
+                # /staff/reports/{report_id}/feedback - フィードバック取得
+                report_id = parts[-2]
+                if method == 'GET':
+                    return get_report_feedback(report_id, event, headers)
+            else:
+                report_id = parts[-1]
+                if method == 'GET':
+                    return get_report_detail(report_id, event, headers)
+                elif method == 'PUT':
+                    return update_report_by_id(report_id, event, headers)
+                elif method == 'DELETE':
+                    return delete_report(report_id, event, headers)
         elif normalized_path.startswith('/public/reports/'):
-            # 公開レポート詳細の取得（認証不要）
-            report_id = normalized_path.split('/')[-1]
-            if method == 'GET':
-                return get_public_report(report_id, headers)
+            # 公開レポート関連（認証不要）
+            parts = normalized_path.split('/')
+            if len(parts) >= 4 and parts[-1] == 'feedback':
+                # /public/reports/{report_id}/feedback - フィードバック送信
+                report_id = parts[-2]
+                if method == 'POST':
+                    return save_report_feedback(report_id, event, headers)
+            else:
+                # /public/reports/{report_id} - 公開レポート詳細の取得
+                report_id = parts[-1]
+                if method == 'GET':
+                    return get_public_report(report_id, headers)
         elif normalized_path == '/staff/report-images':
             # レポート用画像のアップロード・一覧取得
             if method == 'POST':
@@ -5591,6 +5606,116 @@ def delete_store(store_id, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': '店舗の削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+
+def save_report_feedback(report_id, event, headers):
+    """
+    顧客からのフィードバック（評価・コメント）を保存
+    認証不要
+    """
+    try:
+        body = json.loads(event.get('body', '{}'))
+        rating = body.get('rating', 0)
+        comment = body.get('comment', '')
+        
+        # レポートが存在するか確認
+        REPORTS_TABLE = dynamodb.Table('misesapo-reports')
+        response = REPORTS_TABLE.get_item(Key={'report_id': report_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'レポートが見つかりません'}, ensure_ascii=False)
+            }
+        
+        # フィードバックを保存
+        feedback = {
+            'rating': rating,
+            'comment': comment,
+            'submitted_at': datetime.now().isoformat()
+        }
+        
+        REPORTS_TABLE.update_item(
+            Key={'report_id': report_id},
+            UpdateExpression='SET satisfaction = :feedback',
+            ExpressionAttributeValues={':feedback': feedback}
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'フィードバックを保存しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error saving feedback: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'フィードバックの保存に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+
+def get_report_feedback(report_id, event, headers):
+    """
+    レポートのフィードバック（評価・コメント）を取得
+    スタッフ用（認証必要）
+    """
+    try:
+        # 認証チェック
+        auth_header = event.get('headers', {}).get('Authorization', '') or event.get('headers', {}).get('authorization', '')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': '認証が必要です'}, ensure_ascii=False)
+            }
+        
+        id_token = auth_header.replace('Bearer ', '')
+        user_info = verify_firebase_token(id_token)
+        if not user_info:
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'トークンが無効です'}, ensure_ascii=False)
+            }
+        
+        # レポートを取得
+        REPORTS_TABLE = dynamodb.Table('misesapo-reports')
+        response = REPORTS_TABLE.get_item(Key={'report_id': report_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'レポートが見つかりません'}, ensure_ascii=False)
+            }
+        
+        report = response['Item']
+        feedback = report.get('satisfaction', {})
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'feedback': feedback
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error getting feedback: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'フィードバックの取得に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }

@@ -415,6 +415,22 @@
       </div>
     </div>
   </dialog>
+
+  <!-- コメントモーダル -->
+  <dialog id="feedback-dialog" class="modal feedback-dialog">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>顧客コメント</h3>
+        <button type="button" class="close-btn" onclick="document.getElementById('feedback-dialog').close()">×</button>
+      </div>
+      <div class="modal-body" id="feedback-content">
+        <p class="loading">読み込み中...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('feedback-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
 </main>
 
 <script src="/js/admin-reports.js"></script>

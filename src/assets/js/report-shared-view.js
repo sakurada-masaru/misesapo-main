@@ -273,22 +273,33 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         const btn = document.getElementById('satisfaction-submit');
-        if (btn) btn.addEventListener('click', () => {
+        if (btn) btn.addEventListener('click', async () => {
             const reportId = getReportIdFromUrl();
             const comment = document.getElementById('storeComment').value.trim();
             
-            // TODO: 実際のAPI呼び出しに置き換え
-            // 現在はローカルストレージに保存
-            const feedbackData = {
-                report_id: reportId,
-                rating: rating,
-                comment: comment,
-                submitted_at: new Date().toISOString()
-            };
-            localStorage.setItem(`report_feedback_${reportId}`, JSON.stringify(feedbackData));
-            
-            wrap.style.display = 'none';
-            if (thanks) thanks.style.display = 'block';
+            try {
+                // APIにフィードバックを送信
+                const response = await fetch(`https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod/public/reports/${reportId}/feedback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        rating: rating,
+                        comment: comment
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('送信に失敗しました');
+                }
+                
+                wrap.style.display = 'none';
+                if (thanks) thanks.style.display = 'block';
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                alert('送信に失敗しました。もう一度お試しください。');
+            }
         });
     }
 });
