@@ -1764,6 +1764,7 @@
 
       // モーダル用: 清掃項目を追加
       window.addWorkItemModal = function(itemData = null) {
+        console.log('[addWorkItemModal] Received itemData:', JSON.stringify(itemData, null, 2));
         modalWorkItemCounter++;
         const container = document.getElementById('work-items-container-modal');
         const itemIdValue = itemData?.item_id || `work-item-modal-${modalWorkItemCounter}`;
@@ -1773,6 +1774,8 @@
         const workMemo = itemData?.work_memo || '';
         const beforePhotos = itemData?.photos?.before || [];
         const afterPhotos = itemData?.photos?.after || [];
+        console.log('[addWorkItemModal] beforePhotos:', beforePhotos);
+        console.log('[addWorkItemModal] afterPhotos:', afterPhotos);
         
         const workItemSection = document.createElement('section');
         workItemSection.className = 'cleaning-section-modal';
@@ -2130,7 +2133,14 @@
             };
             
             // 作業前の写真（Base64またはURL）- アップロードボタンを除外
-            section.querySelectorAll('[data-category="before"] .image-item-modal:not(.image-add-btns-modal)').forEach(photoItem => {
+            const beforeItems = section.querySelectorAll('[data-category="before"] .image-item-modal:not(.image-add-btns-modal)');
+            console.log('[Submit] Before photo items found:', beforeItems.length);
+            beforeItems.forEach(photoItem => {
+              console.log('[Submit] Before photo item:', {
+                base64: photoItem.dataset.base64 ? 'yes' : 'no',
+                url: photoItem.dataset.url || 'none',
+                imgSrc: photoItem.querySelector('img')?.src?.substring(0, 50) || 'none'
+              });
               if (photoItem.dataset.base64) {
                 workItem.photos.before.push(photoItem.dataset.base64);
               } else if (photoItem.dataset.url) {
@@ -2145,7 +2155,14 @@
             });
             
             // 作業後の写真（Base64またはURL）- アップロードボタンを除外
-            section.querySelectorAll('[data-category="after"] .image-item-modal:not(.image-add-btns-modal)').forEach(photoItem => {
+            const afterItems = section.querySelectorAll('[data-category="after"] .image-item-modal:not(.image-add-btns-modal)');
+            console.log('[Submit] After photo items found:', afterItems.length);
+            afterItems.forEach(photoItem => {
+              console.log('[Submit] After photo item:', {
+                base64: photoItem.dataset.base64 ? 'yes' : 'no',
+                url: photoItem.dataset.url || 'none',
+                imgSrc: photoItem.querySelector('img')?.src?.substring(0, 50) || 'none'
+              });
               if (photoItem.dataset.base64) {
                 workItem.photos.after.push(photoItem.dataset.base64);
               } else if (photoItem.dataset.url) {
@@ -2158,6 +2175,8 @@
                 }
               }
             });
+            
+            console.log('[Submit] Work item photos:', workItem.photos);
             
             formData.work_items.push(workItem);
           });
@@ -2181,6 +2200,15 @@
           // 編集モードかどうかを判定
           const reportId = document.getElementById('report-id').value;
           const isEditMode = reportId && reportId.trim() !== '';
+          
+          // 送信データのデバッグログ
+          console.log('[Submit] Final formData:', JSON.stringify(formData, (key, value) => {
+            // Base64データは長すぎるので省略
+            if (typeof value === 'string' && value.startsWith('data:')) {
+              return value.substring(0, 50) + '...(base64)';
+            }
+            return value;
+          }, 2));
           
           // APIに送信
           const idToken = await getFirebaseIdToken();
