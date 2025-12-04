@@ -122,44 +122,53 @@
           <input type="hidden" id="report-id" name="id">
           
           <div class="report-container-modal">
-            <!-- ヘッダー部分（ピンク背景） -->
+            <!-- ヘッダー部分 -->
             <header class="report-header-modal">
-              <div class="report-header-content-modal">
-                <div class="form-group-inline-modal">
-                  <label class="form-label-inline-modal">店舗 <span class="required">*</span></label>
-                  <select id="report-store" name="store_id" class="form-select-inline-modal" required>
-                    <option value="">店舗を選択</option>
-              </select>
-                  <input type="hidden" id="report-store-name" name="store_name">
-            </div>
-                <div class="form-group-inline-modal">
-                  <label class="form-label-inline-modal">清掃日 <span class="required">*</span></label>
-                  <input type="date" id="report-date" name="cleaning_date" class="form-input-inline-modal" required>
-            </div>
-                <div class="form-group-inline-modal">
-                  <label class="form-label-inline-modal">開始時刻</label>
-                  <input type="time" id="report-start" name="cleaning_start_time" class="form-input-inline-modal">
-          </div>
-                <div class="form-group-inline-modal">
-                  <label class="form-label-inline-modal">終了時刻</label>
-                  <input type="time" id="report-end" name="cleaning_end_time" class="form-input-inline-modal">
-            </div>
+              <h2 class="report-title-modal" id="report-title-modal">作業報告書</h2>
+              <div class="report-info-modal">
+                <div class="info-row-modal">
+                  <span class="info-label-modal">作業日時：</span>
+                  <div class="info-value-modal">
+                    <input type="date" id="report-date" name="cleaning_date" class="form-input-modal" required>
+                    <input type="time" id="report-start" name="cleaning_start_time" class="form-input-modal" style="width: 100px;">
+                    <span>-</span>
+                    <input type="time" id="report-end" name="cleaning_end_time" class="form-input-modal" style="width: 100px;">
+                  </div>
+                </div>
+                <div class="info-row-modal">
+                  <span class="info-label-modal">作業場所：</span>
+                  <div class="info-value-modal">
+                    <select id="report-store" name="store_id" class="form-select-modal" required>
+                      <option value="">店舗を選択</option>
+                    </select>
+                    <input type="hidden" id="report-store-name" name="store_name">
+                  </div>
+                </div>
+                <div class="info-row-modal">
+                  <span class="info-label-modal">業者名・担当名：</span>
+                  <div class="info-value-modal">
+                    <span>ミセサポ / 担当：</span>
+                    <select id="report-worker" name="staff_id" class="form-select-modal" style="width: 200px;">
+                      <option value="">担当者を選択</option>
+                    </select>
+                    <input type="hidden" id="report-worker-name" name="staff_name">
+                    <input type="hidden" id="report-worker-email" name="staff_email">
+                  </div>
+                </div>
+                <div class="info-row-modal">
+                  <span class="info-label-modal">作業内容一覧：</span>
+                  <div class="info-value-modal">
+                    <div class="items-list-items-modal" id="cleaning-items-list-modal">
+                      <span class="items-list-empty-modal">項目を追加してください</span>
+                    </div>
+                    <button type="button" class="btn-add-item-modal" id="add-work-item-modal" style="margin-left: 10px;">
+                      <i class="fas fa-plus"></i>
+                      項目を追加
+                    </button>
+                  </div>
+                </div>
               </div>
             </header>
-            
-            <!-- 実施清掃項目リスト -->
-            <div class="items-list-bar-modal">
-              <div class="items-list-modal">
-                <span class="items-list-label-modal">実施清掃項目</span>
-                <div class="items-list-items-modal" id="cleaning-items-list-modal">
-                  <span class="items-list-empty-modal">項目を追加してください</span>
-            </div>
-          </div>
-              <button type="button" class="btn-add-item-modal" id="add-work-item-modal">
-                <i class="fas fa-plus"></i>
-                項目を追加
-              </button>
-          </div>
             
             <!-- 清掃項目の詳細 -->
             <div class="report-main-modal" id="work-items-container-modal">
@@ -680,46 +689,59 @@
       background: #fff;
       border-radius: 0;
       overflow: hidden;
+      padding: 20px;
     }
     .report-header-modal {
-      background: #FF679C;
-      color: #fff;
-      padding: 16px 24px;
+      background: #fff;
+      padding: 0 0 20px 0;
+      border-bottom: 2px solid #eee;
+      margin-bottom: 20px;
     }
-    .report-header-content-modal {
+    .report-title-modal {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0 0 20px 0;
+      color: #222;
+    }
+    .report-info-modal {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
-    .form-group-inline-modal {
+    .info-row-modal {
       display: flex;
-      align-items: center;
-      gap: 12px;
+      align-items: flex-start;
+      gap: 10px;
       flex-wrap: wrap;
     }
-    .form-label-inline-modal {
-      font-size: 1rem;
+    .info-label-modal {
       font-weight: 600;
-      color: #fff;
-      min-width: 80px;
+      color: #555;
+      min-width: 120px;
+      flex-shrink: 0;
     }
-    .form-select-inline-modal,
-    .form-input-inline-modal {
+    .info-value-modal {
+      color: #333;
       flex: 1;
-      min-width: 150px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .form-input-modal,
+    .form-select-modal {
       padding: 8px 12px;
-      border: 1px solid rgba(255,255,255,0.3);
+      border: 1px solid #e5e7eb;
       border-radius: 6px;
-      background: rgba(255,255,255,0.9);
+      background: #fff;
       color: #333;
       font-size: 0.95rem;
     }
-    .form-select-inline-modal:focus,
-    .form-input-inline-modal:focus {
+    .form-input-modal:focus,
+    .form-select-modal:focus {
       outline: none;
-      border-color: #fff;
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+      border-color: #FF679C;
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
     }
     .items-list-bar-modal {
       background: #f9f9f9;
@@ -748,13 +770,13 @@
       flex-wrap: wrap;
       gap: 8px;
     }
-    .items-list-item-modal {
+    .items-list-item {
       font-size: 0.9rem;
       color: #333;
-      padding: 6px 12px;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 4px;
+      padding: 4px 8px;
+      margin-right: 8px;
+      margin-bottom: 4px;
+      display: inline-block;
     }
     .items-list-empty-modal {
       font-size: 0.9rem;
@@ -779,164 +801,127 @@
       background: #e55a8a;
     }
     .cleaning-section-modal {
-      padding: 24px;
+      padding: 0 0 30px 0;
+      margin-bottom: 30px;
       border-bottom: 1px solid #eee;
     }
     .cleaning-section-modal:last-child {
       border-bottom: none;
     }
-    .item-header-modal {
+    .work-item-header-modal {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
       gap: 15px;
       margin-bottom: 20px;
     }
-    .item-title-input-modal,
-    .item-title-select-modal {
+    .work-item-title-select-modal {
       flex: 1;
       min-width: 200px;
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       font-weight: 600;
       color: #222;
       padding: 8px 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      background: #fff;
+      border: none;
+      border-bottom: 2px solid #333;
+      background: transparent;
       cursor: pointer;
     }
-    .item-title-input-modal:focus,
-    .item-title-select-modal:focus {
+    .work-item-title-select-modal:focus {
       outline: none;
-      border-color: #FF679C;
-      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+      border-bottom-color: #FF679C;
     }
-    .item-details-modal {
+    /* 写真セクション */
+    .photos-section-modal {
+      margin-bottom: 20px;
+    }
+    .photos-label-modal {
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+    .photos-grid-modal {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      padding-top: 5px;
-    }
-    .detail-tag-input-modal {
-      padding: 6px 12px;
-      background: #f0f4f8;
-      color: #555;
-      border: 1px solid #e5e7eb;
-      border-radius: 20px;
-      font-size: 0.85rem;
-    }
-    .detail-tag-input-modal:focus {
-      outline: none;
-      border-color: #FF679C;
-      background: #fff;
-    }
-    .subsection-modal {
-      margin-top: 20px;
-    }
-    .subsection-title-modal {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #333;
-      border-bottom: 2px solid #333;
-      padding-bottom: 5px;
-      margin-top: 25px;
+      gap: 12px;
       margin-bottom: 15px;
     }
-    .subsection-modal textarea {
-      width: 100%;
-      min-height: 100px;
-      padding: 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-family: inherit;
-      resize: vertical;
-    }
-    .subsection-modal textarea:focus {
-      outline: none;
-      border-color: #FF679C;
-      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
-    }
-    .image-grid-modal {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      margin-top: 20px;
-    }
-    .image-category-modal {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: center;
-      padding: 16px;
-      border-radius: 12px;
-    }
-    /* 作業前のスタイル */
-    .image-category-modal.before-category {
-      background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
-      border: 2px solid #f59e0b;
-    }
-    .image-category-modal.before-category .image-category-title-modal {
-      color: #b45309;
-    }
-    .image-category-modal.before-category .image-category-title-modal i {
-      color: #f59e0b;
-    }
-    /* 作業後のスタイル */
-    .image-category-modal.after-category {
-      background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
-      border: 2px solid #10b981;
-    }
-    .image-category-modal.after-category .image-category-title-modal {
-      color: #047857;
-    }
-    .image-category-modal.after-category .image-category-title-modal i {
-      color: #10b981;
-    }
-    .image-category-title-modal {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #444;
-      margin: 0;
-      text-align: center;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .image-category-title-modal i {
-      font-size: 1.1rem;
-    }
-    .image-list-modal {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      width: 100%;
-      max-width: 100%;
-    }
-    .image-item-modal {
+    .photo-item-modal {
       position: relative;
-      aspect-ratio: 1;
-      border-radius: 8px;
+      width: 200px;
+      height: 200px;
+      border-radius: 4px;
       overflow: hidden;
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
       background: #fafafa;
+      flex-shrink: 0;
     }
-    .image-item-modal img {
+    .photo-item-modal img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+    .photo-remove-modal {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .photo-remove-modal:hover {
+      background: rgba(0, 0, 0, 0.9);
+    }
+    /* コメントセクション */
+    .comment-section-modal {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 4px;
+    }
+    .comment-label-modal {
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+    .comment-textarea-modal {
+      width: 100%;
+      min-height: 96px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font: inherit;
+      resize: vertical;
+    }
+    .comment-textarea-modal:focus {
+      outline: none;
+      border-color: #FF679C;
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .photo-add-btns-modal {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .image-upload-btn-modal {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      height: 100%;
+      width: 120px;
+      height: 120px;
       background: #f9fafb;
       border: 2px dashed #d1d5db;
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -948,27 +933,13 @@
       display: none;
     }
     .image-upload-btn-modal i {
-      font-size: 2rem;
+      font-size: 1.5rem;
       color: #FF679C;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
     .image-upload-btn-modal span {
       font-size: 0.75rem;
       color: #6b7280;
-    }
-    .image-add-btns-modal {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      border: none;
-      background: transparent;
-    }
-    .image-add-btns-modal .image-upload-btn-modal,
-    .image-add-btns-modal .image-media-btn-modal,
-    .image-add-btns-modal .image-warehouse-btn-modal {
-      flex: 1;
-      min-height: 50px;
-      border-radius: 6px;
     }
     .image-media-btn-modal,
     .image-warehouse-btn-modal {
@@ -976,9 +947,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 100%;
+      width: 120px;
+      height: 120px;
       background: #f0f9ff;
       border: 2px dashed #0ea5e9;
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s;
       padding: 8px;
@@ -1416,7 +1389,7 @@
         // 実施清掃項目リスト
         const itemNames = report.work_items.map(item => item.item_name || item.name || item.item_id).filter(Boolean);
         const itemsListHtml = itemNames.length > 0
-          ? itemNames.map(name => `<span class="items-list-item-modal">${escapeHtml(name)}</span>`).join('')
+          ? itemNames.map(name => `<span class="items-list-item">${escapeHtml(name)}</span>`).join('')
           : '<span class="items-list-empty-modal">項目なし</span>';
 
         // 清掃項目の詳細
@@ -1897,12 +1870,11 @@
         }
         
         const itemNames = Array.from(items).map(section => {
-          const select = section.querySelector('.item-title-select-modal');
-          const input = section.querySelector('.item-title-input-modal');
+          const select = section.querySelector('.work-item-title-select-modal');
           if (select) {
             return select.value || '未入力';
           }
-          return input ? input.value || '未入力' : '未入力';
+          return '未入力';
         }).filter(name => name !== '未入力' && name !== '');
         
         if (itemNames.length === 0) {
@@ -1911,7 +1883,7 @@
         }
         
         container.innerHTML = itemNames.map(name => 
-          `<span class="items-list-item-modal">${name}</span>`
+          `<span class="items-list-item">${name}</span>`
         ).join('');
       };
 
@@ -1935,9 +1907,9 @@
         const beforePhotosHtml = beforePhotos.map((url, idx) => {
           const isBase64 = url.startsWith('data:');
           return `
-            <div class="image-item-modal" data-base64="${isBase64 ? url : ''}" data-url="${!isBase64 ? url : ''}">
+            <div class="photo-item-modal" data-base64="${isBase64 ? url : ''}" data-url="${!isBase64 ? url : ''}">
               <img src="${url}" alt="作業前" loading="lazy">
-              <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
+              <button type="button" class="photo-remove-modal" onclick="removePhotoModal(this)">
                 <i class="fas fa-times"></i>
               </button>
             </div>
@@ -1948,9 +1920,9 @@
         const afterPhotosHtml = afterPhotos.map((url, idx) => {
           const isBase64 = url.startsWith('data:');
           return `
-            <div class="image-item-modal" data-base64="${isBase64 ? url : ''}" data-url="${!isBase64 ? url : ''}">
+            <div class="photo-item-modal" data-base64="${isBase64 ? url : ''}" data-url="${!isBase64 ? url : ''}">
               <img src="${url}" alt="作業後" loading="lazy">
-              <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
+              <button type="button" class="photo-remove-modal" onclick="removePhotoModal(this)">
                 <i class="fas fa-times"></i>
               </button>
             </div>
@@ -1964,78 +1936,68 @@
         }).join('');
         
         workItemSection.innerHTML = `
-          <div class="item-header-modal">
-            <select class="item-title-select-modal" data-item-id="${itemIdValue}">
+          <div class="work-item-header-modal">
+            <select class="work-item-title-select-modal" data-item-id="${itemIdValue}">
               <option value="">-- 清掃項目を選択 --</option>
               ${serviceOptions}
             </select>
-            <div class="item-details-modal">
-              <input type="text" class="detail-tag-input-modal" placeholder="タイプ（例: 床置き型）" style="width: 150px;" value="${escapeHtml(details.type || '')}">
-              <input type="text" class="detail-tag-input-modal" placeholder="個数（例: 2個）" style="width: 100px;" value="${escapeHtml(details.count || '')}">
-            </div>
             <button type="button" class="item-remove-btn-modal" onclick="removeWorkItemModal('${itemIdValue}')">
               <i class="fas fa-trash"></i>
               削除
             </button>
           </div>
-          <div class="subsection-modal">
-            <h4 class="subsection-title-modal">作業内容</h4>
-            <textarea class="work-item-content-modal" placeholder="作業内容を入力してください">${escapeHtml(workContent)}</textarea>
-          </div>
-          <div class="image-grid-modal">
-            <div class="image-category-modal before-category">
-              <h4 class="image-category-title-modal"><i class="fas fa-clock"></i> 作業前（Before）</h4>
-              <div class="image-list-modal" data-category="before" data-item-id="${itemIdValue}">
-                ${beforePhotosHtml}
-                <div class="image-item-modal image-add-btns-modal">
-                  <label class="image-upload-btn-modal">
-                    <input type="file" accept="image/*" multiple data-category="before" data-item-id="${itemIdValue}" />
-                    <i class="fas fa-camera"></i>
-                    <span>ファイルから</span>
-                  </label>
-                  <button type="button" class="image-media-btn-modal" data-category="before" data-item-id="${itemIdValue}">
-                    <i class="fas fa-images"></i>
-                    <span>メディアから</span>
-                  </button>
-                  <button type="button" class="image-warehouse-btn-modal" data-category="before" data-item-id="${itemIdValue}">
-                    <i class="fas fa-warehouse"></i>
-                    <span>画像倉庫から</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="image-category-modal after-category">
-              <h4 class="image-category-title-modal"><i class="fas fa-check-circle"></i> 作業後（After）</h4>
-              <div class="image-list-modal" data-category="after" data-item-id="${itemIdValue}">
-                ${afterPhotosHtml}
-                <div class="image-item-modal image-add-btns-modal">
-                  <label class="image-upload-btn-modal">
-                    <input type="file" accept="image/*" multiple data-category="after" data-item-id="${itemIdValue}" />
-                    <i class="fas fa-camera"></i>
-                    <span>ファイルから</span>
-                  </label>
-                  <button type="button" class="image-media-btn-modal" data-category="after" data-item-id="${itemIdValue}">
-                    <i class="fas fa-images"></i>
-                    <span>メディアから</span>
-                  </button>
-                  <button type="button" class="image-warehouse-btn-modal" data-category="after" data-item-id="${itemIdValue}">
-                    <i class="fas fa-warehouse"></i>
-                    <span>画像倉庫から</span>
-                  </button>
-                </div>
+          <div class="photos-section-modal">
+            <div class="photos-label-modal">作業前:</div>
+            <div class="photos-grid-modal" data-category="before" data-item-id="${itemIdValue}">
+              ${beforePhotosHtml}
+              <div class="photo-add-btns-modal">
+                <label class="image-upload-btn-modal">
+                  <input type="file" accept="image/*" multiple data-category="before" data-item-id="${itemIdValue}" />
+                  <i class="fas fa-camera"></i>
+                  <span>ファイルから</span>
+                </label>
+                <button type="button" class="image-media-btn-modal" data-category="before" data-item-id="${itemIdValue}">
+                  <i class="fas fa-images"></i>
+                  <span>メディアから</span>
+                </button>
+                <button type="button" class="image-warehouse-btn-modal" data-category="before" data-item-id="${itemIdValue}">
+                  <i class="fas fa-warehouse"></i>
+                  <span>画像倉庫から</span>
+                </button>
               </div>
             </div>
           </div>
-          <div class="subsection-modal">
-            <h4 class="subsection-title-modal">作業メモ</h4>
-            <textarea class="work-item-memo-modal" placeholder="特記事項を入力してください">${escapeHtml(workMemo)}</textarea>
+          <div class="photos-section-modal">
+            <div class="photos-label-modal">作業後:</div>
+            <div class="photos-grid-modal" data-category="after" data-item-id="${itemIdValue}">
+              ${afterPhotosHtml}
+              <div class="photo-add-btns-modal">
+                <label class="image-upload-btn-modal">
+                  <input type="file" accept="image/*" multiple data-category="after" data-item-id="${itemIdValue}" />
+                  <i class="fas fa-camera"></i>
+                  <span>ファイルから</span>
+                </label>
+                <button type="button" class="image-media-btn-modal" data-category="after" data-item-id="${itemIdValue}">
+                  <i class="fas fa-images"></i>
+                  <span>メディアから</span>
+                </button>
+                <button type="button" class="image-warehouse-btn-modal" data-category="after" data-item-id="${itemIdValue}">
+                  <i class="fas fa-warehouse"></i>
+                  <span>画像倉庫から</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="comment-section-modal">
+            <div class="comment-label-modal">コメント</div>
+            <textarea class="comment-textarea-modal" placeholder="コメントを入力してください">${escapeHtml(workMemo || workContent)}</textarea>
           </div>
         `;
         
         container.appendChild(workItemSection);
         
         // タイトル選択のイベントリスナー（リスト更新用）
-        const titleSelect = workItemSection.querySelector('.item-title-select-modal');
+        const titleSelect = workItemSection.querySelector('.work-item-title-select-modal');
         if (titleSelect) {
           titleSelect.addEventListener('change', window.updateCleaningItemsListModal);
         }
@@ -2097,7 +2059,7 @@
           return;
         }
         
-        const photoGrid = input.closest('.image-list-modal');
+        const photoGrid = input.closest('.photos-grid-modal');
         if (!photoGrid) {
           return;
         }
@@ -2114,15 +2076,15 @@
             const base64 = await blobToBase64Modal(optimizedBlob);
             
             const photoItem = document.createElement('div');
-            photoItem.className = 'image-item-modal';
+            photoItem.className = 'photo-item-modal';
             photoItem.innerHTML = `
               <img src="${base64}" alt="Uploaded photo">
-              <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
+              <button type="button" class="photo-remove-modal" onclick="removePhotoModal(this)">
                 <i class="fas fa-times"></i>
               </button>
             `;
             
-            const uploadBtn = input.closest('.image-item-modal');
+            const uploadBtn = input.closest('.photo-add-btns-modal');
             if (!uploadBtn) {
               continue;
             }
@@ -2141,7 +2103,7 @@
 
       // モーダル用: 写真を削除
       window.removePhotoModal = function(button) {
-        const photoItem = button.closest('.image-item-modal');
+        const photoItem = button.closest('.photo-item-modal');
         photoItem.remove();
       };
 
@@ -2171,7 +2133,7 @@
 
       // メディアから選択した画像をレポートに追加
       function addMediaImageToReport(imagePath, category, itemId) {
-        const photoGrid = document.querySelector(`.image-list-modal[data-category="${category}"][data-item-id="${itemId}"]`);
+        const photoGrid = document.querySelector(`.photos-grid-modal[data-category="${category}"][data-item-id="${itemId}"]`);
         if (!photoGrid) {
           console.error('Could not find photo grid for', category, itemId);
           return;
@@ -2189,17 +2151,17 @@
         }
         
         const photoItem = document.createElement('div');
-        photoItem.className = 'image-item-modal';
+        photoItem.className = 'photo-item-modal';
         photoItem.dataset.url = resolvedPath;
         photoItem.innerHTML = `
           <img src="${resolvedPath}" alt="Selected from media">
-          <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
+          <button type="button" class="photo-remove-modal" onclick="removePhotoModal(this)">
             <i class="fas fa-times"></i>
           </button>
         `;
         
         // アップロードボタンの前に挿入
-        const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+        const addBtns = photoGrid.querySelector('.photo-add-btns-modal');
         if (addBtns) {
           photoGrid.insertBefore(photoItem, addBtns);
         } else {
@@ -2544,7 +2506,7 @@
         console.log('[Warehouse] itemIdStr:', itemIdStr);
         
         // まず、すべてのphotoGridを確認
-        const allPhotoGrids = document.querySelectorAll('.image-list-modal');
+        const allPhotoGrids = document.querySelectorAll('.photos-grid-modal');
         console.log('[Warehouse] All available photo grids:', Array.from(allPhotoGrids).map(el => ({
           category: el.dataset.category,
           itemId: el.dataset.itemId,
@@ -2554,7 +2516,7 @@
         })));
         
         // セレクターを構築
-        const selector = `.image-list-modal[data-category="${category}"][data-item-id="${itemIdStr}"]`;
+        const selector = `.photos-grid-modal[data-category="${category}"][data-item-id="${itemIdStr}"]`;
         console.log('[Warehouse] Looking for photo grid with selector:', selector);
         
         let photoGrid = document.querySelector(selector);
@@ -2595,24 +2557,24 @@
         
         // 既に同じ画像が追加されていないか確認
         const escapedUrl = escapeHtml(imageUrl);
-        const existingImages = photoGrid.querySelectorAll(`.image-item-modal[data-url="${escapedUrl}"]`);
+        const existingImages = photoGrid.querySelectorAll(`.photo-item-modal[data-url="${escapedUrl}"]`);
         if (existingImages.length > 0) {
           console.log('[Warehouse] Image already exists, skipping:', imageUrl);
           return false; // 既に追加されている
         }
         
         const photoItem = document.createElement('div');
-        photoItem.className = 'image-item-modal';
+        photoItem.className = 'photo-item-modal';
         photoItem.dataset.url = imageUrl;
         photoItem.innerHTML = `
           <img src="${escapedUrl}" alt="Selected from warehouse" loading="lazy">
-          <button type="button" class="image-remove-modal" onclick="removePhotoModal(this)">
+          <button type="button" class="photo-remove-modal" onclick="removePhotoModal(this)">
             <i class="fas fa-times"></i>
           </button>
         `;
         
         // アップロードボタンの前に挿入
-        const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+        const addBtns = photoGrid.querySelector('.photo-add-btns-modal');
         console.log('[Warehouse] addBtns found:', !!addBtns);
         
         if (addBtns) {
@@ -2624,7 +2586,7 @@
         }
         
         // 追加されたことを確認
-        const addedImage = photoGrid.querySelector(`.image-item-modal[data-url="${escapedUrl}"]`);
+        const addedImage = photoGrid.querySelector(`.photo-item-modal[data-url="${escapedUrl}"]`);
         if (addedImage) {
           console.log('[Warehouse] ✓ Image successfully added to DOM:', imageUrl);
           console.log('[Warehouse] Photo grid now has', photoGrid.children.length, 'children');
@@ -2685,30 +2647,22 @@
           // 清掃項目を収集
           document.querySelectorAll('.cleaning-section-modal').forEach(section => {
             const itemId = section.dataset.itemId;
-            const titleSelect = section.querySelector('.item-title-select-modal');
-            const titleInput = section.querySelector('.item-title-input-modal');
-            const itemName = (titleSelect?.value?.trim()) || (titleInput?.value?.trim()) || '';
+            const titleSelect = section.querySelector('.work-item-title-select-modal');
+            const itemName = titleSelect?.value?.trim() || '';
             
             if (!itemName) {
               return;
             }
             
-            const detailInputs = section.querySelectorAll('.detail-tag-input-modal');
-            const type = detailInputs[0]?.value?.trim() || '';
-            const count = detailInputs[1]?.value?.trim() || '';
-            
-            const workContentEl = section.querySelector('.work-item-content-modal');
-            const workMemoEl = section.querySelector('.work-item-memo-modal');
+            const commentEl = section.querySelector('.comment-textarea-modal');
+            const comment = commentEl ? commentEl.value.trim() : '';
             
             const workItem = {
               item_id: itemId,
               item_name: itemName,
-              details: {
-                type: type,
-                count: count
-              },
-              work_content: workContentEl ? workContentEl.value.trim() : '',
-              work_memo: workMemoEl ? workMemoEl.value.trim() : '',
+              details: {},
+              work_content: '',
+              work_memo: comment,
               photos: {
                 before: [],
                 after: []
@@ -2716,7 +2670,7 @@
             };
             
             // 作業前の写真（Base64またはURL）- アップロードボタンを除外
-            const beforeItems = section.querySelectorAll('[data-category="before"] .image-item-modal:not(.image-add-btns-modal)');
+            const beforeItems = section.querySelectorAll('[data-category="before"] .photo-item-modal:not(.photo-add-btns-modal)');
             beforeItems.forEach(photoItem => {
               if (photoItem.dataset.base64) {
                 workItem.photos.before.push(photoItem.dataset.base64);
@@ -2732,7 +2686,7 @@
             });
             
             // 作業後の写真（Base64またはURL）- アップロードボタンを除外
-            const afterItems = section.querySelectorAll('[data-category="after"] .image-item-modal:not(.image-add-btns-modal)');
+            const afterItems = section.querySelectorAll('[data-category="after"] .photo-item-modal:not(.photo-add-btns-modal)');
             afterItems.forEach(photoItem => {
               if (photoItem.dataset.base64) {
                 workItem.photos.after.push(photoItem.dataset.base64);
