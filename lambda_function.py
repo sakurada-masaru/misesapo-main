@@ -1510,6 +1510,57 @@ def create_report(event, headers):
         # staff_idが指定されていない場合は、created_byを使用
         staff_id = body_json.get('staff_id') or user_info.get('uid', 'admin-uid')
         
+        # sectionsの画像をS3にアップロード
+        sections = body_json.get('sections', [])
+        processed_sections = []
+        for section in sections:
+            if section.get('section_type') == 'image':
+                section_id = section.get('section_id', str(uuid.uuid4()))
+                processed_section = {
+                    'section_id': section_id,
+                    'section_type': 'image',
+                    'image_type': section.get('image_type', 'work'),
+                    'photos': {
+                        'before': [],
+                        'after': []
+                    }
+                }
+                
+                # 作業前の写真
+                base64_counter = 0
+                for photo_data in section.get('photos', {}).get('before', []):
+                    if photo_data:
+                        if isinstance(photo_data, str) and photo_data.startswith('data:image'):
+                            base64_counter += 1
+                            photo_key = f"reports/{report_id}/section-{section_id}-before-{base64_counter}.jpg"
+                            try:
+                                photo_url = upload_photo_to_s3(photo_data, photo_key)
+                                processed_section['photos']['before'].append(photo_url)
+                            except Exception as e:
+                                print(f"Error uploading section before photo: {str(e)}")
+                        elif isinstance(photo_data, str) and (photo_data.startswith('http://') or photo_data.startswith('https://')):
+                            processed_section['photos']['before'].append(photo_data)
+                
+                # 作業後の写真
+                base64_counter = 0
+                for photo_data in section.get('photos', {}).get('after', []):
+                    if photo_data:
+                        if isinstance(photo_data, str) and photo_data.startswith('data:image'):
+                            base64_counter += 1
+                            photo_key = f"reports/{report_id}/section-{section_id}-after-{base64_counter}.jpg"
+                            try:
+                                photo_url = upload_photo_to_s3(photo_data, photo_key)
+                                processed_section['photos']['after'].append(photo_url)
+                            except Exception as e:
+                                print(f"Error uploading section after photo: {str(e)}")
+                        elif isinstance(photo_data, str) and (photo_data.startswith('http://') or photo_data.startswith('https://')):
+                            processed_section['photos']['after'].append(photo_data)
+                
+                processed_sections.append(processed_section)
+            else:
+                # コメントや作業内容セクションはそのまま追加
+                processed_sections.append(section)
+        
         # DynamoDBに保存するアイテムを作成
         report_item = {
             'report_id': report_id,
@@ -1528,6 +1579,7 @@ def create_report(event, headers):
             'cleaning_end_time': body_json.get('cleaning_end_time'),
             'status': 'published',
             'work_items': body_json['work_items'],
+            'sections': processed_sections,
             'location': body_json.get('location'),
             'satisfaction': {
                 'rating': None,
@@ -2075,6 +2127,57 @@ def update_report_by_id(report_id, event, headers):
         if staff_id_value == '' or staff_id_value is None:
             staff_id_value = None
         
+        # sectionsの画像をS3にアップロード
+        sections = body_json.get('sections', existing_item.get('sections', []))
+        processed_sections = []
+        for section in sections:
+            if section.get('section_type') == 'image':
+                section_id = section.get('section_id', str(uuid.uuid4()))
+                processed_section = {
+                    'section_id': section_id,
+                    'section_type': 'image',
+                    'image_type': section.get('image_type', 'work'),
+                    'photos': {
+                        'before': [],
+                        'after': []
+                    }
+                }
+                
+                # 作業前の写真
+                base64_counter = 0
+                for photo_data in section.get('photos', {}).get('before', []):
+                    if photo_data:
+                        if isinstance(photo_data, str) and photo_data.startswith('data:image'):
+                            base64_counter += 1
+                            photo_key = f"reports/{report_id}/section-{section_id}-before-{base64_counter}.jpg"
+                            try:
+                                photo_url = upload_photo_to_s3(photo_data, photo_key)
+                                processed_section['photos']['before'].append(photo_url)
+                            except Exception as e:
+                                print(f"Error uploading section before photo: {str(e)}")
+                        elif isinstance(photo_data, str) and (photo_data.startswith('http://') or photo_data.startswith('https://')):
+                            processed_section['photos']['before'].append(photo_data)
+                
+                # 作業後の写真
+                base64_counter = 0
+                for photo_data in section.get('photos', {}).get('after', []):
+                    if photo_data:
+                        if isinstance(photo_data, str) and photo_data.startswith('data:image'):
+                            base64_counter += 1
+                            photo_key = f"reports/{report_id}/section-{section_id}-after-{base64_counter}.jpg"
+                            try:
+                                photo_url = upload_photo_to_s3(photo_data, photo_key)
+                                processed_section['photos']['after'].append(photo_url)
+                            except Exception as e:
+                                print(f"Error uploading section after photo: {str(e)}")
+                        elif isinstance(photo_data, str) and (photo_data.startswith('http://') or photo_data.startswith('https://')):
+                            processed_section['photos']['after'].append(photo_data)
+                
+                processed_sections.append(processed_section)
+            else:
+                # コメントや作業内容セクションはそのまま追加
+                processed_sections.append(section)
+        
         # レポートを更新
         updated_item = {
             'report_id': report_id,
@@ -2093,6 +2196,7 @@ def update_report_by_id(report_id, event, headers):
             'cleaning_end_time': body_json.get('cleaning_end_time', existing_item.get('cleaning_end_time')),
             'status': body_json.get('status', existing_item.get('status', 'published')),
             'work_items': body_json.get('work_items', existing_item['work_items']),
+            'sections': processed_sections,
             'location': body_json.get('location', existing_item.get('location')),
             'satisfaction': body_json.get('satisfaction', existing_item.get('satisfaction', {})),
             'ttl': existing_item.get('ttl')
