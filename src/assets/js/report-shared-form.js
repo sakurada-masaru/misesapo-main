@@ -6,8 +6,23 @@ function getReportIdFromUrl() {
     return match ? match[1] : null;
 }
 
-// フォーム送信処理
-document.getElementById('viewer-info-form').addEventListener('submit', async function(e) {
+// ページ読み込み時に直接レポート表示ページにリダイレクト
+window.addEventListener('DOMContentLoaded', function() {
+    const reportId = getReportIdFromUrl();
+    if (reportId) {
+        // /view が含まれていない場合のみリダイレクト（無限ループを防ぐ）
+        if (!window.location.pathname.includes('/view')) {
+            const cleanId = reportId.replace('.html', '');
+            window.location.href = `/reports/shared/${cleanId}/view`;
+            return;
+        }
+    }
+});
+
+// フォーム送信処理（このページは使用されなくなりましたが、念のため残しておきます）
+const form = document.getElementById('viewer-info-form');
+if (form) {
+    form.addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const reportId = getReportIdFromUrl();
@@ -52,12 +67,14 @@ document.getElementById('viewer-info-form').addEventListener('submit', async fun
     // reportIdから.htmlを削除（もし含まれている場合）
     const cleanId = reportId.replace('.html', '');
     window.location.href = `/reports/shared/${cleanId}/view`;
-});
+    });
+}
 
-// 入力済み情報があれば復元
-window.addEventListener('DOMContentLoaded', function() {
+// 入力済み情報があれば復元（このページは使用されなくなりましたが、念のため残しておきます）
+const formForRestore = document.getElementById('viewer-info-form');
+if (formForRestore) {
     const reportId = getReportIdFromUrl();
-    if (reportId) {
+    if (reportId && !window.location.pathname.includes('/view')) {
         const saved = localStorage.getItem(`report_viewer_${reportId}`);
         if (saved) {
             try {
@@ -87,6 +104,6 @@ window.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-});
+}
 
 

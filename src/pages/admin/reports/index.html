@@ -217,11 +217,6 @@
           <div class="copy-success-message" id="copy-success" style="display: none;">
             <i class="fas fa-check-circle"></i> URLをコピーしました
           </div>
-          <div class="share-actions">
-            <a id="share-preview-link" href="#" target="_blank" class="btn btn-outline">
-              <i class="fas fa-external-link-alt"></i> プレビューで開く
-            </a>
-          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -568,15 +563,6 @@
       display: flex;
       align-items: center;
       gap: 8px;
-    }
-    .share-actions {
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
-    }
-    .share-actions .btn {
-      width: 100%;
-      justify-content: center;
     }
 
     /* ボタン */
@@ -1657,17 +1643,13 @@
         return;
       }
 
-      // 共有URLを生成
+      // 共有URLを生成（直接レポート表示ページ）
       const reportId = report.report_id || report.id;
       const baseUrl = window.location.origin;
-      const shareUrl = `${baseUrl}/reports/shared/${reportId}`;
+      const shareUrl = `${baseUrl}/reports/shared/${reportId}/view`;
 
       // URLを表示
       document.getElementById('share-url-input').value = shareUrl;
-      
-      // プレビューリンクを設定
-      const previewLink = document.getElementById('share-preview-link');
-      previewLink.href = shareUrl;
       
       // コピー成功メッセージを非表示
       document.getElementById('copy-success').style.display = 'none';

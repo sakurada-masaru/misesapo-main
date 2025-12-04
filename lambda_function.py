@@ -205,10 +205,12 @@ def lambda_handler(event, context):
             elif method == 'PUT':
                 return update_report(event, headers)
         elif normalized_path.startswith('/staff/reports/'):
-            # レポート詳細の取得・削除
+            # レポート詳細の取得・更新・削除
             report_id = normalized_path.split('/')[-1]
             if method == 'GET':
                 return get_report_detail(report_id, event, headers)
+            elif method == 'PUT':
+                return update_report_by_id(report_id, event, headers)
             elif method == 'DELETE':
                 return delete_report(report_id, event, headers)
         elif normalized_path.startswith('/public/reports/'):
@@ -1819,6 +1821,168 @@ def update_report(event, headers):
                 'headers': headers,
                 'body': json.dumps({'error': 'report_id is required'}, ensure_ascii=False)
             }
+        
+        # 既存のレポートを取得（スキャンを使用、ページネーションに対応）
+        items = []
+        last_evaluated_key = None
+        
+        while True:
+            scan_kwargs = {
+                'FilterExpression': Attr('report_id').eq(report_id),
+                'Limit': 10
+            }
+            if last_evaluated_key:
+                scan_kwargs['ExclusiveStartKey'] = last_evaluated_key
+            
+            existing_response = REPORTS_TABLE.scan(**scan_kwargs)
+            items.extend(existing_response.get('Items', []))
+            
+            # 見つかったら終了
+            if items:
+                break
+            
+            # ページネーションが続くか確認
+            last_evaluated_key = existing_response.get('LastEvaluatedKey')
+            if not last_evaluated_key:
+                break
+        
+        if not items:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': 'Report not found'}, ensure_ascii=False)
+            }
+        
+        existing_item = items[0]
+        
+        # 写真をS3にアップロード（新しいBase64画像がある場合）
+        photo_urls = {}
+        for item in body_json.get('work_items', []):
+            item_id = item['item_id']
+            photo_urls[item_id] = {
+                'before': [],
+                'after': []
+            }
+            
+            # 既存の写真URLを保持（Base64でないもの）
+            existing_photos = item.get('photos', {})
+            for photo_url in existing_photos.get('before', []):
+                if not photo_url.startswith('data:image'):
+                    photo_urls[item_id]['before'].append(photo_url)
+            
+            for photo_url in existing_photos.get('after', []):
+                if not photo_url.startswith('data:image'):
+                    photo_urls[item_id]['after'].append(photo_url)
+            
+            # 新しいBase64画像をアップロード
+            for idx, photo_data in enumerate(item.get('photos', {}).get('before', [])):
+                if isinstance(photo_data, str) and photo_data.startswith('data:image'):
+                    photo_key = f"reports/{report_id}/{item_id}-before-{len(photo_urls[item_id]['before'])+1}.jpg"
+                    try:
+                        photo_url = upload_photo_to_s3(photo_data, photo_key)
+                        photo_urls[item_id]['before'].append(photo_url)
+                    except Exception as e:
+                        print(f"Error uploading before photo: {str(e)}")
+            
+            for idx, photo_data in enumerate(item.get('photos', {}).get('after', [])):
+                if isinstance(photo_data, str) and photo_data.startswith('data:image'):
+                    photo_key = f"reports/{report_id}/{item_id}-after-{len(photo_urls[item_id]['after'])+1}.jpg"
+                    try:
+                        photo_url = upload_photo_to_s3(photo_data, photo_key)
+                        photo_urls[item_id]['after'].append(photo_url)
+                    except Exception as e:
+                        print(f"Error uploading after photo: {str(e)}")
+        
+        # レポートを更新
+        updated_item = {
+            'report_id': report_id,
+            'created_at': existing_item['created_at'],
+            'updated_at': datetime.utcnow().isoformat() + 'Z',
+            'created_by': existing_item.get('created_by'),
+            'created_by_name': body_json.get('created_by_name', existing_item.get('created_by_name', '')),
+            'created_by_email': existing_item.get('created_by_email'),
+            'staff_id': body_json.get('staff_id', existing_item.get('staff_id')),
+            'staff_name': body_json.get('staff_name', existing_item.get('staff_name')),
+            'staff_email': body_json.get('staff_email', existing_item.get('staff_email')),
+            'store_id': body_json.get('store_id', existing_item['store_id']),
+            'store_name': body_json.get('store_name', existing_item['store_name']),
+            'cleaning_date': body_json.get('cleaning_date', existing_item['cleaning_date']),
+            'cleaning_start_time': body_json.get('cleaning_start_time', existing_item.get('cleaning_start_time')),
+            'cleaning_end_time': body_json.get('cleaning_end_time', existing_item.get('cleaning_end_time')),
+            'status': body_json.get('status', existing_item.get('status', 'published')),
+            'work_items': body_json.get('work_items', existing_item['work_items']),
+            'location': body_json.get('location', existing_item.get('location')),
+            'satisfaction': body_json.get('satisfaction', existing_item.get('satisfaction', {})),
+            'ttl': existing_item.get('ttl')
+        }
+        
+        # 写真URLをwork_itemsに反映
+        for item in updated_item['work_items']:
+            item_id = item['item_id']
+            if item_id in photo_urls:
+                item['photos'] = photo_urls[item_id]
+        
+        # DynamoDBに保存
+        REPORTS_TABLE.put_item(Item=updated_item)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'レポートを更新しました',
+                'report_id': report_id
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error updating report: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'レポートの更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_report_by_id(report_id, event, headers):
+    """
+    レポートを更新（IDをURLパスから取得、管理者のみ）
+    """
+    try:
+        # Firebase ID Tokenを取得
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        
+        # トークンを検証
+        user_info = verify_firebase_token(id_token)
+        if not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        # 管理者権限をチェック
+        if not check_admin_permission(user_info):
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
+            }
+        
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
         
         # 既存のレポートを取得（スキャンを使用、ページネーションに対応）
         items = []
