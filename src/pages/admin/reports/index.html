@@ -2509,12 +2509,20 @@
               warehouseSaved = true;
               
               // 選択した画像をカテゴリごとに追加
+              // MapのforEachは (value, key) の順序なので、selectedWarehouseImages.set(imageUrl, category) の場合
+              // forEach((category, imageUrl) => ...) が正しい
               let addedCount = 0;
               selectedWarehouseImages.forEach((category, imageUrl) => {
                 console.log('[Warehouse] Processing image:', { imageUrl, category, itemId: currentWarehouseItemId });
-                const result = window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
-                if (result) {
-                  addedCount++;
+                console.log('[Warehouse] Calling addWarehouseImageToReport with:', { imageUrl, category, itemId: currentWarehouseItemId });
+                try {
+                  const result = window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
+                  console.log('[Warehouse] addWarehouseImageToReport returned:', result);
+                  if (result) {
+                    addedCount++;
+                  }
+                } catch (error) {
+                  console.error('[Warehouse] Error adding image:', error);
                 }
               });
               
@@ -2548,10 +2556,22 @@
 
       // 画像倉庫から選択した画像をレポートに追加
       window.addWarehouseImageToReport = function(imageUrl, category, itemId) {
-        console.log('[Warehouse] Adding image to report:', { imageUrl, category, itemId, itemIdType: typeof itemId });
+        console.log('[Warehouse] ===== Adding image to report =====');
+        console.log('[Warehouse] Parameters:', { imageUrl, category, itemId, itemIdType: typeof itemId });
         
         // itemIdを文字列に変換（比較のため）
         const itemIdStr = String(itemId);
+        console.log('[Warehouse] itemIdStr:', itemIdStr);
+        
+        // まず、すべてのphotoGridを確認
+        const allPhotoGrids = document.querySelectorAll('.image-list-modal');
+        console.log('[Warehouse] All available photo grids:', Array.from(allPhotoGrids).map(el => ({
+          category: el.dataset.category,
+          itemId: el.dataset.itemId,
+          itemIdType: typeof el.dataset.itemId,
+          matchesCategory: el.dataset.category === category,
+          matchesItemId: el.dataset.itemId === itemIdStr || el.dataset.itemId === itemId || String(el.dataset.itemId) === itemIdStr
+        })));
         
         // セレクターを構築
         const selector = `.image-list-modal[data-category="${category}"][data-item-id="${itemIdStr}"]`;
@@ -2559,27 +2579,36 @@
         
         let photoGrid = document.querySelector(selector);
         if (!photoGrid) {
-          console.error('[Warehouse] Could not find photo grid for', { category, itemId: itemIdStr, selector });
-          // すべてのphotoGridを確認
-          const allPhotoGrids = document.querySelectorAll('.image-list-modal');
-          console.log('[Warehouse] Available photo grids:', Array.from(allPhotoGrids).map(el => ({
-            category: el.dataset.category,
-            itemId: el.dataset.itemId,
-            itemIdType: typeof el.dataset.itemId
-          })));
+          console.warn('[Warehouse] Direct selector failed, trying fallback search');
           
-          // より柔軟な検索を試す（部分一致）
-          const fallbackGrid = Array.from(allPhotoGrids).find(el => 
-            el.dataset.category === category && 
-            (el.dataset.itemId === itemIdStr || el.dataset.itemId === itemId || String(el.dataset.itemId) === itemIdStr)
-          );
+          // より柔軟な検索を試す
+          const fallbackGrid = Array.from(allPhotoGrids).find(el => {
+            const categoryMatch = el.dataset.category === category;
+            const itemIdMatch = el.dataset.itemId === itemIdStr || 
+                               el.dataset.itemId === itemId || 
+                               String(el.dataset.itemId) === itemIdStr ||
+                               String(el.dataset.itemId) === String(itemId);
+            console.log('[Warehouse] Checking grid:', {
+              category: el.dataset.category,
+              itemId: el.dataset.itemId,
+              categoryMatch,
+              itemIdMatch,
+              willMatch: categoryMatch && itemIdMatch
+            });
+            return categoryMatch && itemIdMatch;
+          });
+          
           if (fallbackGrid) {
-            console.log('[Warehouse] Found photo grid using fallback search');
+            console.log('[Warehouse] Found photo grid using fallback search:', fallbackGrid);
             photoGrid = fallbackGrid;
           } else {
             console.error('[Warehouse] Could not find photo grid even with fallback search');
-            return;
+            console.error('[Warehouse] Searched for:', { category, itemId: itemIdStr, originalItemId: itemId });
+            alert(`画像を追加できませんでした。\nカテゴリ: ${category}\n項目ID: ${itemIdStr}\n\nコンソールを確認してください。`);
+            return false;
           }
+        } else {
+          console.log('[Warehouse] Found photo grid using direct selector');
         }
         
         console.log('[Warehouse] Found photo grid:', photoGrid);
@@ -2604,16 +2633,26 @@
         
         // アップロードボタンの前に挿入
         const addBtns = photoGrid.querySelector('.image-add-btns-modal');
+        console.log('[Warehouse] addBtns found:', !!addBtns);
+        
         if (addBtns) {
           photoGrid.insertBefore(photoItem, addBtns);
           console.log('[Warehouse] Image inserted before add buttons');
         } else {
           photoGrid.appendChild(photoItem);
-          console.log('[Warehouse] Image appended to grid');
+          console.log('[Warehouse] Image appended to grid (no add buttons found)');
         }
         
-        console.log('[Warehouse] Image added successfully:', imageUrl);
-        return true; // 成功
+        // 追加されたことを確認
+        const addedImage = photoGrid.querySelector(`.image-item-modal[data-url="${escapedUrl}"]`);
+        if (addedImage) {
+          console.log('[Warehouse] ✓ Image successfully added to DOM:', imageUrl);
+          console.log('[Warehouse] Photo grid now has', photoGrid.children.length, 'children');
+          return true; // 成功
+        } else {
+          console.error('[Warehouse] ✗ Image was not added to DOM:', imageUrl);
+          return false;
+        }
       };
 
       // ベースパスを取得（GitHub Pages対応）
