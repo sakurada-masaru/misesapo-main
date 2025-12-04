@@ -1992,6 +1992,12 @@
               });
             }
             
+            // 空の画像セクション（写真が1枚もない）はスキップ
+            if (sectionData.photos.before.length === 0 && sectionData.photos.after.length === 0) {
+              console.log(`[Submit] Image section ${sectionId} - Skipped (no photos)`);
+              return;
+            }
+            
             console.log(`[Submit] Image section ${sectionId} - Photos:`, sectionData.photos);
             formData.sections.push(sectionData);
           });
