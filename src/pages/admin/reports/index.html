@@ -1250,6 +1250,11 @@
         return;
       }
 
+      // デバッグログ
+      console.log('[viewReport] Report ID:', id);
+      console.log('[viewReport] Report data:', report);
+      console.log('[viewReport] Work items:', report.work_items);
+
       currentReportId = id;
       const store = allStores.find(s => s.id === report.store_id) || {};
       const worker = allWorkers.find(w => w.id === report.worker_id || w.id === report.staff_id) || {};
@@ -1284,12 +1289,18 @@
           // 写真の表示
           const beforePhotos = item.photos?.before || [];
           const afterPhotos = item.photos?.after || [];
+          
+          // デバッグログ
+          console.log(`[viewReport] Item: ${item.item_name}, Before photos:`, beforePhotos);
+          console.log(`[viewReport] Item: ${item.item_name}, After photos:`, afterPhotos);
 
           const beforePhotosHtml = beforePhotos.length > 0
             ? `<div class="image-list-modal">
                  ${beforePhotos.map(url => `
                    <div class="image-item-modal">
-                     <img src="${url}" alt="作業前" loading="lazy" />
+                     <img src="${url}" alt="作業前" loading="lazy" 
+                          onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像読み込みエラー%3C/text%3E%3C/svg%3E'; 
+                          onload="console.log('[Image] Loaded:', '${url}')" />
                    </div>
                  `).join('')}
                </div>`
@@ -1299,7 +1310,9 @@
             ? `<div class="image-list-modal">
                  ${afterPhotos.map(url => `
                    <div class="image-item-modal">
-                     <img src="${url}" alt="作業後" loading="lazy" />
+                     <img src="${url}" alt="作業後" loading="lazy" 
+                          onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像読み込みエラー%3C/text%3E%3C/svg%3E'; 
+                          onload="console.log('[Image] Loaded:', '${url}')" />
                    </div>
                  `).join('')}
                </div>`
