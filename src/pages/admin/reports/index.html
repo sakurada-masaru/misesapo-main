@@ -2198,6 +2198,8 @@
 
       // 画像倉庫を開く
       window.openImageWarehouse = function(category, itemId) {
+        console.log('[Warehouse] Opening warehouse:', { category, itemId });
+        
         currentWarehouseCategory = category;
         currentWarehouseItemId = itemId;
         selectedWarehouseImages.clear();
@@ -2205,10 +2207,16 @@
         // レポートの日付を取得（デフォルト値として使用）
         const reportDate = document.getElementById('report-date').value || new Date().toISOString().split('T')[0];
         document.getElementById('warehouse-date-filter').value = reportDate;
-        document.getElementById('warehouse-category-filter').value = category;
         
-        // 画像を読み込み
-        loadWarehouseImages(reportDate, category);
+        // カテゴリフィルターを設定
+        const categoryFilter = document.getElementById('warehouse-category-filter');
+        if (categoryFilter) {
+          categoryFilter.value = category || '';
+          console.log('[Warehouse] Category filter set to:', categoryFilter.value);
+        }
+        
+        // 画像を読み込み（カテゴリが空の場合は undefined を渡す）
+        loadWarehouseImages(reportDate, category && category.trim() !== '' ? category : undefined);
         
         // モーダルを開く
         document.getElementById('warehouse-dialog').showModal();
@@ -2221,14 +2229,27 @@
         
         try {
           const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
-          const params = new URLSearchParams({ date, ...(category && { category }) });
-          const response = await fetch(`${REPORT_API}/staff/report-images?${params}`);
+          
+          // パラメータを構築（カテゴリが空文字列の場合は送信しない）
+          const params = new URLSearchParams({ date });
+          if (category && category.trim() !== '') {
+            params.append('category', category);
+          }
+          
+          const url = `${REPORT_API}/staff/report-images?${params}`;
+          console.log('[Warehouse] Loading images:', { date, category, url });
+          
+          const response = await fetch(url);
           
           if (!response.ok) {
-            throw new Error('画像の読み込みに失敗しました');
+            const errorText = await response.text();
+            console.error('[Warehouse] Error response:', errorText);
+            throw new Error('画像の読み込みに失敗しました: ' + response.status);
           }
           
           const data = await response.json();
+          console.log('[Warehouse] Received data:', { date: data.date, category: data.category, count: data.count });
+          
           const images = data.images || [];
           
           if (images.length === 0) {
@@ -2250,7 +2271,7 @@
           }).join('');
           
         } catch (error) {
-          console.error('Error loading warehouse images:', error);
+          console.error('[Warehouse] Error loading warehouse images:', error);
           container.innerHTML = '<div class="loading">エラー: ' + error.message + '</div>';
         }
       }
@@ -2280,9 +2301,14 @@
         if (searchBtn) {
           searchBtn.addEventListener('click', function() {
             const date = document.getElementById('warehouse-date-filter').value;
-            const category = document.getElementById('warehouse-category-filter').value;
+            const categorySelect = document.getElementById('warehouse-category-filter');
+            const category = categorySelect ? categorySelect.value : '';
+            
+            console.log('[Warehouse] Search clicked:', { date, category });
+            
             if (date) {
-              loadWarehouseImages(date, category || null);
+              // カテゴリが空文字列の場合は undefined を渡す（すべてのカテゴリを取得）
+              loadWarehouseImages(date, category && category.trim() !== '' ? category : undefined);
             } else {
               alert('日付を選択してください');
             }
