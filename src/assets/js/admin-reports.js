@@ -916,11 +916,11 @@
           const select = section.querySelector('.item-title-select-modal');
           const input = section.querySelector('.item-title-input-modal');
           if (select && select.value === '__custom__' && input) {
-            return input.value.trim() || '';
+            return (input.value || '').trim() || '';
           } else if (select && select.value && select.value !== '__custom__') {
             return select.value;
-          } else if (input && input.value.trim()) {
-            return input.value.trim();
+          } else if (input && input.value) {
+            return (input.value || '').trim();
           }
           return '';
         }).filter(name => name !== '');
