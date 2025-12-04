@@ -1587,41 +1587,49 @@
         console.log('[Warehouse] Save button clicked');
         console.log('[Warehouse] Selected images count:', selectedWarehouseImages.size);
         console.log('[Warehouse] Current itemId:', currentWarehouseItemId);
+        console.log('[Warehouse] Current sectionId:', currentWarehouseSectionId);
         console.log('[Warehouse] Selected images:', Array.from(selectedWarehouseImages.entries()));
         
-        if (selectedWarehouseImages.size > 0 && currentWarehouseItemId) {
-          warehouseSaved = true;
-          
-          // 選択した画像をカテゴリごとに追加
-          // MapのforEachは (value, key) の順序なので、selectedWarehouseImages.set(imageUrl, category) の場合
-          // forEach((category, imageUrl) => ...) が正しい
-          let addedCount = 0;
-          selectedWarehouseImages.forEach((category, imageUrl) => {
-            console.log('[Warehouse] Processing image:', { imageUrl, category, itemId: currentWarehouseItemId, sectionId: currentWarehouseSectionId });
-            try {
-              let result = false;
-              if (currentWarehouseSectionId) {
-                result = window.addWarehouseImageToReportSection(imageUrl, category, currentWarehouseSectionId);
-              } else {
-                result = window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
-              }
-              console.log('[Warehouse] addWarehouseImageToReport returned:', result);
-              if (result) {
-                addedCount++;
-              }
-            } catch (error) {
-              console.error('[Warehouse] Error adding image:', error);
-            }
-          });
-          
-          console.log('[Warehouse] Added', addedCount, 'images out of', selectedWarehouseImages.size);
-          selectedWarehouseImages.clear();
-          
-          // モーダルを閉じる
-          document.getElementById('warehouse-dialog').close();
-        } else {
+        // 画像が選択されているか、itemIdまたはsectionIdが設定されているかチェック
+        if (selectedWarehouseImages.size === 0) {
           alert('画像を選択してください');
+          return;
         }
+        
+        if (!currentWarehouseItemId && !currentWarehouseSectionId) {
+          alert('エラー: 追加先が特定できませんでした');
+          return;
+        }
+        
+        warehouseSaved = true;
+        
+        // 選択した画像をカテゴリごとに追加
+        // MapのforEachは (value, key) の順序なので、selectedWarehouseImages.set(imageUrl, category) の場合
+        // forEach((category, imageUrl) => ...) が正しい
+        let addedCount = 0;
+        selectedWarehouseImages.forEach((category, imageUrl) => {
+          console.log('[Warehouse] Processing image:', { imageUrl, category, itemId: currentWarehouseItemId, sectionId: currentWarehouseSectionId });
+          try {
+            let result = false;
+            if (currentWarehouseSectionId) {
+              result = window.addWarehouseImageToReportSection(imageUrl, category, currentWarehouseSectionId);
+            } else if (currentWarehouseItemId) {
+              result = window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
+            }
+            console.log('[Warehouse] addWarehouseImageToReport returned:', result);
+            if (result) {
+              addedCount++;
+            }
+          } catch (error) {
+            console.error('[Warehouse] Error adding image:', error);
+          }
+        });
+        
+        console.log('[Warehouse] Added', addedCount, 'images out of', selectedWarehouseImages.size);
+        selectedWarehouseImages.clear();
+        
+        // モーダルを閉じる
+        document.getElementById('warehouse-dialog').close();
       };
 
       // 画像倉庫から選択した画像をレポートに追加
