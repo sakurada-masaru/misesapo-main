@@ -2089,7 +2089,7 @@
             const itemId = section.dataset.itemId;
             const titleSelect = section.querySelector('.item-title-select-modal');
             const titleInput = section.querySelector('.item-title-input-modal');
-            const itemName = titleSelect ? titleSelect.value.trim() : (titleInput ? titleInput.value.trim() : '');
+            const itemName = (titleSelect?.value?.trim()) || (titleInput?.value?.trim()) || '';
             
             if (!itemName) {
               return;
