@@ -2126,23 +2126,33 @@
               }
             };
             
-            // 作業前の写真（Base64またはURL）
-            section.querySelectorAll('[data-category="before"] .image-item-modal img').forEach(img => {
-              const photoItem = img.closest('.image-item-modal');
+            // 作業前の写真（Base64またはURL）- アップロードボタンを除外
+            section.querySelectorAll('[data-category="before"] .image-item-modal:not(.image-add-btns-modal)').forEach(photoItem => {
               if (photoItem.dataset.base64) {
                 workItem.photos.before.push(photoItem.dataset.base64);
               } else if (photoItem.dataset.url) {
                 workItem.photos.before.push(photoItem.dataset.url);
+              } else {
+                // img srcから直接取得（フォールバック）
+                const img = photoItem.querySelector('img');
+                if (img && img.src) {
+                  workItem.photos.before.push(img.src);
+                }
               }
             });
             
-            // 作業後の写真（Base64またはURL）
-            section.querySelectorAll('[data-category="after"] .image-item-modal img').forEach(img => {
-              const photoItem = img.closest('.image-item-modal');
+            // 作業後の写真（Base64またはURL）- アップロードボタンを除外
+            section.querySelectorAll('[data-category="after"] .image-item-modal:not(.image-add-btns-modal)').forEach(photoItem => {
               if (photoItem.dataset.base64) {
                 workItem.photos.after.push(photoItem.dataset.base64);
               } else if (photoItem.dataset.url) {
                 workItem.photos.after.push(photoItem.dataset.url);
+              } else {
+                // img srcから直接取得（フォールバック）
+                const img = photoItem.querySelector('img');
+                if (img && img.src) {
+                  workItem.photos.after.push(img.src);
+                }
               }
             });
             
