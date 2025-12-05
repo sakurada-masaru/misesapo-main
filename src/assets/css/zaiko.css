@@ -297,6 +297,15 @@
     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
 }
 
+.modal-dialog-large {
+    max-width: 900px;
+}
+
+.modal-body-scrollable {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
 .modal-dialog:not([open]) {
     display: none;
 }

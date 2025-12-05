@@ -1,35 +1,70 @@
-// --- JavaScript ロジック ---
-        
-// 1. 在庫データ（データベース代わり） - 20項目
-const initialInventory = [
-    { id: 'P001', name: '商品A（ビスケット）', stock: 150, minStock: 50, safeStock: 100 },
-    { id: 'P002', name: '商品B（飲料水）', stock: 200, minStock: 50, safeStock: 100 },
-    { id: 'P003', name: '商品C（文房具セット）', stock: 50, minStock: 30, safeStock: 60 },
-    { id: 'P004', name: '商品D（電池パック）', stock: 300, minStock: 50, safeStock: 100 },
-    { id: 'P005', name: '商品E（タオル）', stock: 100, minStock: 40, safeStock: 80 },
-    { id: 'P006', name: '商品F（シャンプー）', stock: 120, minStock: 50, safeStock: 100 },
-    { id: 'P007', name: '商品G（トイレットペーパー）', stock: 80, minStock: 40, safeStock: 80 },
-    { id: 'P008', name: '商品H（洗剤）', stock: 140, minStock: 50, safeStock: 100 },
-    { id: 'P009', name: '商品I（歯磨き粉）', stock: 90, minStock: 40, safeStock: 80 },
-    { id: 'P010', name: '商品J（レトルト食品）', stock: 250, minStock: 50, safeStock: 100 },
-    { id: 'P011', name: '商品K（マスク）', stock: 400, minStock: 100, safeStock: 200 },
-    { id: 'P012', name: '商品L（救急箱）', stock: 70, minStock: 30, safeStock: 60 },
-    { id: 'P013', name: '商品M（軍手）', stock: 180, minStock: 50, safeStock: 100 },
-    { id: 'P014', name: '商品N（カセットコンロ）', stock: 30, minStock: 20, safeStock: 40 },
-    { id: 'P015', name: '商品O（ガムテープ）', stock: 110, minStock: 40, safeStock: 80 },
-    { id: 'P016', name: '商品P（懐中電灯）', stock: 60, minStock: 30, safeStock: 60 },
-    { id: 'P017', name: '商品Q（アルミホイル）', stock: 130, minStock: 50, safeStock: 100 },
-    { id: 'P018', name: '商品R（ラップ）', stock: 170, minStock: 50, safeStock: 100 },
-    { id: 'P019', name: '商品S（ビニール袋）', stock: 220, minStock: 50, safeStock: 100 },
-    { id: 'P020', name: '商品T（ロープ）', stock: 40, minStock: 20, safeStock: 40 }
-];
+// --- 在庫管理 JavaScript ---
 
-let inventoryData = [...initialInventory]; // 実際に操作するデータ
+const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+const BASE_URL = window.location.origin;
+
+let inventoryData = []; // DynamoDBから取得したデータ
 let modalCurrentMode = 'out'; // モーダル内のモード
 let currentProductId = null; // 現在選択中の商品ID
 
-// 2. DOM要素の取得
+// DOM要素の取得
 const inventoryGrid = document.getElementById('inventory-grid');
+const loadingSpinner = document.getElementById('loading-spinner');
+
+// Firebase ID Token取得（簡易版）
+async function getFirebaseIdToken() {
+    // 実際の実装ではFirebase認証から取得
+    // ここではモックトークンを返す
+    const authData = localStorage.getItem('misesapo_auth');
+    if (authData) {
+        try {
+            const parsed = JSON.parse(authData);
+            if (parsed.token) {
+                return parsed.token;
+            }
+        } catch (e) {
+            console.error('Error parsing auth data:', e);
+        }
+    }
+    return 'mock-token';
+}
+
+// 在庫一覧を取得
+async function loadInventory() {
+    if (loadingSpinner) loadingSpinner.style.display = 'block';
+    
+    try {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/inventory/items`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${idToken}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('在庫一覧の取得に失敗しました');
+        }
+        
+        const data = await response.json();
+        inventoryData = (data.items || []).map(item => ({
+            id: item.product_id,
+            product_id: item.product_id,
+            name: item.name,
+            stock: item.stock || 0,
+            minStock: item.minStock || 50,
+            safeStock: item.safeStock || 100,
+            status: item.status
+        }));
+        
+        renderInventory();
+    } catch (error) {
+        console.error('Error loading inventory:', error);
+        alert('在庫一覧の読み込みに失敗しました: ' + error.message);
+    } finally {
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+    }
+}
 
 // 4. 在庫ステータスの判定
 function getStockStatus(item) {
@@ -60,13 +95,14 @@ function renderInventory() {
         card.className = `inventory-card ${statusClass}`;
         card.dataset.productId = item.id;
         
+        const productId = item.product_id || item.id;
         card.innerHTML = `
             <div class="card-icon">
                 <i class="fas fa-box"></i>
             </div>
             <div class="card-content">
                 <div class="card-name">${escapeHtml(item.name)}</div>
-                <div class="card-id">${escapeHtml(item.id)}</div>
+                <div class="card-id">${escapeHtml(productId)}</div>
                 <div class="card-stock">
                     <span class="stock-number">${item.stock.toLocaleString()}</span>
                     <span class="stock-unit">個</span>
@@ -79,24 +115,24 @@ function renderInventory() {
         
         // カードクリックでモーダルを開く
         card.addEventListener('click', () => {
-            openProductDetail(item.id);
+            openProductDetail(productId);
         });
         
         inventoryGrid.appendChild(card);
     });
 }
 
-// 6. 商品詳細モーダルを開く
+// 商品詳細モーダルを開く
 function openProductDetail(productId) {
-    const item = inventoryData.find(i => i.id === productId);
+    const item = inventoryData.find(i => i.id === productId || i.product_id === productId);
     if (!item) return;
     
-    currentProductId = productId;
+    currentProductId = item.product_id || item.id;
     modalCurrentMode = 'out';
     
     // モーダルに情報を設定
     document.getElementById('modal-product-name').textContent = item.name;
-    document.getElementById('modal-product-id').textContent = item.id;
+    document.getElementById('modal-product-id').textContent = currentProductId;
     document.getElementById('modal-product-name-text').textContent = item.name;
     document.getElementById('modal-product-stock').textContent = `${item.stock.toLocaleString()} 個`;
     
@@ -125,12 +161,12 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// 7. モーダル内での在庫更新処理
-function processModalTransaction() {
+// モーダル内での在庫更新処理
+async function processModalTransaction() {
     if (!currentProductId) return;
     
     const quantity = parseInt(document.getElementById('modal-quantity').value, 10);
-    const item = inventoryData.find(i => i.id === currentProductId);
+    const item = inventoryData.find(i => (i.id === currentProductId || i.product_id === currentProductId));
     
     if (!item) {
         alert('商品が見つかりませんでした');
@@ -143,24 +179,147 @@ function processModalTransaction() {
         return;
     }
     
-    // 在庫更新ロジック
-    if (modalCurrentMode === 'in') {
-        // 入庫処理
-        item.stock += quantity;
-        alert(`✅ 入庫成功: ${item.name} に ${quantity} 個を追加しました。現在の在庫: ${item.stock}`);
-    } else {
-        // 出庫処理
-        if (item.stock < quantity) {
-            alert(`⚠️ 出庫エラー: ${item.name} の在庫は ${item.stock} 個しかありません。${quantity} 個出庫できません。`);
+    try {
+        const idToken = await getFirebaseIdToken();
+        const endpoint = modalCurrentMode === 'in' ? '/staff/inventory/in' : '/staff/inventory/out';
+        
+        const response = await fetch(`${REPORT_API}${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+                product_id: currentProductId,
+                quantity: quantity
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || '在庫更新に失敗しました');
+        }
+        
+        const result = await response.json();
+        
+        if (result.errors && result.errors.length > 0) {
+            alert('エラー: ' + result.errors.join('\n'));
             return;
         }
-        item.stock -= quantity;
-        alert(`✅ 出庫成功: ${item.name} から ${quantity} 個を減らしました。現在の在庫: ${item.stock}`);
+        
+        if (result.results && result.results.length > 0) {
+            const res = result.results[0];
+            alert(`✅ ${modalCurrentMode === 'in' ? '入庫' : '出庫'}成功: ${res.product_name} ${quantity}個。現在の在庫: ${res.stock_after}`);
+        }
+        
+        // UIを更新
+        await loadInventory();
+        openProductDetail(currentProductId); // モーダルを更新
+        
+    } catch (error) {
+        console.error('Error processing transaction:', error);
+        alert('在庫更新に失敗しました: ' + error.message);
+    }
+}
+
+// 商品登録
+async function createInventoryItem() {
+    const productId = document.getElementById('new-product-id').value.trim();
+    const name = document.getElementById('new-product-name').value.trim();
+    const stock = parseInt(document.getElementById('new-product-stock').value, 10);
+    const minStock = parseInt(document.getElementById('new-product-min-stock').value, 10);
+    const safeStock = parseInt(document.getElementById('new-product-safe-stock').value, 10);
+    
+    if (!productId || !name) {
+        alert('商品IDと商品名は必須です');
+        return;
     }
     
-    // UIを更新
-    renderInventory();
-    openProductDetail(currentProductId); // モーダルを更新
+    try {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/inventory/items`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                name: name,
+                stock: stock,
+                minStock: minStock,
+                safeStock: safeStock
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || '商品登録に失敗しました');
+        }
+        
+        alert('商品を登録しました');
+        document.getElementById('new-item-dialog').close();
+        
+        // フォームをリセット
+        document.getElementById('new-product-id').value = '';
+        document.getElementById('new-product-name').value = '';
+        document.getElementById('new-product-stock').value = '0';
+        document.getElementById('new-product-min-stock').value = '50';
+        document.getElementById('new-product-safe-stock').value = '100';
+        
+        // 在庫一覧を再読み込み
+        await loadInventory();
+        
+    } catch (error) {
+        console.error('Error creating item:', error);
+        alert('商品登録に失敗しました: ' + error.message);
+    }
+}
+
+// QRコードを生成して表示
+async function showQRCodes() {
+    const qrcodeGrid = document.getElementById('qrcode-grid');
+    if (!qrcodeGrid) return;
+    
+    qrcodeGrid.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> QRコードを生成中...</div>';
+    
+    document.getElementById('qrcode-dialog').showModal();
+    
+    try {
+        qrcodeGrid.innerHTML = '';
+        
+        for (const item of inventoryData) {
+            const productId = item.product_id || item.id;
+            const qrUrl = `${BASE_URL}/staff/inventory/scan?product_id=${productId}`;
+            
+            const qrCard = document.createElement('div');
+            qrCard.style.cssText = 'text-align: center; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff;';
+            
+            const canvas = document.createElement('canvas');
+            qrCard.appendChild(canvas);
+            
+            const nameDiv = document.createElement('div');
+            nameDiv.style.cssText = 'margin-top: 12px; font-weight: 600; font-size: 0.9rem; color: #111827;';
+            nameDiv.textContent = item.name;
+            qrCard.appendChild(nameDiv);
+            
+            const idDiv = document.createElement('div');
+            idDiv.style.cssText = 'margin-top: 4px; font-size: 0.75rem; color: #6b7280;';
+            idDiv.textContent = productId;
+            qrCard.appendChild(idDiv);
+            
+            qrcodeGrid.appendChild(qrCard);
+            
+            // QRコードを生成
+            await QRCode.toCanvas(canvas, qrUrl, {
+                width: 180,
+                margin: 2
+            });
+        }
+    } catch (error) {
+        console.error('Error generating QR codes:', error);
+        qrcodeGrid.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc2626;">QRコードの生成に失敗しました</div>';
+    }
 }
 
 // 8. イベントリスナーの設定
@@ -205,7 +364,28 @@ document.addEventListener('keypress', (e) => {
     }
 });
 
-// 初期化処理
+// イベントリスナーの設定
 document.addEventListener('DOMContentLoaded', function() {
-    renderInventory();
+    // 在庫一覧を読み込み
+    loadInventory();
+    
+    // 商品登録ボタン
+    const btnNewItem = document.getElementById('btn-new-item');
+    if (btnNewItem) {
+        btnNewItem.addEventListener('click', () => {
+            document.getElementById('new-item-dialog').showModal();
+        });
+    }
+    
+    // 商品登録実行ボタン
+    const btnCreateItem = document.getElementById('btn-create-item');
+    if (btnCreateItem) {
+        btnCreateItem.addEventListener('click', createInventoryItem);
+    }
+    
+    // QRコード表示ボタン
+    const btnShowQRCodes = document.getElementById('btn-show-qrcodes');
+    if (btnShowQRCodes) {
+        btnShowQRCodes.addEventListener('click', showQRCodes);
+    }
 });
