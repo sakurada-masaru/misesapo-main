@@ -306,6 +306,8 @@
     .btn-outline:hover { background: #f8fafc; }
     .btn-success { background: var(--success); color: #fff; }
     .btn-success:hover { background: #16a34a; }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-warning:hover { background: #d97706; }
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-danger:hover { background: #dc2626; }
 
@@ -792,6 +794,34 @@
       padding: 16px;
       background: #f9fafb;
       border-radius: 8px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .form-label .required {
+      color: #ef4444;
+    }
+    .form-textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+    }
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 107, 156, 0.1);
     }
     .warehouse-filters .form-group {
       flex: 1;
