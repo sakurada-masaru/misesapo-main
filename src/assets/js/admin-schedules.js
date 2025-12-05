@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (typeof DataUtils === 'undefined') {
     console.error('DataUtils is not loaded after waiting');
     if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">データユーティリティの読み込みに失敗しました</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">データユーティリティの読み込みに失敗しました</td></tr>';
     }
     return;
   }
@@ -71,7 +71,7 @@ async function loadSchedules() {
   } catch (error) {
     console.error('Failed to load schedules:', error);
     if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">読み込みに失敗しました</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">読み込みに失敗しました</td></tr>';
     }
   }
 }
@@ -468,7 +468,7 @@ function renderTable() {
   const pageSchedules = filteredSchedules.slice(start, start + perPage);
 
   if (pageSchedules.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">該当するスケジュールがありません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">該当するスケジュールがありません</td></tr>';
     return;
   }
 
@@ -509,6 +509,9 @@ function renderTable() {
     
     return `
       <tr data-id="${schedule.id}" class="${isDraft ? 'draft-row' : ''}">
+        <td>
+          <span class="schedule-id">${escapeHtml(schedule.id || '-')}</span>
+        </td>
         <td>
           <div><strong>${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</strong></div>
           <div style="font-size:0.85rem;color:#6b7280">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration ? ` (${normalized.duration}分)` : ''}</div>
