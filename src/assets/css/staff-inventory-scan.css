@@ -468,14 +468,19 @@
   border-color: #cbd5e1;
 }
 
-/* モーダル */
-dialog.modal-dialog {
-  display: none;
+/* モーダル - デフォルトで非表示 */
+.modal-dialog:not([open]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
-dialog.modal-dialog[open] {
-  display: flex;
+.modal-dialog[open] {
+  display: flex !important;
   flex-direction: column;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .modal-dialog {
@@ -492,6 +497,7 @@ dialog.modal-dialog[open] {
   transform: translate(-50%, -50%);
   margin: 0;
   background: #fff;
+  z-index: 1000;
 }
 
 .modal-dialog::backdrop {
