@@ -163,7 +163,7 @@ async function openProductDetail(productId) {
     // 最終入出庫情報を初期化
     document.getElementById('last-in-info').textContent = '読み込み中...';
     document.getElementById('last-out-info').textContent = '読み込み中...';
-    
+        
     // 最終入出庫情報を取得
     loadLastTransactions(currentProductId);
     
@@ -299,13 +299,13 @@ async function processModalTransaction() {
         alert('商品が見つかりませんでした');
         return;
     }
-    
+
     // 入力チェック
     if (isNaN(quantity) || quantity <= 0) {
         alert('数量（1以上の数値）を正しく入力してください。');
         return;
     }
-    
+
     try {
         const idToken = await getFirebaseIdToken();
         const endpoint = modalCurrentMode === 'in' ? '/staff/inventory/in' : '/staff/inventory/out';
@@ -337,9 +337,9 @@ async function processModalTransaction() {
         if (result.results && result.results.length > 0) {
             const res = result.results[0];
             alert(`✅ ${modalCurrentMode === 'in' ? '入庫' : '出庫'}成功: ${res.product_name} ${quantity}個。現在の在庫: ${res.stock_after}`);
-        }
-        
-        // UIを更新
+    }
+
+    // UIを更新
         await loadInventory();
         openProductDetail(currentProductId); // モーダルを更新
         

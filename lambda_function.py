@@ -217,12 +217,12 @@ def lambda_handler(event, context):
                     return get_report_feedback(report_id, event, headers)
             else:
                 report_id = parts[-1]
-                if method == 'GET':
-                    return get_report_detail(report_id, event, headers)
+            if method == 'GET':
+                return get_report_detail(report_id, event, headers)
                 elif method == 'PUT':
                     return update_report_by_id(report_id, event, headers)
-                elif method == 'DELETE':
-                    return delete_report(report_id, event, headers)
+            elif method == 'DELETE':
+                return delete_report(report_id, event, headers)
         elif normalized_path.startswith('/public/reports/'):
             # 公開レポート関連（認証不要）
             parts = normalized_path.split('/')
@@ -1265,7 +1265,7 @@ def verify_firebase_token(id_token):
         # ロールを取得（カスタムクレームから）
         role = payload.get('custom:role') or payload.get('role', 'staff')
         
-        return {
+    return {
             'uid': uid,
             'cognito_sub': uid,
             'email': email,
@@ -1546,11 +1546,11 @@ def create_report(event, headers):
                     'role': 'staff'
                 }
             else:
-                return {
-                    'statusCode': 401,
-                    'headers': headers,
-                    'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
-                }
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
         
         # リクエストボディを取得
         if event.get('isBase64Encoded'):
@@ -1590,12 +1590,12 @@ def create_report(event, headers):
                     if isinstance(photo_data, str) and photo_data.startswith('data:image'):
                         base64_counter_before += 1
                         photo_key = f"reports/{report_id}/{item_id}-before-{base64_counter_before}.jpg"
-                        try:
+                    try:
                             photo_url = upload_photo_to_s3(photo_data, photo_key)
-                            photo_urls[item_id]['before'].append(photo_url)
+                        photo_urls[item_id]['before'].append(photo_url)
                             print(f"[DEBUG] Uploaded to S3: {photo_url}")
-                        except Exception as e:
-                            print(f"Error uploading before photo: {str(e)}")
+                    except Exception as e:
+                        print(f"Error uploading before photo: {str(e)}")
                     else:
                         # 既に完全URLの場合はそのまま使用、そうでなければ変換
                         if isinstance(photo_data, str) and (photo_data.startswith('http://') or photo_data.startswith('https://')):
@@ -1614,12 +1614,12 @@ def create_report(event, headers):
                     if isinstance(photo_data, str) and photo_data.startswith('data:image'):
                         base64_counter_after += 1
                         photo_key = f"reports/{report_id}/{item_id}-after-{base64_counter_after}.jpg"
-                        try:
+                    try:
                             photo_url = upload_photo_to_s3(photo_data, photo_key)
-                            photo_urls[item_id]['after'].append(photo_url)
+                        photo_urls[item_id]['after'].append(photo_url)
                             print(f"[DEBUG] Uploaded to S3: {photo_url}")
-                        except Exception as e:
-                            print(f"Error uploading after photo: {str(e)}")
+                    except Exception as e:
+                        print(f"Error uploading after photo: {str(e)}")
                     else:
                         # 既に完全URLの場合はそのまま使用、そうでなければ変換
                         if isinstance(photo_data, str) and (photo_data.startswith('http://') or photo_data.startswith('https://')):
@@ -1800,7 +1800,7 @@ def get_reports(event, headers):
                 Limit=limit
             )
         else:
-            response = REPORTS_TABLE.scan(Limit=limit)
+        response = REPORTS_TABLE.scan(Limit=limit)
         
         items = response.get('Items', [])
         

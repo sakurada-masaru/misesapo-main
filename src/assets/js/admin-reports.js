@@ -392,7 +392,7 @@
                            <div class="image-item-modal">
                              <img src="${url}" alt="${beforeLabel}" loading="lazy" 
                                   onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像読み込みエラー%3C/text%3E%3C/svg%3E';" />
-                           </div>
+            </div>
                          `).join('')}
                        </div>`
                     : '<p style="color: #999; font-style: italic; padding: 20px; text-align: center;">写真なし</p>';
@@ -1824,35 +1824,35 @@
           return;
         }
         
-        warehouseSaved = true;
-        
-        // 選択した画像をカテゴリごとに追加
-        // MapのforEachは (value, key) の順序なので、selectedWarehouseImages.set(imageUrl, category) の場合
-        // forEach((category, imageUrl) => ...) が正しい
-        let addedCount = 0;
-        selectedWarehouseImages.forEach((category, imageUrl) => {
-          console.log('[Warehouse] Processing image:', { imageUrl, category, itemId: currentWarehouseItemId, sectionId: currentWarehouseSectionId });
-          try {
-            let result = false;
-            if (currentWarehouseSectionId) {
-              result = window.addWarehouseImageToReportSection(imageUrl, category, currentWarehouseSectionId);
+          warehouseSaved = true;
+          
+          // 選択した画像をカテゴリごとに追加
+          // MapのforEachは (value, key) の順序なので、selectedWarehouseImages.set(imageUrl, category) の場合
+          // forEach((category, imageUrl) => ...) が正しい
+          let addedCount = 0;
+          selectedWarehouseImages.forEach((category, imageUrl) => {
+            console.log('[Warehouse] Processing image:', { imageUrl, category, itemId: currentWarehouseItemId, sectionId: currentWarehouseSectionId });
+            try {
+              let result = false;
+              if (currentWarehouseSectionId) {
+                result = window.addWarehouseImageToReportSection(imageUrl, category, currentWarehouseSectionId);
             } else if (currentWarehouseItemId) {
-              result = window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
+                result = window.addWarehouseImageToReport(imageUrl, category, currentWarehouseItemId);
+              }
+              console.log('[Warehouse] addWarehouseImageToReport returned:', result);
+              if (result) {
+                addedCount++;
+              }
+            } catch (error) {
+              console.error('[Warehouse] Error adding image:', error);
             }
-            console.log('[Warehouse] addWarehouseImageToReport returned:', result);
-            if (result) {
-              addedCount++;
-            }
-          } catch (error) {
-            console.error('[Warehouse] Error adding image:', error);
-          }
-        });
-        
-        console.log('[Warehouse] Added', addedCount, 'images out of', selectedWarehouseImages.size);
-        selectedWarehouseImages.clear();
-        
-        // モーダルを閉じる
-        document.getElementById('warehouse-dialog').close();
+          });
+          
+          console.log('[Warehouse] Added', addedCount, 'images out of', selectedWarehouseImages.size);
+          selectedWarehouseImages.clear();
+          
+          // モーダルを閉じる
+          document.getElementById('warehouse-dialog').close();
       };
 
       // 画像倉庫から選択した画像をレポートに追加
@@ -2139,18 +2139,18 @@
             if (beforeContainer) {
               const beforeItems = beforeContainer.querySelectorAll('.image-item-modal:not(.image-add-btns-modal)');
               console.log(`[Submit] Image section ${sectionId} - Before items found:`, beforeItems.length);
-              beforeItems.forEach(photoItem => {
-                if (photoItem.dataset.base64) {
+            beforeItems.forEach(photoItem => {
+              if (photoItem.dataset.base64) {
                   sectionData.photos.before.push(photoItem.dataset.base64);
-                } else if (photoItem.dataset.url) {
+              } else if (photoItem.dataset.url) {
                   sectionData.photos.before.push(photoItem.dataset.url);
-                } else {
-                  const img = photoItem.querySelector('img');
-                  if (img && img.src) {
+              } else {
+                const img = photoItem.querySelector('img');
+                if (img && img.src) {
                     sectionData.photos.before.push(img.src);
-                  }
                 }
-              });
+              }
+            });
             }
             
             // 作業後の写真
@@ -2158,18 +2158,18 @@
             if (afterContainer) {
               const afterItems = afterContainer.querySelectorAll('.image-item-modal:not(.image-add-btns-modal)');
               console.log(`[Submit] Image section ${sectionId} - After items found:`, afterItems.length);
-              afterItems.forEach(photoItem => {
-                if (photoItem.dataset.base64) {
+            afterItems.forEach(photoItem => {
+              if (photoItem.dataset.base64) {
                   sectionData.photos.after.push(photoItem.dataset.base64);
-                } else if (photoItem.dataset.url) {
+              } else if (photoItem.dataset.url) {
                   sectionData.photos.after.push(photoItem.dataset.url);
-                } else {
-                  const img = photoItem.querySelector('img');
-                  if (img && img.src) {
+              } else {
+                const img = photoItem.querySelector('img');
+                if (img && img.src) {
                     sectionData.photos.after.push(img.src);
-                  }
                 }
-              });
+              }
+            });
             }
             
             // 空の画像セクション（写真が1枚もない）はスキップ

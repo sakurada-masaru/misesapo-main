@@ -17,6 +17,16 @@
       </div>
     </header>
 
+    <!-- 業務連絡通知セクション -->
+    <div class="announcements-banner" id="announcements-banner" style="display: none;">
+      <div class="announcements-banner-content">
+        <h3><i class="fas fa-bullhorn"></i> 業務連絡</h3>
+        <div class="announcements-banner-list" id="announcements-banner-list">
+          <div class="loading">読み込み中...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Bento Grid -->
     <div class="bento-grid">
       <!-- 大きな統計カード -->
@@ -146,6 +156,88 @@
     }
 
     /* Bento Grid */
+    /* 業務連絡バナー */
+    .announcements-banner {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 2px solid #e5e7eb;
+    }
+    .announcements-banner-content h3 {
+      margin: 0 0 16px 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .announcements-banner-content h3 i {
+      color: var(--primary, #3b82f6);
+    }
+    .announcements-banner-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .announcement-banner-item {
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 2px solid #e5e7eb;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .announcement-banner-item:hover {
+      border-color: var(--primary, #3b82f6);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .announcement-banner-item.unread {
+      border-color: var(--primary, #3b82f6);
+      background: #eff6ff;
+    }
+    .announcement-banner-item.read {
+      opacity: 0.7;
+    }
+    .announcement-banner-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .announcement-banner-title {
+      font-weight: 600;
+      color: #111827;
+      font-size: 0.95rem;
+    }
+    .badge.new {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #ef4444;
+      color: #fff;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .announcement-banner-meta {
+      margin-bottom: 0;
+    }
+    .announcement-banner-date {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    .announcement-banner-more {
+      text-align: center;
+      margin-top: 8px;
+    }
+    .announcement-banner-more a {
+      color: var(--primary, #3b82f6);
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+
     .bento-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -579,6 +671,7 @@
 <script>
 (function() {
   const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
   
   // 日付表示
   const today = new Date();
@@ -634,6 +727,140 @@
     } catch (error) {
       console.error('Dashboard load error:', error);
     }
+  }
+
+  // 業務連絡を読み込み
+  async function loadAnnouncements() {
+    try {
+      const idToken = await getFirebaseIdToken();
+      const response = await fetch(`${REPORT_API}/staff/announcements`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('業務連絡の取得に失敗しました');
+      }
+      
+      const data = await response.json();
+      const announcements = data.announcements || [];
+      
+      renderAnnouncements(announcements);
+    } catch (error) {
+      console.error('Error loading announcements:', error);
+      const banner = document.getElementById('announcements-banner');
+      if (banner) {
+        banner.style.display = 'none';
+      }
+    }
+  }
+
+  // 業務連絡を表示
+  function renderAnnouncements(announcements) {
+    const banner = document.getElementById('announcements-banner');
+    const listEl = document.getElementById('announcements-banner-list');
+    if (!banner || !listEl) return;
+    
+    if (announcements.length === 0) {
+      banner.style.display = 'none';
+      return;
+    }
+    
+    banner.style.display = 'block';
+    
+    // 最新3件のみ表示
+    const recentAnnouncements = announcements.slice(0, 3);
+    
+    let html = '';
+    recentAnnouncements.forEach(announcement => {
+      const createdDate = new Date(announcement.created_at);
+      const dateStr = createdDate.toLocaleDateString('ja-JP', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      const newBadge = announcement.is_new ? '<span class="badge new">NEW</span>' : '';
+      const readClass = announcement.is_read ? 'read' : 'unread';
+      
+      html += `
+        <div class="announcement-banner-item ${readClass}" data-id="${announcement.id}">
+          <div class="announcement-banner-header">
+            <span class="announcement-banner-title">${escapeHtml(announcement.title)}</span>
+            ${newBadge}
+          </div>
+          <div class="announcement-banner-meta">
+            <span class="announcement-banner-date">${dateStr}</span>
+          </div>
+        </div>
+      `;
+    });
+    
+    if (announcements.length > 3) {
+      html += `<div class="announcement-banner-more"><a href="/staff/announcements">すべて見る</a></div>`;
+    }
+    
+    listEl.innerHTML = html;
+    
+    // クリックイベントを追加（既読マーク）
+    listEl.querySelectorAll('.announcement-banner-item').forEach(item => {
+      item.addEventListener('click', async () => {
+        const announcementId = item.dataset.id;
+        if (!announcementId) return;
+        
+        // 既読マーク
+        try {
+          const idToken = await getFirebaseIdToken();
+          await fetch(`${REPORT_API}/staff/announcements/${announcementId}/read`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${idToken}`
+            }
+          });
+          
+          // 表示を更新
+          item.classList.remove('unread');
+          item.classList.add('read');
+        } catch (error) {
+          console.error('Error marking announcement read:', error);
+        }
+        
+        // 詳細ページに遷移
+        window.location.href = `/staff/announcements?id=${announcementId}`;
+      });
+    });
+  }
+
+  // Firebase ID Token取得
+  async function getFirebaseIdToken() {
+    try {
+      const cognitoIdToken = localStorage.getItem('cognito_id_token');
+      if (cognitoIdToken) {
+        return cognitoIdToken;
+      }
+      
+      const authData = localStorage.getItem('misesapo_auth');
+      if (authData) {
+        const parsed = JSON.parse(authData);
+        if (parsed.token) {
+          return parsed.token;
+        }
+      }
+      
+      return 'mock-token';
+    } catch (error) {
+      console.error('Error getting Firebase ID token:', error);
+      return 'mock-token';
+    }
+  }
+
+  // HTMLエスケープ
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   function renderMiniChart(schedules) {
@@ -771,6 +998,7 @@
   }
 
   loadDashboard();
+  loadAnnouncements();
 })();
 
 </script>

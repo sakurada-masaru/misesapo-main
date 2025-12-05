@@ -186,8 +186,8 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                             return
                         except Exception as e:
                             print(f"Error serving shared report template: {e}")
-                            self.send_error(500, f"Internal Server Error: {e}")
-                            return
+                        self.send_error(500, f"Internal Server Error: {e}")
+                        return
             
             # 動的ルーティング: /reports/{report_id}.html を /reports/[id].html にマッピング
             if path.startswith('/reports/') and path.endswith('.html') and not path.startswith('/reports/shared/'):

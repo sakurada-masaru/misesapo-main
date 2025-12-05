@@ -25,6 +25,16 @@
       </a>
         </header>
         
+        <!-- 業務連絡通知セクション -->
+        <div class="section announcements-section" id="announcements-section" style="display: none;">
+          <div class="section-header">
+            <h2><i class="fas fa-bullhorn"></i> 業務連絡</h2>
+          </div>
+          <div class="announcements-list" id="announcements-list">
+            <div class="loading">読み込み中...</div>
+          </div>
+        </div>
+        
         <!-- 今日のサマリー -->
         <div class="summary-row">
           <div class="summary-card" onclick="switchScreen('schedule')">
@@ -2279,6 +2289,76 @@
       opacity: 0.8;
     }
 
+    /* 業務連絡セクション */
+    .announcements-section {
+      margin: 0 16px 16px;
+    }
+    .announcements-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .announcement-item {
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 2px solid #e5e7eb;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .announcement-item:hover {
+      border-color: var(--primary, #ff679c);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .announcement-item.unread {
+      border-color: var(--primary, #ff679c);
+      background: #fef3f2;
+    }
+    .announcement-item.read {
+      opacity: 0.7;
+    }
+    .announcement-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .announcement-title {
+      font-weight: 600;
+      color: #111827;
+      font-size: 0.9rem;
+    }
+    .badge.new {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #ef4444;
+      color: #fff;
+      border-radius: 10px;
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+    .announcement-meta {
+      margin-bottom: 6px;
+    }
+    .announcement-date {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .announcement-content {
+      font-size: 0.85rem;
+      color: #4b5563;
+      line-height: 1.4;
+    }
+    .announcement-more {
+      text-align: center;
+      margin-top: 8px;
+    }
+    .announcement-more .see-all {
+      color: var(--primary, #ff679c);
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+
     @media (min-width: 600px) {
       .sales-app {
         max-width: 480px;
@@ -2296,6 +2376,7 @@
 
   <script>
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
     const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
     
     let allStores = [];
@@ -2333,6 +2414,7 @@
       await loadData();
       loadServiceItems();
       renderClientList(); // 顧客一覧の初期表示
+      loadAnnouncements(); // 業務連絡を読み込み
     });
 
     function setupTabs() {
@@ -2885,6 +2967,170 @@
           console.warn('Failed to load brands');
           allBrands = [];
         }
+        
+        // 統計更新
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = formatDateToYYYYMMDD(today);
+        const todayCount = allSchedules.filter(s => {
+          const sDate = s.scheduled_date || s.date;
+          if (!sDate) return false;
+          const sDateStr = formatDateToYYYYMMDD(new Date(sDate));
+          return sDateStr === todayStr;
+        }).length;
+        document.getElementById('today-count').textContent = todayCount;
+        
+        // 仮押さえ件数（自分が申請したもの）
+        const draftSchedules = allSchedules.filter(s => s.status === 'draft');
+        document.getElementById('draft-count').textContent = draftSchedules.length;
+        
+        // スケジュール表示
+        renderSchedules();
+        
+        // 仮押さえ状況表示
+        renderDraftStatus();
+        
+        // 店舗セレクト更新
+        populateStoreSelects();
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      }
+    }
+
+    // 業務連絡を読み込み
+    async function loadAnnouncements() {
+      try {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/announcements`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${idToken}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('業務連絡の取得に失敗しました');
+        }
+        
+        const data = await response.json();
+        const announcements = data.announcements || [];
+        
+        renderAnnouncements(announcements);
+      } catch (error) {
+        console.error('Error loading announcements:', error);
+        const announcementsEl = document.getElementById('announcements-list');
+        if (announcementsEl) {
+          announcementsEl.innerHTML = '<div class="empty-state">業務連絡の読み込みに失敗しました</div>';
+        }
+      }
+    }
+
+    // 業務連絡を表示
+    function renderAnnouncements(announcements) {
+      const section = document.getElementById('announcements-section');
+      const listEl = document.getElementById('announcements-list');
+      if (!section || !listEl) return;
+      
+      if (announcements.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+      
+      section.style.display = 'block';
+      
+      // 最新3件のみ表示
+      const recentAnnouncements = announcements.slice(0, 3);
+      
+      let html = '';
+      recentAnnouncements.forEach(announcement => {
+        const createdDate = new Date(announcement.created_at);
+        const dateStr = createdDate.toLocaleDateString('ja-JP', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const newBadge = announcement.is_new ? '<span class="badge new">NEW</span>' : '';
+        const readClass = announcement.is_read ? 'read' : 'unread';
+        
+        html += `
+          <div class="announcement-item ${readClass}" data-id="${announcement.id}">
+            <div class="announcement-header">
+              <span class="announcement-title">${escapeHtml(announcement.title)}</span>
+              ${newBadge}
+            </div>
+            <div class="announcement-meta">
+              <span class="announcement-date">${dateStr}</span>
+            </div>
+            <div class="announcement-content">${escapeHtml(announcement.content.substring(0, 80))}${announcement.content.length > 80 ? '...' : ''}</div>
+          </div>
+        `;
+      });
+      
+      if (announcements.length > 3) {
+        html += `<div class="announcement-more"><a href="/staff/announcements" class="see-all">すべて見る</a></div>`;
+      }
+      
+      listEl.innerHTML = html;
+      
+      // クリックイベントを追加（既読マーク）
+      listEl.querySelectorAll('.announcement-item').forEach(item => {
+        item.addEventListener('click', async () => {
+          const announcementId = item.dataset.id;
+          if (!announcementId) return;
+          
+          // 既読マーク
+          try {
+            const idToken = await getFirebaseIdToken();
+            await fetch(`${REPORT_API}/staff/announcements/${announcementId}/read`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${idToken}`
+              }
+            });
+            
+            // 表示を更新
+            item.classList.remove('unread');
+            item.classList.add('read');
+          } catch (error) {
+            console.error('Error marking announcement read:', error);
+          }
+          
+          // 詳細ページに遷移
+          window.location.href = `/staff/announcements?id=${announcementId}`;
+        });
+      });
+    }
+
+    // Firebase ID Token取得
+    async function getFirebaseIdToken() {
+      try {
+        const cognitoIdToken = localStorage.getItem('cognito_id_token');
+        if (cognitoIdToken) {
+          return cognitoIdToken;
+        }
+        
+        const authData = localStorage.getItem('misesapo_auth');
+        if (authData) {
+          const parsed = JSON.parse(authData);
+          if (parsed.token) {
+            return parsed.token;
+          }
+        }
+        
+        return 'mock-token';
+      } catch (error) {
+        console.error('Error getting Firebase ID token:', error);
+        return 'mock-token';
+      }
+    }
+
+    // HTMLエスケープ
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
         
         // 統計更新
         const today = new Date();
