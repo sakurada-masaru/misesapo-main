@@ -502,7 +502,7 @@ function renderTable() {
         <td>
           <div class="action-btns">
             ${isDraft ? `
-              <button class="action-btn assign" title="アサイン・確定" onclick="editSchedule('${schedule.id}')" style="background:#ffc107;color:#333">
+              <button class="action-btn assign" title="アサイン・確定（新規案件）" onclick="editSchedule('${schedule.id}')" style="background:#ffc107;color:#333">
                 <i class="fas fa-user-check"></i>
               </button>
             ` : `
