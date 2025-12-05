@@ -2,12 +2,12 @@
 
 .staff-inventory-scan {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #f9fafb 0%, #ffffff 100%);
-  padding: 20px 16px 80px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 80px 16px 100px;
 }
 
 .scan-container {
-  max-width: 600px;
+  max-width: 500px;
   margin: 0 auto;
 }
 
@@ -15,43 +15,44 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
   padding: 0 4px;
 }
 
 .scan-header h1 {
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: #111827;
+  color: #1e293b;
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .btn-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #fff;
-  border: 2px solid #e5e7eb;
-  border-radius: 14px;
-  color: #374151;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  color: #475569;
   cursor: pointer;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .btn-icon:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .btn-icon:active {
   transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .cart-badge {
@@ -70,34 +71,49 @@
 
 /* スキャンエリア */
 .scan-section {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .scan-area {
   background: #fff;
-  border-radius: 20px;
-  padding: 32px 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #f3f4f6;
+  border-radius: 24px;
+  padding: 40px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
 }
 
 .scan-placeholder {
   text-align: center;
-  padding: 48px 20px;
+  padding: 32px 16px;
 }
 
-.scan-placeholder i {
-  font-size: 5rem;
-  color: #d1d5db;
+.scan-placeholder > i {
+  font-size: 3.5rem;
+  background: linear-gradient(135deg, #FF679C 0%, #FF4081 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 20px;
   display: block;
 }
 
+/* ボタン内のアイコンは通常サイズ */
+.scan-placeholder .btn i {
+  font-size: 1rem;
+  background: none;
+  -webkit-background-clip: initial;
+  -webkit-text-fill-color: inherit;
+  background-clip: initial;
+  margin-bottom: 0;
+  display: inline;
+}
+
 .scan-placeholder p {
-  color: #6b7280;
-  margin-bottom: 32px;
-  font-size: 1.05rem;
+  color: #64748b;
+  margin-bottom: 28px;
+  font-size: 1rem;
   font-weight: 500;
+  line-height: 1.5;
 }
 
 /* 商品情報表示 */
@@ -119,27 +135,30 @@
 
 .product-card {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 24px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #f3f4f6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
 }
 
 .product-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 20px;
-  padding-bottom: 18px;
-  border-bottom: 2px solid #f3f4f6;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .product-header h2 {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #111827;
+  color: #1e293b;
   margin: 0;
   letter-spacing: -0.01em;
+  line-height: 1.4;
+  flex: 1;
+  padding-right: 12px;
 }
 
 .product-details {
@@ -150,39 +169,44 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 0;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: #f8fafc;
+  border-radius: 10px;
 }
 
 .detail-row:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .detail-label {
-  color: #6b7280;
-  font-size: 0.95rem;
+  color: #64748b;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
 .detail-value {
-  color: #111827;
+  color: #1e293b;
   font-weight: 700;
   font-size: 1rem;
 }
 
 .quantity-input-area {
-  margin-bottom: 24px;
+  margin: 20px 0;
   padding: 20px;
-  background: #f9fafb;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-radius: 16px;
+  border: 1px solid #bbf7d0;
 }
 
 .quantity-input-area label {
   display: block;
   margin-bottom: 12px;
   font-weight: 600;
-  color: #374151;
-  font-size: 0.95rem;
+  color: #166534;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .quantity-controls {
@@ -192,25 +216,25 @@
 }
 
 .btn-quantity {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #fff;
-  border: 2px solid #e5e7eb;
-  border-radius: 10px;
-  color: #374151;
+  border: 2px solid #16a34a;
+  border-radius: 12px;
+  color: #16a34a;
   cursor: pointer;
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: 700;
   transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.1);
 }
 
 .btn-quantity:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
+  background: #16a34a;
+  color: #fff;
   transform: scale(1.05);
 }
 
@@ -221,25 +245,29 @@
 #quantity-input {
   flex: 1;
   padding: 14px;
-  border: 2px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 1.2rem;
+  border: 2px solid #16a34a;
+  border-radius: 12px;
+  font-size: 1.5rem;
   font-weight: 700;
   text-align: center;
   background: #fff;
   transition: all 0.2s;
+  color: #166534;
 }
 
 #quantity-input:focus {
   outline: none;
-  border-color: #FF679C;
-  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+  border-color: #15803d;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
 }
 
 .action-buttons {
   display: flex;
   gap: 12px;
-  margin-top: 8px;
+}
+
+.action-buttons .btn {
+  flex: 1;
 }
 
 /* カートエリア */
@@ -376,9 +404,9 @@
 
 /* ボタンスタイル */
 .btn {
-  padding: 14px 28px;
+  padding: 16px 24px;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -387,59 +415,69 @@
   align-items: center;
   gap: 8px;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   letter-spacing: 0.01em;
 }
 
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .btn:active {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary {
-  background: #FF679C;
+  background: linear-gradient(135deg, #FF679C 0%, #FF4081 100%);
   color: #fff;
 }
 
 .btn-primary:hover {
-  background: #ff4d8a;
+  background: linear-gradient(135deg, #FF4081 0%, #E91E63 100%);
 }
 
 .btn-success {
-  background: #10b981;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: #fff;
 }
 
 .btn-success:hover {
-  background: #059669;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
 }
 
 .btn-danger {
-  background: #ef4444;
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
   color: #fff;
 }
 
 .btn-danger:hover {
-  background: #dc2626;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
 .btn-outline {
   background: #fff;
-  color: #374151;
-  border: 2px solid #e5e7eb;
+  color: #475569;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .btn-outline:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 /* モーダル */
+dialog.modal-dialog {
+  display: none;
+}
+
+dialog.modal-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 .modal-dialog {
   border: none;
   border-radius: 20px;
@@ -448,16 +486,27 @@
   width: 90vw;
   box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
   animation: modalFadeIn 0.3s ease-out;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  background: #fff;
+}
+
+.modal-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
 }
 
 @keyframes modalFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translate(-50%, -50%) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
@@ -577,15 +626,15 @@
 /* レスポンシブ対応 */
 @media (max-width: 640px) {
   .staff-inventory-scan {
-    padding: 16px 12px 80px;
+    padding: 70px 12px 100px;
   }
   
   .scan-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
   
   .scan-area {
-    padding: 24px 20px;
+    padding: 32px 16px;
   }
   
   .product-card {
@@ -597,7 +646,7 @@
   }
   
   .btn {
-    padding: 12px 20px;
+    padding: 14px 20px;
     font-size: 0.95rem;
   }
   
@@ -605,6 +654,25 @@
     padding: 16px;
     font-size: 1rem;
     min-height: 70px;
+  }
+
+  .scan-placeholder i {
+    font-size: 3.5rem;
+  }
+
+  .quantity-controls {
+    gap: 8px;
+  }
+
+  .btn-quantity {
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+  }
+
+  #quantity-input {
+    font-size: 1.3rem;
+    padding: 12px;
   }
 }
 
