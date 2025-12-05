@@ -80,6 +80,7 @@ s3_client = boto3.client('s3')
 # DynamoDBリソースの初期化
 dynamodb = boto3.resource('dynamodb')
 ANNOUNCEMENTS_TABLE = dynamodb.Table('announcements')
+ANNOUNCEMENT_READS_TABLE = dynamodb.Table('announcement-reads')
 REPORTS_TABLE = dynamodb.Table('staff-reports')
 SCHEDULES_TABLE = dynamodb.Table('schedules')
 ESTIMATES_TABLE = dynamodb.Table('estimates')
@@ -290,6 +291,30 @@ def lambda_handler(event, context):
                 return upload_report_image(event, headers)
             elif method == 'GET':
                 return get_report_images(event, headers)
+        elif normalized_path == '/staff/announcements':
+            # 業務連絡一覧取得（清掃員向け）
+            if method == 'GET':
+                return get_staff_announcements(event, headers)
+        elif normalized_path.startswith('/staff/announcements/') and normalized_path.endswith('/read'):
+            # 業務連絡の既読マーク
+            announcement_id = normalized_path.split('/')[-2]
+            if method == 'POST':
+                return mark_announcement_read(announcement_id, event, headers)
+        elif normalized_path == '/admin/announcements':
+            # 業務連絡一覧取得・作成（管理者向け）
+            if method == 'GET':
+                return get_admin_announcements(event, headers)
+            elif method == 'POST':
+                return create_announcement(event, headers)
+        elif normalized_path.startswith('/admin/announcements/'):
+            # 業務連絡詳細取得・更新・削除（管理者向け）
+            announcement_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_announcement_detail(announcement_id, event, headers)
+            elif method == 'PUT':
+                return update_announcement(announcement_id, event, headers)
+            elif method == 'DELETE':
+                return delete_announcement(announcement_id, event, headers)
         elif normalized_path == '/admin/dashboard/stats':
             # 管理ダッシュボードの統計データを取得
             if method == 'GET':
@@ -6313,6 +6338,568 @@ def get_inventory_transactions(event, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': '履歴の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+# ==================== 業務連絡機能 ====================
+
+def get_staff_announcements(event, headers):
+    """
+    清掃員向け業務連絡一覧取得
+    """
+    try:
+        # 認証チェック
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info or not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        staff_id = user_info.get('uid')
+        query_params = event.get('queryStringParameters') or {}
+        limit = int(query_params.get('limit', 50))
+        
+        # 全社員向けと個別向けの業務連絡を取得
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # 全社員向け（target_type='all'）
+        all_announcements = []
+        try:
+            response = ANNOUNCEMENTS_TABLE.query(
+                IndexName='created_at-index',
+                KeyConditionExpression=Key('target_type').eq('all'),
+                ScanIndexForward=False,
+                Limit=limit
+            )
+            all_announcements = response.get('Items', [])
+        except Exception as e:
+            print(f"Error querying all announcements: {e}")
+        
+        # 個別向け（target_type='individual'、target_staff_idsにstaff_idが含まれる）
+        individual_announcements = []
+        try:
+            response = ANNOUNCEMENTS_TABLE.scan(
+                FilterExpression=Attr('target_type').eq('individual') & Attr('target_staff_ids').contains(staff_id)
+            )
+            individual_announcements = response.get('Items', [])
+        except Exception as e:
+            print(f"Error querying individual announcements: {e}")
+        
+        # マージしてソート
+        all_items = all_announcements + individual_announcements
+        all_items.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        # 既読情報を取得
+        read_ids = set()
+        try:
+            read_response = ANNOUNCEMENT_READS_TABLE.query(
+                IndexName='staff_id-read_at-index',
+                KeyConditionExpression=Key('staff_id').eq(staff_id)
+            )
+            read_ids = {item.get('announcement_id') for item in read_response.get('Items', [])}
+        except Exception as e:
+            print(f"Error querying read status: {e}")
+        
+        # レスポンスに既読情報とNEWバッジ情報を追加
+        announcements = []
+        for item in all_items[:limit]:
+            announcement_id = item.get('id')
+            created_at = item.get('created_at', '')
+            is_read = announcement_id in read_ids
+            
+            # NEWバッジ判定（作成から1週間以内）
+            is_new = False
+            if created_at:
+                try:
+                    created_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+                    is_new = created_date > week_ago
+                except:
+                    pass
+            
+            announcements.append({
+                **item,
+                'is_read': is_read,
+                'is_new': is_new
+            })
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'announcements': announcements,
+                'total': len(announcements)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        import traceback
+        print(f"Error getting staff announcements: {str(e)}")
+        print(traceback.format_exc())
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '業務連絡の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def mark_announcement_read(announcement_id, event, headers):
+    """
+    業務連絡の既読マーク
+    """
+    try:
+        # 認証チェック
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info or not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        staff_id = user_info.get('uid')
+        now = datetime.utcnow().isoformat() + 'Z'
+        read_id = f"{announcement_id}_{staff_id}"
+        
+        # 既読レコードを作成
+        read_item = {
+            'id': read_id,
+            'announcement_id': announcement_id,
+            'staff_id': staff_id,
+            'staff_name': user_info.get('name', user_info.get('email', 'Unknown')),
+            'read_at': now
+        }
+        
+        ANNOUNCEMENT_READS_TABLE.put_item(Item=read_item)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '既読にマークしました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        import traceback
+        print(f"Error marking announcement read: {str(e)}")
+        print(traceback.format_exc())
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '既読マークに失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_admin_announcements(event, headers):
+    """
+    管理者向け業務連絡一覧取得
+    """
+    try:
+        # 認証・権限チェック
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info or not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        if not check_admin_permission(user_info):
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
+            }
+        
+        query_params = event.get('queryStringParameters') or {}
+        limit = int(query_params.get('limit', 50))
+        target_type = query_params.get('target_type', '')  # 'all' or 'individual' or ''
+        
+        # 業務連絡を取得
+        if target_type:
+            response = ANNOUNCEMENTS_TABLE.query(
+                IndexName='created_at-index',
+                KeyConditionExpression=Key('target_type').eq(target_type),
+                ScanIndexForward=False,
+                Limit=limit
+            )
+            announcements = response.get('Items', [])
+        else:
+            # すべて取得
+            response = ANNOUNCEMENTS_TABLE.scan(Limit=limit)
+            announcements = response.get('Items', [])
+            announcements.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'announcements': announcements,
+                'total': len(announcements)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        import traceback
+        print(f"Error getting admin announcements: {str(e)}")
+        print(traceback.format_exc())
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '業務連絡の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_announcement(event, headers):
+    """
+    業務連絡作成（管理者のみ）
+    """
+    try:
+        # 認証・権限チェック
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info or not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        if not check_admin_permission(user_info):
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
+            }
+        
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 必須項目チェック
+        title = body_json.get('title', '').strip()
+        content = body_json.get('content', '').strip()
+        target_type = body_json.get('target_type', 'all')  # 'all' or 'individual'
+        target_staff_ids = body_json.get('target_staff_ids', [])  # 個別送信の場合のstaff_idリスト
+        has_deadline = body_json.get('has_deadline', False)
+        deadline = body_json.get('deadline', '')  # ISO 8601形式
+        
+        if not title or not content:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'タイトルと本文は必須です'}, ensure_ascii=False)
+            }
+        
+        if target_type == 'individual' and not target_staff_ids:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': '個別送信の場合は対象者を選択してください'}, ensure_ascii=False)
+            }
+        
+        if has_deadline and not deadline:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': '期限を設定する場合は期限日時を入力してください'}, ensure_ascii=False)
+            }
+        
+        # 業務連絡を作成
+        announcement_id = str(uuid.uuid4())
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        announcement_item = {
+            'id': announcement_id,
+            'title': title,
+            'content': content,
+            'target_type': target_type,
+            'target_staff_ids': target_staff_ids if target_type == 'individual' else [],
+            'has_deadline': has_deadline,
+            'deadline': deadline if has_deadline else None,
+            'created_at': now,
+            'updated_at': now,
+            'created_by': user_info.get('uid'),
+            'created_by_name': user_info.get('name', user_info.get('email', 'Unknown')),
+            'target_type': target_type  # GSI用
+        }
+        
+        ANNOUNCEMENTS_TABLE.put_item(Item=announcement_item)
+        
+        return {
+            'statusCode': 201,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '業務連絡を作成しました',
+                'announcement_id': announcement_id
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        import traceback
+        print(f"Error creating announcement: {str(e)}")
+        print(traceback.format_exc())
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '業務連絡の作成に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_announcement_detail(announcement_id, event, headers):
+    """
+    業務連絡詳細取得（既読状況含む、管理者向け）
+    """
+    try:
+        # 認証・権限チェック
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info or not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        if not check_admin_permission(user_info):
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
+            }
+        
+        # 業務連絡を取得
+        response = ANNOUNCEMENTS_TABLE.get_item(Key={'id': announcement_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': '業務連絡が見つかりません'}, ensure_ascii=False)
+            }
+        
+        announcement = response['Item']
+        
+        # 既読状況を取得
+        read_response = ANNOUNCEMENT_READS_TABLE.query(
+            IndexName='announcement_id-read_at-index',
+            KeyConditionExpression=Key('announcement_id').eq(announcement_id)
+        )
+        read_items = read_response.get('Items', [])
+        
+        # 全従業員リストを取得（既読チェック用）
+        all_staff = []
+        try:
+            staff_response = WORKERS_TABLE.scan(
+                FilterExpression=Attr('role_code').eq('99')  # 清掃員
+            )
+            all_staff = staff_response.get('Items', [])
+        except Exception as e:
+            print(f"Error getting staff list: {e}")
+        
+        # 既読マップを作成
+        read_map = {item.get('staff_id'): item for item in read_items}
+        
+        # 対象者リストを作成
+        target_staff_ids = announcement.get('target_staff_ids', [])
+        if announcement.get('target_type') == 'all':
+            # 全社員向けの場合は全従業員が対象
+            target_staff_ids = [staff.get('id') for staff in all_staff]
+        
+        # 既読チェックリストを作成
+        read_status = []
+        for staff_id in target_staff_ids:
+            staff = next((s for s in all_staff if s.get('id') == staff_id), None)
+            if staff:
+                read_item = read_map.get(staff_id)
+                read_status.append({
+                    'staff_id': staff_id,
+                    'staff_name': staff.get('name', staff.get('email', 'Unknown')),
+                    'is_read': read_item is not None,
+                    'read_at': read_item.get('read_at') if read_item else None
+                })
+        
+        announcement['read_status'] = read_status
+        announcement['read_count'] = len([s for s in read_status if s['is_read']])
+        announcement['total_count'] = len(read_status)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(announcement, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        import traceback
+        print(f"Error getting announcement detail: {str(e)}")
+        print(traceback.format_exc())
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '業務連絡の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_announcement(announcement_id, event, headers):
+    """
+    業務連絡更新（管理者のみ）
+    """
+    try:
+        # 認証・権限チェック
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info or not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        if not check_admin_permission(user_info):
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
+            }
+        
+        # 既存の業務連絡を取得
+        response = ANNOUNCEMENTS_TABLE.get_item(Key={'id': announcement_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({'error': '業務連絡が見つかりません'}, ensure_ascii=False)
+            }
+        
+        existing = response['Item']
+        
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        # 更新
+        now = datetime.utcnow().isoformat() + 'Z'
+        update_item = {
+            **existing,
+            'title': body_json.get('title', existing.get('title')),
+            'content': body_json.get('content', existing.get('content')),
+            'target_type': body_json.get('target_type', existing.get('target_type')),
+            'target_staff_ids': body_json.get('target_staff_ids', existing.get('target_staff_ids', [])),
+            'has_deadline': body_json.get('has_deadline', existing.get('has_deadline', False)),
+            'deadline': body_json.get('deadline', existing.get('deadline')),
+            'updated_at': now
+        }
+        
+        ANNOUNCEMENTS_TABLE.put_item(Item=update_item)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '業務連絡を更新しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        import traceback
+        print(f"Error updating announcement: {str(e)}")
+        print(traceback.format_exc())
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '業務連絡の更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_announcement(announcement_id, event, headers):
+    """
+    業務連絡削除（管理者のみ）
+    """
+    try:
+        # 認証・権限チェック
+        auth_header = event.get('headers', {}).get('Authorization') or event.get('headers', {}).get('authorization', '')
+        id_token = auth_header.replace('Bearer ', '') if auth_header else ''
+        user_info = verify_firebase_token(id_token)
+        if not user_info or not user_info.get('verified'):
+            return {
+                'statusCode': 401,
+                'headers': headers,
+                'body': json.dumps({'error': 'Unauthorized'}, ensure_ascii=False)
+            }
+        
+        if not check_admin_permission(user_info):
+            return {
+                'statusCode': 403,
+                'headers': headers,
+                'body': json.dumps({'error': 'Forbidden: Admin access required'}, ensure_ascii=False)
+            }
+        
+        # 業務連絡を削除
+        ANNOUNCEMENTS_TABLE.delete_item(Key={'id': announcement_id})
+        
+        # 既読レコードも削除（オプション）
+        try:
+            read_response = ANNOUNCEMENT_READS_TABLE.query(
+                IndexName='announcement_id-read_at-index',
+                KeyConditionExpression=Key('announcement_id').eq(announcement_id)
+            )
+            for read_item in read_response.get('Items', []):
+                ANNOUNCEMENT_READS_TABLE.delete_item(Key={'id': read_item.get('id')})
+        except Exception as e:
+            print(f"Error deleting read records: {e}")
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '業務連絡を削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        import traceback
+        print(f"Error deleting announcement: {str(e)}")
+        print(traceback.format_exc())
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '業務連絡の削除に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }

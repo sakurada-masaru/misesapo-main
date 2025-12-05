@@ -58,9 +58,9 @@
       <i class="fas fa-book"></i>
       <span class="nav-label">清掃マニュアル</span>
     </a>
-    <a href="/announcements" class="nav-item" data-page="announcements">
+    <a href="/staff/announcements" class="nav-item" data-page="announcements">
       <i class="fas fa-bullhorn"></i>
-      <span class="nav-label">お知らせ</span>
+      <span class="nav-label">業務連絡</span>
     </a>
     <div class="nav-divider"></div>
     <a href="/staff/mypage/settings" class="nav-item" data-page="settings">
@@ -88,6 +88,19 @@
     <div class="mypage-grid stack-on-sm">
       <!-- メインカラム -->
       <div class="mypage-main">
+        <!-- 業務連絡通知セクション -->
+        <section class="section section-order-0 announcements-section">
+          <h2 class="section-title">
+            <i class="fas fa-bullhorn"></i>
+            業務連絡
+          </h2>
+          <div class="card announcements-card">
+            <div id="announcements-list">
+              <div class="empty-state">業務連絡はありません</div>
+            </div>
+          </div>
+        </section>
+
         <!-- 出退勤記録セクション -->
         <section class="section section-order-1">
           <h2 class="section-title">
@@ -740,6 +753,70 @@
       font-size: 0.875rem;
     }
 
+    /* 業務連絡セクション */
+    .announcements-section {
+      margin-bottom: 24px;
+    }
+    .announcements-card {
+      padding: 16px;
+    }
+    .announcement-item {
+      padding: 16px;
+      margin-bottom: 12px;
+      background: #fff;
+      border-radius: 8px;
+      border: 2px solid #e5e7eb;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .announcement-item:hover {
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .announcement-item.unread {
+      border-color: var(--primary);
+      background: #fef3f2;
+    }
+    .announcement-item.read {
+      opacity: 0.8;
+    }
+    .announcement-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .announcement-title {
+      font-weight: 600;
+      color: #111827;
+      font-size: 1rem;
+    }
+    .new-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #ef4444;
+      color: #fff;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .announcement-meta {
+      margin-bottom: 8px;
+    }
+    .announcement-date {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    .announcement-content {
+      font-size: 0.9rem;
+      color: #4b5563;
+      line-height: 1.5;
+    }
+    .announcement-more {
+      text-align: center;
+      margin-top: 12px;
+    }
+
     @media (max-width: 767.98px) {
       .staff-mypage.main-content {
         margin-left: 0 !important;
@@ -773,6 +850,7 @@
 
   <script>
     const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
     let currentUser = null;
     let attendanceRecords = {};
     let currentCalendarDate = new Date();
@@ -1000,8 +1078,9 @@
         // ユーザー情報を表示
         renderUser(currentUser);
 
-        // スケジュールを読み込み
+        // スケジュールと業務連絡を読み込み
         loadWeeklySchedule();
+        loadAnnouncements();
 
         // カレンダーを表示
         renderCalendar();
@@ -1849,6 +1928,135 @@
         scheduleEl.innerHTML = '<div class="empty-state">今週の予定はありません</div>';
       } catch (error) {
         console.error('Error loading schedule:', error);
+      }
+    }
+
+    // 業務連絡を読み込み
+    async function loadAnnouncements() {
+      if (!currentUser) return;
+      
+      try {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/announcements`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${idToken}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('業務連絡の取得に失敗しました');
+        }
+        
+        const data = await response.json();
+        const announcements = data.announcements || [];
+        
+        renderAnnouncements(announcements);
+      } catch (error) {
+        console.error('Error loading announcements:', error);
+        const announcementsEl = document.getElementById('announcements-list');
+        if (announcementsEl) {
+          announcementsEl.innerHTML = '<div class="empty-state">業務連絡の読み込みに失敗しました</div>';
+        }
+      }
+    }
+
+    // 業務連絡を表示
+    function renderAnnouncements(announcements) {
+      const announcementsEl = document.getElementById('announcements-list');
+      if (!announcementsEl) return;
+      
+      if (announcements.length === 0) {
+        announcementsEl.innerHTML = '<div class="empty-state">業務連絡はありません</div>';
+        return;
+      }
+      
+      // 最新5件のみ表示
+      const recentAnnouncements = announcements.slice(0, 5);
+      
+      let html = '';
+      recentAnnouncements.forEach(announcement => {
+        const createdDate = new Date(announcement.created_at);
+        const dateStr = createdDate.toLocaleDateString('ja-JP', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const newBadge = announcement.is_new ? '<span class="new-badge">NEW</span>' : '';
+        const readClass = announcement.is_read ? 'read' : 'unread';
+        
+        html += `
+          <div class="announcement-item ${readClass}" data-id="${announcement.id}">
+            <div class="announcement-header">
+              <span class="announcement-title">${escapeHtml(announcement.title)}</span>
+              ${newBadge}
+            </div>
+            <div class="announcement-meta">
+              <span class="announcement-date">${dateStr}</span>
+            </div>
+            <div class="announcement-content">${escapeHtml(announcement.content.substring(0, 100))}${announcement.content.length > 100 ? '...' : ''}</div>
+          </div>
+        `;
+      });
+      
+      if (announcements.length > 5) {
+        html += `<div class="announcement-more"><a href="/staff/announcements" class="btn btn-text btn-sm">すべて見る</a></div>`;
+      }
+      
+      announcementsEl.innerHTML = html;
+      
+      // クリックイベントを追加（既読マーク）
+      announcementsEl.querySelectorAll('.announcement-item').forEach(item => {
+        item.addEventListener('click', async () => {
+          const announcementId = item.dataset.id;
+          if (!announcementId) return;
+          
+          // 既読マーク
+          try {
+            const idToken = await getFirebaseIdToken();
+            await fetch(`${REPORT_API}/staff/announcements/${announcementId}/read`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${idToken}`
+              }
+            });
+            
+            // 表示を更新
+            item.classList.remove('unread');
+            item.classList.add('read');
+          } catch (error) {
+            console.error('Error marking announcement read:', error);
+          }
+          
+          // 詳細ページに遷移
+          window.location.href = `/staff/announcements?id=${announcementId}`;
+        });
+      });
+    }
+
+    // Firebase ID Token取得（既存の関数がある場合はそれを使用）
+    async function getFirebaseIdToken() {
+      try {
+        // Cognito認証から取得
+        const cognitoIdToken = localStorage.getItem('cognito_id_token');
+        if (cognitoIdToken) {
+          return cognitoIdToken;
+        }
+        
+        // misesapo_authから取得
+        const authData = localStorage.getItem('misesapo_auth');
+        if (authData) {
+          const parsed = JSON.parse(authData);
+          if (parsed.token) {
+            return parsed.token;
+          }
+        }
+        
+        return 'mock-token';
+      } catch (error) {
+        console.error('Error getting Firebase ID token:', error);
+        return 'mock-token';
       }
     }
 
