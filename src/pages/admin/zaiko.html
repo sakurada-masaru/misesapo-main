@@ -45,22 +45,58 @@
         <hr>
 
         <h2>📦 現在の在庫一覧</h2>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>商品名</th>
-                <th class="center-text">現在の在庫数</th>
-              </tr>
-            </thead>
-            <tbody id="inventory-list">
-            </tbody>
-          </table>
+        <div class="inventory-grid" id="inventory-grid">
+          <!-- カードが動的に追加される -->
         </div>
       </div>
     </div>
   </div>
+
+  <!-- 商品詳細モーダル -->
+  <dialog id="product-detail-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-product-name">商品詳細</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('product-detail-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="product-detail-info">
+          <div class="detail-item">
+            <span class="detail-label">商品ID:</span>
+            <span class="detail-value" id="modal-product-id">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">商品名:</span>
+            <span class="detail-value" id="modal-product-name-text">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">現在の在庫数:</span>
+            <span class="detail-value" id="modal-product-stock">-</span>
+          </div>
+        </div>
+        
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+        
+        <div class="modal-transaction-area">
+          <h4>在庫更新</h4>
+          <div class="mode-buttons">
+            <button id="modal-mode-in" class="active">入庫</button>
+            <button id="modal-mode-out" class="inactive">出庫</button>
+          </div>
+          <div class="input-group">
+            <label for="modal-quantity">数量</label>
+            <input type="number" id="modal-quantity" value="1" min="1" required>
+          </div>
+          <button id="modal-process-button" class="btn-process">在庫更新を実行</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('product-detail-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
 </main>
 
 <script src="/js/zaiko.js"></script>
