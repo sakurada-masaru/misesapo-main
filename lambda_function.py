@@ -256,12 +256,22 @@ def lambda_handler(event, context):
                 return get_inventory_items(event, headers)
             elif method == 'POST':
                 return create_inventory_item(event, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
         elif normalized_path.startswith('/staff/inventory/items/'):
             # 商品詳細の取得・更新・削除
             product_id = normalized_path.split('/')[-1]
             if method == 'GET':
                 # 商品詳細取得（実装は後で追加）
-                pass
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Not implemented'}, ensure_ascii=False)
+                }
         elif normalized_path == '/staff/inventory/out':
             # 出庫処理
             if method == 'POST':
