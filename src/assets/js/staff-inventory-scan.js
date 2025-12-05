@@ -355,12 +355,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // 手入力モーダルを閉じる
-    document.getElementById('btn-close-manual').addEventListener('click', () => {
-        document.getElementById('manual-input-dialog').classList.remove('active');
-    });
-    document.getElementById('btn-cancel-manual').addEventListener('click', () => {
-        document.getElementById('manual-input-dialog').classList.remove('active');
-    });
+    const btnCloseManual = document.getElementById('btn-close-manual');
+    if (btnCloseManual) {
+        btnCloseManual.addEventListener('click', () => {
+            document.getElementById('manual-input-dialog').classList.remove('active');
+        });
+    }
+    const btnCancelManual = document.getElementById('btn-cancel-manual');
+    if (btnCancelManual) {
+        btnCancelManual.addEventListener('click', () => {
+            document.getElementById('manual-input-dialog').classList.remove('active');
+        });
+    }
     
     // 手入力確定ボタン
     document.getElementById('btn-submit-manual').addEventListener('click', async () => {
@@ -428,12 +434,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // 処理モードモーダルを閉じる
-    document.getElementById('btn-close-mode').addEventListener('click', () => {
-        document.getElementById('process-mode-dialog').classList.remove('active');
-    });
-    document.getElementById('btn-cancel-mode').addEventListener('click', () => {
-        document.getElementById('process-mode-dialog').classList.remove('active');
-    });
+    const btnCloseMode = document.getElementById('btn-close-mode');
+    if (btnCloseMode) {
+        btnCloseMode.addEventListener('click', () => {
+            document.getElementById('process-mode-dialog').classList.remove('active');
+        });
+    }
+    const btnCancelMode = document.getElementById('btn-cancel-mode');
+    if (btnCancelMode) {
+        btnCancelMode.addEventListener('click', () => {
+            document.getElementById('process-mode-dialog').classList.remove('active');
+        });
+    }
     
     // 初期化
     updateCart();
