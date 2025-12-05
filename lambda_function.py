@@ -5850,32 +5850,40 @@ def get_inventory_items(event, headers):
         
         print(f"DEBUG: Processing {len(items)} items")
         # 在庫ステータスを計算
+        processed_items = []
         for item in items:
-            # DynamoDBのDecimal型をintに変換
-            stock = int(item.get('stock', 0)) if item.get('stock') is not None else 0
-            safe_stock = int(item.get('safeStock', 100)) if item.get('safeStock') is not None else 100
-            min_stock = int(item.get('minStock', 50)) if item.get('minStock') is not None else 50
+            # DynamoDBの型をJSONシリアライズ可能な型に変換
+            processed_item = {}
+            for key, value in item.items():
+                # Decimal型をintに変換
+                if hasattr(value, '__class__') and value.__class__.__name__ == 'Decimal':
+                    processed_item[key] = int(value)
+                elif isinstance(value, (int, float, str, bool, type(None))):
+                    processed_item[key] = value
+                else:
+                    processed_item[key] = str(value)
             
             # 数値型に変換してから比較
-            if stock >= safe_stock:
-                item['status'] = 'safe'
-            elif stock >= min_stock:
-                item['status'] = 'warning'
-            else:
-                item['status'] = 'danger'
+            stock = processed_item.get('stock', 0)
+            safe_stock = processed_item.get('safeStock', 100)
+            min_stock = processed_item.get('minStock', 50)
             
-            # DynamoDBの型をJSONシリアライズ可能な型に変換
-            item['stock'] = stock
-            item['safeStock'] = safe_stock
-            item['minStock'] = min_stock
+            if stock >= safe_stock:
+                processed_item['status'] = 'safe'
+            elif stock >= min_stock:
+                processed_item['status'] = 'warning'
+            else:
+                processed_item['status'] = 'danger'
+            
+            processed_items.append(processed_item)
         
-        print(f"DEBUG: Returning {len(items)} items")
+        print(f"DEBUG: Returning {len(processed_items)} items")
         return {
             'statusCode': 200,
             'headers': headers,
             'body': json.dumps({
-                'items': items
-            }, ensure_ascii=False, default=str)
+                'items': processed_items
+            }, ensure_ascii=False)
         }
     except Exception as e:
         import traceback
