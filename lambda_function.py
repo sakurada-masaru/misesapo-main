@@ -5828,33 +5828,48 @@ def get_inventory_items(event, headers):
     在庫一覧を取得（認証不要）
     """
     try:
+        print("DEBUG: get_inventory_items called")
         items = []
         try:
+            print("DEBUG: Attempting to scan inventory-items table")
             response = INVENTORY_ITEMS_TABLE.scan()
+            print(f"DEBUG: Scan response received, items count: {len(response.get('Items', []))}")
             items.extend(response.get('Items', []))
             
             while 'LastEvaluatedKey' in response:
+                print("DEBUG: Paginating scan results")
                 response = INVENTORY_ITEMS_TABLE.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
                 items.extend(response.get('Items', []))
         except Exception as table_error:
             # テーブルが存在しない場合やエラーの場合
-            print(f"Error scanning inventory items table: {str(table_error)}")
+            import traceback
+            print(f"ERROR: Error scanning inventory items table: {str(table_error)}")
+            print(traceback.format_exc())
             # 空の配列を返す（テーブルが存在しない場合のフォールバック）
             items = []
         
+        print(f"DEBUG: Processing {len(items)} items")
         # 在庫ステータスを計算
         for item in items:
-            stock = item.get('stock', 0)
-            safe_stock = item.get('safeStock', 100)
-            min_stock = item.get('minStock', 50)
+            # DynamoDBのDecimal型をintに変換
+            stock = int(item.get('stock', 0)) if item.get('stock') is not None else 0
+            safe_stock = int(item.get('safeStock', 100)) if item.get('safeStock') is not None else 100
+            min_stock = int(item.get('minStock', 50)) if item.get('minStock') is not None else 50
             
+            # 数値型に変換してから比較
             if stock >= safe_stock:
                 item['status'] = 'safe'
             elif stock >= min_stock:
                 item['status'] = 'warning'
             else:
                 item['status'] = 'danger'
+            
+            # DynamoDBの型をJSONシリアライズ可能な型に変換
+            item['stock'] = stock
+            item['safeStock'] = safe_stock
+            item['minStock'] = min_stock
         
+        print(f"DEBUG: Returning {len(items)} items")
         return {
             'statusCode': 200,
             'headers': headers,
@@ -5864,7 +5879,8 @@ def get_inventory_items(event, headers):
         }
     except Exception as e:
         import traceback
-        print(f"Error getting inventory items: {str(e)}")
+        error_msg = f"Error getting inventory items: {str(e)}"
+        print(error_msg)
         print(traceback.format_exc())
         return {
             'statusCode': 500,
