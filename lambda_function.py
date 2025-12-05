@@ -5825,16 +5825,22 @@ def get_report_feedback(report_id, event, headers):
 
 def get_inventory_items(event, headers):
     """
-    在庫一覧を取得
+    在庫一覧を取得（認証不要）
     """
     try:
         items = []
-        response = INVENTORY_ITEMS_TABLE.scan()
-        items.extend(response.get('Items', []))
-        
-        while 'LastEvaluatedKey' in response:
-            response = INVENTORY_ITEMS_TABLE.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        try:
+            response = INVENTORY_ITEMS_TABLE.scan()
             items.extend(response.get('Items', []))
+            
+            while 'LastEvaluatedKey' in response:
+                response = INVENTORY_ITEMS_TABLE.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+                items.extend(response.get('Items', []))
+        except Exception as table_error:
+            # テーブルが存在しない場合やエラーの場合
+            print(f"Error scanning inventory items table: {str(table_error)}")
+            # 空の配列を返す（テーブルが存在しない場合のフォールバック）
+            items = []
         
         # 在庫ステータスを計算
         for item in items:
@@ -5857,7 +5863,9 @@ def get_inventory_items(event, headers):
             }, ensure_ascii=False, default=str)
         }
     except Exception as e:
+        import traceback
         print(f"Error getting inventory items: {str(e)}")
+        print(traceback.format_exc())
         return {
             'statusCode': 500,
             'headers': headers,
