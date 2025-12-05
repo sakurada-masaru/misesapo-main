@@ -1,30 +1,39 @@
-/* --- CSS スタイル --- */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f4f7f6;
-    color: #333;
+/* --- 在庫管理ページ CSS --- */
+.admin-zaiko {
+  display: flex;
+  min-height: 100vh;
+  background: #f9fafb;
 }
-h1 {
-    color: #007bff;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
+
+.admin-zaiko .zaiko-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+.admin-zaiko h1 {
+  color: #111827;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin: 0;
+}
+
+.admin-zaiko h2 {
+  color: #374151;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
 }
 /* トランザクション処理セクション */
 #transaction-area {
     margin-bottom: 30px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
 }
 .mode-buttons button {
     padding: 10px 20px;
@@ -44,58 +53,109 @@ h1 {
     color: white;
 }
 /* 入力フォーム */
+.input-group {
+    margin-bottom: 16px;
+}
+
 .input-group label {
     display: block;
-    margin-top: 10px;
-    font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #374151;
 }
 .input-group input {
-    width: calc(100% - 22px);
-    padding: 10px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 0;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
     box-sizing: border-box;
-    font-size: 16px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+.input-group input:focus {
+    outline: none;
+    border-color: #FF679C;
+    box-shadow: 0 0 0 3px rgba(255, 107, 156, 0.1);
 }
 #process-button {
-    background-color: #007bff;
+    background-color: #FF679C;
     color: white;
-    padding: 12px 25px;
+    padding: 12px 24px;
     margin-top: 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     width: 100%;
-    font-size: 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
 }
 #process-button:hover {
-    background-color: #0056b3;
+    background-color: #e91e63;
+}
+#process-button:active {
+    transform: scale(0.98);
 }
 /* 在庫テーブル */
+.table-container {
+    margin-top: 24px;
+    overflow-x: auto;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    margin-top: 0;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
 }
 th, td {
-    border: 1px solid #ddd;
-    padding: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 12px 16px;
     text-align: left;
 }
 th {
-    background-color: #f0f0f0;
-    color: #333;
+    background-color: #f9fafb;
+    color: #374151;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+td {
+    color: #111827;
+    font-size: 0.9rem;
 }
 .center-text {
     text-align: center;
 }
+tbody tr:hover {
+    background-color: #f9fafb;
+}
 /* メッセージエリア */
 #message {
-    margin-top: 15px;
-    padding: 10px;
-    border-radius: 4px;
-    font-weight: bold;
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
 }
-.success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
-.error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+.success { 
+    background-color: #d1fae5; 
+    color: #065f46; 
+    border: 1px solid #a7f3d0; 
+}
+.error { 
+    background-color: #fee2e2; 
+    color: #991b1b; 
+    border: 1px solid #fecaca; 
+}
+
+/* 管理ダッシュボードとの統合 */
+.admin-zaiko hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 24px 0;
+}
