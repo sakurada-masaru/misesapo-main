@@ -222,6 +222,30 @@ async function processModalTransaction() {
     }
 }
 
+// 次の商品IDを自動生成
+function generateNextProductId() {
+    if (!inventoryData || inventoryData.length === 0) {
+        return 'P001';
+    }
+    
+    // 既存の商品IDから最大値を取得
+    let maxNum = 0;
+    for (const item of inventoryData) {
+        const productId = item.product_id || item.id;
+        if (productId && productId.startsWith('P')) {
+            const numStr = productId.substring(1);
+            const num = parseInt(numStr, 10);
+            if (!isNaN(num) && num > maxNum) {
+                maxNum = num;
+            }
+        }
+    }
+    
+    // 次のIDを生成（3桁ゼロパディング）
+    const nextNum = maxNum + 1;
+    return `P${String(nextNum).padStart(3, '0')}`;
+}
+
 // 商品登録
 async function createInventoryItem() {
     const productId = document.getElementById('new-product-id').value.trim();
@@ -263,7 +287,7 @@ async function createInventoryItem() {
         // フォームをリセット
         const savedProductId = productId;
         const savedName = name;
-        document.getElementById('new-product-id').value = '';
+        // 商品IDは自動生成されるので、モーダルを閉じる時にリセットしない
         document.getElementById('new-product-name').value = '';
         document.getElementById('new-product-stock').value = '0';
         document.getElementById('new-product-min-stock').value = '50';
@@ -442,6 +466,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnNewItem = document.getElementById('btn-new-item');
     if (btnNewItem) {
         btnNewItem.addEventListener('click', () => {
+            // 次の商品IDを自動生成して入力
+            const nextId = generateNextProductId();
+            document.getElementById('new-product-id').value = nextId;
             document.getElementById('new-item-dialog').showModal();
         });
     }
