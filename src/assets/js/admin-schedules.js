@@ -71,7 +71,7 @@ async function loadSchedules() {
   } catch (error) {
     console.error('Failed to load schedules:', error);
     if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">読み込みに失敗しました</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">読み込みに失敗しました</td></tr>';
     }
   }
 }
