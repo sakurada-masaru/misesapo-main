@@ -60,11 +60,20 @@ function redirectToLogin() {
 
 // ID Token取得（認証済みユーザーから）
 async function getFirebaseIdToken() {
-    // Cognito認証の場合
+    // Cognito ID Token（優先）
+    const cognitoIdToken = localStorage.getItem('cognito_id_token');
+    if (cognitoIdToken) {
+        return cognitoIdToken;
+    }
+    
+    // Cognito認証のユーザーオブジェクトからトークンを取得
     const cognitoUser = localStorage.getItem('cognito_user');
     if (cognitoUser) {
         try {
             const parsed = JSON.parse(cognitoUser);
+            if (parsed.tokens && parsed.tokens.idToken) {
+                return parsed.tokens.idToken;
+            }
             if (parsed.idToken) {
                 return parsed.idToken;
             }
