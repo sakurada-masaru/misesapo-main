@@ -25,14 +25,14 @@
 
     <div class="content-wrapper">
 
-    <!-- 仮押さえアラート -->
+    <!-- 新規案件アラート -->
     <div class="draft-alert hidden" id="draft-alert">
       <div class="draft-alert-icon">
         <i class="fas fa-clock"></i>
       </div>
       <div class="draft-alert-content">
-        <div class="draft-alert-title">仮押さえ申請があります</div>
-        <div class="draft-alert-text" id="draft-alert-text">営業から<span id="draft-count">0</span>件の仮押さえ申請が届いています。清掃員をアサインして確定してください。</div>
+        <div class="draft-alert-title">新規案件があります</div>
+        <div class="draft-alert-text" id="draft-alert-text">営業から<span id="draft-count">0</span>件の新規案件が届いています。清掃員をアサインして確定してください。</div>
       </div>
       <button class="draft-alert-btn" onclick="filterDraft()">
         <i class="fas fa-list"></i> 確認する
@@ -58,7 +58,7 @@
           <label>ステータス</label>
           <select id="status-filter">
             <option value="">全て</option>
-            <option value="draft">仮押さえ</option>
+            <option value="draft">未確定</option>
             <option value="scheduled">確定</option>
             <option value="in_progress">作業中</option>
             <option value="completed">完了</option>
@@ -209,7 +209,7 @@
         <div class="form-field">
           <label for="schedule-status">ステータス</label>
           <select id="schedule-status" name="status">
-            <option value="draft">仮押さえ</option>
+            <option value="draft">未確定</option>
             <option value="scheduled">確定</option>
             <option value="in_progress">作業中</option>
             <option value="completed">完了</option>

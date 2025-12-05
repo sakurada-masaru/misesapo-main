@@ -76,7 +76,7 @@ async function loadSchedules() {
   }
 }
 
-// 仮押さえアラート更新
+// 新規案件アラート更新
 function updateDraftAlert() {
   const draftCount = allSchedules.filter(s => s.status === 'draft').length;
   const alertEl = document.getElementById('draft-alert');
@@ -92,7 +92,7 @@ function updateDraftAlert() {
   }
 }
 
-// 仮押さえフィルター（グローバル関数）
+// 新規案件フィルター（グローバル関数）
 window.filterDraft = function() {
   const statusFilter = document.getElementById('status-filter');
   if (statusFilter) {
@@ -661,14 +661,14 @@ function setupEventListeners() {
         notes: document.getElementById('schedule-notes').value
       };
 
-      // 清掃員を割り当てた場合、仮押さえ（draft）から確定（scheduled）に自動更新
+      // 清掃員を割り当てた場合、未確定（draft）から確定（scheduled）に自動更新
       if (!isNew && originalSchedule) {
         const wasDraft = originalSchedule.status === 'draft';
         const hadWorker = originalSchedule.worker_id && originalSchedule.worker_id !== '';
         const hasWorker = data.worker_id && data.worker_id !== '';
         const workerAssigned = !hadWorker && hasWorker; // 新しく清掃員が割り当てられた
         
-        // 仮押さえ状態で清掃員を新しく割り当てた場合、自動的に確定に変更
+        // 未確定状態で清掃員を新しく割り当てた場合、自動的に確定に変更
         if (wasDraft && workerAssigned) {
           data.status = 'scheduled';
           document.getElementById('schedule-status').value = 'scheduled';
@@ -904,7 +904,7 @@ function formatDate(dateStr) {
 
 function getStatusLabel(status) {
   const labels = {
-    'draft': '仮押さえ',
+    'draft': '未確定',
     'scheduled': '確定',
     'in_progress': '作業中',
     'completed': '完了',
