@@ -13,8 +13,29 @@ const loadingSpinner = document.getElementById('loading-spinner');
 
 // Firebase ID Token取得（簡易版）
 async function getFirebaseIdToken() {
-    // 実際の実装ではFirebase認証から取得
-    // ここではモックトークンを返す
+    // Cognito ID Token（優先）
+    const cognitoIdToken = localStorage.getItem('cognito_id_token');
+    if (cognitoIdToken) {
+        return cognitoIdToken;
+    }
+    
+    // Cognito認証のユーザーオブジェクトからトークンを取得
+    const cognitoUser = localStorage.getItem('cognito_user');
+    if (cognitoUser) {
+        try {
+            const parsed = JSON.parse(cognitoUser);
+            if (parsed.tokens && parsed.tokens.idToken) {
+                return parsed.tokens.idToken;
+            }
+            if (parsed.idToken) {
+                return parsed.idToken;
+            }
+        } catch (e) {
+            console.error('Error parsing cognito user:', e);
+        }
+    }
+    
+    // misesapo_auth から取得
     const authData = localStorage.getItem('misesapo_auth');
     if (authData) {
         try {
@@ -26,7 +47,10 @@ async function getFirebaseIdToken() {
             console.error('Error parsing auth data:', e);
         }
     }
-    return 'mock-token';
+    
+    // トークンが見つからない場合はエラー
+    console.error('No authentication token found');
+    return null;
 }
 
 // 在庫一覧を取得
