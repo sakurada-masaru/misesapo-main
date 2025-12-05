@@ -412,13 +412,23 @@
     grid.innerHTML = '<p class="loading"><i class="fas fa-spinner fa-spin"></i> 読み込み中...</p>';
 
     try {
-      let url = `${REPORT_API}/staff/report-images?cleaning_date=${date}`;
+      // Lambda関数は 'date' パラメータを期待している
+      let url = `${REPORT_API}/staff/report-images?date=${date}`;
       if (category) url += `&category=${category}`;
 
+      console.log('[Warehouse] Loading images:', { date, category, url });
+
       const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to load');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Warehouse] Error response:', response.status, errorText);
+        throw new Error(`読み込みに失敗しました (${response.status}): ${errorText}`);
+      }
 
       const data = await response.json();
+      console.log('[Warehouse] Received data:', data);
+      
       warehouseImages = data.images || [];
 
       if (warehouseImages.length === 0) {
@@ -433,8 +443,8 @@
       `).join('');
 
     } catch (error) {
-      console.error('Error loading warehouse:', error);
-      grid.innerHTML = '<p style="text-align:center;color:#dc2626;padding:20px;">読み込みに失敗しました</p>';
+      console.error('[Warehouse] Error loading warehouse:', error);
+      grid.innerHTML = `<p style="text-align:center;color:#dc2626;padding:20px;">読み込みに失敗しました<br><small>${error.message}</small></p>`;
     }
   }
 
