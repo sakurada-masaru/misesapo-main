@@ -740,7 +740,8 @@ function setupEventListeners() {
       }
 
       if (isNew) {
-        data.id = DataUtils.IdUtils.generateSchedule();
+        // ID生成はバックエンドに任せる（SCH-YYYYMMDD-NNN形式）
+        // data.id = DataUtils.IdUtils.generateSchedule(); // 削除
         data.created_at = new Date().toISOString();
       } else {
         data.id = id;
