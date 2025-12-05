@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (typeof DataUtils === 'undefined') {
     console.error('DataUtils is not loaded after waiting');
     if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">データユーティリティの読み込みに失敗しました</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">データユーティリティの読み込みに失敗しました</td></tr>';
     }
     return;
   }
