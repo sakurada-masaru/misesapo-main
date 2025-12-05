@@ -503,8 +503,8 @@ function renderTable() {
     return `
       <tr data-id="${schedule.id}" class="${isDraft ? 'draft-row' : ''}">
         <td>
-          <div><strong>${formatDate(normalized.date)}</strong></div>
-          <div style="font-size:0.85rem;color:#6b7280">${normalized.time || '-'} (${normalized.duration}分)</div>
+          <div><strong>${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</strong></div>
+          <div style="font-size:0.85rem;color:#6b7280">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration ? ` (${normalized.duration}分)` : ''}</div>
         </td>
         <td>
           <span class="client-name">${escapeHtml(clientName || '-')}</span>
