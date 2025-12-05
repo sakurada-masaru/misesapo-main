@@ -118,7 +118,7 @@ aws apigateway put-integration \
   --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
   --region ${REGION} > /dev/null 2>&1 || echo "POST 統合は既に設定されています"
 
-# OPTIONS メソッドを追加（CORS用）
+# OPTIONS メソッドを追加（CORS用 - MOCK統合）
 echo "[/staff/inventory/items] OPTIONS メソッドを設定中..."
 aws apigateway put-method \
   --rest-api-id ${REST_API_ID} \
@@ -127,13 +127,20 @@ aws apigateway put-method \
   --authorization-type NONE \
   --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS メソッドは既に存在します"
 
+# 既存の統合を削除（AWS_PROXYからMOCKに変更するため）
+aws apigateway delete-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ITEMS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+# MOCK統合を設定
 aws apigateway put-integration \
   --rest-api-id ${REST_API_ID} \
   --resource-id ${ITEMS_RESOURCE_ID} \
   --http-method OPTIONS \
-  --type AWS_PROXY \
-  --integration-http-method POST \
-  --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
+  --type MOCK \
+  --request-templates '{"application/json":"{\"statusCode\": 200}"}' \
   --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS 統合は既に設定されています"
 
 # /staff/inventory/out リソースが存在するか確認
@@ -175,7 +182,7 @@ aws apigateway put-integration \
   --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
   --region ${REGION} > /dev/null 2>&1 || echo "POST 統合は既に設定されています"
 
-# OPTIONS メソッドを追加（CORS用）
+# OPTIONS メソッドを追加（CORS用 - MOCK統合）
 echo "[/staff/inventory/out] OPTIONS メソッドを設定中..."
 aws apigateway put-method \
   --rest-api-id ${REST_API_ID} \
@@ -184,13 +191,20 @@ aws apigateway put-method \
   --authorization-type NONE \
   --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS メソッドは既に存在します"
 
+# 既存の統合を削除（AWS_PROXYからMOCKに変更するため）
+aws apigateway delete-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${OUT_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+# MOCK統合を設定
 aws apigateway put-integration \
   --rest-api-id ${REST_API_ID} \
   --resource-id ${OUT_RESOURCE_ID} \
   --http-method OPTIONS \
-  --type AWS_PROXY \
-  --integration-http-method POST \
-  --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
+  --type MOCK \
+  --request-templates '{"application/json":"{\"statusCode\": 200}"}' \
   --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS 統合は既に設定されています"
 
 # /staff/inventory/in リソースが存在するか確認
@@ -232,7 +246,7 @@ aws apigateway put-integration \
   --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
   --region ${REGION} > /dev/null 2>&1 || echo "POST 統合は既に設定されています"
 
-# OPTIONS メソッドを追加（CORS用）
+# OPTIONS メソッドを追加（CORS用 - MOCK統合）
 echo "[/staff/inventory/in] OPTIONS メソッドを設定中..."
 aws apigateway put-method \
   --rest-api-id ${REST_API_ID} \
@@ -241,13 +255,20 @@ aws apigateway put-method \
   --authorization-type NONE \
   --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS メソッドは既に存在します"
 
+# 既存の統合を削除（AWS_PROXYからMOCKに変更するため）
+aws apigateway delete-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${IN_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+# MOCK統合を設定
 aws apigateway put-integration \
   --rest-api-id ${REST_API_ID} \
   --resource-id ${IN_RESOURCE_ID} \
   --http-method OPTIONS \
-  --type AWS_PROXY \
-  --integration-http-method POST \
-  --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
+  --type MOCK \
+  --request-templates '{"application/json":"{\"statusCode\": 200}"}' \
   --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS 統合は既に設定されています"
 
 # /staff/inventory/transactions リソースが存在するか確認
@@ -289,7 +310,7 @@ aws apigateway put-integration \
   --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
   --region ${REGION} > /dev/null 2>&1 || echo "GET 統合は既に設定されています"
 
-# OPTIONS メソッドを追加（CORS用）
+# OPTIONS メソッドを追加（CORS用 - MOCK統合）
 echo "[/staff/inventory/transactions] OPTIONS メソッドを設定中..."
 aws apigateway put-method \
   --rest-api-id ${REST_API_ID} \
@@ -298,13 +319,20 @@ aws apigateway put-method \
   --authorization-type NONE \
   --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS メソッドは既に存在します"
 
+# 既存の統合を削除（AWS_PROXYからMOCKに変更するため）
+aws apigateway delete-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${TRANSACTIONS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+# MOCK統合を設定
 aws apigateway put-integration \
   --rest-api-id ${REST_API_ID} \
   --resource-id ${TRANSACTIONS_RESOURCE_ID} \
   --http-method OPTIONS \
-  --type AWS_PROXY \
-  --integration-http-method POST \
-  --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
+  --type MOCK \
+  --request-templates '{"application/json":"{\"statusCode\": 200}"}' \
   --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS 統合は既に設定されています"
 
 # /admin/inventory/transactions リソースが存在するか確認
@@ -387,7 +415,7 @@ aws apigateway put-integration \
   --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
   --region ${REGION} > /dev/null 2>&1 || echo "GET 統合は既に設定されています"
 
-# OPTIONS メソッドを追加（CORS用）
+# OPTIONS メソッドを追加（CORS用 - MOCK統合）
 echo "[/admin/inventory/transactions] OPTIONS メソッドを設定中..."
 aws apigateway put-method \
   --rest-api-id ${REST_API_ID} \
@@ -396,14 +424,110 @@ aws apigateway put-method \
   --authorization-type NONE \
   --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS メソッドは既に存在します"
 
+# 既存の統合を削除（AWS_PROXYからMOCKに変更するため）
+aws apigateway delete-integration \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_TRANSACTIONS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+# MOCK統合を設定
 aws apigateway put-integration \
   --rest-api-id ${REST_API_ID} \
   --resource-id ${ADMIN_TRANSACTIONS_RESOURCE_ID} \
   --http-method OPTIONS \
-  --type AWS_PROXY \
-  --integration-http-method POST \
-  --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
+  --type MOCK \
+  --request-templates '{"application/json":"{\"statusCode\": 200}"}' \
   --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS 統合は既に設定されています"
+
+# CORS統合レスポンスを設定
+echo ""
+echo "CORS統合レスポンスを設定中..."
+
+# /staff/inventory/items のOPTIONSメソッドにCORS設定
+aws apigateway put-method-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ITEMS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters "method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false,method.response.header.Access-Control-Allow-Origin=false" \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+aws apigateway put-integration-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ITEMS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,POST,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+# /staff/inventory/out のOPTIONSメソッドにCORS設定
+aws apigateway put-method-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${OUT_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters "method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false,method.response.header.Access-Control-Allow-Origin=false" \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+aws apigateway put-integration-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${OUT_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'POST,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+# /staff/inventory/in のOPTIONSメソッドにCORS設定
+aws apigateway put-method-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${IN_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters "method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false,method.response.header.Access-Control-Allow-Origin=false" \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+aws apigateway put-integration-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${IN_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'POST,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+# /staff/inventory/transactions のOPTIONSメソッドにCORS設定
+aws apigateway put-method-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${TRANSACTIONS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters "method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false,method.response.header.Access-Control-Allow-Origin=false" \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+aws apigateway put-integration-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${TRANSACTIONS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+# /admin/inventory/transactions のOPTIONSメソッドにCORS設定
+aws apigateway put-method-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_TRANSACTIONS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters "method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false,method.response.header.Access-Control-Allow-Origin=false" \
+  --region ${REGION} > /dev/null 2>&1 || true
+
+aws apigateway put-integration-response \
+  --rest-api-id ${REST_API_ID} \
+  --resource-id ${ADMIN_TRANSACTIONS_RESOURCE_ID} \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{"method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,OPTIONS'"'"'","method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'"}' \
+  --region ${REGION} > /dev/null 2>&1 || true
 
 # APIをデプロイ
 echo ""
