@@ -123,7 +123,7 @@ function renderInventory() {
 }
 
 // 商品詳細モーダルを開く
-function openProductDetail(productId) {
+async function openProductDetail(productId) {
     const item = inventoryData.find(i => i.id === productId || i.product_id === productId);
     if (!item) return;
     
@@ -135,6 +135,13 @@ function openProductDetail(productId) {
     document.getElementById('modal-product-id').textContent = currentProductId;
     document.getElementById('modal-product-name-text').textContent = item.name;
     document.getElementById('modal-product-stock').textContent = `${item.stock.toLocaleString()} 個`;
+    
+    // 最終入出庫情報を初期化
+    document.getElementById('last-in-info').textContent = '読み込み中...';
+    document.getElementById('last-out-info').textContent = '読み込み中...';
+    
+    // 最終入出庫情報を取得
+    loadLastTransactions(currentProductId);
     
     // QRコードを生成
     const qrContainer = document.getElementById('modal-product-qrcode');
@@ -184,6 +191,77 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+// 最終入出庫情報を取得
+async function loadLastTransactions(productId) {
+    try {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/admin/inventory/transactions?product_id=${productId}&limit=20`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${idToken}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('トランザクション取得に失敗');
+        }
+        
+        const data = await response.json();
+        const transactions = data.transactions || [];
+        
+        // 最新の入庫と出庫を探す
+        let lastIn = null;
+        let lastOut = null;
+        
+        for (const tx of transactions) {
+            if (tx.type === 'in' && !lastIn) {
+                lastIn = tx;
+            } else if (tx.type === 'out' && !lastOut) {
+                lastOut = tx;
+            }
+            if (lastIn && lastOut) break;
+        }
+        
+        // 表示を更新
+        const lastInEl = document.getElementById('last-in-info');
+        const lastOutEl = document.getElementById('last-out-info');
+        
+        if (lastIn) {
+            const date = formatTransactionDate(lastIn.created_at);
+            lastInEl.innerHTML = `${escapeHtml(lastIn.staff_name || '不明')} <span style="color: #6b7280; font-weight: normal;">(${date})</span>`;
+        } else {
+            lastInEl.textContent = '履歴なし';
+        }
+        
+        if (lastOut) {
+            const date = formatTransactionDate(lastOut.created_at);
+            lastOutEl.innerHTML = `${escapeHtml(lastOut.staff_name || '不明')} <span style="color: #6b7280; font-weight: normal;">(${date})</span>`;
+        } else {
+            lastOutEl.textContent = '履歴なし';
+        }
+        
+    } catch (error) {
+        console.error('Error loading transactions:', error);
+        document.getElementById('last-in-info').textContent = '-';
+        document.getElementById('last-out-info').textContent = '-';
+    }
+}
+
+// トランザクション日時をフォーマット
+function formatTransactionDate(dateString) {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString);
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${month}/${day} ${hours}:${minutes}`;
+    } catch (e) {
+        return dateString;
+    }
 }
 
 // モーダル内での在庫更新処理
