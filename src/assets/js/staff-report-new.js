@@ -116,7 +116,13 @@
       }
       
       const data = await response.json();
-      const reports = data.items || data.reports || [];
+      let reports = data.items || data.reports || [];
+      
+      // 念のため、クライアント側でもrevision_requestedステータスのものだけをフィルタリング
+      reports = reports.filter(report => {
+        const status = report.status || '';
+        return status === 'revision_requested';
+      });
       
       // バッジを更新
       const badge = document.getElementById('revision-badge');
