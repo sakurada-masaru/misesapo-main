@@ -326,14 +326,14 @@ function setupCleaningItemsSearch() {
     const query = searchInput.value.trim().toLowerCase();
     const category = categoryFilter ? categoryFilter.value : '';
     
-    if (query.length === 0) {
-      resultsDiv.style.display = 'none';
-      return;
-    }
-    
-    // サービス名で部分一致検索
+    // サービス名で部分一致検索（検索クエリが空の場合は全件表示）
     let filtered = allServices.filter(service => {
       const serviceName = (service.title || service.name || '').toLowerCase();
+      
+      // 検索クエリが空の場合は全件表示
+      if (query.length === 0) {
+        return true;
+      }
       
       // カテゴリで絞り込み（現時点ではサービス名のみ）
       if (category === 'service' && !serviceName.includes(query)) return false;
@@ -547,7 +547,19 @@ function renderTable() {
         <td>
           <span class="status-badge status-${normalized.status}">${getStatusLabel(normalized.status)}</span>
         </td>
-        <td>${escapeHtml(normalized.work_content || '')}</td>
+        <td>
+          ${(() => {
+            const cleaningItems = schedule.cleaning_items || normalized.cleaning_items || [];
+            if (!Array.isArray(cleaningItems) || cleaningItems.length === 0) {
+              return '<span style="color: #9ca3af;">-</span>';
+            }
+            const itemNames = cleaningItems.map(item => {
+              const name = item.name || item.title || '';
+              return escapeHtml(name);
+            }).filter(name => name);
+            return itemNames.length > 0 ? itemNames.join(', ') : '<span style="color: #9ca3af;">-</span>';
+          })()}
+        </td>
         <td>
           <div class="action-btns">
             ${isDraft ? `
