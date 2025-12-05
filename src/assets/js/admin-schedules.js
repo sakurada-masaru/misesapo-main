@@ -766,8 +766,12 @@ function setupEventListeners() {
           }
           
           // レスポンスから作成されたスケジュールデータを取得
+          // バックエンドから返されたIDを使用（新規作成時はschedule_id、更新時は既存のid）
           const responseData = await response.json();
-          const savedSchedule = responseData.schedule || { ...data, id: responseData.schedule_id || id };
+          const savedSchedule = responseData.schedule || { 
+            ...data, 
+            id: responseData.schedule_id || responseData.id || id 
+          };
           
           if (isNew) {
             allSchedules.unshift(savedSchedule);
