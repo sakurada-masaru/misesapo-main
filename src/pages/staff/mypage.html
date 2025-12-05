@@ -50,9 +50,9 @@
       <i class="fas fa-tasks"></i>
       <span class="nav-label">作業一覧</span>
     </a>
-    <a href="/staff/reports" class="nav-item" data-page="reports">
-      <i class="fas fa-clipboard-list"></i>
-      <span class="nav-label">レポート一覧</span>
+    <a href="/wiki" class="nav-item" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
     </a>
     <a href="/cleaning-manual" class="nav-item" data-page="cleaning-manual">
       <i class="fas fa-book"></i>
@@ -188,18 +188,6 @@
           </div>
         </section>
 
-        <!-- 最近のレポート -->
-        <section class="section section-order-4">
-          <h2 class="section-title">
-            <i class="fas fa-file-alt"></i>
-            最近のレポート
-          </h2>
-          <div class="card">
-            <div id="recent-reports">
-              <div class="empty-state">レポートはありません</div>
-            </div>
-          </div>
-        </section>
       </div>
 
       <!-- サイドバーカラム -->
@@ -1012,9 +1000,8 @@
         // ユーザー情報を表示
         renderUser(currentUser);
 
-        // スケジュールとレポートを読み込み
+        // スケジュールを読み込み
         loadWeeklySchedule();
-        loadRecentReports();
 
         // カレンダーを表示
         renderCalendar();
@@ -1865,18 +1852,6 @@
       }
     }
 
-    // 最近のレポートを読み込み
-    async function loadRecentReports() {
-      if (!currentUser) return;
-      
-      try {
-        // TODO: APIからレポートを取得
-        const reportsEl = document.getElementById('recent-reports');
-        reportsEl.innerHTML = '<div class="empty-state">最近のレポートはありません</div>';
-      } catch (error) {
-        console.error('Error loading reports:', error);
-      }
-    }
 
     // カレンダーを表示
     function renderCalendar() {
