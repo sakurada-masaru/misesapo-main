@@ -67,18 +67,17 @@
     const storeSearchInput = document.getElementById('report-store-search');
     const storeResults = document.getElementById('store-search-results');
     
-    storeSearchInput.addEventListener('input', function() {
-      const query = this.value.trim();
-      if (query.length === 0) {
-        storeResults.style.display = 'none';
-        return;
-      }
+    // ドロップダウンを表示・更新する関数
+    function updateStoreDropdown() {
+      const query = storeSearchInput.value.trim();
       
-      // 部分一致で検索
-      const filtered = stores.filter(store => {
-        const name = (store.store_name || store.name || '').toLowerCase();
-        return name.includes(query.toLowerCase());
-      });
+      // 部分一致で検索（空文字の場合は全店舗を表示）
+      const filtered = query.length === 0 
+        ? stores 
+        : stores.filter(store => {
+            const name = (store.store_name || store.name || '').toLowerCase();
+            return name.includes(query.toLowerCase());
+          });
       
       if (filtered.length === 0) {
         storeResults.innerHTML = '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
@@ -106,6 +105,16 @@
           storeResults.style.display = 'none';
         });
       });
+    }
+    
+    // フォーカス時に全店舗を表示
+    storeSearchInput.addEventListener('focus', function() {
+      updateStoreDropdown();
+    });
+    
+    // 入力時にフィルタリング
+    storeSearchInput.addEventListener('input', function() {
+      updateStoreDropdown();
     });
     
     // 外部クリックで閉じる
