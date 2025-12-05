@@ -108,6 +108,65 @@ function updateCart() {
     }
 }
 
+// 直接入庫/出庫処理
+async function processStock(mode) {
+    if (!currentProduct) {
+        alert('商品が選択されていません');
+        return;
+    }
+    
+    const quantity = parseInt(document.getElementById('quantity-input').value, 10);
+    if (isNaN(quantity) || quantity <= 0) {
+        alert('数量を正しく入力してください');
+        return;
+    }
+    
+    const actionText = mode === 'in' ? '入庫' : '出庫';
+    
+    if (!confirm(`${currentProduct.name} を ${quantity}個 ${actionText}しますか？`)) {
+        return;
+    }
+    
+    try {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/inventory/${mode}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+                items: [{
+                    product_id: currentProduct.product_id,
+                    quantity: quantity
+                }]
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `${actionText}に失敗しました`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.errors && result.errors.length > 0) {
+            alert('エラー:\n' + result.errors.join('\n'));
+            return;
+        }
+        
+        alert(`✅ ${actionText}完了: ${currentProduct.name} ${quantity}個`);
+        
+        // 在庫情報を更新
+        const updatedProduct = await loadProduct(currentProduct.product_id);
+        showProduct(updatedProduct);
+        
+    } catch (error) {
+        console.error('Error processing stock:', error);
+        alert(`${actionText}に失敗しました: ` + error.message);
+    }
+}
+
 // カートに追加
 function addToCart() {
     if (!currentProduct) return;
@@ -391,8 +450,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // 商品情報を閉じる
     document.getElementById('btn-close-product').addEventListener('click', hideProduct);
     
-    // カートに追加
-    document.getElementById('btn-add-to-cart').addEventListener('click', addToCart);
+    // 入庫ボタン
+    const btnStockIn = document.getElementById('btn-stock-in');
+    if (btnStockIn) {
+        btnStockIn.addEventListener('click', () => processStock('in'));
+    }
+    
+    // 出庫ボタン
+    const btnStockOut = document.getElementById('btn-stock-out');
+    if (btnStockOut) {
+        btnStockOut.addEventListener('click', () => processStock('out'));
+    }
+    
+    // カートに追加（旧機能、互換性のため残す）
+    const btnAddToCart = document.getElementById('btn-add-to-cart');
+    if (btnAddToCart) {
+        btnAddToCart.addEventListener('click', addToCart);
+    }
     
     // 数量増減ボタン
     document.getElementById('btn-increase').addEventListener('click', () => {

@@ -1,4 +1,4 @@
-@layout('layouts.base')
+@layout('layouts.blank')
 @json('data/meta/staff_inventory_scan_title.json', $title)
 @json('data/meta/staff_inventory_scan_body_class.json', $body_class)
 
@@ -59,8 +59,11 @@
           </div>
         </div>
         <div class="action-buttons">
-          <button type="button" class="btn btn-success" id="btn-add-to-cart">
-            <i class="fas fa-cart-plus"></i> カートに追加
+          <button type="button" class="btn btn-success" id="btn-stock-in">
+            <i class="fas fa-arrow-up"></i> 入庫
+          </button>
+          <button type="button" class="btn btn-danger" id="btn-stock-out">
+            <i class="fas fa-arrow-down"></i> 出庫
           </button>
         </div>
       </div>
