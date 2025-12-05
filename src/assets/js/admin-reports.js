@@ -839,6 +839,59 @@
       }
     });
 
+    // 要修正として返す
+    document.getElementById('btn-request-revision').addEventListener('click', () => {
+      if (!currentReportId) return;
+      document.getElementById('revision-comment').value = '';
+      document.getElementById('revision-dialog').showModal();
+    });
+
+    // 要修正として返す（確認）
+    document.getElementById('btn-confirm-revision').addEventListener('click', async () => {
+      if (!currentReportId) return;
+      
+      const comment = document.getElementById('revision-comment').value.trim();
+      if (!comment) {
+        alert('修正コメントを入力してください');
+        return;
+      }
+      
+      try {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/reports/${currentReportId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            status: 'revision_requested',
+            revision_comment: comment
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || '要修正として返すのに失敗しました');
+        }
+        
+        const report = allReports.find(r => String(r.id) === String(currentReportId) || String(r.report_id) === String(currentReportId));
+        if (report) {
+          report.status = 'revision_requested';
+          report.revision_comment = comment;
+        }
+        
+        document.getElementById('revision-dialog').close();
+        document.getElementById('detail-dialog').close();
+        updateStats();
+        filterAndRender();
+        alert('レポートを要修正として返しました');
+      } catch (e) {
+        console.error('Error requesting revision:', e);
+        alert('要修正として返すのに失敗しました: ' + e.message);
+      }
+    });
+
     // イベントリスナー
     function setupEventListeners() {
       document.getElementById('search-input').addEventListener('input', debounce(filterAndRender, 300));

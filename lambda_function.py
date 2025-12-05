@@ -2257,6 +2257,13 @@ def update_report_by_id(report_id, event, headers):
             'ttl': existing_item.get('ttl')
         }
         
+        # 修正コメントを保存（管理者が要修正として返す場合）
+        if 'revision_comment' in body_json:
+            updated_item['revision_comment'] = body_json['revision_comment']
+        elif existing_item.get('revision_comment'):
+            # 既存のコメントを保持（清掃員が修正した場合は削除されない）
+            updated_item['revision_comment'] = existing_item['revision_comment']
+        
         # staff_idがNoneの場合は、DynamoDBアイテムから削除（インデックスキーとして使用できないため）
         if updated_item['staff_id'] is None:
             del updated_item['staff_id']

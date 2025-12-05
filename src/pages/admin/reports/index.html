@@ -104,6 +104,9 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="document.getElementById('detail-dialog').close()">閉じる</button>
+        <button type="button" class="btn btn-warning" id="btn-request-revision">
+          <i class="fas fa-undo"></i> 要修正として返す
+        </button>
         <button type="button" class="btn btn-success" id="btn-approve">承認</button>
         <button type="button" class="btn btn-danger" id="btn-reject">却下</button>
       </div>
@@ -412,6 +415,31 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" onclick="document.getElementById('help-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 要修正モーダル -->
+  <dialog id="revision-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>レポートを要修正として返す</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('revision-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 16px; color: #6b7280;">清掃員に修正を依頼するコメントを入力してください。</p>
+        <div class="form-group">
+          <label for="revision-comment" class="form-label">修正コメント <span class="required">*</span></label>
+          <textarea id="revision-comment" class="form-textarea" rows="5" placeholder="例：作業前の写真が不足しています。作業前の写真を追加してください。" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('revision-dialog').close()">キャンセル</button>
+        <button type="button" class="btn btn-warning" id="btn-confirm-revision">
+          <i class="fas fa-undo"></i> 要修正として返す
+        </button>
       </div>
     </div>
   </dialog>
