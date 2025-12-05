@@ -158,6 +158,7 @@ async function processCart() {
     
     // 処理モードを選択
     const modeDialog = document.getElementById('process-mode-dialog');
+    modeDialog.style.display = 'flex';
     modeDialog.showModal();
     
     // モード選択ボタンのイベント
@@ -166,6 +167,7 @@ async function processCart() {
         btn.onclick = async () => {
             const mode = btn.dataset.mode;
             modeDialog.close();
+            modeDialog.style.display = 'none';
             
             await executeCartProcess(mode);
         };
@@ -319,7 +321,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 手入力ボタン
     document.getElementById('btn-manual-input').addEventListener('click', () => {
-        document.getElementById('manual-input-dialog').showModal();
+        const dialog = document.getElementById('manual-input-dialog');
+        dialog.style.display = 'flex';
+        dialog.showModal();
     });
     
     // 手入力確定ボタン
@@ -330,7 +334,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        document.getElementById('manual-input-dialog').close();
+        const dialog = document.getElementById('manual-input-dialog');
+        dialog.close();
+        dialog.style.display = 'none';
         
         try {
             const product = await loadProduct(productId);
