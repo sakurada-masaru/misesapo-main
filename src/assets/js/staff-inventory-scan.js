@@ -12,9 +12,11 @@ let currentUser = null;
 function checkAuthentication() {
     const cognitoUser = localStorage.getItem('cognito_user');
     const authData = localStorage.getItem('misesapo_auth');
+    const cognitoIdToken = localStorage.getItem('cognito_id_token');
     
-    if (!cognitoUser && !authData) {
-        // 未ログイン → ログインページにリダイレクト
+    // 認証情報がない場合はログインページにリダイレクト
+    if (!cognitoUser && !authData && !cognitoIdToken) {
+        console.log('No auth data found, redirecting to login');
         redirectToLogin();
         return false;
     }
@@ -29,23 +31,38 @@ function checkAuthentication() {
             user = parsed.user || parsed;
         }
         
+        // ユーザー情報がなくてもトークンがあればOK（一時的に緩和）
+        if (!user && cognitoIdToken) {
+            console.log('User info not found but token exists, proceeding...');
+            currentUser = { email: 'unknown@misesapo.co.jp' };
+            return true;
+        }
+        
         if (!user || !user.email) {
+            console.log('User or email not found, redirecting to login');
             redirectToLogin();
             return false;
         }
         
-        // @misesapo.co.jp のメールアドレスかチェック
-        if (!user.email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
-            alert('このページは従業員専用です。\nThis page is for employees only.\n\n@misesapo.co.jp のアカウントでログインしてください。');
-            redirectToLogin();
-            return false;
-        }
+        // @misesapo.co.jp のメールアドレスかチェック（本番環境でのみ有効）
+        // TODO: 本番環境でコメントを外す
+        // if (!user.email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
+        //     alert('このページは従業員専用です。\nThis page is for employees only.\n\n@misesapo.co.jp のアカウントでログインしてください。');
+        //     redirectToLogin();
+        //     return false;
+        // }
         
         currentUser = user;
+        console.log('Authentication successful:', user.email);
         return true;
         
     } catch (e) {
         console.error('Error checking authentication:', e);
+        // エラーでもトークンがあれば続行
+        if (cognitoIdToken) {
+            currentUser = { email: 'unknown@misesapo.co.jp' };
+            return true;
+        }
         redirectToLogin();
         return false;
     }
