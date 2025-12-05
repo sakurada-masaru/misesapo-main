@@ -123,6 +123,55 @@
   box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
 }
 
+/* 店舗検索 */
+.store-search-group {
+  position: relative;
+}
+
+.store-search-wrapper {
+  position: relative;
+}
+
+.store-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  margin-top: 4px;
+}
+
+.store-search-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.store-search-item:last-child {
+  border-bottom: none;
+}
+
+.store-search-item:hover {
+  background: #f9fafb;
+}
+
+.store-search-item.no-results {
+  color: #9ca3af;
+  cursor: default;
+  font-style: italic;
+}
+
+.store-search-item.no-results:hover {
+  background: transparent;
+}
+
 /* 実施清掃項目リスト */
 .items-list-bar {
   background: #fff;

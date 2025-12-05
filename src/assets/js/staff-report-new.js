@@ -31,15 +31,6 @@
     try {
       const res = await fetch(`${API_BASE}/stores`);
       stores = await res.json();
-      
-      const select = document.getElementById('report-store');
-      stores.forEach(store => {
-        const opt = document.createElement('option');
-        opt.value = store.store_id || store.id;
-        opt.textContent = store.store_name || store.name;
-        opt.dataset.name = store.store_name || store.name;
-        select.appendChild(opt);
-      });
     } catch (e) {
       console.error('Failed to load stores:', e);
     }
@@ -72,10 +63,56 @@
 
   // イベントリスナー設定
   function setupEventListeners() {
-    // 店舗選択時
-    document.getElementById('report-store').addEventListener('change', function() {
-      const opt = this.options[this.selectedIndex];
-      document.getElementById('report-store-name').value = opt.dataset.name || '';
+    // 店舗検索
+    const storeSearchInput = document.getElementById('report-store-search');
+    const storeResults = document.getElementById('store-search-results');
+    
+    storeSearchInput.addEventListener('input', function() {
+      const query = this.value.trim();
+      if (query.length === 0) {
+        storeResults.style.display = 'none';
+        return;
+      }
+      
+      // 部分一致で検索
+      const filtered = stores.filter(store => {
+        const name = (store.store_name || store.name || '').toLowerCase();
+        return name.includes(query.toLowerCase());
+      });
+      
+      if (filtered.length === 0) {
+        storeResults.innerHTML = '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
+        storeResults.style.display = 'block';
+        return;
+      }
+      
+      storeResults.innerHTML = filtered.map(store => {
+        const name = store.store_name || store.name;
+        const id = store.store_id || store.id;
+        return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`;
+      }).join('');
+      
+      storeResults.style.display = 'block';
+      
+      // クリックイベント
+      storeResults.querySelectorAll('.store-search-item').forEach(item => {
+        if (item.classList.contains('no-results')) return;
+        item.addEventListener('click', function() {
+          const id = this.dataset.id;
+          const name = this.dataset.name;
+          document.getElementById('report-store').value = id;
+          document.getElementById('report-store-name').value = name;
+          storeSearchInput.value = name;
+          storeResults.style.display = 'none';
+        });
+      });
+    });
+    
+    // 外部クリックで閉じる
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.store-search-group')) {
+        storeResults.style.display = 'none';
+      }
     });
 
     // 追加ボタン

@@ -22,12 +22,14 @@
     <!-- 基本情報（ピンク背景） -->
     <div class="report-header-section">
       <div class="form-row">
-        <div class="form-group">
+        <div class="form-group store-search-group">
           <label class="form-label">店舗 <span class="required">*</span></label>
-          <select id="report-store" name="store_id" class="form-select" required>
-            <option value="">店舗を選択</option>
-          </select>
-          <input type="hidden" id="report-store-name" name="store_name">
+          <div class="store-search-wrapper">
+            <input type="text" id="report-store-search" class="form-input" placeholder="店舗名で検索..." autocomplete="off">
+            <input type="hidden" id="report-store" name="store_id">
+            <input type="hidden" id="report-store-name" name="store_name">
+            <div id="store-search-results" class="store-search-results" style="display: none;"></div>
+          </div>
         </div>
       </div>
       <div class="form-row">
