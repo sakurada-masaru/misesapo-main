@@ -137,7 +137,15 @@
         <div class="form-field">
           <label for="schedule-store-search">店舗・ブランド・法人名 <span class="required">*</span></label>
           <div class="store-search-wrapper">
-            <input type="text" id="schedule-store-search" placeholder="店舗名、ブランド名、法人名で検索..." autocomplete="off" required>
+            <div class="store-search-controls">
+              <select id="store-category-filter" class="store-category-filter">
+                <option value="">全て</option>
+                <option value="store">店舗名</option>
+                <option value="brand">ブランド名</option>
+                <option value="client">法人名</option>
+              </select>
+              <input type="text" id="schedule-store-search" placeholder="店舗名、ブランド名、法人名で検索..." autocomplete="off" required>
+            </div>
             <input type="hidden" id="schedule-store" name="store_id">
             <div class="store-search-results" id="schedule-store-results" style="display: none;"></div>
           </div>
@@ -179,8 +187,21 @@
       
       <div class="form-row">
         <div class="form-field">
-          <label for="schedule-work-content">作業内容</label>
-          <textarea id="schedule-work-content" name="work_content" rows="3" placeholder="作業内容を入力してください"></textarea>
+          <label for="cleaning-items-search">清掃内容</label>
+          <div class="cleaning-items-search-wrapper">
+            <div class="store-search-controls">
+              <select id="cleaning-category-filter" class="store-category-filter">
+                <option value="">全て</option>
+                <option value="service">サービス名</option>
+              </select>
+              <input type="text" id="cleaning-items-search" placeholder="清掃内容（サービス）を検索..." autocomplete="off">
+            </div>
+            <div class="cleaning-items-results" id="cleaning-items-results" style="display: none;"></div>
+          </div>
+          <div class="cleaning-items-selected" id="cleaning-items-selected">
+            <!-- 選択された項目がここに追加される -->
+          </div>
+          <input type="hidden" id="selected-cleaning-items-json" name="cleaning_items">
         </div>
       </div>
       

@@ -313,16 +313,18 @@ function setupStoreSearch() {
   });
 }
 
-// 作業項目検索機能のセットアップ
+// 清掃内容検索機能のセットアップ（店舗検索と同様のUI）
 function setupCleaningItemsSearch() {
   const searchInput = document.getElementById('cleaning-items-search');
   const resultsDiv = document.getElementById('cleaning-items-results');
   const selectedDiv = document.getElementById('cleaning-items-selected');
+  const categoryFilter = document.getElementById('cleaning-category-filter');
   
   if (!searchInput || !resultsDiv || !selectedDiv) return;
   
   function updateCleaningItemsDropdown() {
     const query = searchInput.value.trim().toLowerCase();
+    const category = categoryFilter ? categoryFilter.value : '';
     
     if (query.length === 0) {
       resultsDiv.style.display = 'none';
@@ -330,13 +332,18 @@ function setupCleaningItemsSearch() {
     }
     
     // サービス名で部分一致検索
-    const filtered = allServices.filter(service => {
+    let filtered = allServices.filter(service => {
       const serviceName = (service.title || service.name || '').toLowerCase();
+      
+      // カテゴリで絞り込み（現時点ではサービス名のみ）
+      if (category === 'service' && !serviceName.includes(query)) return false;
+      
+      // キーワード検索
       return serviceName.includes(query);
     });
     
     if (filtered.length === 0) {
-      resultsDiv.innerHTML = '<div class="cleaning-item-result no-results">該当する作業項目が見つかりません</div>';
+      resultsDiv.innerHTML = '<div class="cleaning-item-result no-results">該当する清掃内容が見つかりません</div>';
       resultsDiv.style.display = 'block';
       return;
     }
@@ -344,7 +351,8 @@ function setupCleaningItemsSearch() {
     resultsDiv.innerHTML = filtered.map(service => {
       const serviceName = service.title || service.name || '';
       const serviceId = service.id || '';
-      return `<div class="cleaning-item-result" data-id="${serviceId}" data-name="${escapeHtml(serviceName)}">${escapeHtml(serviceName)}</div>`;
+      const categoryLabel = '<span class="store-search-item-category">サービス</span>';
+      return `<div class="cleaning-item-result" data-id="${serviceId}" data-name="${escapeHtml(serviceName)}">${categoryLabel}${escapeHtml(serviceName)}</div>`;
     }).join('');
     
     resultsDiv.style.display = 'block';
@@ -368,6 +376,11 @@ function setupCleaningItemsSearch() {
   }
   
   function updateCleaningItemsSelected() {
+    if (selectedCleaningItems.length === 0) {
+      selectedDiv.innerHTML = '<div style="color: #9ca3af; font-size: 0.875rem; padding: 8px;">選択された清掃内容がありません</div>';
+      return;
+    }
+    
     selectedDiv.innerHTML = selectedCleaningItems.map((item, index) => {
       return `
         <div class="cleaning-item-tag">
@@ -385,10 +398,13 @@ function setupCleaningItemsSearch() {
   
   searchInput.addEventListener('input', updateCleaningItemsDropdown);
   searchInput.addEventListener('focus', updateCleaningItemsDropdown);
+  if (categoryFilter) {
+    categoryFilter.addEventListener('change', updateCleaningItemsDropdown);
+  }
   
   // 外側をクリックしたら閉じる
   document.addEventListener('click', (e) => {
-    if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+    if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target) && (!categoryFilter || !categoryFilter.contains(e.target))) {
       resultsDiv.style.display = 'none';
     }
   });
@@ -626,7 +642,7 @@ function setupEventListeners() {
         return;
       }
       
-      // 作業項目を取得
+      // 清掃内容を取得
       const cleaningItems = selectedCleaningItems.map(item => ({
         name: item.name,
         id: item.id
@@ -640,7 +656,7 @@ function setupEventListeners() {
         sales_id: document.getElementById('schedule-sales').value || null,
         worker_id: document.getElementById('schedule-worker').value || null,
         cleaning_items: cleaningItems,
-        work_content: cleaningItems.map(item => item.name).join(', '),
+        work_content: cleaningItems.length > 0 ? cleaningItems.map(item => item.name).join(', ') : '',
         status: document.getElementById('schedule-status').value,
         notes: document.getElementById('schedule-notes').value
       };
@@ -757,11 +773,19 @@ function openAddDialog(dateStr) {
   if (scheduleStoreSearch) scheduleStoreSearch.value = '';
   if (scheduleDate) scheduleDate.value = dateStr || new Date().toISOString().split('T')[0];
   
-  // 作業項目をリセット
+  // 清掃内容をリセット
   selectedCleaningItems = [];
   const selectedDiv = document.getElementById('cleaning-items-selected');
+  const cleaningSearchInput = document.getElementById('cleaning-items-search');
+  const cleaningCategoryFilter = document.getElementById('cleaning-category-filter');
   if (selectedDiv) {
-    selectedDiv.innerHTML = '';
+    selectedDiv.innerHTML = '<div style="color: #9ca3af; font-size: 0.875rem; padding: 8px;">選択された清掃内容がありません</div>';
+  }
+  if (cleaningSearchInput) {
+    cleaningSearchInput.value = '';
+  }
+  if (cleaningCategoryFilter) {
+    cleaningCategoryFilter.value = '';
   }
   
   if (formStatus) formStatus.textContent = '';
@@ -796,7 +820,6 @@ window.editSchedule = function(id) {
   const scheduleDurationEl = document.getElementById('schedule-duration');
   const scheduleSalesEl = document.getElementById('schedule-sales');
   const scheduleWorkerEl = document.getElementById('schedule-worker');
-  const scheduleWorkContentEl = document.getElementById('schedule-work-content');
   const scheduleStatusEl = document.getElementById('schedule-status');
   const scheduleNotesEl = document.getElementById('schedule-notes');
 
@@ -817,28 +840,38 @@ window.editSchedule = function(id) {
   if (scheduleDurationEl) scheduleDurationEl.value = schedule.duration_minutes || normalized.duration || 60;
   if (scheduleSalesEl) scheduleSalesEl.value = schedule.sales_id || schedule.created_by || '';
   if (scheduleWorkerEl) scheduleWorkerEl.value = workerId;
-  if (scheduleWorkContentEl) scheduleWorkContentEl.value = schedule.work_content || schedule.cleaning_items?.map(item => item.name).join(', ') || '';
   if (scheduleStatusEl) scheduleStatusEl.value = schedule.status || 'scheduled';
   if (scheduleNotesEl) scheduleNotesEl.value = schedule.notes || normalized.notes || '';
   
-  // 作業項目を読み込む
+  // 清掃内容を読み込む
   selectedCleaningItems = [];
   if (schedule.cleaning_items && Array.isArray(schedule.cleaning_items)) {
     selectedCleaningItems = schedule.cleaning_items.map(item => ({
       id: item.id || item.name,
       name: item.name || item.title || ''
     }));
+  } else if (schedule.work_content) {
+    // 既存のwork_contentから清掃内容を復元（カンマ区切り）
+    const workItems = schedule.work_content.split(',').map(s => s.trim()).filter(s => s);
+    selectedCleaningItems = workItems.map(name => ({
+      id: name,
+      name: name
+    }));
   }
   const selectedDiv = document.getElementById('cleaning-items-selected');
   if (selectedDiv) {
-    selectedDiv.innerHTML = selectedCleaningItems.map((item, index) => {
-      return `
-        <div class="cleaning-item-tag">
-          <span>${escapeHtml(item.name)}</span>
-          <span class="cleaning-item-tag-remove" onclick="removeCleaningItem(${index})">×</span>
-        </div>
-      `;
-    }).join('');
+    if (selectedCleaningItems.length === 0) {
+      selectedDiv.innerHTML = '<div style="color: #9ca3af; font-size: 0.875rem; padding: 8px;">選択された清掃内容がありません</div>';
+    } else {
+      selectedDiv.innerHTML = selectedCleaningItems.map((item, index) => {
+        return `
+          <div class="cleaning-item-tag">
+            <span>${escapeHtml(item.name)}</span>
+            <span class="cleaning-item-tag-remove" onclick="removeCleaningItem(${index})">×</span>
+          </div>
+        `;
+      }).join('');
+    }
   }
   
   if (formStatus) formStatus.textContent = '';

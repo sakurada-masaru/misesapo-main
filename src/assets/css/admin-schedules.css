@@ -599,7 +599,7 @@
   border-radius: 4px;
 }
 
-/* 作業項目検索 */
+/* 清掃内容検索 */
 .cleaning-items-wrapper {
   display: flex;
   flex-direction: column;
@@ -608,8 +608,12 @@
 .cleaning-items-search-wrapper {
   position: relative;
 }
+.cleaning-items-search-wrapper .store-search-controls {
+  display: flex;
+  gap: 8px;
+}
 .cleaning-items-search-wrapper input[type="text"] {
-  width: 100%;
+  flex: 1;
   padding: 10px 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -652,6 +656,14 @@
 }
 .cleaning-item-result.no-results:hover {
   background: #fff;
+}
+.cleaning-item-result .store-search-item-category {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-right: 8px;
+  padding: 2px 6px;
+  background: #f3f4f6;
+  border-radius: 4px;
 }
 .cleaning-items-selected {
   display: flex;
