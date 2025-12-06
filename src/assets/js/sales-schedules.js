@@ -547,14 +547,14 @@ function renderTable() {
           <div class="schedule-card-row">
             <span class="schedule-card-item">日付：${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</span>
             <span class="schedule-card-separator">|</span>
-            <span class="schedule-card-item" title="${escapeHtml(clientName || '-')}">${truncateText(clientName || '-', 20)}</span>
+            <span class="schedule-card-item" title="${escapeHtml(clientName || '-')}">法人名：${truncateText(clientName || '-', 20)}</span>
           </div>
           <div class="schedule-card-row">
             <span class="schedule-card-item">時刻：${escapeHtml(formattedTime)}</span>
             <span class="schedule-card-separator">|</span>
-            <span class="schedule-card-item" title="${escapeHtml(brandName || '-')}">${truncateText(brandName || '-', 15)}</span>
+            <span class="schedule-card-item" title="${escapeHtml(brandName || '-')}">ブランド名：${truncateText(brandName || '-', 15)}</span>
             <span class="schedule-card-separator">|</span>
-            <span class="schedule-card-item" title="${escapeHtml(displayStoreName)}">${truncateText(displayStoreName, 15)}</span>
+            <span class="schedule-card-item" title="${escapeHtml(displayStoreName)}">店舗名：${truncateText(displayStoreName, 15)}</span>
           </div>
           <div class="schedule-card-divider"></div>
           <div class="schedule-card-row">
