@@ -1181,10 +1181,9 @@
       }
     });
     
-    // 外部クリックで閉じる
+    // 外部クリックで閉じる（ブランド検索結果のみ）
     document.addEventListener('click', function(e) {
       if (!e.target.closest('.store-search-group')) {
-        if (storeResults) storeResults.style.display = 'none';
         if (brandResults) brandResults.style.display = 'none';
       }
     });
