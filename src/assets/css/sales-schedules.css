@@ -225,6 +225,8 @@
 
 .schedule-card-header .field-label {
   font-size: 0.75rem;
+  width: 70px;
+  text-align: right;
 }
 
 .schedule-card-header .field-value {
