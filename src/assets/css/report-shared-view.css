@@ -220,6 +220,18 @@ body {
 .work-content-section {
     padding: 16px 24px;
 }
+/* サンクス画像 */
+.thanks-image-wrapper {
+    text-align: center;
+    padding: 32px 24px;
+    background: #fff;
+}
+.thanks-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
 /* レポート承認セクション */
 .approval-section {
     padding: 32px 24px;
