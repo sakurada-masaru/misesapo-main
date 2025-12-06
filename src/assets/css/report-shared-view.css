@@ -646,7 +646,6 @@ body {
         gap: 4px;
     }
     .image-item {
-        aspect-ratio: 4/3;
         border-radius: 6px;
     }
     .no-photo {
