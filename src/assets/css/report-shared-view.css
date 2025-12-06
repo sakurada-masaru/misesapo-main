@@ -89,9 +89,11 @@ body {
     font-size: 0.95rem;
     color: #fff;
     padding: 6px 12px;
-    background: #FF679C;
+    background: #FFB3D1;
     border: none;
     border-radius: 20px;
+    font-weight: 700;
+    text-align: center;
 }
 .cleaning-section {
     padding: 16px;
