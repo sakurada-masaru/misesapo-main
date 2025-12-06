@@ -252,18 +252,29 @@
   // レポートデータをフォームに読み込む
   function loadReportToForm(report) {
     // 基本情報
-    document.getElementById('report-store').value = report.store_id || '';
-    document.getElementById('report-store-name').value = report.store_name || '';
+    const storeId = report.store_id || '';
+    document.getElementById('report-store').value = storeId;
+    
+    // 店舗名を取得（report.store_nameがなければstores配列から検索）
+    let storeName = report.store_name || '';
+    if (storeId && !storeName) {
+      const store = stores.find(s => (s.store_id || s.id) === storeId || String(s.store_id || s.id) === String(storeId));
+      if (store) {
+        storeName = store.store_name || store.name || '';
+      }
+    }
+    
+    document.getElementById('report-store-name').value = storeName;
     const storeSearchInput = document.getElementById('report-store-search');
     if (storeSearchInput) {
-      storeSearchInput.value = report.store_name || '';
+      storeSearchInput.value = storeName;
       // readonly属性を確実に設定（モーダルを開くため）
       storeSearchInput.setAttribute('readonly', 'readonly');
     }
     
     // ブランド情報を設定（店舗から取得）
-    if (report.store_id) {
-      const store = stores.find(s => (s.store_id || s.id) === report.store_id);
+    if (storeId) {
+      const store = stores.find(s => (s.store_id || s.id) === storeId || String(s.store_id || s.id) === String(storeId));
       if (store) {
         const brandId = store.brand_id || store.brandId;
         if (brandId) {
