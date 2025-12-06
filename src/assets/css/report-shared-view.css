@@ -266,7 +266,7 @@ body {
 .image-category {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     align-items: center;
     justify-content: flex-start;
 }
@@ -305,7 +305,7 @@ body {
 .image-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 16px;
     width: 100%;
     max-width: 100%;
     justify-items: center;
@@ -447,60 +447,48 @@ body {
     border-bottom: none;
 }
 .before-category {
-    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-    padding: 24px;
-    border-radius: 16px;
-    border: 3px solid #fbbf24;
-    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    transition: all 0.3s ease;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    transition: none;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 .before-category::before {
-    content: '📸';
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 2rem;
-    opacity: 0.1;
-    z-index: 0;
+    display: none;
 }
 .before-category > * {
     position: relative;
     z-index: 1;
 }
 .before-category:hover {
-    box-shadow: 0 8px 24px rgba(251, 191, 36, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    transform: translateY(-3px);
-    border-color: #f59e0b;
+    box-shadow: none;
+    transform: none;
+    border-color: transparent;
 }
 .after-category {
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    padding: 24px;
-    border-radius: 16px;
-    border: 3px solid #10b981;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    transition: all 0.3s ease;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    transition: none;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 .after-category::before {
-    content: '✨';
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 2rem;
-    opacity: 0.1;
-    z-index: 0;
+    display: none;
 }
 .after-category > * {
     position: relative;
     z-index: 1;
 }
 .after-category:hover {
-    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    transform: translateY(-3px);
-    border-color: #059669;
+    box-shadow: none;
+    transform: none;
+    border-color: transparent;
 }
 /* 満足度アンケートフォーム */
 .satisfaction-form {
