@@ -250,34 +250,40 @@
       let userId = null;
       let email = null;
 
-      // まずローカルストレージのcognito_userからIDを取得（最優先）
-      try {
-        const storedCognitoUser = localStorage.getItem('cognito_user');
-        if (storedCognitoUser) {
-          const parsedUser = JSON.parse(storedCognitoUser);
-          if (parsedUser.id) {
-            userId = parsedUser.id;
-            console.log('[AdminSidebar] Using ID from stored cognito_user:', userId);
-          } else if (parsedUser.email) {
-            email = parsedUser.email;
-            console.log('[AdminSidebar] Using email from stored cognito_user:', email);
+      // Cognito認証から最新の情報を取得（最優先）
+      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+        try {
+          const cognitoUser = await window.CognitoAuth.getCurrentUser();
+          if (cognitoUser) {
+            if (cognitoUser.id) {
+              userId = cognitoUser.id;
+              console.log('[AdminSidebar] Using ID from Cognito:', userId);
+            } else if (cognitoUser.email) {
+              email = cognitoUser.email;
+              console.log('[AdminSidebar] Using email from Cognito:', email);
+            }
           }
+        } catch (e) {
+          console.warn('[AdminSidebar] Error getting user from Cognito:', e);
         }
-      } catch (e) {
-        console.warn('[AdminSidebar] Error parsing stored cognito_user:', e);
       }
 
-      // Cognito認証からIDまたはメールアドレスを取得
-      if (!userId && !email && window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
-        const cognitoUser = await window.CognitoAuth.getCurrentUser();
-        if (cognitoUser) {
-          if (cognitoUser.id) {
-            userId = cognitoUser.id;
-            console.log('[AdminSidebar] Using ID from Cognito:', userId);
-          } else if (cognitoUser.email) {
-            email = cognitoUser.email;
-            console.log('[AdminSidebar] Using email from Cognito:', email);
+      // Cognito認証から取得できなかった場合、ローカルストレージのcognito_userから取得（フォールバック）
+      if (!userId && !email) {
+        try {
+          const storedCognitoUser = localStorage.getItem('cognito_user');
+          if (storedCognitoUser) {
+            const parsedUser = JSON.parse(storedCognitoUser);
+            if (parsedUser.id) {
+              userId = parsedUser.id;
+              console.log('[AdminSidebar] Using ID from stored cognito_user (fallback):', userId);
+            } else if (parsedUser.email) {
+              email = parsedUser.email;
+              console.log('[AdminSidebar] Using email from stored cognito_user (fallback):', email);
+            }
           }
+        } catch (e) {
+          console.warn('[AdminSidebar] Error parsing stored cognito_user:', e);
         }
       }
 
