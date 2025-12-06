@@ -70,30 +70,10 @@
 
   <!-- リスト表示 -->
   <div class="schedule-list-view" id="list-view">
-    <div class="schedule-table-wrapper">
-      <table class="schedule-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>日時</th>
-            <th>法人名</th>
-            <th>ブランド名</th>
-            <th>店舗</th>
-            <th>営業担当</th>
-            <th>清掃員</th>
-            <th>ステータス</th>
-            <th>清掃内容</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="schedule-tbody">
-          <tr>
-            <td colspan="10" class="loading-cell">
-              <i class="fas fa-spinner fa-spin"></i> 読み込み中...
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="schedule-card-list" id="schedule-card-list">
+      <div class="loading-state">
+        <i class="fas fa-spinner fa-spin"></i> 読み込み中...
+      </div>
     </div>
     <div class="pagination" id="pagination"></div>
   </div>
@@ -121,6 +101,26 @@
     <div class="calendar-grid" id="calendar-days"></div>
   </div>
 </main>
+
+<!-- ボトムタブナビゲーション -->
+<nav class="bottom-tabs">
+  <button class="tab" onclick="window.location.href='/sales/dashboard'">
+    <i class="fas fa-bolt"></i>
+    <span>アクティビティ</span>
+  </button>
+  <button class="tab" onclick="window.location.href='/sales/dashboard#client'">
+    <i class="fas fa-user-plus"></i>
+    <span>顧客登録</span>
+  </button>
+  <button class="tab active" onclick="window.location.href='/sales/schedules'">
+    <i class="fas fa-calendar"></i>
+    <span>スケジュール</span>
+  </button>
+  <button class="tab" onclick="window.location.href='/sales/dashboard#case'">
+    <i class="fas fa-folder-open"></i>
+    <span>案件管理</span>
+  </button>
+</nav>
 
 <!-- 新規作成/編集ダイアログ -->
 <dialog id="schedule-dialog" class="schedule-dialog">

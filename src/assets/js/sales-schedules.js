@@ -15,12 +15,12 @@ let currentMonth = new Date();
 let deleteTargetId = null;
 
 // DOM要素（初期化時に取得）
-let tbody, pagination, scheduleDialog, deleteDialog, scheduleForm, formStatus;
+let scheduleCardList, pagination, scheduleDialog, deleteDialog, scheduleForm, formStatus;
 
 // 初期化
 document.addEventListener('DOMContentLoaded', async () => {
   // DOM要素を取得
-  tbody = document.getElementById('schedule-tbody');
+  scheduleCardList = document.getElementById('schedule-card-list');
   pagination = document.getElementById('pagination');
   scheduleDialog = document.getElementById('schedule-dialog');
   deleteDialog = document.getElementById('delete-dialog');
@@ -37,8 +37,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   if (typeof DataUtils === 'undefined') {
     console.error('DataUtils is not loaded after waiting');
-    if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">データユーティリティの読み込みに失敗しました</td></tr>';
+    if (scheduleCardList) {
+      scheduleCardList.innerHTML = '<div class="loading-state">データユーティリティの読み込みに失敗しました</div>';
     }
     return;
   }
@@ -463,15 +463,15 @@ function filterAndRender() {
   renderPagination();
 }
 
-// テーブル描画
+// カードリスト描画（スマホ向け）
 function renderTable() {
-  if (!tbody) return;
+  if (!scheduleCardList) return;
   
   const start = (currentPage - 1) * perPage;
   const pageSchedules = filteredSchedules.slice(start, start + perPage);
 
   if (pageSchedules.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">該当するスケジュールがありません</td></tr>';
+    scheduleCardList.innerHTML = '<div class="empty-state">該当するスケジュールがありません</div>';
     return;
   }
 
@@ -488,7 +488,7 @@ function renderTable() {
     return brand ? brand.name : '';
   }
 
-  tbody.innerHTML = pageSchedules.map(schedule => {
+  scheduleCardList.innerHTML = pageSchedules.map(schedule => {
     // 正規化されたスケジュールデータを使用
     const normalized = DataUtils.normalizeSchedule(schedule);
     // store_id または client_id に対応（営業側は client_id を使用）
@@ -510,76 +510,76 @@ function renderTable() {
     const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
     const clientName = getClientName(clientId);
     
+    // 清掃内容を取得
+    const cleaningItems = schedule.cleaning_items || normalized.cleaning_items || [];
+    const itemNames = Array.isArray(cleaningItems) ? cleaningItems.map(item => {
+      const name = item.name || item.title || '';
+      return escapeHtml(name);
+    }).filter(name => name) : [];
+    
     return `
-      <tr data-id="${schedule.id}" class="${isDraft ? 'draft-row' : ''}">
-        <td>
-          <span class="schedule-id">${escapeHtml(schedule.id || '-')}</span>
-        </td>
-        <td>
-          <div><strong>${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</strong></div>
-          <div style="font-size:0.8rem;color:#6b7280">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration ? ` (${normalized.duration}分)` : ''}</div>
-        </td>
-        <td>
-          <span class="client-name">${escapeHtml(clientName || '-')}</span>
-        </td>
-        <td>
-          <span class="brand-name">${escapeHtml(brandName || '-')}</span>
-        </td>
-        <td>
-          <div class="store-info">
-            <span class="store-name">${escapeHtml(displayStoreName)}</span>
-            <span class="store-address">${escapeHtml(store.pref || '')}${escapeHtml(store.city || '')}</span>
-          </div>
-        </td>
-        <td>
-          ${sales ? `
-            <div class="worker-info">
-              <span class="worker-avatar">${(sales.name || '?')[0]}</span>
-              <span>${escapeHtml(sales.name || '')}</span>
-            </div>
-          ` : '<span class="unassigned">未設定</span>'}
-        </td>
-        <td>
-          ${worker ? `
-            <div class="worker-info">
-              <span class="worker-avatar">${(worker.name || '?')[0]}</span>
-              <span>${escapeHtml(worker.name || '')}</span>
-            </div>
-          ` : '<span class="unassigned">未割当</span>'}
-        </td>
-        <td>
+      <div class="schedule-card ${isDraft ? 'draft-card' : ''}" data-id="${schedule.id}">
+        <div class="schedule-card-header">
+          <div class="schedule-card-id">${escapeHtml(schedule.id || '-')}</div>
           <span class="status-badge status-${normalized.status}">${getStatusLabel(normalized.status)}</span>
-        </td>
-        <td>
-          ${(() => {
-            const cleaningItems = schedule.cleaning_items || normalized.cleaning_items || [];
-            if (!Array.isArray(cleaningItems) || cleaningItems.length === 0) {
-              return '<span style="color: #9ca3af;">-</span>';
-            }
-            const itemNames = cleaningItems.map(item => {
-              const name = item.name || item.title || '';
-              return escapeHtml(name);
-            }).filter(name => name);
-            return itemNames.length > 0 ? itemNames.join(', ') : '<span style="color: #9ca3af;">-</span>';
-          })()}
-        </td>
-        <td>
-          <div class="action-btns">
-            ${isDraft ? `
-              <button class="action-btn assign" title="アサイン・確定（新規案件）" onclick="editSchedule('${schedule.id}')" style="background:#ffc107;color:#333">
-                <i class="fas fa-user-check"></i>
-              </button>
-            ` : `
-              <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
-                <i class="fas fa-edit"></i>
-              </button>
-            `}
-            <button class="action-btn delete" title="削除" onclick="confirmDelete('${schedule.id}')">
-              <i class="fas fa-trash"></i>
-            </button>
+        </div>
+        <div class="schedule-card-body">
+          <div class="schedule-card-date">
+            <i class="fas fa-calendar-alt"></i>
+            <div>
+              <div class="schedule-date-main">${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</div>
+              <div class="schedule-time">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration_minutes ? ` (${normalized.duration_minutes}分)` : ''}</div>
+            </div>
           </div>
-        </td>
-      </tr>
+          <div class="schedule-card-store">
+            <i class="fas fa-store"></i>
+            <div>
+              <div class="store-name">${escapeHtml(displayStoreName)}</div>
+              ${clientName || brandName ? `<div class="store-meta">${escapeHtml(clientName || '')}${clientName && brandName ? ' / ' : ''}${escapeHtml(brandName || '')}</div>` : ''}
+              ${store.pref || store.city ? `<div class="store-address">${escapeHtml(store.pref || '')}${escapeHtml(store.city || '')}</div>` : ''}
+            </div>
+          </div>
+          ${sales || worker ? `
+            <div class="schedule-card-assignees">
+              ${sales ? `
+                <div class="assignee-item">
+                  <i class="fas fa-user-tie"></i>
+                  <span>${escapeHtml(sales.name || '')}</span>
+                </div>
+              ` : ''}
+              ${worker ? `
+                <div class="assignee-item">
+                  <i class="fas fa-user"></i>
+                  <span>${escapeHtml(worker.name || '')}</span>
+                </div>
+              ` : '<div class="assignee-item"><i class="fas fa-user"></i><span class="unassigned">未割当</span></div>'}
+            </div>
+          ` : ''}
+          ${itemNames.length > 0 ? `
+            <div class="schedule-card-cleaning">
+              <i class="fas fa-broom"></i>
+              <div class="cleaning-items">${itemNames.join(', ')}</div>
+            </div>
+          ` : ''}
+        </div>
+        <div class="schedule-card-actions">
+          ${isDraft ? `
+            <button class="action-btn assign" title="アサイン・確定（新規案件）" onclick="editSchedule('${schedule.id}')">
+              <i class="fas fa-user-check"></i>
+              <span>アサイン</span>
+            </button>
+          ` : `
+            <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
+              <i class="fas fa-edit"></i>
+              <span>編集</span>
+            </button>
+          `}
+          <button class="action-btn delete" title="削除" onclick="confirmDelete('${schedule.id}')">
+            <i class="fas fa-trash"></i>
+            <span>削除</span>
+          </button>
+        </div>
+      </div>
     `;
   }).join('');
 }
@@ -613,6 +613,8 @@ window.goToPage = function(page) {
   currentPage = page;
   renderTable();
   renderPagination();
+  // ページトップにスクロール
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 // イベントリスナー

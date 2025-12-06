@@ -8,8 +8,10 @@
   max-width: 100%;
   margin: 0;
   padding: 16px;
+  padding-bottom: 80px; /* ボトムタブのスペース */
   background: #f9fafb;
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .page-header {
@@ -169,48 +171,164 @@
   white-space: nowrap;
 }
 
-/* テーブル */
-.schedule-table-wrapper {
+/* カードリスト（スマホ向け） */
+.schedule-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.schedule-card {
   background: #fff;
   border-radius: 12px;
-  overflow: hidden;
+  padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
 }
 
-.schedule-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 800px;
+.schedule-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.schedule-table th,
-.schedule-table td {
-  padding: 12px 8px;
-  text-align: left;
+.schedule-card.draft-card {
+  background: #fffde7;
+  border-color: #ffc107;
+}
+
+.schedule-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
   border-bottom: 1px solid #f3f4f6;
+}
+
+.schedule-card-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.schedule-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.schedule-card-date,
+.schedule-card-store,
+.schedule-card-assignees,
+.schedule-card-cleaning {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.schedule-card-date i,
+.schedule-card-store i,
+.schedule-card-assignees i,
+.schedule-card-cleaning i {
+  color: var(--primary);
+  font-size: 1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.schedule-date-main {
+  font-weight: 600;
   color: #111827;
+  font-size: 0.95rem;
+}
+
+.schedule-time {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.store-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.store-meta {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.store-address {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.schedule-card-assignees {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assignee-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.assignee-item i {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.cleaning-items {
+  font-size: 0.9rem;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.schedule-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.schedule-card-actions .action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.schedule-card-actions .action-btn span {
   font-size: 0.875rem;
 }
 
-.schedule-table th {
-  background: #f9fafb;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.schedule-table tbody tr:hover {
-  background: #fafafa;
-}
-
-.loading-cell {
+.loading-state,
+.empty-state {
   text-align: center;
-  padding: 40px !important;
+  padding: 40px 20px;
   color: #6b7280;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 /* ステータスバッジ */
@@ -229,14 +347,6 @@
 .status-completed { background: #d1fae5; color: #047857; }
 .status-cancelled { background: #fee2e2; color: #b91c1c; }
 
-/* 新規案件行ハイライト */
-.schedule-table tbody tr.draft-row {
-  background: #fffde7;
-}
-
-.schedule-table tbody tr.draft-row:hover {
-  background: #fff9c4;
-}
 
 /* 店舗・清掃員情報 */
 .store-info {
@@ -323,6 +433,59 @@
 .action-btn.delete:hover { background: #fecaca; }
 .action-btn.assign { background: #ffc107; color: #333; }
 .action-btn.assign:hover { background: #e0a800; }
+
+/* ボトムタブナビゲーション */
+.bottom-tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  background: #fff;
+  display: flex;
+  border-top: 1px solid #eee;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 0.65rem;
+  cursor: pointer;
+  padding: 8px 4px;
+  transition: color 0.2s;
+  text-decoration: none;
+}
+
+.tab i {
+  font-size: 1.25rem;
+}
+
+.tab span {
+  font-weight: 500;
+}
+
+.bottom-tabs .tab.active {
+  color: var(--primary, #ff679c);
+  background: transparent !important;
+  border: none !important;
+}
+
+.bottom-tabs .tab:active {
+  opacity: 0.7;
+}
+
+.bottom-tabs .tab:hover {
+  opacity: 0.8;
+}
 
 /* カレンダー */
 .calendar-header {
@@ -847,24 +1010,6 @@
     width: 100%;
   }
 
-  .schedule-table-wrapper {
-    border-radius: 8px;
-  }
-
-  .schedule-table {
-    min-width: 1000px;
-  }
-
-  .schedule-table th,
-  .schedule-table td {
-    padding: 10px 6px;
-    font-size: 0.8rem;
-  }
-
-  .schedule-table th {
-    font-size: 0.7rem;
-  }
-
   .new-project-alert {
     flex-direction: column;
     align-items: stretch;
@@ -924,24 +1069,16 @@
 }
 
 @media (max-width: 480px) {
-  .schedule-table {
-    min-width: 1200px;
+  .schedule-card {
+    padding: 12px;
   }
 
-  .schedule-table th,
-  .schedule-table td {
-    padding: 8px 4px;
-    font-size: 0.75rem;
+  .schedule-card-actions .action-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
   }
 
-  .schedule-id {
-    font-size: 0.7rem;
-    padding: 2px 4px;
-  }
-
-  .action-btn {
-    width: 28px;
-    height: 28px;
+  .schedule-card-actions .action-btn span {
     font-size: 0.8rem;
   }
 
