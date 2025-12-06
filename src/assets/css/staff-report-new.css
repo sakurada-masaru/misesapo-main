@@ -136,14 +136,19 @@
   padding: 12px 16px;
   color: #fff;
   margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
   flex-shrink: 0;
   overflow-x: hidden;
   box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
 }
 
 .form-row {
   margin-bottom: 8px;
+  margin-left: 0;
+  margin-right: 0;
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -170,6 +175,8 @@
   flex-direction: row;
   gap: 8px;
   align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-row.three-col-inline .form-group {
@@ -177,6 +184,36 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+.form-row.three-col-inline .date-time-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.date-time-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.95;
+  white-space: nowrap;
+  flex-shrink: 0;
+  color: #fff;
+  min-width: fit-content;
+}
+
+.date-time-label .required {
+  color: #fef08a;
+}
+
+.date-time-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  width: auto;
 }
 
 .form-group {
@@ -228,36 +265,6 @@
   padding: 0;
 }
 
-/* 日付・時刻入力フィールドのラベル表示 */
-.form-input-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.date-time-input {
-  padding-right: 100px;
-}
-
-.form-input-label {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.9rem;
-  color: #9ca3af;
-  pointer-events: none;
-  white-space: nowrap;
-  opacity: 0.8;
-  transition: opacity 0.2s;
-}
-
-.date-time-input:focus + .form-input-label {
-  opacity: 0.4;
-}
-
-.date-time-input.has-value + .form-input-label {
-  opacity: 0;
-}
 
 .form-input:focus,
 .form-select:focus {
@@ -1395,5 +1402,52 @@ body.dark-mode .modal-header h3 {
 
 body.dark-mode .modal-footer {
   border-color: #374151;
+}
+
+/* スマホ表示の調整 */
+@media (max-width: 768px) {
+  .report-header-section {
+    padding: 12px;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .form-row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .form-row.two-col {
+    gap: 8px;
+  }
+  
+  .form-row.three-col-inline {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .form-row.three-col-inline .date-time-group {
+    flex: 1 1 calc(50% - 3px);
+    min-width: 0;
+  }
+  
+  .form-row.three-col-inline .date-time-group:last-child {
+    flex: 1 1 100%;
+  }
+  
+  .date-time-label {
+    font-size: 0.8rem;
+    min-width: 50px;
+  }
+  
+  .date-time-input {
+    font-size: 0.85rem;
+    padding: 8px 10px;
+  }
+  
+  .form-input,
+  .form-select {
+    padding: 8px 12px;
+  }
 }
 
