@@ -571,15 +571,23 @@
       color: #999;
     }
     .schedule-date.today .day { color: var(--primary, #ff679c); }
-    .schedule-info { flex: 1; min-width: 0; }
+    .schedule-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .schedule-brand {
+      font-size: 0.9rem;
+      color: #111;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .schedule-time {
       font-size: 0.8rem;
       color: var(--primary, #ff679c);
       font-weight: 500;
     }
-    .schedule-store {
-      font-size: 0.9rem;
-      color: #111;
+    .schedule-cleaning {
+      font-size: 0.75rem;
+      color: #6b7280;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -3144,10 +3152,46 @@
         // DataUtilsで店舗検索・スケジュール正規化
         const normalized = DataUtils.normalizeSchedule(s);
         const storeId = normalized.store_id || s.store_id || s.client_id;
-        const isReminder = s.type === 'reminder' || !storeId;
-        const displayName = isReminder
-          ? (s.notes || s.title || 'リマインダー')
-          : DataUtils.getStoreName(allStores, storeId, normalized.store_name || s.store_name || s.client_name);
+        const store = DataUtils.findStore(allStores, storeId) || {};
+        const brandId = store.brand_id;
+        const brandName = getBrandName(brandId) || '-';
+        
+        // 日付フォーマット
+        const dateStr = normalized.date || s.date || s.scheduled_date || '';
+        let formattedDate = '-';
+        if (dateStr) {
+          try {
+            const dateObj = dateStr instanceof Date ? dateStr : new Date(dateStr);
+            if (!isNaN(dateObj.getTime())) {
+              formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+            }
+          } catch (e) {
+            console.error('Date parsing error:', e);
+          }
+        }
+        
+        // 時刻フォーマット
+        let formattedTime = normalized.time || s.time_slot || s.scheduled_time || '-';
+        if (formattedTime && formattedTime !== '-' && !formattedTime.includes('-')) {
+          if (normalized.duration_minutes || s.duration_minutes) {
+            const duration = normalized.duration_minutes || s.duration_minutes;
+            const [hours, minutes] = formattedTime.split(':').map(Number);
+            const startDate = new Date();
+            startDate.setHours(hours, minutes, 0, 0);
+            const endDate = new Date(startDate.getTime() + duration * 60000);
+            const endHours = String(endDate.getHours()).padStart(2, '0');
+            const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+            formattedTime = `${formattedTime}-${endHours}:${endMinutes}`;
+          }
+        }
+        
+        // 清掃項目
+        const cleaningItems = s.cleaning_items || normalized.cleaning_items || [];
+        const itemNames = Array.isArray(cleaningItems) ? cleaningItems.map(item => {
+          return item.name || item.title || '';
+        }).filter(name => name) : [];
+        const cleaningContent = itemNames.length > 0 ? itemNames.join(', ') : '-';
+        
         const statusClass = normalized.status === 'completed' ? 'completed' : (normalized.status === 'draft' ? 'draft' : '');
         
         return `
@@ -3157,8 +3201,9 @@
               <div class="dow">${weekdays[s.date.getDay()]}</div>
             </div>
             <div class="schedule-info">
-              <div class="schedule-time">${normalized.time || '-'}</div>
-              <div class="schedule-store">${escapeHtml(displayName)}</div>
+              <div class="schedule-brand">${escapeHtml(brandName)}</div>
+              <div class="schedule-time">${escapeHtml(formattedTime)}</div>
+              <div class="schedule-cleaning">${escapeHtml(cleaningContent)}</div>
             </div>
             <div class="schedule-dot ${statusClass}"></div>
           </div>
