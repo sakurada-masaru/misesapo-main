@@ -2329,15 +2329,20 @@
         .map(async ([id, s]) => {
           if (s.type === 'image') {
             // 画像セクションの場合、ローカル画像をS3にアップロード
-            const uploadedPhotos = {
-              before: await uploadSectionImages(s.photos.before || [], cleaningDate),
-              after: await uploadSectionImages(s.photos.after || [], cleaningDate)
-            };
+            const imageType = s.image_type || 'before_after';
+            const uploadedPhotos = {};
+            
+            if (imageType === 'completed') {
+              uploadedPhotos.completed = await uploadSectionImages(s.photos.completed || [], cleaningDate);
+            } else {
+              uploadedPhotos.before = await uploadSectionImages(s.photos.before || [], cleaningDate);
+              uploadedPhotos.after = await uploadSectionImages(s.photos.after || [], cleaningDate);
+            }
             
             return {
               section_id: id,
               section_type: 'image',
-              image_type: 'work',
+              image_type: imageType,
               photos: uploadedPhotos
             };
           } else if (s.type === 'comment') {
