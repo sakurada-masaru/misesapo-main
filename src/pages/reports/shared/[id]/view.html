@@ -38,34 +38,18 @@
                 <!-- 清掃項目が動的に追加される -->
             </div>
 
-            <!-- 満足度アンケートフォーム -->
-            <div id="satisfaction-wrap" class="satisfaction-form">
-                <div class="form-question">今回の作業の満足度はいかがでしたか？</div>
-                <div class="rating-stars">
-                    <span class="rating-label">良い</span>
-                    <div class="stars" aria-label="5段階評価" role="radiogroup">
-                        <span class="star" data-value="1" role="radio" aria-label="1" aria-checked="false" tabindex="0">☆</span>
-                        <span class="star" data-value="2" role="radio" aria-label="2" aria-checked="false" tabindex="0">☆</span>
-                        <span class="star" data-value="3" role="radio" aria-label="3" aria-checked="false" tabindex="0">☆</span>
-                        <span class="star" data-value="4" role="radio" aria-label="4" aria-checked="false" tabindex="0">☆</span>
-                        <span class="star" data-value="5" role="radio" aria-label="5" aria-checked="false" tabindex="0">☆</span>
-                    </div>
-                    <span class="rating-label">悪い</span>
+            <!-- レポート承認セクション -->
+            <div id="approval-section" class="approval-section">
+                <h3 class="approval-title">お客様へ、レポート確認後のお願い</h3>
+                <div class="approval-message">
+                    <p>この度は弊社に清掃のご依頼を頂き、誠にありがとうございました。上記レポート内容につきまして、ご意見、ご不明点等ございましたら、お手数ではございますが、弊社担当者にお問い合わせください。また、今回のご依頼につきましてはお客様の『承認』をもちまして『清掃完了』とさせていただきます。お手数ではございますが、レポートのご確認がお済みになられましたら、下記『レポート承認』ボタンを押していただきますようお願い申し上げます。</p>
                 </div>
-                <div class="comment-section">
-                    <label for="storeComment" class="comment-label">店舗担当者コメント</label>
-                    <textarea id="storeComment" class="comment-textarea" placeholder="コメントを入力してください"></textarea>
-                </div>
-                <div class="submit-button-wrapper">
-                    <button id="satisfaction-submit" type="button" class="submit-button">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                        </svg>
-                        コメントを送る
+                <div class="approval-button-wrapper">
+                    <button id="approval-button" type="button" class="approval-button">
+                        レポート承認
                     </button>
                 </div>
             </div>
-            <div id="satisfaction-thanks" class="satisfaction-thanks">コメントをお寄せいただきありがとうございました。</div>
         </div>
         <div id="error-message" class="error-message" style="display: none;"></div>
     </div>

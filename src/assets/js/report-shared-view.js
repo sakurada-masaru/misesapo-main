@@ -313,102 +313,77 @@ function openImageModal(imageSrc) {
     }, 10);
 }
 
-// 満足度評価の処理
+// レポート承認の処理
 document.addEventListener('DOMContentLoaded', function() {
     loadReportDetail();
     
-    // 満足度評価の星
-    const wrap = document.getElementById('satisfaction-wrap');
-    const thanks = document.getElementById('satisfaction-thanks');
-    if (wrap) {
-        const stars = Array.from(wrap.querySelectorAll('.star'));
-        let rating = 0;
-        function render() {
-            stars.forEach((s, i) => {
-                const filled = (i + 1) <= rating;
-                s.classList.toggle('filled', filled);
-                s.setAttribute('aria-checked', String(filled && (i + 1) === rating));
-            });
-        }
-        stars.forEach((s) => {
-            s.addEventListener('click', () => { rating = Number(s.dataset.value || '0'); render(); });
-            s.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); rating = Number(s.dataset.value || '0'); render(); }
-                if (e.key === 'ArrowRight') { e.preventDefault(); rating = Math.min(5, rating + 1) || 1; render(); }
-                if (e.key === 'ArrowLeft') { e.preventDefault(); rating = Math.max(1, rating - 1) || 1; render(); }
-            });
-        });
-        const btn = document.getElementById('satisfaction-submit');
-        if (btn) btn.addEventListener('click', async () => {
-            const reportId = getReportIdFromUrl();
-            const commentEl = document.getElementById('storeComment');
-            const comment = commentEl ? commentEl.value.trim() : '';
+    // レポート承認ボタンの処理
+    const approvalButton = document.getElementById('approval-button');
+    if (approvalButton) {
+        approvalButton.addEventListener('click', function() {
+            if (this.disabled) return;
             
-            // レポートIDの確認
-            if (!reportId) {
-                alert('レポートIDが取得できませんでした。ページを再読み込みしてください。');
-                console.error('Report ID not found in URL');
-                return;
-            }
-            
-            // 評価が選択されていない場合の警告（コメントのみでも送信可能）
-            if (rating === 0 && !comment) {
-                alert('評価またはコメントを入力してください。');
-                return;
-            }
-            
-            // ボタンを無効化
-            btn.disabled = true;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
-            
-            try {
-                const apiUrl = `${API_BASE_URL}/public/reports/${reportId}/feedback`;
-                const requestBody = {
-                    rating: rating || 0,
-                    comment: comment || ''
-                };
-                
-                console.log('[Feedback] Sending feedback:', { reportId, apiUrl, requestBody });
-                
-                // APIにフィードバックを送信
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                
-                console.log('[Feedback] Response status:', response.status);
-                
-                if (!response.ok) {
-                    let errorMessage = `送信に失敗しました (${response.status})`;
-                    try {
-                        const errorData = await response.json();
-                        errorMessage = errorData.error || errorData.message || errorMessage;
-                        console.error('[Feedback] Error response:', errorData);
-                    } catch (e) {
-                        const errorText = await response.text();
-                        console.error('[Feedback] Error response text:', errorText);
-                        errorMessage = errorText || errorMessage;
-                    }
-                    throw new Error(errorMessage);
-                }
-                
-                const result = await response.json();
-                console.log('[Feedback] Success:', result);
-                
-                wrap.style.display = 'none';
-                if (thanks) thanks.style.display = 'block';
-            } catch (error) {
-                console.error('[Feedback] Error submitting feedback:', error);
-                alert(`送信に失敗しました: ${error.message}\n\nもう一度お試しください。`);
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
+            // ダイアログを表示
+            showApprovalDialog();
         });
     }
 });
+
+// 承認ダイアログを表示
+function showApprovalDialog() {
+    // 既存のダイアログが存在する場合は削除
+    const existingDialog = document.getElementById('approval-dialog');
+    if (existingDialog) {
+        existingDialog.remove();
+    }
+    
+    // ダイアログ要素を作成
+    const dialog = document.createElement('div');
+    dialog.id = 'approval-dialog';
+    dialog.className = 'approval-dialog';
+    dialog.innerHTML = `
+        <div class="approval-dialog-overlay"></div>
+        <div class="approval-dialog-content">
+            <p class="approval-dialog-message">レポート承認を受け付けました。スタッフ一同、またのご利用心よりお待ちしております。ありがとうございました</p>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    // ダイアログを表示
+    setTimeout(() => {
+        dialog.classList.add('show');
+    }, 10);
+    
+    // タッチ/クリックでダイアログを閉じる
+    const overlay = dialog.querySelector('.approval-dialog-overlay');
+    const content = dialog.querySelector('.approval-dialog-content');
+    
+    const closeDialog = () => {
+        dialog.classList.remove('show');
+        setTimeout(() => {
+            dialog.remove();
+            // ボタンを「ありがとうございました」に変更し、無効化
+            const approvalButton = document.getElementById('approval-button');
+            if (approvalButton) {
+                approvalButton.textContent = 'ありがとうございました';
+                approvalButton.disabled = true;
+                approvalButton.classList.add('disabled');
+            }
+        }, 300);
+    };
+    
+    overlay.addEventListener('click', closeDialog);
+    content.addEventListener('click', closeDialog);
+    
+    // ESCキーで閉じる
+    const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+            closeDialog();
+            document.removeEventListener('keydown', handleEsc);
+        }
+    };
+    document.addEventListener('keydown', handleEsc);
+}
 
 
