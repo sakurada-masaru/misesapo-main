@@ -244,7 +244,7 @@
       document.getElementById('tab-new').click();
       
       // フォームにデータを読み込む
-      loadReportToForm(report);
+      await loadReportToForm(report);
       
     } catch (error) {
       console.error('Error loading report:', error);
@@ -253,27 +253,31 @@
   };
 
   // レポートデータをフォームに読み込む
-  function loadReportToForm(report) {
+  async function loadReportToForm(report) {
+    // stores配列が空の場合は読み込みを待つ
+    if (stores.length === 0) {
+      console.log('[loadReportToForm] Stores not loaded yet, loading...');
+      await loadStores();
+    }
+    
     // 基本情報
     const storeId = report.store_id || '';
     document.getElementById('report-store').value = storeId;
     
-    // 店舗名を取得（report.store_nameがなければstores配列から検索）
+    // 店舗名を取得（report.store_nameがあっても、stores配列からも検索して確実に取得）
     let storeName = report.store_name || '';
     if (storeId) {
-      // まずreport.store_nameを確認
-      if (!storeName) {
-        // stores配列から店舗を検索
-        const store = stores.find(s => {
-          const sId = s.store_id || s.id;
-          return sId === storeId || String(sId) === String(storeId);
-        });
-        if (store) {
-          storeName = store.store_name || store.name || '';
-          console.log('[loadReportToForm] Found store:', { storeId, storeName, store });
-        } else {
-          console.warn('[loadReportToForm] Store not found:', { storeId, storesCount: stores.length, sampleStore: stores[0] });
-        }
+      // stores配列から店舗を検索（report.store_nameがなくても検索）
+      const store = stores.find(s => {
+        const sId = s.store_id || s.id;
+        return sId === storeId || String(sId) === String(storeId);
+      });
+      if (store) {
+        // stores配列から取得した店舗名を優先（より確実）
+        storeName = store.store_name || store.name || storeName;
+        console.log('[loadReportToForm] Found store:', { storeId, storeName, store, reportStoreName: report.store_name });
+      } else {
+        console.warn('[loadReportToForm] Store not found:', { storeId, storesCount: stores.length, sampleStore: stores[0] });
       }
     }
     
