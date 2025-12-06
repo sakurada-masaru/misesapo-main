@@ -520,60 +520,57 @@ function renderTable() {
     return `
       <div class="schedule-card ${isDraft ? 'draft-card' : ''}" data-id="${schedule.id}">
         <div class="schedule-card-header">
-          <div class="schedule-card-id">${escapeHtml(schedule.id || '-')}</div>
           <span class="status-badge status-${normalized.status}">${getStatusLabel(normalized.status)}</span>
         </div>
         <div class="schedule-card-body">
-          <div class="schedule-card-date">
-            <i class="fas fa-calendar-alt"></i>
-            <div>
-              <div class="schedule-date-main">${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</div>
-              <div class="schedule-time">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration_minutes ? ` (${normalized.duration_minutes}分)` : ''}</div>
+          <div class="schedule-card-main-info">
+            <div class="schedule-card-date">
+              <i class="fas fa-calendar-alt"></i>
+              <div>
+                <div class="schedule-date-main">${formatDate(normalized.date || schedule.date || schedule.scheduled_date)}</div>
+                <div class="schedule-time">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration_minutes ? ` (${normalized.duration_minutes}分)` : ''}</div>
+              </div>
+            </div>
+            <div class="schedule-card-store">
+              <i class="fas fa-store"></i>
+              <div>
+                <div class="store-name">${escapeHtml(displayStoreName)}</div>
+                ${clientName || brandName ? `<div class="store-meta">${escapeHtml(clientName || '')}${clientName && brandName ? ' / ' : ''}${escapeHtml(brandName || '')}</div>` : ''}
+              </div>
             </div>
           </div>
-          <div class="schedule-card-store">
-            <i class="fas fa-store"></i>
-            <div>
-              <div class="store-name">${escapeHtml(displayStoreName)}</div>
-              ${clientName || brandName ? `<div class="store-meta">${escapeHtml(clientName || '')}${clientName && brandName ? ' / ' : ''}${escapeHtml(brandName || '')}</div>` : ''}
-              ${store.pref || store.city ? `<div class="store-address">${escapeHtml(store.pref || '')}${escapeHtml(store.city || '')}</div>` : ''}
-            </div>
-          </div>
-          ${sales || worker ? `
-            <div class="schedule-card-assignees">
-              ${sales ? `
-                <div class="assignee-item">
-                  <i class="fas fa-user-tie"></i>
-                  <span>${escapeHtml(sales.name || '')}</span>
+          ${(sales || worker || itemNames.length > 0) ? `
+            <div class="schedule-card-details">
+              ${sales || worker ? `
+                <div class="schedule-card-assignees">
+                  ${sales ? `
+                    <div class="assignee-item">
+                      <i class="fas fa-user-tie"></i>
+                      <span>${escapeHtml(sales.name || '')}</span>
+                    </div>
+                  ` : ''}
+                  ${worker ? `
+                    <div class="assignee-item">
+                      <i class="fas fa-user"></i>
+                      <span>${escapeHtml(worker.name || '')}</span>
+                    </div>
+                  ` : '<div class="assignee-item"><i class="fas fa-user"></i><span class="unassigned">未割当</span></div>'}
                 </div>
               ` : ''}
-              ${worker ? `
-                <div class="assignee-item">
-                  <i class="fas fa-user"></i>
-                  <span>${escapeHtml(worker.name || '')}</span>
+              ${itemNames.length > 0 ? `
+                <div class="schedule-card-cleaning">
+                  <i class="fas fa-broom"></i>
+                  <div class="cleaning-items">${itemNames.join(', ')}</div>
                 </div>
-              ` : '<div class="assignee-item"><i class="fas fa-user"></i><span class="unassigned">未割当</span></div>'}
-            </div>
-          ` : ''}
-          ${itemNames.length > 0 ? `
-            <div class="schedule-card-cleaning">
-              <i class="fas fa-broom"></i>
-              <div class="cleaning-items">${itemNames.join(', ')}</div>
+              ` : ''}
             </div>
           ` : ''}
         </div>
         <div class="schedule-card-actions">
-          ${isDraft ? `
-            <button class="action-btn assign" title="アサイン・確定（新規案件）" onclick="editSchedule('${schedule.id}')">
-              <i class="fas fa-user-check"></i>
-              <span>アサイン</span>
-            </button>
-          ` : `
-            <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
-              <i class="fas fa-edit"></i>
-              <span>編集</span>
-            </button>
-          `}
+          <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
+            <i class="fas fa-edit"></i>
+            <span>編集</span>
+          </button>
           <button class="action-btn delete" title="削除" onclick="confirmDelete('${schedule.id}')">
             <i class="fas fa-trash"></i>
             <span>削除</span>
