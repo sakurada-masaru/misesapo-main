@@ -678,6 +678,7 @@
       
       const query = brandSearchInput.value.trim();
       
+      // 検索クエリが空の場合は全ブランドを表示（清掃項目と同じ仕様）
       const filtered = query.length === 0 
         ? brands 
         : brands.filter(brand => {
@@ -718,8 +719,18 @@
     }
     
     if (brandSearchInput) {
-      brandSearchInput.addEventListener('focus', updateBrandDropdown);
-      brandSearchInput.addEventListener('input', updateBrandDropdown);
+      // フォーカス時（タッチ時）に全ブランドを表示（清掃項目と同じ仕様）
+      brandSearchInput.addEventListener('focus', function() {
+        updateBrandDropdown();
+      });
+      // 入力時にフィルタリング（直接入力も可能）
+      brandSearchInput.addEventListener('input', function() {
+        updateBrandDropdown();
+      });
+      // タッチイベントも追加（モバイル対応）
+      brandSearchInput.addEventListener('touchstart', function() {
+        updateBrandDropdown();
+      });
     }
 
     // 店舗検索
@@ -790,14 +801,19 @@
       });
     }
     
-    // フォーカス時に全店舗を表示
+    // フォーカス時（タッチ時）に全店舗を表示（清掃項目と同じ仕様）
     if (storeSearchInput) {
       storeSearchInput.addEventListener('focus', function() {
         updateStoreDropdown();
       });
       
-      // 入力時にフィルタリング
+      // 入力時にフィルタリング（直接入力も可能）
       storeSearchInput.addEventListener('input', function() {
+        updateStoreDropdown();
+      });
+      
+      // タッチイベントも追加（モバイル対応）
+      storeSearchInput.addEventListener('touchstart', function() {
         updateStoreDropdown();
       });
     }
