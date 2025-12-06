@@ -950,3 +950,148 @@
   }
 }
 
+/* 新規作成ページ用スタイル */
+.sales-schedules-new {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #f9fafb;
+  min-height: 100vh;
+}
+
+.schedule-form-new {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.schedule-form-new .form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.schedule-form-new .form-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schedule-form-new .form-field.half {
+  flex: 0 0 calc(50% - 8px);
+}
+
+.schedule-form-new .form-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.schedule-form-new .required {
+  color: #ef4444;
+}
+
+.schedule-form-new .form-field input,
+.schedule-form-new .form-field select,
+.schedule-form-new .form-field textarea {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.schedule-form-new .form-field input:focus,
+.schedule-form-new .form-field select:focus,
+.schedule-form-new .form-field textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+}
+
+.schedule-form-new .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.schedule-form-new .form-actions .btn {
+  min-width: 140px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.schedule-form-new .btn-primary {
+  background: var(--primary, #FF6BA6);
+  color: #ffffff;
+}
+
+.schedule-form-new .btn-primary:hover {
+  background: var(--primary-hover, #ff8fb3);
+}
+
+.schedule-form-new .btn-secondary {
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.schedule-form-new .btn-secondary:hover {
+  background: #f9fafb;
+}
+
+.schedule-form-new .form-status {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.schedule-form-new .form-status.success {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.schedule-form-new .form-status.error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+@media (max-width: 768px) {
+  .sales-schedules-new {
+    padding: 16px;
+  }
+  .schedule-form-new {
+    padding: 24px;
+  }
+  .schedule-form-new .form-row {
+    flex-direction: column;
+  }
+  .schedule-form-new .form-field.half {
+    flex: 1;
+  }
+  .schedule-form-new .form-actions {
+    flex-direction: column-reverse;
+  }
+  .schedule-form-new .form-actions .btn {
+    width: 100%;
+  }
+}
+
