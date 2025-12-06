@@ -2,7 +2,7 @@
 const API_BASE_URL = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
 
 // デフォルト画像（画像がない場合）
-const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg';
+const DEFAULT_NO_PHOTO_IMAGE = '/images-admin/sorry.png';
 
 // URLからレポートIDを取得
 function getReportIdFromUrl() {
