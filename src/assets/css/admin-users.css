@@ -48,7 +48,6 @@
   font-size: 0.8125rem;
 }
 
-.sidebar.collapsed 
 .nav-divider {
   height: 1px;
   background: #e5e7eb;
@@ -60,12 +59,20 @@
   margin-left: var(--sidebar-width);
   padding: 24px;
   background: #f9fafb;
+  width: calc(100% - var(--sidebar-width));
+  max-width: none;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
 
-  transition: margin-left 0.3s ease;}
 .sidebar.collapsed ~ .main-content {
-  margin-left: var(--sidebar-width);
+  margin-left: var(--sidebar-width-collapsed);
   padding: 24px;
   background: #f9fafb;
+  width: calc(100% - var(--sidebar-width-collapsed));
+  max-width: none;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease, width 0.3s ease;
 
   transition: margin-left 0.3s ease;}
 

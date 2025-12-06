@@ -2,6 +2,8 @@
 @json('data/meta/admin_users_title.json', $title)
 @json('data/meta/admin_users_body_class.json', $body_class)
 
+<link rel="stylesheet" href="/css/admin-users.css" />
+
 <main id="main" class="admin-users-v2">
   @include('partials.admin-sidebar')
   <!-- メインコンテンツ -->
@@ -332,9 +334,7 @@
       </div>
     </div>
   </dialog>
-
-  <link rel="stylesheet" href="/assets/css/admin-users.css">
   </div>
 </main>
 
-<script src="/assets/js/admin-users.js"></script>
+<script src="/js/admin-users.js"></script>
