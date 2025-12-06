@@ -190,7 +190,7 @@ function renderReport(report) {
         return `
           <section class="cleaning-section">
             <div class="item-header">
-              <h3 class="item-title">${escapeHtml(item.item_name || item.item_id)}</h3>
+              <h3 class="item-title">〜 ${escapeHtml(item.item_name || item.item_id)} 〜</h3>
               <div class="item-details">${tagsHtml}</div>
             </div>
           </section>
