@@ -4,6 +4,36 @@ const API_BASE_URL = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.co
 // デフォルト画像（画像がない場合）
 const DEFAULT_NO_PHOTO_IMAGE = '/images-admin/sorry.png';
 
+// パスを解決（GitHub Pages対応）
+function resolvePath(path) {
+    if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+        return path;
+    }
+    
+    const hostname = window.location.hostname;
+    const isLocalDev = hostname === 'localhost' || 
+                      hostname === '127.0.0.1' ||
+                      hostname === '';
+    
+    const isCustomDomain = hostname === 'misesapo.co.jp' || hostname === 'www.misesapo.co.jp';
+    
+    if (isLocalDev || isCustomDomain) {
+        return path.startsWith('/') ? path : '/' + path;
+    }
+    
+    // GitHub Pages（sakurada-masaru.github.io）では/misesapo/を追加
+    let resolvedPath;
+    if (path.startsWith('/misesapo/')) {
+        resolvedPath = path;
+    } else if (path.startsWith('/')) {
+        resolvedPath = '/misesapo' + path;
+    } else {
+        resolvedPath = '/misesapo/' + path;
+    }
+    
+    return resolvedPath;
+}
+
 // URLからレポートIDを取得
 function getReportIdFromUrl() {
     const path = window.location.pathname;
@@ -189,7 +219,7 @@ function renderReport(report) {
                    </div>`
                 : `<div class="image-list">
                      <div class="image-item">
-                       <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真なし" class="default-no-photo-image" />
+                       <img src="${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}" alt="写真なし" class="default-no-photo-image" />
                      </div>
                    </div>`;
             
@@ -198,13 +228,13 @@ function renderReport(report) {
                      ${afterPhotos.map((url, index) => `
                        <div class="image-item" data-image-url="${url}">
                          <img src="${url}" alt="${afterLabel}" loading="lazy" 
-                              onerror="this.onerror=null; this.src='${DEFAULT_NO_PHOTO_IMAGE}';" />
+                              onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
                        </div>
                      `).join('')}
                    </div>`
                 : `<div class="image-list">
                      <div class="image-item">
-                       <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真なし" class="default-no-photo-image" />
+                       <img src="${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}" alt="写真なし" class="default-no-photo-image" />
                      </div>
                    </div>`;
             
