@@ -9,6 +9,8 @@
 
   // データ
   let stores = [];
+  let brands = [];
+  let clients = [];
   let serviceItems = [];
   let sectionCounter = 0;
   let sections = {}; // セクションデータを保持
@@ -26,7 +28,7 @@
 
   // 初期化
   document.addEventListener('DOMContentLoaded', async () => {
-    await Promise.all([loadStores(), loadServiceItems()]);
+    await Promise.all([loadStores(), loadBrands(), loadClients(), loadServiceItems()]);
     await initImageStockDB();
     await loadImageStockFromDB();
     setupEventListeners();
@@ -42,6 +44,26 @@
       stores = await res.json();
     } catch (e) {
       console.error('Failed to load stores:', e);
+    }
+  }
+
+  // ブランド読み込み
+  async function loadBrands() {
+    try {
+      const res = await fetch(`${API_BASE}/brands`);
+      brands = await res.json();
+    } catch (e) {
+      console.error('Failed to load brands:', e);
+    }
+  }
+
+  // クライアント読み込み
+  async function loadClients() {
+    try {
+      const res = await fetch(`${API_BASE}/clients`);
+      clients = await res.json();
+    } catch (e) {
+      console.error('Failed to load clients:', e);
     }
   }
 
@@ -228,7 +250,26 @@
     // 基本情報
     document.getElementById('report-store').value = report.store_id || '';
     document.getElementById('report-store-name').value = report.store_name || '';
-    document.getElementById('report-store-search').value = report.store_name || '';
+    const storeSearchInput = document.getElementById('report-store-search');
+    if (storeSearchInput) storeSearchInput.value = report.store_name || '';
+    
+    // ブランド情報を設定（店舗から取得）
+    if (report.store_id) {
+      const store = stores.find(s => (s.store_id || s.id) === report.store_id);
+      if (store) {
+        const brandId = store.brand_id || store.brandId;
+        if (brandId) {
+          const brandName = getBrandName(brandId);
+          if (brandName) {
+            document.getElementById('report-brand').value = brandId;
+            document.getElementById('report-brand-name').value = brandName;
+            const brandSearchInput = document.getElementById('report-brand-search');
+            if (brandSearchInput) brandSearchInput.value = brandName;
+          }
+        }
+      }
+    }
+    
     document.getElementById('report-date').value = report.cleaning_date || '';
     document.getElementById('report-start').value = report.cleaning_start_time || '';
     document.getElementById('report-end').value = report.cleaning_end_time || '';
@@ -616,23 +657,94 @@
     allCards.forEach(card => setupSectionDragAndDrop(card));
   }
 
+  // ヘルパー関数
+  function getBrandName(brandId) {
+    if (!brandId) return '';
+    const brand = brands.find(b => b.id === brandId || String(b.id) === String(brandId));
+    return brand ? (brand.name || '') : '';
+  }
+
   // イベントリスナー設定
   function setupEventListeners() {
+    // ブランド検索
+    const brandSearchInput = document.getElementById('report-brand-search');
+    const brandResults = document.getElementById('brand-search-results');
+    
+    function updateBrandDropdown() {
+      if (!brandSearchInput || !brandResults) return;
+      
+      const query = brandSearchInput.value.trim();
+      
+      const filtered = query.length === 0 
+        ? brands 
+        : brands.filter(brand => {
+            const name = (brand.name || '').toLowerCase();
+            return name.includes(query.toLowerCase());
+          });
+      
+      if (filtered.length === 0) {
+        brandResults.innerHTML = '<div class="store-search-item no-results">該当するブランドが見つかりません</div>';
+        brandResults.style.display = 'block';
+        return;
+      }
+      
+      brandResults.innerHTML = filtered.map(brand => {
+        const name = brand.name;
+        const id = brand.id;
+        return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`;
+      }).join('');
+      
+      brandResults.style.display = 'block';
+      
+      brandResults.querySelectorAll('.store-search-item').forEach(item => {
+        if (item.classList.contains('no-results')) return;
+        item.addEventListener('click', function() {
+          const id = this.dataset.id;
+          const name = this.dataset.name;
+          document.getElementById('report-brand').value = id;
+          document.getElementById('report-brand-name').value = name;
+          brandSearchInput.value = name;
+          brandResults.style.display = 'none';
+          
+          // ブランド選択時に店舗リストを更新
+          if (storeSearchInput) {
+            updateStoreDropdown();
+          }
+        });
+      });
+    }
+    
+    if (brandSearchInput) {
+      brandSearchInput.addEventListener('focus', updateBrandDropdown);
+      brandSearchInput.addEventListener('input', updateBrandDropdown);
+    }
+
     // 店舗検索
     const storeSearchInput = document.getElementById('report-store-search');
     const storeResults = document.getElementById('store-search-results');
     
     // ドロップダウンを表示・更新する関数
     function updateStoreDropdown() {
+      if (!storeSearchInput || !storeResults) return;
+      
       const query = storeSearchInput.value.trim();
+      const selectedBrandId = document.getElementById('report-brand')?.value;
       
       // 部分一致で検索（空文字の場合は全店舗を表示）
-      const filtered = query.length === 0 
+      let filtered = query.length === 0 
         ? stores 
         : stores.filter(store => {
             const name = (store.store_name || store.name || '').toLowerCase();
             return name.includes(query.toLowerCase());
           });
+      
+      // ブランドが選択されている場合はフィルタリング
+      if (selectedBrandId) {
+        filtered = filtered.filter(store => {
+          const storeBrandId = store.brand_id || store.brandId;
+          return storeBrandId === selectedBrandId || String(storeBrandId) === String(selectedBrandId);
+        });
+      }
       
       if (filtered.length === 0) {
         storeResults.innerHTML = '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
@@ -643,7 +755,8 @@
       storeResults.innerHTML = filtered.map(store => {
         const name = store.store_name || store.name;
         const id = store.store_id || store.id;
-        return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`;
+        const brandId = store.brand_id || store.brandId;
+        return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}" data-brand-id="${brandId || ''}">${escapeHtml(name)}</div>`;
       }).join('');
       
       storeResults.style.display = 'block';
@@ -654,28 +767,43 @@
         item.addEventListener('click', function() {
           const id = this.dataset.id;
           const name = this.dataset.name;
+          const brandId = this.dataset.brandId;
+          
           document.getElementById('report-store').value = id;
           document.getElementById('report-store-name').value = name;
           storeSearchInput.value = name;
           storeResults.style.display = 'none';
+          
+          // 店舗選択時にブランド名も自動設定
+          if (brandId && brandSearchInput) {
+            const brandName = getBrandName(brandId);
+            if (brandName) {
+              document.getElementById('report-brand').value = brandId;
+              document.getElementById('report-brand-name').value = brandName;
+              brandSearchInput.value = brandName;
+            }
+          }
         });
       });
     }
     
     // フォーカス時に全店舗を表示
-    storeSearchInput.addEventListener('focus', function() {
-      updateStoreDropdown();
-    });
-    
-    // 入力時にフィルタリング
-    storeSearchInput.addEventListener('input', function() {
-      updateStoreDropdown();
-    });
+    if (storeSearchInput) {
+      storeSearchInput.addEventListener('focus', function() {
+        updateStoreDropdown();
+      });
+      
+      // 入力時にフィルタリング
+      storeSearchInput.addEventListener('input', function() {
+        updateStoreDropdown();
+      });
+    }
     
     // 外部クリックで閉じる
     document.addEventListener('click', function(e) {
       if (!e.target.closest('.store-search-group')) {
-        storeResults.style.display = 'none';
+        if (storeResults) storeResults.style.display = 'none';
+        if (brandResults) brandResults.style.display = 'none';
       }
     });
 
@@ -712,10 +840,6 @@
         document.getElementById(`tab-${this.dataset.tab}`).classList.add('active');
       });
     });
-
-    // カメラ入力
-    document.getElementById('camera-input').addEventListener('change', handleCameraInput);
-    document.getElementById('file-input').addEventListener('change', handleFileInput);
 
     // 画像倉庫フィルター
     document.getElementById('library-date').addEventListener('change', loadWarehouseImages);
@@ -923,6 +1047,60 @@
       setupStockItemDragAndDrop(item);
     });
   }
+
+  // モーダル内の画像ストック選択を表示
+  function renderStockSelection() {
+    const selectionGrid = document.getElementById('stock-selection-grid');
+    if (!selectionGrid) return;
+
+    if (imageStock.length === 0) {
+      selectionGrid.innerHTML = `
+        <div class="image-stock-empty">
+          <i class="fas fa-box"></i>
+          <p>画像ストックが空です</p>
+          <small>画像ストックエリアから画像をアップロードしてください</small>
+        </div>
+      `;
+      return;
+    }
+
+    selectionGrid.innerHTML = imageStock.map((imageData) => {
+      const isSelected = selectedWarehouseImages[currentImageCategory]?.includes(imageData.blobUrl) || false;
+      return `
+        <div class="stock-selection-item ${isSelected ? 'selected' : ''}" 
+             data-image-id="${imageData.id}" 
+             data-blob-url="${imageData.blobUrl}"
+             onclick="toggleStockImageSelection('${imageData.id}', '${imageData.blobUrl}')">
+          <img src="${imageData.blobUrl}" alt="Stock image">
+          <div class="stock-selection-check">
+            <i class="fas fa-check-circle"></i>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ストック画像の選択をトグル
+  window.toggleStockImageSelection = function(imageId, blobUrl) {
+    const arr = selectedWarehouseImages[currentImageCategory] || [];
+    const idx = arr.indexOf(blobUrl);
+    
+    if (idx > -1) {
+      arr.splice(idx, 1);
+    } else {
+      arr.push(blobUrl);
+    }
+    
+    // UIを更新
+    const item = document.querySelector(`.stock-selection-item[data-image-id="${imageId}"]`);
+    if (item) {
+      if (arr.includes(blobUrl)) {
+        item.classList.add('selected');
+      } else {
+        item.classList.remove('selected');
+      }
+    }
+  };
 
   // ストックアイテムのドラッグ&ドロップ設定
   function setupStockItemDragAndDrop(item) {
@@ -1314,76 +1492,11 @@
     currentImageSection = sectionId;
     currentImageCategory = category;
     selectedWarehouseImages = { before: [], after: [] };
-    document.getElementById('upload-preview').innerHTML = '';
+    renderStockSelection();
     loadWarehouseImages();
     document.getElementById('warehouse-dialog').style.display = 'flex';
   };
 
-  // カメラ入力処理
-  async function handleCameraInput(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    await uploadAndPreview(file);
-    e.target.value = '';
-  }
-
-  // ファイル入力処理
-  async function handleFileInput(e) {
-    const files = Array.from(e.target.files);
-    for (const file of files) {
-      await uploadAndPreview(file);
-    }
-    e.target.value = '';
-  }
-
-  // アップロードとプレビュー
-  async function uploadAndPreview(file) {
-    const preview = document.getElementById('upload-preview');
-    const cleaningDate = document.getElementById('report-date').value || new Date().toISOString().split('T')[0];
-
-    // プレビュー表示（ローディング）
-    const itemId = `upload-${Date.now()}`;
-    const loadingHtml = `
-      <div class="upload-preview-item" id="${itemId}">
-        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;">
-          <i class="fas fa-spinner fa-spin" style="color:#FF679C;"></i>
-        </div>
-      </div>
-    `;
-    preview.insertAdjacentHTML('beforeend', loadingHtml);
-
-    try {
-      // Base64に変換
-      const base64 = await fileToBase64(file);
-
-      // S3にアップロード
-      const response = await fetch(`${REPORT_API}/staff/report-images`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: base64,
-          category: currentImageCategory,
-          cleaning_date: cleaningDate
-        })
-      });
-
-      if (!response.ok) throw new Error('Upload failed');
-      
-      const result = await response.json();
-      const imageUrl = result.image.url;
-
-      // プレビュー更新
-      document.getElementById(itemId).innerHTML = `<img src="${imageUrl}" alt="Preview">`;
-      
-      // 選択画像に追加
-      selectedWarehouseImages[currentImageCategory].push(imageUrl);
-
-    } catch (error) {
-      console.error('Upload error:', error);
-      document.getElementById(itemId).remove();
-      alert('画像のアップロードに失敗しました');
-    }
-  }
 
   // 画像倉庫読み込み
   async function loadWarehouseImages() {
@@ -1446,7 +1559,7 @@
   function saveSelectedImages() {
     const sectionId = currentImageSection;
     const category = currentImageCategory;
-    const images = selectedWarehouseImages[category];
+    const images = selectedWarehouseImages[category] || [];
 
     if (images.length === 0) {
       alert('画像を選択してください');
@@ -1454,18 +1567,45 @@
     }
 
     // セクションに画像を追加
-    sections[sectionId].photos[category] = [
-      ...sections[sectionId].photos[category],
-      ...images
-    ];
+    if (!sections[sectionId]) {
+      sections[sectionId] = { type: 'image', photos: { before: [], after: [] } };
+    }
+    
+    // ストック画像の場合は、imageDataオブジェクトとして保存
+    images.forEach(blobUrl => {
+      const imageData = imageStock.find(img => img.blobUrl === blobUrl);
+      if (imageData) {
+        // ストック画像の場合、imageDataオブジェクトとして保存
+        if (!sections[sectionId].photos[category]) {
+          sections[sectionId].photos[category] = [];
+        }
+        sections[sectionId].photos[category].push({
+          imageId: imageData.id,
+          blobUrl: imageData.blobUrl,
+          fileName: imageData.fileName
+        });
+      } else {
+        // 画像倉庫からの画像の場合、URL文字列として保存
+        if (!sections[sectionId].photos[category]) {
+          sections[sectionId].photos[category] = [];
+        }
+        sections[sectionId].photos[category].push(blobUrl);
+      }
+    });
 
     // UIに画像を追加
     const container = document.getElementById(`${sectionId}-${category}`);
     const addBtn = container.querySelector('.image-add-btn');
 
-    images.forEach(url => {
-      const thumb = createImageThumb(sectionId, category, url);
-      container.insertBefore(thumb, addBtn);
+    images.forEach(blobUrl => {
+      const imageData = imageStock.find(img => img.blobUrl === blobUrl);
+      if (imageData) {
+        const thumb = createImageThumb(sectionId, category, blobUrl, imageData.id);
+        container.insertBefore(thumb, addBtn);
+      } else {
+        const thumb = createImageThumb(sectionId, category, blobUrl);
+        container.insertBefore(thumb, addBtn);
+      }
     });
     
     // 画像リストにドラッグ&ドロップを設定
@@ -1746,6 +1886,8 @@
 
     const storeId = document.getElementById('report-store').value;
     const storeName = document.getElementById('report-store-name').value;
+    const brandId = document.getElementById('report-brand')?.value || '';
+    const brandName = document.getElementById('report-brand-name')?.value || '';
     const cleaningDate = document.getElementById('report-date').value;
 
     if (!storeId) {
@@ -1817,6 +1959,8 @@
     const reportData = {
       store_id: storeId,
       store_name: storeName,
+      brand_id: brandId,
+      brand_name: brandName,
       cleaning_date: cleaningDate,
       cleaning_start_time: document.getElementById('report-start').value || '',
       cleaning_end_time: document.getElementById('report-end').value || '',

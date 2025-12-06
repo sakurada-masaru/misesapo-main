@@ -35,9 +35,18 @@
     <form id="report-form" class="report-form">
     <!-- 基本情報（ピンク背景） -->
     <div class="report-header-section">
-      <div class="form-row">
+      <div class="form-row two-col">
         <div class="form-group store-search-group">
-          <label class="form-label">店舗 <span class="required">*</span></label>
+          <span class="form-label-inline">ブランド名 <span class="required">*</span></span>
+          <div class="store-search-wrapper">
+            <input type="text" id="report-brand-search" class="form-input" placeholder="ブランド名で検索..." autocomplete="off">
+            <input type="hidden" id="report-brand" name="brand_id">
+            <input type="hidden" id="report-brand-name" name="brand_name">
+            <div id="brand-search-results" class="store-search-results" style="display: none;"></div>
+          </div>
+        </div>
+        <div class="form-group store-search-group">
+          <span class="form-label-inline">店舗名 <span class="required">*</span></span>
           <div class="store-search-wrapper">
             <input type="text" id="report-store-search" class="form-input" placeholder="店舗名で検索..." autocomplete="off">
             <input type="hidden" id="report-store" name="store_id">
@@ -46,19 +55,17 @@
           </div>
         </div>
       </div>
-      <div class="form-row">
+      <div class="form-row three-col">
         <div class="form-group">
-          <label class="form-label">清掃日 <span class="required">*</span></label>
+          <span class="form-label-inline">清掃日 <span class="required">*</span></span>
           <input type="date" id="report-date" name="cleaning_date" class="form-input" required>
         </div>
-      </div>
-      <div class="form-row two-col">
         <div class="form-group">
-          <label class="form-label">開始</label>
+          <span class="form-label-inline">開始</span>
           <input type="time" id="report-start" name="cleaning_start_time" class="form-input">
         </div>
         <div class="form-group">
-          <label class="form-label">終了</label>
+          <span class="form-label-inline">終了</span>
           <input type="time" id="report-end" name="cleaning_end_time" class="form-input">
         </div>
       </div>
@@ -158,29 +165,19 @@
       </div>
       <div class="modal-body">
         <div class="warehouse-tabs">
-          <button type="button" class="tab-btn active" data-tab="upload">
-            <i class="fas fa-camera"></i> 撮影・アップ
+          <button type="button" class="tab-btn active" data-tab="stock">
+            <i class="fas fa-box"></i> 画像ストック
           </button>
           <button type="button" class="tab-btn" data-tab="library">
             <i class="fas fa-images"></i> 画像倉庫
           </button>
         </div>
         
-        <!-- 撮影・アップロードタブ -->
-        <div id="tab-upload" class="tab-content active">
-          <div class="upload-area">
-            <label class="upload-btn">
-              <input type="file" accept="image/*" capture="environment" id="camera-input" style="display:none;">
-              <i class="fas fa-camera"></i>
-              <span>カメラで撮影</span>
-            </label>
-            <label class="upload-btn">
-              <input type="file" accept="image/*" multiple id="file-input" style="display:none;">
-              <i class="fas fa-folder-open"></i>
-              <span>ファイルから選択</span>
-            </label>
+        <!-- 画像ストックタブ -->
+        <div id="tab-stock" class="tab-content active">
+          <div class="stock-selection-grid" id="stock-selection-grid">
+            <p class="loading">読み込み中...</p>
           </div>
-          <div class="upload-preview" id="upload-preview"></div>
         </div>
         
         <!-- 画像倉庫タブ -->
