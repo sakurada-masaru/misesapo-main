@@ -2463,10 +2463,10 @@
             const uploadedPhotos = {};
             
             if (imageType === 'completed') {
-              uploadedPhotos.completed = await uploadSectionImages(s.photos.completed || [], cleaningDate);
+              uploadedPhotos.completed = await uploadSectionImages(s.photos.completed || [], cleaningDate, 'completed');
             } else {
-              uploadedPhotos.before = await uploadSectionImages(s.photos.before || [], cleaningDate);
-              uploadedPhotos.after = await uploadSectionImages(s.photos.after || [], cleaningDate);
+              uploadedPhotos.before = await uploadSectionImages(s.photos.before || [], cleaningDate, 'before');
+              uploadedPhotos.after = await uploadSectionImages(s.photos.after || [], cleaningDate, 'after');
             }
             
           return {
