@@ -222,35 +222,93 @@
     if (!mypageLink) return;
 
     try {
+      let userId = null;
       let email = null;
 
-      // Cognito認証からメールアドレスを取得
-      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+      // まずローカルストレージのcognito_userからIDを取得（最優先）
+      try {
+        const storedCognitoUser = localStorage.getItem('cognito_user');
+        if (storedCognitoUser) {
+          const parsedUser = JSON.parse(storedCognitoUser);
+          if (parsedUser.id) {
+            userId = parsedUser.id;
+            console.log('[AdminSidebar] Using ID from stored cognito_user:', userId);
+          } else if (parsedUser.email) {
+            email = parsedUser.email;
+            console.log('[AdminSidebar] Using email from stored cognito_user:', email);
+          }
+        }
+      } catch (e) {
+        console.warn('[AdminSidebar] Error parsing stored cognito_user:', e);
+      }
+
+      // Cognito認証からIDまたはメールアドレスを取得
+      if (!userId && !email && window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
         const cognitoUser = await window.CognitoAuth.getCurrentUser();
-        if (cognitoUser && cognitoUser.email) {
-          email = cognitoUser.email;
+        if (cognitoUser) {
+          if (cognitoUser.id) {
+            userId = cognitoUser.id;
+            console.log('[AdminSidebar] Using ID from Cognito:', userId);
+          } else if (cognitoUser.email) {
+            email = cognitoUser.email;
+            console.log('[AdminSidebar] Using email from Cognito:', email);
+          }
         }
       }
 
-      // Firebase認証からメールアドレスを取得（フォールバック）
-      if (!email && window.Auth && window.Auth.getCurrentUser) {
+      // Firebase認証からIDまたはメールアドレスを取得（フォールバック）
+      if (!userId && !email && window.Auth && window.Auth.getCurrentUser) {
         const user = window.Auth.getCurrentUser();
-        if (user && user.email) {
-          email = user.email;
+        if (user) {
+          if (user.id) {
+            userId = user.id;
+          } else if (user.email) {
+            email = user.email;
+          }
         }
       }
 
       // Auth.getAuthDataから取得（追加のフォールバック）
-      if (!email && window.Auth && window.Auth.getAuthData) {
+      if (!userId && !email && window.Auth && window.Auth.getAuthData) {
         const authData = window.Auth.getAuthData();
         if (authData) {
-          email = authData.user?.email || authData.email;
+          if (authData.user?.id) {
+            userId = authData.user.id;
+          } else if (authData.user?.email || authData.email) {
+            email = authData.user?.email || authData.email;
+          }
         }
       }
 
-      if (email) {
+      // メールアドレスからIDを取得（IDが取得できなかった場合）
+      if (!userId && email) {
+        try {
+          // ローカルのworkers.jsonから検索
+          const localResponse = await fetch('/data/workers.json');
+          if (localResponse.ok) {
+            const localWorkers = await localResponse.json();
+            if (Array.isArray(localWorkers) && localWorkers.length > 0) {
+              const matchingUser = localWorkers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+              if (matchingUser && matchingUser.id) {
+                userId = matchingUser.id;
+                console.log('[AdminSidebar] Found ID from local workers.json:', userId);
+              }
+            }
+          }
+        } catch (e) {
+          console.log('[AdminSidebar] Could not fetch local workers.json, will use email');
+        }
+      }
+
+      // リンクを設定（IDを優先、なければメールアドレス）
+      if (userId) {
+        mypageLink.href = `/staff/mypage?id=${encodeURIComponent(userId)}`;
+        mypageLink.style.display = 'flex';
+        console.log('[AdminSidebar] Mypage link set with ID:', userId);
+      } else if (email) {
         mypageLink.href = `/staff/mypage?email=${encodeURIComponent(email)}`;
         mypageLink.style.display = 'flex';
+        console.log('[AdminSidebar] Mypage link set with email:', email);
       }
     } catch (error) {
       console.error('Error setting up mypage link:', error);
