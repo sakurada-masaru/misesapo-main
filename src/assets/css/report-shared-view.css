@@ -441,8 +441,28 @@ body {
         grid-template-columns: 1fr;
         gap: 8px;
     }
-    .satisfaction-form {
-        padding: 16px;
+    .approval-section {
+        padding: 24px 16px;
+    }
+    .approval-title {
+        font-size: 1.1rem;
+    }
+    .approval-message {
+        margin-bottom: 20px;
+    }
+    .approval-message p {
+        font-size: 0.9rem;
+    }
+    .approval-button {
+        padding: 12px 24px;
+        font-size: 1rem;
+    }
+    .approval-dialog-content {
+        padding: 32px 24px;
+        max-width: 85%;
+    }
+    .approval-dialog-message {
+        font-size: 0.95rem;
     }
     .image-modal-content {
         max-width: 95%;
