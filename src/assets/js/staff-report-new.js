@@ -1069,13 +1069,13 @@
           const name = this.dataset.name;
           const brandId = this.dataset.brandId;
           
-          document.getElementById('report-store').value = id;
-          document.getElementById('report-store-name').value = name;
-          storeSearchInput.value = name;
+          document.getElementById('report-store').value = id || '';
+          document.getElementById('report-store-name').value = name || '';
+          storeSearchInput.value = name || '';
           closeStoreModal();
           
-          // 店舗選択時にブランド名も自動設定
-          if (brandId && brandSearchInput) {
+          // 店舗選択時にブランド名も自動設定（未設定の場合は設定しない）
+          if (id && brandId && brandSearchInput) {
             const brandName = getBrandName(brandId);
             if (brandName) {
               document.getElementById('report-brand').value = brandId;
