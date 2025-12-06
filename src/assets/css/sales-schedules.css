@@ -124,22 +124,23 @@
 /* フィルター */
 .filter-section {
   background: #fff;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 20px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .filter-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
+  gap: 8px;
+  align-items: center;
 }
 
 .filter-group {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 6px;
   flex: 1;
   min-width: 120px;
@@ -149,15 +150,18 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: #6b7280;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .filter-group input,
 .filter-group select {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
-  font-size: 0.9rem;
-  width: 100%;
+  font-size: 0.85rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .filter-group input:focus,
@@ -167,8 +171,9 @@
 }
 
 #reset-filters {
-  align-self: flex-end;
   white-space: nowrap;
+  padding: 6px 12px;
+  font-size: 0.85rem;
 }
 
 /* カードリスト（スマホ向け） */
@@ -1007,8 +1012,14 @@
     font-size: 1.25rem;
   }
 
+  .filter-section {
+    padding: 8px 10px;
+    margin-bottom: 12px;
+  }
+
   .filter-row {
     flex-direction: column;
+    gap: 6px;
   }
 
   .filter-group {
@@ -1017,8 +1028,8 @@
   }
 
   #reset-filters {
-    align-self: stretch;
     width: 100%;
+    padding: 6px 10px;
   }
 
   .new-project-alert {
