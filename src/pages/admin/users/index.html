@@ -42,10 +42,31 @@
       </div>
     </div>
     <div class="stat-mini">
+      <div class="stat-mini-icon teal"><i class="fas fa-briefcase"></i></div>
+      <div class="stat-mini-body">
+        <div class="stat-mini-value" id="stat-office">-</div>
+        <div class="stat-mini-label">事務</div>
+      </div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-icon indigo"><i class="fas fa-code"></i></div>
+      <div class="stat-mini-body">
+        <div class="stat-mini-value" id="stat-developer">-</div>
+        <div class="stat-mini-label">開発者</div>
+      </div>
+    </div>
+    <div class="stat-mini">
       <div class="stat-mini-icon purple"><i class="fas fa-user-shield"></i></div>
       <div class="stat-mini-body">
         <div class="stat-mini-value" id="stat-admin">-</div>
         <div class="stat-mini-label">管理者</div>
+      </div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-icon pink"><i class="fas fa-cog"></i></div>
+      <div class="stat-mini-body">
+        <div class="stat-mini-value" id="stat-operation">-</div>
+        <div class="stat-mini-label">運営</div>
       </div>
     </div>
   </div>
@@ -447,7 +468,7 @@
     /* 統計 */
     .stats-row {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
@@ -1096,7 +1117,10 @@
     document.getElementById('stat-total').textContent = allUsers.length;
     document.getElementById('stat-staff').textContent = allUsers.filter(u => u.role === 'staff').length;
     document.getElementById('stat-sales').textContent = allUsers.filter(u => u.role === 'sales').length;
-    document.getElementById('stat-admin').textContent = allUsers.filter(u => u.role === 'admin' || u.role === 'other').length;
+    document.getElementById('stat-office').textContent = allUsers.filter(u => u.role === 'office').length;
+    document.getElementById('stat-developer').textContent = allUsers.filter(u => u.role === 'developer').length;
+    document.getElementById('stat-admin').textContent = allUsers.filter(u => u.role === 'admin').length;
+    document.getElementById('stat-operation').textContent = allUsers.filter(u => u.role === 'operation').length;
   }
 
   function filterAndRender() {
