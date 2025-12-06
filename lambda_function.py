@@ -1340,7 +1340,7 @@ def verify_firebase_token(id_token):
         name = payload.get('name') or payload.get('given_name', '') or email.split('@')[0] if email else ''
         
         # ロールを取得（カスタムクレームから）
-        role = payload.get('custom:role') or payload.get('role', 'staff')
+        role = payload.get('custom:role') or payload.get('role', 'cleaning')
         
         return {
             'uid': uid,
@@ -1620,7 +1620,7 @@ def create_report(event, headers):
                     'verified': True,
                     'uid': 'dev-user',
                     'email': 'dev@example.com',
-                    'role': 'staff'
+                    'role': 'cleaning'
                 }
             else:
                 return {
@@ -3609,7 +3609,7 @@ def create_cognito_user(event, headers):
         email = body_json.get('email')
         password = body_json.get('password')
         name = body_json.get('name', '')
-        role = body_json.get('role', 'staff')
+        role = body_json.get('role', 'cleaning')
         department = body_json.get('department', '')
         
         if not email or not password:
@@ -3741,8 +3741,8 @@ def create_worker(event, headers):
             'name': body_json.get('name', ''),
             'email': email,
             'phone': body_json.get('phone', ''),
-            'role': body_json.get('role', 'staff'),
-            'role_code': body_json.get('role_code', '99'),
+            'role': body_json.get('role', 'cleaning'),
+            'role_code': body_json.get('role_code', '4'),
             'department': body_json.get('department', ''),
             'status': body_json.get('status', 'active'),
             'created_at': body_json.get('created_at', now),
@@ -3750,7 +3750,7 @@ def create_worker(event, headers):
         }
         
         # role_codeからroleを設定（roleが指定されていない場合）
-        if not worker_data['role'] or worker_data['role'] == 'staff':
+        if not worker_data['role'] or worker_data['role'] == 'cleaning':
             if worker_data['role_code'] == '1':
                 worker_data['role'] = 'admin'
             elif worker_data['role_code'] == '2':
@@ -3758,23 +3758,35 @@ def create_worker(event, headers):
             elif worker_data['role_code'] == '3':
                 worker_data['role'] = 'office'
             elif worker_data['role_code'] == '4':
-                worker_data['role'] = 'staff'
+                worker_data['role'] = 'cleaning'
             elif worker_data['role_code'] == '5':
-                worker_data['role'] = 'developer'
+                worker_data['role'] = 'development'
             elif worker_data['role_code'] == '6':
                 worker_data['role'] = 'designer'
             elif worker_data['role_code'] == '7':
                 worker_data['role'] = 'general_affairs'
             elif worker_data['role_code'] == '8':
-                worker_data['role'] = 'operation'
+                worker_data['role'] = 'director'
             elif worker_data['role_code'] == '9':
                 worker_data['role'] = 'contractor'
             elif worker_data['role_code'] == '10':
                 worker_data['role'] = 'accounting'
             elif worker_data['role_code'] == '11':
                 worker_data['role'] = 'human_resources'
+            elif worker_data['role_code'] == '12':
+                worker_data['role'] = 'special_advisor'
+            elif worker_data['role_code'] == '13':
+                worker_data['role'] = 'field_sales'
+            elif worker_data['role_code'] == '14':
+                worker_data['role'] = 'inside_sales'
+            elif worker_data['role_code'] == '15':
+                worker_data['role'] = 'mechanic'
+            elif worker_data['role_code'] == '16':
+                worker_data['role'] = 'engineer'
+            elif worker_data['role_code'] == '17':
+                worker_data['role'] = 'part_time'
             else:
-                worker_data['role'] = 'staff'
+                worker_data['role'] = 'cleaning'
         
         # DynamoDBに保存
         WORKERS_TABLE.put_item(Item=worker_data)
@@ -7009,7 +7021,7 @@ def get_announcement_detail(announcement_id, event, headers):
         all_staff = []
         try:
             staff_response = WORKERS_TABLE.scan(
-                FilterExpression=Attr('role_code').eq('99')  # 清掃員
+                FilterExpression=Attr('role_code').eq('4')  # 清掃
             )
             all_staff = staff_response.get('Items', [])
         except Exception as e:
