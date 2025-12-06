@@ -79,6 +79,8 @@ body {
     font-weight: 600;
     color: #555;
     font-size: 1rem;
+    text-align: center;
+    width: 100%;
 }
 .items-list-items {
     display: flex;
@@ -97,7 +99,7 @@ body {
 }
 .cleaning-section {
     padding: 16px;
-    background: #f8f9fa;
+    background: #FFE5F0;
     border-bottom: 1px solid #eee;
     margin-bottom: 8px;
 }
@@ -113,10 +115,12 @@ body {
     margin-bottom: 20px;
 }
 .item-title {
-    font-size: 1.4rem;
-    font-weight: 600;
+    font-size: 1.5rem;
+    font-weight: 700;
     color: #333 !important;
     margin: 0;
+    text-align: center;
+    width: 100%;
 }
 .item-details {
     display: flex;
