@@ -141,7 +141,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
   min-width: 120px;
 }
@@ -152,6 +152,8 @@
   color: #6b7280;
   white-space: nowrap;
   flex-shrink: 0;
+  width: 60px;
+  text-align: right;
 }
 
 .filter-group input,
@@ -162,6 +164,7 @@
   font-size: 0.85rem;
   flex: 1;
   min-width: 0;
+  width: 100%;
 }
 
 .filter-group input:focus,
@@ -1025,6 +1028,10 @@
   .filter-group {
     width: 100%;
     min-width: 100%;
+  }
+
+  .filter-group label {
+    width: 70px;
   }
 
   #reset-filters {
