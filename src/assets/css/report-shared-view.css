@@ -437,6 +437,9 @@ body {
         grid-template-columns: 1fr;
         gap: 8px;
     }
+    .thanks-image-wrapper {
+        padding: 24px 16px;
+    }
     .approval-section {
         padding: 24px 16px;
     }
