@@ -1,6 +1,9 @@
 // APIエンドポイント（将来的に実装）
 const API_BASE_URL = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
 
+// デフォルト画像（画像がない場合）
+const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg';
+
 // URLからレポートIDを取得
 function getReportIdFromUrl() {
     const path = window.location.pathname;
@@ -180,22 +183,30 @@ function renderReport(report) {
                      ${beforePhotos.map((url, index) => `
                        <div class="image-item" data-image-url="${url}">
                          <img src="${url}" alt="${beforeLabel}" loading="lazy" 
-                              onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像エラー%3C/text%3E%3C/svg%3E';" />
+                              onerror="this.onerror=null; this.src='${DEFAULT_NO_PHOTO_IMAGE}';" />
                        </div>
                      `).join('')}
                    </div>`
-                : '<p class="no-photo">写真なし</p>';
+                : `<div class="image-list">
+                     <div class="image-item">
+                       <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真なし" class="default-no-photo-image" />
+                     </div>
+                   </div>`;
             
             const afterPhotosHtml = afterPhotos.length > 0
                 ? `<div class="image-list">
                      ${afterPhotos.map((url, index) => `
                        <div class="image-item" data-image-url="${url}">
                          <img src="${url}" alt="${afterLabel}" loading="lazy" 
-                              onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3E画像エラー%3C/text%3E%3C/svg%3E';" />
+                              onerror="this.onerror=null; this.src='${DEFAULT_NO_PHOTO_IMAGE}';" />
                        </div>
                      `).join('')}
                    </div>`
-                : '<p class="no-photo">写真なし</p>';
+                : `<div class="image-list">
+                     <div class="image-item">
+                       <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真なし" class="default-no-photo-image" />
+                     </div>
+                   </div>`;
             
             return `
               <section class="image-section">
