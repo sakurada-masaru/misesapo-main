@@ -89,7 +89,16 @@
 
   // デフォルト日付設定
   function setDefaultDate() {
-    document.getElementById('report-date').value = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('report-date');
+    if (dateInput) {
+      dateInput.value = new Date().toISOString().split('T')[0];
+      // ラベルを非表示にする
+      const label = dateInput.nextElementSibling;
+      if (label && label.classList.contains('form-input-label')) {
+        label.style.opacity = '0';
+      }
+      dateInput.classList.add('has-value');
+    }
   }
 
   // タブ切り替え設定
@@ -851,6 +860,39 @@
 
     // 画像ストック機能
     setupImageStock();
+    
+    // 日付・時刻フィールドのラベル表示制御
+    setupDateTimeLabels();
+  }
+  
+  // 日付・時刻フィールドのラベル表示制御
+  function setupDateTimeLabels() {
+    const dateInput = document.getElementById('report-date');
+    const startInput = document.getElementById('report-start');
+    const endInput = document.getElementById('report-end');
+    
+    function updateLabel(input) {
+      const label = input.nextElementSibling;
+      if (label && label.classList.contains('form-input-label')) {
+        if (input.value) {
+          label.style.opacity = '0';
+          input.classList.add('has-value');
+        } else {
+          label.style.opacity = '0.8';
+          input.classList.remove('has-value');
+        }
+      }
+    }
+    
+    [dateInput, startInput, endInput].forEach(input => {
+      if (input) {
+        input.addEventListener('change', () => updateLabel(input));
+        input.addEventListener('input', () => updateLabel(input));
+        input.addEventListener('blur', () => updateLabel(input));
+        // 初期状態を設定
+        updateLabel(input);
+      }
+    });
   }
 
   // 画像ストック機能の設定

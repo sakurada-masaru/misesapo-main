@@ -55,13 +55,22 @@
       </div>
       <div class="form-row three-col-inline">
         <div class="form-group">
-          <input type="date" id="report-date" name="cleaning_date" class="form-input" placeholder="清掃日 *" required>
+          <div class="form-input-wrapper">
+            <input type="date" id="report-date" name="cleaning_date" class="form-input date-time-input" required>
+            <label for="report-date" class="form-input-label">清掃日 <span class="required">*</span></label>
+          </div>
         </div>
         <div class="form-group">
-          <input type="time" id="report-start" name="cleaning_start_time" class="form-input" placeholder="開始時刻">
+          <div class="form-input-wrapper">
+            <input type="time" id="report-start" name="cleaning_start_time" class="form-input date-time-input">
+            <label for="report-start" class="form-input-label">開始時刻</label>
+          </div>
         </div>
         <div class="form-group">
-          <input type="time" id="report-end" name="cleaning_end_time" class="form-input" placeholder="終了時刻">
+          <div class="form-input-wrapper">
+            <input type="time" id="report-end" name="cleaning_end_time" class="form-input date-time-input">
+            <label for="report-end" class="form-input-label">終了時刻</label>
+          </div>
         </div>
       </div>
     </div>
