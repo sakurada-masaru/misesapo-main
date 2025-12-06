@@ -10,6 +10,14 @@
 <script src="/js/client_auth.js"></script>
 <script src="/js/admin-sidebar.js"></script>
 
+<!-- モバイルメニューボタン -->
+<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+  <i class="fas fa-bars"></i>
+</button>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
 <!-- サイドバー -->
 <aside class="sidebar" id="admin-sidebar">
   <div class="sidebar-header">
@@ -817,6 +825,14 @@
       margin-top: 12px;
     }
 
+    /* モバイル対応のユーティリティクラス */
+    .stack-on-sm {
+      display: block;
+    }
+    .hide-sm {
+      display: block;
+    }
+    
     @media (max-width: 767.98px) {
       .staff-mypage.main-content {
         margin-left: 0 !important;
@@ -825,25 +841,143 @@
       
       .staff-mypage {
         padding: 12px;
+        min-height: 100dvh;
       }
+      
       .mypage-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
       }
+      
+      .section {
+        padding: 16px;
+        border-radius: 8px;
+      }
+      
+      .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+      }
+      
       .attendance-today-grid {
         flex-direction: column;
         gap: 16px;
         align-items: stretch;
         text-align: center;
+        padding: 16px;
       }
+      
       .attendance-status-box {
         justify-content: center;
       }
+      
+      .status-time {
+        font-size: 1.1rem;
+      }
+      
       .btn-attendance {
         width: 100%;
         justify-content: center;
+        padding: 14px 24px;
+        font-size: 0.9rem;
       }
+      
       .attendance-summary {
         grid-template-columns: 1fr;
+      }
+      
+      .summary-item {
+        padding: 12px 16px;
+      }
+      
+      .summary-value {
+        font-size: 1.1rem;
+      }
+      
+      .break-section {
+        padding: 12px 16px;
+      }
+      
+      .break-actions {
+        flex-direction: column;
+      }
+      
+      .break-actions .btn {
+        width: 100%;
+      }
+      
+      .todo-card {
+        padding: 12px;
+      }
+      
+      .todo-input-wrapper {
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .todo-input {
+        width: 100%;
+      }
+      
+      .todo-filters {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      
+      .filter-btn {
+        flex: 1;
+        min-width: calc(33.333% - 4px);
+        padding: 8px 12px;
+        font-size: 0.7rem;
+      }
+      
+      .announcements-card {
+        padding: 12px;
+      }
+      
+      .announcement-item {
+        padding: 12px;
+        margin-bottom: 8px;
+      }
+      
+      .announcement-title {
+        font-size: 0.95rem;
+      }
+      
+      .announcement-content {
+        font-size: 0.85rem;
+      }
+      
+      .card {
+        padding: 12px;
+      }
+      
+      .stack-on-sm {
+        display: block;
+      }
+      
+      .hide-sm {
+        display: none !important;
+      }
+      
+      .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 10px 0;
+      }
+      
+      .info-item-label {
+        font-size: 0.8rem;
+      }
+      
+      .info-item-value {
+        font-size: 0.9rem;
+      }
+      
+      .empty-state {
+        padding: 24px 16px;
+        font-size: 0.85rem;
       }
     }
   </style>

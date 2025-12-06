@@ -90,20 +90,96 @@
   function initSidebarToggle() {
     const sidebar = document.getElementById('admin-sidebar');
     const sidebarToggle = document.getElementById('sidebar-toggle');
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
     
-    if (!sidebar || !sidebarToggle) return;
+    if (!sidebar) return;
 
-    // ローカルストレージから状態を読み込み
-    const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-    if (isCollapsed) {
-      sidebar.classList.add('collapsed');
+    // ローカルストレージから状態を読み込み（PCのみ）
+    if (window.innerWidth > 768) {
+      const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+      if (isCollapsed) {
+        sidebar.classList.add('collapsed');
+      }
     }
 
-    // トグルボタンのイベント
-    sidebarToggle.addEventListener('click', function() {
-      sidebar.classList.toggle('collapsed');
-      const collapsed = sidebar.classList.contains('collapsed');
-      localStorage.setItem('sidebar-collapsed', collapsed.toString());
+    // PC用トグルボタンのイベント
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        const collapsed = sidebar.classList.contains('collapsed');
+        localStorage.setItem('sidebar-collapsed', collapsed.toString());
+      });
+    }
+
+    // モバイルメニューボタンのイベント
+    if (mobileMenuButton) {
+      mobileMenuButton.addEventListener('click', function() {
+        sidebar.classList.toggle('open');
+        if (sidebarOverlay) {
+          sidebarOverlay.classList.toggle('active');
+        }
+        // ボタンのアイコンを変更
+        const icon = mobileMenuButton.querySelector('i');
+        if (icon) {
+          if (sidebar.classList.contains('open')) {
+            icon.className = 'fas fa-times';
+          } else {
+            icon.className = 'fas fa-bars';
+          }
+        }
+      });
+    }
+
+    // オーバーレイクリックでサイドバーを閉じる
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', function() {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+        const icon = mobileMenuButton?.querySelector('i');
+        if (icon) {
+          icon.className = 'fas fa-bars';
+        }
+      });
+    }
+
+    // サイドバー内のリンククリックでモバイルサイドバーを閉じる
+    if (window.innerWidth <= 768) {
+      const navItems = sidebar.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        item.addEventListener('click', function() {
+          sidebar.classList.remove('open');
+          if (sidebarOverlay) {
+            sidebarOverlay.classList.remove('active');
+          }
+          const icon = mobileMenuButton?.querySelector('i');
+          if (icon) {
+            icon.className = 'fas fa-bars';
+          }
+        });
+      });
+    }
+
+    // ウィンドウリサイズ時の処理
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function() {
+        if (window.innerWidth > 768) {
+          // PC表示に切り替え
+          sidebar.classList.remove('open');
+          if (sidebarOverlay) {
+            sidebarOverlay.classList.remove('active');
+          }
+          const icon = mobileMenuButton?.querySelector('i');
+          if (icon) {
+            icon.className = 'fas fa-bars';
+          }
+        } else {
+          // モバイル表示に切り替え
+          sidebar.classList.remove('collapsed');
+        }
+      }, 250);
     });
   }
 

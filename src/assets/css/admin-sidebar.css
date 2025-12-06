@@ -235,23 +235,86 @@
   padding-right: 0 !important;
 }
 
+/* サイドバーオーバーレイ（モバイル用） */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
+}
+
+/* モバイルメニューボタン */
+.mobile-menu-button {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 101;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  color: #111827;
+  font-size: 1.2rem;
+}
+
+.mobile-menu-button:hover {
+  background: #f3f4f6;
+}
+
 /* レスポンシブ */
 @media (max-width: 768px) {
+  .mobile-menu-button {
+    display: flex;
+  }
+  
   .sidebar {
     transform: translateX(-100%);
+    width: var(--sidebar-width);
+    z-index: 100;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
   }
   
   .sidebar.collapsed {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.open.collapsed {
     transform: translateX(0);
-    width: var(--sidebar-width-collapsed);
+    width: var(--sidebar-width);
   }
   
   .main-content {
-    margin-left: 0;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
   
-  .sidebar.collapsed ~ .main-content {
-    margin-left: var(--sidebar-width-collapsed);
+  .sidebar-toggle {
+    display: none;
+  }
+  
+  .sidebar.open ~ .main-content,
+  .sidebar.open + .main-content {
+    margin-left: 0 !important;
   }
 }
 
