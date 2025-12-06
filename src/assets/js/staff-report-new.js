@@ -19,9 +19,16 @@
   let currentImageSection = null;
   let currentImageCategory = null;
 
+  // 画像ストック用
+  let imageStock = []; // ローカル保存された画像データ配列 { id, file, blobUrl, fileName, uploaded: false }
+  const STOCK_DB_NAME = 'report-image-stock';
+  const STOCK_DB_VERSION = 1;
+
   // 初期化
   document.addEventListener('DOMContentLoaded', async () => {
     await Promise.all([loadStores(), loadServiceItems()]);
+    await initImageStockDB();
+    await loadImageStockFromDB();
     setupEventListeners();
     setupTabs();
     setDefaultDate();
@@ -316,9 +323,9 @@
               <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
               <div class="image-list" id="${sectionId}-before">
                 ${(section.photos?.before || []).map(url => `
-                  <div class="image-thumb">
-                    <img src="${url}" alt="Before">
-                    <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'before', '${url}', this)">
+                  <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="before" data-image-url="${url}">
+                    <img src="${url}" alt="Before" draggable="false">
+                    <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'before', '${url}', '', this)">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
@@ -333,9 +340,9 @@
               <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
               <div class="image-list" id="${sectionId}-after">
                 ${(section.photos?.after || []).map(url => `
-                  <div class="image-thumb">
-                    <img src="${url}" alt="After">
-                    <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'after', '${url}', this)">
+                  <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="after" data-image-url="${url}">
+                    <img src="${url}" alt="After" draggable="false">
+                    <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'after', '${url}', '', this)">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
@@ -352,7 +359,23 @@
     `;
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
-    if (newCard) setupSectionDragAndDrop(newCard);
+    if (newCard) {
+      setupSectionDragAndDrop(newCard);
+      // 画像リストにドラッグ&ドロップを設定
+      const beforeList = document.getElementById(`${sectionId}-before`);
+      const afterList = document.getElementById(`${sectionId}-after`);
+      if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before');
+      if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after');
+      // 既存の画像サムネイルにドラッグ&ドロップを設定
+      newCard.querySelectorAll('.image-thumb').forEach(thumb => {
+        const thumbSectionId = thumb.dataset.sectionId;
+        const thumbCategory = thumb.dataset.category;
+        const thumbUrl = thumb.dataset.imageUrl;
+        if (thumbSectionId && thumbCategory && thumbUrl) {
+          setupImageThumbDragAndDrop(thumb, thumbSectionId, thumbCategory, thumbUrl);
+        }
+      });
+    }
   }
 
   function addCommentSectionWithData(section) {
@@ -701,7 +724,409 @@
 
     // 画像選択確定
     document.getElementById('save-images-btn').addEventListener('click', saveSelectedImages);
+
+    // 画像ストック機能
+    setupImageStock();
   }
+
+  // 画像ストック機能の設定
+  function setupImageStock() {
+    const stockFileInput = document.getElementById('stock-file-input');
+    const stockGrid = document.getElementById('image-stock-grid');
+    const clearStockBtn = document.getElementById('clear-stock-btn');
+
+    // ファイル選択
+    stockFileInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+
+      await addImagesToStock(files);
+      e.target.value = ''; // リセット
+    });
+
+    // すべて削除
+    clearStockBtn.addEventListener('click', async () => {
+      if (confirm('画像ストック内のすべての画像を削除しますか？')) {
+        // Blob URLを解放
+        imageStock.forEach(item => {
+          if (item.blobUrl) {
+            URL.revokeObjectURL(item.blobUrl);
+          }
+        });
+        
+        imageStock = [];
+        await clearImageStockDB();
+        renderImageStock();
+      }
+    });
+
+    // 画像ストックグリッドのドロップゾーン設定
+    setupImageStockDropZone(stockGrid);
+  }
+
+  // IndexedDBの初期化
+  let stockDB = null;
+  async function initImageStockDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(STOCK_DB_NAME, STOCK_DB_VERSION);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        stockDB = request.result;
+        resolve();
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('images')) {
+          db.createObjectStore('images', { keyPath: 'id' });
+        }
+      };
+    });
+  }
+
+  // IndexedDBから画像ストックを読み込み
+  async function loadImageStockFromDB() {
+    if (!stockDB) return;
+    
+    return new Promise((resolve, reject) => {
+      const transaction = stockDB.transaction(['images'], 'readonly');
+      const store = transaction.objectStore('images');
+      const request = store.getAll();
+      
+      request.onsuccess = () => {
+        imageStock = request.result || [];
+        // Blob URLを再生成
+        imageStock.forEach(item => {
+          if (item.blobData && !item.blobUrl) {
+            item.blobUrl = URL.createObjectURL(new Blob([item.blobData], { type: item.fileType || 'image/jpeg' }));
+          }
+        });
+        renderImageStock();
+        resolve();
+      };
+      
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  // IndexedDBに画像を保存
+  async function saveImageToDB(imageData) {
+    if (!stockDB) return;
+    
+    return new Promise((resolve, reject) => {
+      const transaction = stockDB.transaction(['images'], 'readwrite');
+      const store = transaction.objectStore('images');
+      const request = store.put(imageData);
+      
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  // IndexedDBから画像を削除
+  async function deleteImageFromDB(imageId) {
+    if (!stockDB) return;
+    
+    return new Promise((resolve, reject) => {
+      const transaction = stockDB.transaction(['images'], 'readwrite');
+      const store = transaction.objectStore('images');
+      const request = store.delete(imageId);
+      
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  // IndexedDBの全画像を削除
+  async function clearImageStockDB() {
+    if (!stockDB) return;
+    
+    return new Promise((resolve, reject) => {
+      const transaction = stockDB.transaction(['images'], 'readwrite');
+      const store = transaction.objectStore('images');
+      const request = store.clear();
+      
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  // 画像をストックに追加（ローカル保存）
+  async function addImagesToStock(files) {
+    for (const file of files) {
+      try {
+        // 画像IDを生成
+        const imageId = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Blob URLを作成（プレビュー用）
+        const blobUrl = URL.createObjectURL(file);
+        
+        // ArrayBufferに変換（IndexedDB保存用）
+        const arrayBuffer = await file.arrayBuffer();
+        
+        // 画像データオブジェクト
+        const imageData = {
+          id: imageId,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          blobData: arrayBuffer,
+          blobUrl: blobUrl,
+          uploaded: false,
+          createdAt: new Date().toISOString()
+        };
+        
+        // IndexedDBに保存
+        await saveImageToDB(imageData);
+        
+        // メモリにも追加
+        imageStock.push(imageData);
+      } catch (error) {
+        console.error('Error adding image to stock:', error);
+        alert(`画像の保存に失敗しました: ${file.name}`);
+      }
+    }
+    
+    renderImageStock();
+  }
+
+  // 画像ストックを表示
+  function renderImageStock() {
+    const stockGrid = document.getElementById('image-stock-grid');
+    const clearStockBtn = document.getElementById('clear-stock-btn');
+
+    if (imageStock.length === 0) {
+      stockGrid.innerHTML = `
+        <div class="image-stock-empty">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>画像をアップロードしてください</p>
+          <small>ドラッグ&ドロップで各セクションに配置できます</small>
+        </div>
+      `;
+      clearStockBtn.style.display = 'none';
+      return;
+    }
+
+    clearStockBtn.style.display = 'flex';
+    stockGrid.innerHTML = imageStock.map((imageData, index) => `
+      <div class="image-stock-item" draggable="true" data-image-id="${imageData.id}" data-stock-index="${index}">
+        <img src="${imageData.blobUrl}" alt="Stock image" draggable="false">
+        <button type="button" class="image-stock-item-remove" onclick="removeFromStock('${imageData.id}')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `).join('');
+
+    // 各ストックアイテムにドラッグ&ドロップを設定
+    stockGrid.querySelectorAll('.image-stock-item').forEach(item => {
+      setupStockItemDragAndDrop(item);
+    });
+  }
+
+  // ストックアイテムのドラッグ&ドロップ設定
+  function setupStockItemDragAndDrop(item) {
+    const imageId = item.dataset.imageId;
+    const imageData = imageStock.find(img => img.id === imageId);
+    if (!imageData) return;
+
+    // テキスト選択を防ぐ
+    item.addEventListener('selectstart', (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    item.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    // タッチイベント用の変数
+    let touchStartTime = 0;
+    let isDragging = false;
+    let longPressTimer = null;
+    const LONG_PRESS_DURATION = 300;
+
+    // タッチ開始（スマホ用）
+    item.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      touchStartTime = Date.now();
+      isDragging = false;
+
+      longPressTimer = setTimeout(() => {
+        isDragging = true;
+        item.classList.add('dragging');
+        
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }, LONG_PRESS_DURATION);
+    }, { passive: true });
+
+    // タッチ移動（スマホ用）
+    item.addEventListener('touchmove', (e) => {
+      if (!isDragging) {
+        clearTimeout(longPressTimer);
+        return;
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const touch = e.touches[0];
+      const targetList = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.image-list');
+
+      if (targetList) {
+        document.querySelectorAll('.image-list').forEach(list => {
+          if (list !== targetList) {
+            list.classList.remove('drag-over');
+          }
+        });
+        targetList.classList.add('drag-over');
+      }
+    }, { passive: false });
+
+    // タッチ終了（スマホ用）
+    item.addEventListener('touchend', (e) => {
+      clearTimeout(longPressTimer);
+      item.classList.remove('dragging');
+
+      if (!isDragging) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const touch = e.changedTouches[0];
+      const targetList = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.image-list');
+
+      if (targetList && targetList.id) {
+        const targetIdParts = targetList.id.split('-');
+        const targetSectionId = targetIdParts.slice(0, -1).join('-');
+        const targetCategory = targetIdParts[targetIdParts.length - 1];
+
+        if (targetSectionId && targetCategory && imageData) {
+          addImageToSectionFromStock(imageData, targetSectionId, targetCategory);
+        }
+      }
+
+      document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
+      isDragging = false;
+    }, { passive: false });
+
+    item.addEventListener('touchcancel', () => {
+      clearTimeout(longPressTimer);
+      item.classList.remove('dragging');
+      isDragging = false;
+      document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
+    });
+
+    // ドラッグ開始（PC用）
+    item.addEventListener('dragstart', (e) => {
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        source: 'stock',
+        imageId: imageId
+      }));
+    });
+
+    // ドラッグ終了（PC用）
+    item.addEventListener('dragend', (e) => {
+      item.classList.remove('dragging');
+      document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
+    });
+  }
+
+  // 画像ストックのドロップゾーン設定（画像リストからストックに戻す場合）
+  function setupImageStockDropZone(stockGrid) {
+    stockGrid.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'move';
+    });
+
+    stockGrid.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // ストックへのドロップは実装しない（削除ボタンで対応）
+    });
+  }
+
+  // ストックからセクションに画像を追加
+  function addImageToSectionFromStock(imageData, sectionId, category) {
+    // セクションが存在しない場合は作成
+    if (!sections[sectionId]) {
+      sections[sectionId] = {
+        type: 'image',
+        photos: { before: [], after: [] }
+      };
+    }
+
+    if (!sections[sectionId].photos) {
+      sections[sectionId].photos = { before: [], after: [] };
+    }
+
+    if (!sections[sectionId].photos[category]) {
+      sections[sectionId].photos[category] = [];
+    }
+
+    // 既に存在する場合は追加しない（画像IDで判定）
+    const exists = sections[sectionId].photos[category].some(
+      img => (typeof img === 'object' && img.imageId === imageData.id) || 
+             (typeof img === 'string' && img === imageData.id)
+    );
+    if (exists) {
+      return;
+    }
+
+    // データに追加（画像データオブジェクトとして保存）
+    sections[sectionId].photos[category].push({
+      imageId: imageData.id,
+      blobUrl: imageData.blobUrl,
+      fileName: imageData.fileName,
+      uploaded: false
+    });
+
+    // UIに追加
+    const container = document.getElementById(`${sectionId}-${category}`);
+    if (!container) {
+      // セクションが存在しない場合は作成
+      addImageSection();
+      const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (newCard) {
+        const newContainer = document.getElementById(`${sectionId}-${category}`);
+        if (newContainer) {
+          const addBtn = newContainer.querySelector('.image-add-btn');
+          const newThumb = createImageThumb(sectionId, category, imageData.blobUrl, imageData.id);
+          newContainer.insertBefore(newThumb, addBtn);
+          setupImageListDragAndDrop(newContainer, sectionId, category);
+        }
+      }
+      return;
+    }
+
+    const addBtn = container.querySelector('.image-add-btn');
+    const newThumb = createImageThumb(sectionId, category, imageData.blobUrl, imageData.id);
+    container.insertBefore(newThumb, addBtn);
+    setupImageListDragAndDrop(container, sectionId, category);
+  }
+
+  // ストックから削除
+  window.removeFromStock = async function(imageId) {
+    const index = imageStock.findIndex(img => img.id === imageId);
+    if (index > -1) {
+      const imageData = imageStock[index];
+      // Blob URLを解放
+      if (imageData.blobUrl) {
+        URL.revokeObjectURL(imageData.blobUrl);
+      }
+      // IndexedDBから削除
+      await deleteImageFromDB(imageId);
+      // メモリから削除
+      imageStock.splice(index, 1);
+      renderImageStock();
+    }
+  };
 
   // 清掃項目セクション追加
   function addCleaningItemSection() {
@@ -779,7 +1204,14 @@
 
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
-    if (newCard) setupSectionDragAndDrop(newCard);
+    if (newCard) {
+      setupSectionDragAndDrop(newCard);
+      // 画像リストにドラッグ&ドロップを設定
+      const beforeList = document.getElementById(`${sectionId}-before`);
+      const afterList = document.getElementById(`${sectionId}-after`);
+      if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before');
+      if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after');
+    }
   }
 
   // コメントセクション追加
@@ -1032,25 +1464,275 @@
     const addBtn = container.querySelector('.image-add-btn');
 
     images.forEach(url => {
-      const thumb = document.createElement('div');
-      thumb.className = 'image-thumb';
-      thumb.innerHTML = `
-        <img src="${url}" alt="Photo">
-        <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', '${category}', '${url}', this)">
-          <i class="fas fa-times"></i>
-        </button>
-      `;
+      const thumb = createImageThumb(sectionId, category, url);
       container.insertBefore(thumb, addBtn);
     });
+    
+    // 画像リストにドラッグ&ドロップを設定
+    setupImageListDragAndDrop(container, sectionId, category);
 
     document.getElementById('warehouse-dialog').style.display = 'none';
   }
 
+  // 画像サムネイルを作成
+  function createImageThumb(sectionId, category, url, imageId = null) {
+    const thumb = document.createElement('div');
+    thumb.className = 'image-thumb';
+    thumb.draggable = true;
+    thumb.dataset.imageUrl = url;
+    thumb.dataset.sectionId = sectionId;
+    thumb.dataset.category = category;
+    if (imageId) {
+      thumb.dataset.imageId = imageId;
+    }
+    thumb.innerHTML = `
+      <img src="${url}" alt="Photo" draggable="false">
+      <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', '${category}', '${url}', '${imageId || ''}', this)">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+    
+    // 画像サムネイルのドラッグ&ドロップを設定
+    setupImageThumbDragAndDrop(thumb, sectionId, category, url, imageId);
+    
+    return thumb;
+  }
+
+  // 画像サムネイルのドラッグ&ドロップ設定
+  function setupImageThumbDragAndDrop(thumb, sectionId, category, url, imageId = null) {
+    // テキスト選択を防ぐ
+    thumb.addEventListener('selectstart', (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    thumb.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    // タッチイベント用の変数
+    let touchStartTime = 0;
+    let isDragging = false;
+    let longPressTimer = null;
+    const LONG_PRESS_DURATION = 300;
+
+    // タッチ開始（スマホ用）
+    thumb.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      touchStartTime = Date.now();
+      isDragging = false;
+      thumb.classList.add('touching');
+
+      longPressTimer = setTimeout(() => {
+        isDragging = true;
+        thumb.classList.add('dragging');
+        thumb.classList.remove('touching');
+        
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }, LONG_PRESS_DURATION);
+    }, { passive: true });
+
+    // タッチ移動（スマホ用）
+    thumb.addEventListener('touchmove', (e) => {
+      if (!isDragging) {
+        clearTimeout(longPressTimer);
+        thumb.classList.remove('touching');
+        return;
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const touch = e.touches[0];
+      const targetList = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.image-list');
+
+      if (targetList) {
+        document.querySelectorAll('.image-list').forEach(list => {
+          if (list !== targetList) {
+            list.classList.remove('drag-over');
+          }
+        });
+        targetList.classList.add('drag-over');
+      }
+    }, { passive: false });
+
+    // タッチ終了（スマホ用）
+    thumb.addEventListener('touchend', (e) => {
+      clearTimeout(longPressTimer);
+      thumb.classList.remove('touching', 'dragging');
+
+      if (!isDragging) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const touch = e.changedTouches[0];
+      const targetList = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.image-list');
+
+      if (targetList && targetList.id) {
+        const targetIdParts = targetList.id.split('-');
+        const targetSectionId = targetIdParts.slice(0, -1).join('-');
+        const targetCategory = targetIdParts[targetIdParts.length - 1];
+
+        if (targetSectionId && targetCategory && (targetSectionId !== sectionId || targetCategory !== category)) {
+          moveImage(sectionId, category, url, targetSectionId, targetCategory);
+        }
+      }
+
+      document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
+      isDragging = false;
+    }, { passive: false });
+
+    thumb.addEventListener('touchcancel', () => {
+      clearTimeout(longPressTimer);
+      thumb.classList.remove('touching', 'dragging');
+      isDragging = false;
+      document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
+    });
+
+    // ドラッグ開始（PC用）
+    thumb.addEventListener('dragstart', (e) => {
+      thumb.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        sectionId: sectionId,
+        category: category,
+        url: url
+      }));
+    });
+
+    // ドラッグ終了（PC用）
+    thumb.addEventListener('dragend', (e) => {
+      thumb.classList.remove('dragging');
+      document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
+    });
+  }
+
+  // 画像リストのドラッグ&ドロップ設定
+  function setupImageListDragAndDrop(listElement, sectionId, category) {
+    if (listElement.dataset.dragSetup) return;
+    listElement.dataset.dragSetup = 'true';
+
+    // ドラッグオーバー（PC用）
+    listElement.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // データを取得（dragoverではgetDataが動作しない場合があるため、effectAllowedで判定）
+      const effectAllowed = e.dataTransfer.effectAllowed;
+      
+      // ストックからのドロップまたは別セクションからの移動
+      if (effectAllowed === 'copy' || effectAllowed === 'all') {
+        e.dataTransfer.dropEffect = 'copy';
+        listElement.classList.add('drag-over');
+      } else {
+        e.dataTransfer.dropEffect = 'move';
+        listElement.classList.add('drag-over');
+      }
+    });
+
+    // ドラッグリーブ（PC用）
+    listElement.addEventListener('dragleave', (e) => {
+      if (!listElement.contains(e.relatedTarget)) {
+        listElement.classList.remove('drag-over');
+      }
+    });
+
+    // ドロップ（PC用）
+    listElement.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      listElement.classList.remove('drag-over');
+
+      const data = e.dataTransfer.getData('application/json');
+      if (!data) return;
+
+      try {
+        const dragData = JSON.parse(data);
+        
+        // ストックからのドロップ
+        if (dragData.source === 'stock' && dragData.imageId) {
+          const imageData = imageStock.find(img => img.id === dragData.imageId);
+          if (imageData) {
+            addImageToSectionFromStock(imageData, sectionId, category);
+          }
+          return;
+        }
+
+        // セクション間の移動
+        const { sectionId: sourceSectionId, category: sourceCategory, url } = dragData;
+        if (sourceSectionId && sourceCategory && url && 
+            (sourceSectionId !== sectionId || sourceCategory !== category)) {
+          moveImage(sourceSectionId, sourceCategory, url, sectionId, category);
+        }
+      } catch (e) {
+        console.error('Failed to parse drag data:', e);
+      }
+    });
+  }
+
+  // 画像を移動
+  function moveImage(sourceSectionId, sourceCategory, url, targetSectionId, targetCategory) {
+    // データから削除
+    const sourcePhotos = sections[sourceSectionId]?.photos?.[sourceCategory];
+    if (!sourcePhotos) return;
+
+    const sourceIndex = sourcePhotos.indexOf(url);
+    if (sourceIndex === -1) return;
+
+    sourcePhotos.splice(sourceIndex, 1);
+
+    // データに追加
+    if (!sections[targetSectionId]) return;
+    if (!sections[targetSectionId].photos) {
+      sections[targetSectionId].photos = { before: [], after: [] };
+    }
+    if (!sections[targetSectionId].photos[targetCategory]) {
+      sections[targetSectionId].photos[targetCategory] = [];
+    }
+    sections[targetSectionId].photos[targetCategory].push(url);
+
+    // UIから削除
+    const sourceThumb = document.querySelector(
+      `.image-thumb[data-section-id="${sourceSectionId}"][data-category="${sourceCategory}"][data-image-url="${url}"]`
+    );
+    if (sourceThumb) {
+      sourceThumb.remove();
+    }
+
+    // UIに追加
+    const targetContainer = document.getElementById(`${targetSectionId}-${targetCategory}`);
+    if (!targetContainer) return;
+
+    const addBtn = targetContainer.querySelector('.image-add-btn');
+    const newThumb = createImageThumb(targetSectionId, targetCategory, url);
+    targetContainer.insertBefore(newThumb, addBtn);
+
+    // ターゲットリストにドラッグ&ドロップを設定（まだ設定されていない場合）
+    setupImageListDragAndDrop(targetContainer, targetSectionId, targetCategory);
+  }
+
   // 画像削除
-  window.removeImage = function(sectionId, category, url, btn) {
+  window.removeImage = function(sectionId, category, url, imageId, btn) {
     const arr = sections[sectionId].photos[category];
-    const idx = arr.indexOf(url);
-    if (idx > -1) arr.splice(idx, 1);
+    if (imageId) {
+      // 画像データオブジェクトの場合
+      const idx = arr.findIndex(img => 
+        (typeof img === 'object' && img.imageId === imageId) || 
+        (typeof img === 'string' && img === imageId)
+      );
+      if (idx > -1) arr.splice(idx, 1);
+    } else {
+      // URL文字列の場合
+      const idx = arr.findIndex(img => 
+        (typeof img === 'string' && img === url) ||
+        (typeof img === 'object' && img.blobUrl === url)
+      );
+      if (idx > -1) arr.splice(idx, 1);
+    }
     btn.closest('.image-thumb').remove();
   };
 
@@ -1096,33 +1778,41 @@
         };
       });
 
-    // セクションを収集
-    const sectionData = Object.entries(sections)
-      .filter(([_, s]) => s.type !== 'cleaning')
-      .map(([id, s]) => {
-        if (s.type === 'image') {
-          return {
-            section_id: id,
-            section_type: 'image',
-            image_type: 'work',
-            photos: s.photos
-          };
-        } else if (s.type === 'comment') {
-          return {
-            section_id: id,
-            section_type: 'comment',
-            content: s.content
-          };
-        } else if (s.type === 'work_content') {
-          return {
-            section_id: id,
-            section_type: 'work_content',
-            content: s.content
-          };
-        }
-        return null;
-      })
-      .filter(Boolean);
+    // セクションを収集（画像をアップロード）
+    const sectionData = await Promise.all(
+      Object.entries(sections)
+        .filter(([_, s]) => s.type !== 'cleaning')
+        .map(async ([id, s]) => {
+          if (s.type === 'image') {
+            // 画像セクションの場合、ローカル画像をS3にアップロード
+            const uploadedPhotos = {
+              before: await uploadSectionImages(s.photos.before || [], cleaningDate),
+              after: await uploadSectionImages(s.photos.after || [], cleaningDate)
+            };
+            
+            return {
+              section_id: id,
+              section_type: 'image',
+              image_type: 'work',
+              photos: uploadedPhotos
+            };
+          } else if (s.type === 'comment') {
+            return {
+              section_id: id,
+              section_type: 'comment',
+              content: s.content
+            };
+          } else if (s.type === 'work_content') {
+            return {
+              section_id: id,
+              section_type: 'work_content',
+              content: s.content
+            };
+          }
+          return null;
+        })
+    );
+    const validSectionData = sectionData.filter(Boolean);
 
     const reportData = {
       store_id: storeId,
@@ -1131,7 +1821,7 @@
       cleaning_start_time: document.getElementById('report-start').value || '',
       cleaning_end_time: document.getElementById('report-end').value || '',
       work_items: workItems,
-      sections: sectionData,
+      sections: validSectionData,
       status: 'pending' // 清掃員からの提出は「保留」状態
     };
 
@@ -1219,6 +1909,75 @@
       }
     }
     return 'dev-token';
+  }
+
+  // セクション内の画像をアップロード（ローカル画像のみ）
+  async function uploadSectionImages(images, cleaningDate) {
+    const uploadedUrls = await Promise.all(
+      images.map(async (img) => {
+        // 既にURLの場合はそのまま返す
+        if (typeof img === 'string') {
+          return img;
+        }
+        
+        // 画像データオブジェクトの場合
+        if (typeof img === 'object' && img.imageId) {
+          // 既にアップロード済みの場合はURLを返す
+          if (img.uploaded && img.url) {
+            return img.url;
+          }
+          
+          // ローカル画像をS3にアップロード
+          try {
+            const imageData = imageStock.find(stock => stock.id === img.imageId);
+            if (!imageData) {
+              console.warn(`Image not found in stock: ${img.imageId}`);
+              return null;
+            }
+            
+            // ArrayBufferをBlobに変換してBase64に変換
+            const blob = new Blob([imageData.blobData], { type: imageData.fileType || 'image/jpeg' });
+            const base64 = await blobToBase64(blob);
+            
+            // S3にアップロード
+            const response = await fetch(`${REPORT_API}/staff/report-images`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                image: base64,
+                category: 'work',
+                cleaning_date: cleaningDate
+              })
+            });
+            
+            if (!response.ok) {
+              throw new Error('Upload failed');
+            }
+            
+            const result = await response.json();
+            return result.image.url;
+          } catch (error) {
+            console.error('Error uploading image:', error);
+            return null;
+          }
+        }
+        
+        return null;
+      })
+    );
+    
+    // nullを除外
+    return uploadedUrls.filter(url => url !== null);
+  }
+
+  // BlobをBase64に変換
+  function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   }
 
   // Base64変換
