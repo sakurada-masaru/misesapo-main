@@ -190,9 +190,20 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   flex: 1;
   min-width: 0;
+  padding-right: 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.form-row.three-col-inline .date-time-group:first-child {
+  gap: 6px;
+}
+
+.form-row.three-col-inline .date-time-group:last-child {
+  border-right: none;
+  padding-right: 0;
 }
 
 .date-time-label {
@@ -203,6 +214,7 @@
   flex-shrink: 0;
   color: #fff;
   min-width: fit-content;
+  text-align: center;
 }
 
 .date-time-label .required {
@@ -1429,11 +1441,24 @@ body.dark-mode .modal-footer {
   .form-row.three-col-inline .date-time-group {
     flex: 1;
     min-width: 0;
+    gap: 2px;
+    padding-right: 8px;
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .form-row.three-col-inline .date-time-group:first-child {
+    gap: 6px;
+  }
+  
+  .form-row.three-col-inline .date-time-group:last-child {
+    border-right: none;
+    padding-right: 0;
   }
   
   .date-time-label {
     font-size: 0.75rem;
-    min-width: 45px;
+    min-width: 40px;
+    text-align: center;
   }
   
   .date-time-input {
