@@ -878,6 +878,7 @@
           
           // ブランド選択時に店舗リストを更新
           if (storeSearchInput) {
+            updateStorePlaceholder();
             updateStoreModal();
           }
         });
@@ -917,6 +918,18 @@
     // 店舗検索
     const storeSearchInput = document.getElementById('report-store-search');
     const storeResults = document.getElementById('store-search-results');
+    
+    // 店舗名フィールドのプレースホルダーを更新
+    function updateStorePlaceholder() {
+      if (!storeSearchInput) return;
+      const selectedBrandId = document.getElementById('report-brand')?.value;
+      
+      if (!selectedBrandId) {
+        storeSearchInput.placeholder = 'ブランド名を選択してください';
+      } else {
+        storeSearchInput.placeholder = '②店舗名 *';
+      }
+    }
     
     // ドロップダウンを表示・更新する関数
     function updateStoreDropdown() {
