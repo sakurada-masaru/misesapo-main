@@ -1471,5 +1471,9 @@ body.dark-mode .modal-footer {
   .form-select {
     padding: 8px 12px;
   }
+  
+  .image-stock-section {
+    background: #fff5f8;
+  }
 }
 
