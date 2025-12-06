@@ -2593,7 +2593,7 @@
   }
 
   // セクション内の画像をアップロード（ローカル画像のみ）
-  async function uploadSectionImages(images, cleaningDate) {
+  async function uploadSectionImages(images, cleaningDate, category = 'after') {
     const uploadedUrls = await Promise.all(
       images.map(async (img) => {
         // 既にURLの場合はそのまま返す
@@ -2632,17 +2632,21 @@
             // Base64に変換
             const base64 = await blobToBase64(blob);
             
+            // categoryが'completed'の場合は'after'として扱う（APIの制約）
+            const apiCategory = category === 'completed' ? 'after' : category;
+            
             // S3にアップロード
             const requestBody = {
               image: base64,
-              category: 'work',
+              category: apiCategory,
               cleaning_date: cleaningDate
             };
             
             console.log('[uploadSectionImages] Uploading image:', {
               imageId: img.imageId,
               base64Length: base64?.length,
-              category: 'work',
+              category: apiCategory,
+              originalCategory: category,
               cleaning_date: cleaningDate
             });
             
