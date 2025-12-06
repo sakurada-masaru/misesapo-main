@@ -117,6 +117,38 @@
       </div>
     </div>
 
+    <!-- 事務セクション -->
+    <div class="attendance-section" id="attendance-section-office">
+      <div class="attendance-section-header">
+        <h2><i class="fas fa-briefcase"></i> 事務の出退勤</h2>
+        <div class="attendance-header-actions">
+          <span class="attendance-count" id="office-attendance-count">0名</span>
+          <button class="btn btn-outline btn-sm" onclick="bulkAssignRole('office')" title="このセクションのユーザー全員を事務に設定">
+            <i class="fas fa-users"></i> このロールに一括設定
+          </button>
+        </div>
+      </div>
+      <div class="attendance-grid" id="attendance-grid-office">
+        <!-- 事務のトグルスイッチがここに表示されます -->
+      </div>
+    </div>
+
+    <!-- 開発者セクション -->
+    <div class="attendance-section" id="attendance-section-developer">
+      <div class="attendance-section-header">
+        <h2><i class="fas fa-code"></i> 開発者の出退勤</h2>
+        <div class="attendance-header-actions">
+          <span class="attendance-count" id="developer-attendance-count">0名</span>
+          <button class="btn btn-outline btn-sm" onclick="bulkAssignRole('developer')" title="このセクションのユーザー全員を開発者に設定">
+            <i class="fas fa-users"></i> このロールに一括設定
+          </button>
+        </div>
+      </div>
+      <div class="attendance-grid" id="attendance-grid-developer">
+        <!-- 開発者のトグルスイッチがここに表示されます -->
+      </div>
+    </div>
+
     <!-- 管理者セクション -->
     <div class="attendance-section" id="attendance-section-admin">
       <div class="attendance-section-header">
@@ -132,6 +164,22 @@
         <!-- 管理者のトグルスイッチがここに表示されます -->
       </div>
     </div>
+
+    <!-- 運営セクション -->
+    <div class="attendance-section" id="attendance-section-operation">
+      <div class="attendance-section-header">
+        <h2><i class="fas fa-cog"></i> 運営の出退勤</h2>
+        <div class="attendance-header-actions">
+          <span class="attendance-count" id="operation-attendance-count">0名</span>
+          <button class="btn btn-outline btn-sm" onclick="bulkAssignRole('operation')" title="このセクションのユーザー全員を運営に設定">
+            <i class="fas fa-users"></i> このロールに一括設定
+          </button>
+        </div>
+      </div>
+      <div class="attendance-grid" id="attendance-grid-operation">
+        <!-- 運営のトグルスイッチがここに表示されます -->
+      </div>
+    </div>
   </div>
 
   <!-- テーブル -->
@@ -141,6 +189,7 @@
         <tr>
           <th>ID</th>
           <th>名前</th>
+          <th>メールアドレス</th>
           <th>電話番号</th>
           <th>ロール</th>
           <th>部署</th>
@@ -932,7 +981,14 @@
   // ユーザー読み込み
   async function loadUsers() {
     try {
-      const response = await fetch(`${API_BASE}/workers`);
+      // キャッシュを無効化するためにタイムスタンプを追加
+      const timestamp = new Date().getTime();
+      const response = await fetch(`${API_BASE}/workers?t=${timestamp}`, {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -950,18 +1006,21 @@
           const role = w.role || (w.role_code !== undefined ? getRoleFromCode(w.role_code) : 'staff');
           if (role === 'customer') return false;
           
-          // 意味をなしていないユーザーを除外
+          // 全てのユーザーを表示（フィルタリングを緩和）
+          // IDが存在する場合は表示
+          const workerId = String(w.id || w.user_id || '');
+          if (workerId && workerId !== 'N/A') {
+            return true;
+          }
+          
+          // IDがなくても、名前またはメールアドレスがあれば表示
           const name = (w.name || w.display_name || '').trim();
-          if (!name) return false;
-          
-          // 「ユーザー1」「ユーザー2」などのパターンを除外
-          if (name.match(/^ユーザー\d+$/)) return false;
-          
-          // メールアドレスもなく、名前も短すぎる場合は除外
           const email = (w.email || w.email_address || '').trim();
-          if (!email && name.length < 2) return false;
+          if (name || email) {
+            return true;
+          }
           
-          return true;
+          return false;
         })
         .map(w => {
           // roleの判定（role_codeやroleフィールドから）
@@ -973,14 +1032,12 @@
           // IDを正規化（文字列として扱う）
           // 5桁形式（W00001）に対応
           const workerId = String(w.id || w.user_id || '');
-          // IDが存在しない場合はスキップ（バックエンドで生成される）
-          if (!workerId) {
-            console.warn('Worker ID not found:', w);
-            return null;
-          }
+          // IDが存在しない場合は、一時的なIDを生成（表示用）
+          // メールアドレスがあればそれを使用、なければ一時ID
+          const displayId = workerId || (w.email ? `email_${w.email.replace(/[^a-zA-Z0-9]/g, '_')}` : `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
           
           return {
-            id: workerId,
+            id: displayId,
             name: w.name || w.display_name || '名前未設定',
             email: w.email || w.email_address || '-',
             phone: w.phone || w.phone_number || '-',
@@ -989,9 +1046,15 @@
             team: w.team || '-',
             status: w.status || (w.active !== undefined ? (w.active ? 'active' : 'inactive') : 'active'),
             created_at: w.created_at || w.created_date,
-            updated_at: w.updated_at
+            updated_at: w.updated_at,
+            // マイページリンク用の情報を保持
+            cognito_sub: w.cognito_sub,
+            firebase_uid: w.firebase_uid,
+            // 元のIDを保持（編集・削除時に使用）
+            originalId: workerId || null
           };
-        });
+        })
+        .filter(u => u !== null); // nullを除外
       
       console.log('Users loaded:', allUsers.length);
       console.log('Sample user:', allUsers[0]);
@@ -1046,7 +1109,9 @@
 
     filteredUsers = allUsers.filter(u => {
       const matchSearch = !search || 
-        (u.name && u.name.toLowerCase().includes(search));
+        (u.name && u.name.toLowerCase().includes(search)) ||
+        (u.email && u.email.toLowerCase().includes(search)) ||
+        (u.id && u.id.toLowerCase().includes(search));
       const matchRole = !roleFilter || u.role === roleFilter;
       const matchStatus = !statusFilter || u.status === statusFilter;
       return matchSearch && matchRole && matchStatus;
@@ -1062,22 +1127,32 @@
     const pageUsers = filteredUsers.slice(start, start + perPage);
 
     if (pageUsers.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">該当するユーザーがいません</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">該当するユーザーがいません</td></tr>';
       return;
     }
 
-    tbody.innerHTML = pageUsers.map(u => `
+    tbody.innerHTML = pageUsers.map(u => {
+      // マイページリンクを生成（IDを優先、なければメールアドレス）
+      let mypageUrl = '/staff/mypage';
+      if (u.id && u.id !== 'N/A' && !u.id.startsWith('temp_')) {
+        mypageUrl = `/staff/mypage?id=${encodeURIComponent(u.id)}`;
+      } else if (u.email && u.email !== '-') {
+        mypageUrl = `/staff/mypage?email=${encodeURIComponent(u.email)}`;
+      }
+      
+      return `
       <tr>
         <td>${escapeHtml(u.id)}</td>
         <td>
           <div class="user-name-cell">
             <span class="user-avatar">${(u.name || '?')[0]}</span>
-            <a href="/admin/users/detail?id=${u.id}" class="user-name-link">${escapeHtml(u.name || '-')}</a>
-            <a href="/staff/mypage?id=${u.id}" class="user-mypage-link" title="マイページを開く" style="margin-left: 8px; color: #3b82f6; font-size: 0.875rem;">
+            <a href="/admin/users/detail?id=${encodeURIComponent(u.id)}" class="user-name-link">${escapeHtml(u.name || '-')}</a>
+            <a href="${mypageUrl}" class="user-mypage-link" title="マイページを開く" style="margin-left: 8px; color: #3b82f6; font-size: 0.875rem;" target="_blank">
               <i class="fas fa-external-link-alt"></i>
             </a>
           </div>
         </td>
+        <td>${escapeHtml(u.email || '-')}</td>
         <td>${escapeHtml(u.phone || '-')}</td>
         <td><span class="role-badge role-${u.role}">${getRoleLabel(u.role)}</span></td>
         <td>${escapeHtml(u.department || '-')}</td>
@@ -1093,7 +1168,8 @@
           </div>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
   }
 
   function getRoleLabel(role) {
@@ -1272,7 +1348,88 @@
           return;
         }
       } else {
-        data.id = id;
+        // 既存ユーザーの更新時: 既存の情報を取得して保持
+        // originalIdがあればそれを使用、なければidを使用
+        const updateId = allUsers.find(u => String(u.id) === String(id))?.originalId || id;
+        data.id = updateId;
+        
+        try {
+          // 既存ユーザー情報を取得
+          const existingUserResponse = await fetch(`${API_BASE}/workers/${encodeURIComponent(updateId)}`);
+          if (existingUserResponse.ok) {
+            const existingUser = await existingUserResponse.json();
+            
+            // 既存の情報を保持（更新されないフィールド）
+            if (existingUser.created_at) {
+              data.created_at = existingUser.created_at;
+            }
+            if (existingUser.cognito_sub) {
+              data.cognito_sub = existingUser.cognito_sub;
+            }
+            if (existingUser.firebase_uid) {
+              data.firebase_uid = existingUser.firebase_uid;
+            }
+            // スケジュール関連の情報も保持
+            if (existingUser.scheduled_start_time) {
+              data.scheduled_start_time = existingUser.scheduled_start_time;
+            }
+            if (existingUser.scheduled_end_time) {
+              data.scheduled_end_time = existingUser.scheduled_end_time;
+            }
+            if (existingUser.scheduled_work_hours !== undefined) {
+              data.scheduled_work_hours = existingUser.scheduled_work_hours;
+            }
+            
+            // ロールコードを設定（ロールが変更された場合に備えて）
+            const roleCodeMap = {
+              'admin': '1',
+              'sales': '2',
+              'office': '3',
+              'staff': '4',
+              'developer': '5',
+              'designer': '6',
+              'general_affairs': '7',
+              'operation': '8',
+              'contractor': '9',
+              'accounting': '10',
+              'human_resources': '11'
+            };
+            data.role_code = roleCodeMap[data.role] || existingUser.role_code || '4';
+          } else {
+            // 既存ユーザーが見つからない場合、ロールコードのみ設定
+            const roleCodeMap = {
+              'admin': '1',
+              'sales': '2',
+              'office': '3',
+              'staff': '4',
+              'developer': '5',
+              'designer': '6',
+              'general_affairs': '7',
+              'operation': '8',
+              'contractor': '9',
+              'accounting': '10',
+              'human_resources': '11'
+            };
+            data.role_code = roleCodeMap[data.role] || '4';
+          }
+        } catch (fetchError) {
+          console.warn('既存ユーザー情報の取得に失敗しましたが、更新を続行します:', fetchError);
+          // ロールコードのみ設定
+          const roleCodeMap = {
+            'admin': '1',
+            'sales': '2',
+            'office': '3',
+            'staff': '4',
+            'developer': '5',
+            'designer': '6',
+            'general_affairs': '7',
+            'operation': '8',
+            'contractor': '9',
+            'accounting': '10',
+            'human_resources': '11'
+          };
+          data.role_code = roleCodeMap[data.role] || '4';
+        }
       }
       data.updated_at = new Date().toISOString();
 
@@ -1282,24 +1439,33 @@
         }
         
         // workersテーブルに保存
-        const response = await fetch(`${API_BASE}/workers${isNew ? '' : '/' + id}`, {
+        // 更新時はupdateIdを使用（既にdata.idに設定済み）
+        const url = `${API_BASE}/workers${isNew ? '' : '/' + encodeURIComponent(data.id)}`;
+        const response = await fetch(url, {
           method: isNew ? 'POST' : 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
 
         if (response.ok) {
+          const responseData = await response.json().catch(() => ({}));
           document.getElementById('form-status').textContent = '保存しました';
           document.getElementById('form-status').className = 'form-status success';
-          setTimeout(() => {
+          
+          // 少し待ってからダイアログを閉じてリストを更新
+          setTimeout(async () => {
             userDialog.close();
-            loadUsers();
+            // キャッシュを無効化してリストを更新
+            await loadUsers();
           }, 500);
         } else {
-          throw new Error('保存に失敗しました');
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.error || errorData.message || `保存に失敗しました (ステータス: ${response.status})`;
+          throw new Error(errorMessage);
         }
       } catch (error) {
-        document.getElementById('form-status').textContent = error.message;
+        console.error('Update error:', error);
+        document.getElementById('form-status').textContent = error.message || '保存に失敗しました';
         document.getElementById('form-status').className = 'form-status error';
       }
     });
@@ -1318,10 +1484,25 @@
       
       console.log('Attempting to delete worker with ID:', normalizedId);
       console.log('ID type:', typeof normalizedId);
-      console.log('All available user IDs:', allUsers.map(u => ({ id: u.id, type: typeof u.id })));
+      console.log('All available user IDs:', allUsers.map(u => ({ id: u.id, originalId: u.originalId, type: typeof u.id })));
       
       try {
-        const response = await fetch(`${API_BASE}/workers/${encodeURIComponent(normalizedId)}`, {
+        // まず、削除対象のユーザー情報を取得して確認
+        const targetUser = allUsers.find(u => String(u.id) === normalizedId);
+        if (!targetUser) {
+          alert('削除対象のユーザーが見つかりません。ページを更新してください。');
+          deleteDialog.close();
+          deleteTargetId = null;
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = originalText;
+          await loadUsers(); // リストを更新
+          return;
+        }
+        
+        // originalIdがあればそれを使用、なければidを使用
+        const deleteId = targetUser.originalId || targetUser.id;
+        
+        const response = await fetch(`${API_BASE}/workers/${encodeURIComponent(deleteId)}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'
@@ -1335,13 +1516,33 @@
           deleteDialog.close();
           deleteTargetId = null; // 削除対象IDをリセット
           
-          // ユーザー一覧を再読み込み（awaitで待つ）
+          // 少し待ってからユーザー一覧を再読み込み（DynamoDBの反映を待つ）
+          await new Promise(resolve => setTimeout(resolve, 500));
           await loadUsers();
           
-          alert('ユーザーを削除しました');
+          // 削除が成功したか確認
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const verifyResponse = await fetch(`${API_BASE}/workers`);
+          const verifyData = await verifyResponse.json();
+          const verifyWorkers = Array.isArray(verifyData) ? verifyData : (verifyData.items || verifyData.workers || []);
+          const stillExists = verifyWorkers.some(u => String(u.id) === normalizedId);
+          
+          if (stillExists) {
+            alert('削除リクエストは送信されましたが、ユーザーがまだ存在している可能性があります。\n\nページを更新して確認してください。');
+          } else {
+            alert('ユーザーを削除しました');
+          }
         } else {
           const errorText = await response.text();
           let errorMessage = '削除に失敗しました';
+          
+          // エラーレスポンスをパース
+          let errorData = {};
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (e) {
+            // JSONパースに失敗した場合はそのまま使用
+          }
           
           // CORSエラーの場合
           if (response.status === 0 || errorText.includes('CORS') || errorText.includes('Access-Control')) {
@@ -1349,11 +1550,30 @@
                           'AWS API Gatewayコンソールで、/workers/{id} リソースのDELETEメソッドにCORSを設定してください。\n\n' +
                           '詳細: ブラウザのコンソールを確認してください。';
           } else if (response.status === 404) {
-            errorMessage = 'ユーザーが見つかりませんでした';
+            // 404の場合は、実際に存在するか確認
+            const checkResponse = await fetch(`${API_BASE}/workers`);
+            const checkData = await checkResponse.json();
+            const checkWorkers = Array.isArray(checkData) ? checkData : (checkData.items || checkData.workers || []);
+            const exists = checkWorkers.some(u => String(u.id) === normalizedId);
+            
+            if (exists) {
+              errorMessage = `削除に失敗しました（404エラー）。\n\n` +
+                           `ユーザーID: ${normalizedId}\n` +
+                           `ユーザー名: ${targetUser.name || 'N/A'}\n\n` +
+                           `APIがユーザーを見つけられない可能性があります。\n` +
+                           `AWS DynamoDBコンソールから直接削除するか、\n` +
+                           `ページを更新して再度お試しください。\n\n` +
+                           `エラー詳細: ${errorData.error || errorText}`;
+            } else {
+              errorMessage = 'ユーザーは既に削除されています。';
+              // リストを更新
+              await loadUsers();
+            }
           } else if (response.status === 401 || response.status === 403) {
             errorMessage = '権限がありません';
           } else {
-            errorMessage = `削除に失敗しました (ステータス: ${response.status})`;
+            errorMessage = `削除に失敗しました (ステータス: ${response.status})\n\n` +
+                         `エラー: ${errorData.error || errorData.message || errorText}`;
           }
           
           console.error('Delete error:', response.status, errorText);
@@ -1388,18 +1608,42 @@
   }
 
   // 編集
-  window.editUser = function(id) {
-    // EntityFinderを使用してID形式の違いに対応
-    let user = null;
-    if (window.DataUtils?.EntityFinder?.find) {
-      user = window.DataUtils.EntityFinder.find(allUsers, id, 'W');
-    } else {
-      user = allUsers.find(u => u.id === id || String(u.id) === String(id));
+  window.editUser = async function(id) {
+    // IDを文字列として正規化
+    const normalizedId = String(id);
+    
+    // まずローカルのallUsersから検索
+    let user = allUsers.find(u => String(u.id) === normalizedId);
+    
+    // 見つからない場合、APIから直接取得
+    if (!user) {
+      try {
+        document.getElementById('form-status').textContent = 'ユーザー情報を読み込み中...';
+        const response = await fetch(`${API_BASE}/workers/${encodeURIComponent(normalizedId)}`);
+        if (response.ok) {
+          user = await response.json();
+        } else {
+          document.getElementById('form-status').textContent = 'ユーザーが見つかりませんでした';
+          document.getElementById('form-status').className = 'form-status error';
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        document.getElementById('form-status').textContent = 'ユーザー情報の取得に失敗しました';
+        document.getElementById('form-status').className = 'form-status error';
+        return;
+      }
     }
-    if (!user) return;
+    
+    if (!user) {
+      alert('ユーザーが見つかりませんでした。ページを更新してください。');
+      return;
+    }
 
     document.getElementById('dialog-title').textContent = 'ユーザー編集';
-    document.getElementById('user-id').value = user.id;
+    // originalIdがあればそれを使用、なければidを使用
+    const editId = user.originalId || user.id;
+    document.getElementById('user-id').value = editId;
     document.getElementById('user-name').value = user.name || '';
     document.getElementById('user-email').value = user.email || '';
     document.getElementById('user-phone').value = user.phone || '';
@@ -1410,6 +1654,7 @@
     document.getElementById('password-required').style.display = 'none';
     document.getElementById('user-password').required = false;
     document.getElementById('form-status').textContent = '';
+    document.getElementById('form-status').className = '';
     userDialog.showModal();
   };
 
@@ -1471,26 +1716,41 @@
     const usersByRole = {
       staff: allUsers.filter(u => u.role === 'staff' && u.status === 'active'),
       sales: allUsers.filter(u => u.role === 'sales' && u.status === 'active'),
-      admin: allUsers.filter(u => (u.role === 'admin' || u.role === 'other') && u.status === 'active')
+      office: allUsers.filter(u => u.role === 'office' && u.status === 'active'),
+      developer: allUsers.filter(u => u.role === 'developer' && u.status === 'active'),
+      admin: allUsers.filter(u => u.role === 'admin' && u.status === 'active'),
+      operation: allUsers.filter(u => u.role === 'operation' && u.status === 'active')
     };
-
+    
     // 各ロールのセクションをレンダリング
     renderAttendanceSection('staff', usersByRole.staff);
     renderAttendanceSection('sales', usersByRole.sales);
+    renderAttendanceSection('office', usersByRole.office);
+    renderAttendanceSection('developer', usersByRole.developer);
     renderAttendanceSection('admin', usersByRole.admin);
+    renderAttendanceSection('operation', usersByRole.operation);
   }
 
   // 特定のロールの出退勤セクションをレンダリング
   function renderAttendanceSection(role, users) {
     const container = document.getElementById(`attendance-grid-${role}`);
     const countEl = document.getElementById(`${role}-attendance-count`);
+    const sectionEl = document.getElementById(`attendance-section-${role}`);
     
     if (!container) return;
     
     if (users.length === 0) {
-      container.innerHTML = '<div style="padding: 20px; text-align: center; color: #6b7280;">該当するユーザーがいません</div>';
+      // ユーザーがいない場合はセクションを非表示
+      if (sectionEl) {
+        sectionEl.style.display = 'none';
+      }
       if (countEl) countEl.textContent = '0名';
       return;
+    }
+    
+    // ユーザーがいる場合はセクションを表示
+    if (sectionEl) {
+      sectionEl.style.display = 'block';
     }
 
     if (countEl) {
