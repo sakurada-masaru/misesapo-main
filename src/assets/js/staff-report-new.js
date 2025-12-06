@@ -17,7 +17,7 @@
 
   // 画像倉庫用
   let warehouseImages = [];
-  let selectedWarehouseImages = { before: [], after: [] };
+  let selectedWarehouseImages = { before: [], after: [], completed: [] };
   let currentImageSection = null;
   let currentImageCategory = null;
 
@@ -370,13 +370,13 @@
     const sectionId = section.section_id || `section-${sectionCounter}`;
     sections[sectionId] = {
       type: 'image',
-      photos: section.photos || { before: [], after: [] }
+      photos: section.photos || { before: [], after: [], completed: [] }
     };
     
     const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
-          <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
+          <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後・施工後）</span>
           <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
             <i class="fas fa-trash"></i>
           </button>
@@ -417,6 +417,23 @@
                 </button>
               </div>
             </div>
+            <div class="image-category">
+              <div class="image-category-title completed"><i class="fas fa-star"></i> 施工後</div>
+              <div class="image-list" id="${sectionId}-completed">
+                ${(section.photos?.completed || []).map(url => `
+                  <div class="image-thumb" draggable="true" data-section-id="${sectionId}" data-category="completed" data-image-url="${url}">
+                    <img src="${url}" alt="Completed" draggable="false">
+                    <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', 'completed', '${url}', '', this)">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                `).join('')}
+                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'completed')">
+                  <i class="fas fa-plus"></i>
+                  <span>追加</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -428,8 +445,10 @@
       // 画像リストにドラッグ&ドロップを設定
       const beforeList = document.getElementById(`${sectionId}-before`);
       const afterList = document.getElementById(`${sectionId}-after`);
+      const completedList = document.getElementById(`${sectionId}-completed`);
       if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before');
       if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after');
+      if (completedList) setupImageListDragAndDrop(completedList, sectionId, 'completed');
       // 既存の画像サムネイルにドラッグ&ドロップを設定
       newCard.querySelectorAll('.image-thumb').forEach(thumb => {
         const thumbSectionId = thumb.dataset.sectionId;
@@ -1493,12 +1512,12 @@
     if (!sections[sectionId]) {
       sections[sectionId] = {
         type: 'image',
-        photos: { before: [], after: [] }
+        photos: { before: [], after: [], completed: [] }
       };
     }
 
     if (!sections[sectionId].photos) {
-      sections[sectionId].photos = { before: [], after: [] };
+      sections[sectionId].photos = { before: [], after: [], completed: [] };
     }
 
     if (!sections[sectionId].photos[category]) {
@@ -1602,12 +1621,12 @@
   function addImageSection() {
     sectionCounter++;
     const sectionId = `section-${sectionCounter}`;
-    sections[sectionId] = { type: 'image', photos: { before: [], after: [] } };
+    sections[sectionId] = { type: 'image', photos: { before: [], after: [], completed: [] } };
 
     const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
-          <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
+          <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後・施工後）</span>
           <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
             <i class="fas fa-trash"></i>
           </button>
@@ -1632,6 +1651,15 @@
                 </button>
               </div>
             </div>
+            <div class="image-category">
+              <div class="image-category-title completed"><i class="fas fa-star"></i> 施工後</div>
+              <div class="image-list" id="${sectionId}-completed">
+                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'completed')">
+                  <i class="fas fa-plus"></i>
+                  <span>追加</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1644,8 +1672,10 @@
       // 画像リストにドラッグ&ドロップを設定
       const beforeList = document.getElementById(`${sectionId}-before`);
       const afterList = document.getElementById(`${sectionId}-after`);
+      const completedList = document.getElementById(`${sectionId}-completed`);
       if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before');
       if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after');
+      if (completedList) setupImageListDragAndDrop(completedList, sectionId, 'completed');
     }
   }
 
@@ -1748,7 +1778,7 @@
   window.openImageDialog = function(sectionId, category) {
     currentImageSection = sectionId;
     currentImageCategory = category;
-    selectedWarehouseImages = { before: [], after: [] };
+    selectedWarehouseImages = { before: [], after: [], completed: [] };
     renderStockSelection();
     loadWarehouseImages();
     document.getElementById('warehouse-dialog').style.display = 'flex';
@@ -1825,7 +1855,7 @@
 
     // セクションに画像を追加
     if (!sections[sectionId]) {
-      sections[sectionId] = { type: 'image', photos: { before: [], after: [] } };
+      sections[sectionId] = { type: 'image', photos: { before: [], after: [], completed: [] } };
     }
     
     // ストック画像の場合は、imageDataオブジェクトとして保存
@@ -2085,7 +2115,7 @@
     // データに追加
     if (!sections[targetSectionId]) return;
     if (!sections[targetSectionId].photos) {
-      sections[targetSectionId].photos = { before: [], after: [] };
+      sections[targetSectionId].photos = { before: [], after: [], completed: [] };
     }
     if (!sections[targetSectionId].photos[targetCategory]) {
       sections[targetSectionId].photos[targetCategory] = [];

@@ -742,6 +742,10 @@
   color: #10b981;
 }
 
+.image-category-title.completed {
+  color: #f59e0b;
+}
+
 .image-list {
   display: flex;
   flex-wrap: wrap;
