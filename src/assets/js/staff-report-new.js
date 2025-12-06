@@ -817,16 +817,26 @@
     
     // 入力フィールドをクリックしたときにモーダルを開く
     if (brandSearchInput) {
+      // readonly属性を設定（直接入力を無効化）
+      brandSearchInput.setAttribute('readonly', 'readonly');
+      // クリックイベント（readonlyでも発火する）
       brandSearchInput.addEventListener('click', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         openBrandModal();
       });
+      // フォーカスイベント
       brandSearchInput.addEventListener('focus', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         openBrandModal();
       });
-      // 直接入力は無効化（readonlyにしないで、モーダルから選択させる）
-      brandSearchInput.setAttribute('readonly', 'readonly');
+      // タッチイベント（モバイル対応）
+      brandSearchInput.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openBrandModal();
+      });
     }
 
     // 店舗検索
@@ -994,16 +1004,26 @@
     
     // 入力フィールドをクリックしたときにモーダルを開く
     if (storeSearchInput) {
+      // readonly属性を設定（直接入力を無効化）
+      storeSearchInput.setAttribute('readonly', 'readonly');
+      // クリックイベント（readonlyでも発火する）
       storeSearchInput.addEventListener('click', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         openStoreModal();
       });
+      // フォーカスイベント
       storeSearchInput.addEventListener('focus', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         openStoreModal();
       });
-      // 直接入力は無効化（readonlyにしないで、モーダルから選択させる）
-      storeSearchInput.setAttribute('readonly', 'readonly');
+      // タッチイベント（モバイル対応）
+      storeSearchInput.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openStoreModal();
+      });
     }
     
     // モーダルの背景をクリックしたときに閉じる
