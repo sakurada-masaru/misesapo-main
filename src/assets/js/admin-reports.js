@@ -203,9 +203,9 @@
 
         return `
           <tr ${(r.resubmitted || normalized.resubmitted) ? 'class="resubmitted-row"' : ''}>
-            <td>${DataUtils.formatDate(normalized.date)}</td>
-            <td>${DataUtils.escapeHtml(displayStoreName)}</td>
-            <td>${DataUtils.escapeHtml(worker.name || normalized.worker_name || '-')}</td>
+            <td>${(window.DataUtils && window.DataUtils.formatDate) ? window.DataUtils.formatDate(normalized.date) : formatDate(normalized.date)}</td>
+            <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(displayStoreName) : escapeHtml(displayStoreName)}</td>
+            <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(worker.name || normalized.worker_name || '-') : escapeHtml(worker.name || normalized.worker_name || '-')}</td>
             <td>${normalized.start_time || '-'} 〜 ${normalized.end_time || '-'}</td>
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
