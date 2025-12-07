@@ -272,14 +272,8 @@
             const errorDiv = document.getElementById('signin-error');
             if (errorDiv) {
               errorDiv.innerHTML = `
-                <div style="margin-bottom: 8px; text-align: center;">
-                  <strong>認証済。</strong>
-                </div>
-                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px; text-align: center; white-space: nowrap;">
-                  現在<strong>${existingUser.name || existingUser.email}様</strong>でログイン中です。
-                </div>
                 <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px; text-align: center;">
-                  別のユーザーでログインする際は、下記ボタンを押してください。
+                  別ユーザーでログインする場合は下記ボタンを押してください。
                 </div>
                 <button 
                   type="button" 
