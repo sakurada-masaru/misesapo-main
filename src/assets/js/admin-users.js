@@ -61,6 +61,8 @@
     try {
       // キャッシュを無効化するためにタイムスタンプを追加
       const timestamp = new Date().getTime();
+      
+      // 全ユーザー取得APIを使用（強整合性読み取りだが、更新直後は古いデータの可能性がある）
       const response = await fetch(`${API_BASE}/workers?t=${timestamp}&_=${Date.now()}`, {
         cache: 'no-store'
       });

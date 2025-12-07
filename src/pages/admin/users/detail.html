@@ -7,7 +7,7 @@
   <!-- メインコンテンツ -->
   <div class="main-content">
     <div class="page-header">
-      <a href="/admin/users/" class="back-btn">
+      <a href="/admin/users/" class="back-btn" id="back-btn">
         <i class="fas fa-chevron-left"></i>
       </a>
       <h1 class="page-title" id="page-title">ユーザー詳細</h1>
@@ -1333,6 +1333,10 @@
         if (response.ok) {
           statusEl.textContent = '保存しました';
           statusEl.className = 'form-status success';
+          
+          // 一覧画面に戻る際にリロードするためのフラグを設定
+          sessionStorage.setItem('users_list_needs_reload', 'true');
+          sessionStorage.setItem('users_list_updated_user_id', currentUser.id);
           
           // ユーザー情報を再読み込み（キャッシュを無効化）
           setTimeout(async () => {
