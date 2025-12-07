@@ -599,6 +599,10 @@
   function setupEventListeners() {
     document.getElementById('search-input').addEventListener('input', filterAndRender);
     document.getElementById('role-filter').addEventListener('change', filterAndRender);
+    const departmentFilter = document.getElementById('department-filter');
+    if (departmentFilter) {
+      departmentFilter.addEventListener('change', filterAndRender);
+    }
     document.getElementById('status-filter').addEventListener('change', filterAndRender);
     document.getElementById('reset-filters').addEventListener('click', () => {
       document.getElementById('search-input').value = '';
@@ -1033,12 +1037,6 @@
     deleteDialog.showModal();
   };
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
 
   // 出退勤記録の読み込み
   function loadAttendanceRecords() {
