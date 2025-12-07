@@ -1120,11 +1120,8 @@
     }
 
     function getRoleLabel(role) {
-      // ロールは「管理者」と「なし」の2種類のみ
-      if (role === 'admin') {
-        return '管理者';
-      }
-      return 'なし';
+      // ロール表示は非表示（表記しない）
+      return '';
     }
 
     // ユーザー情報を表示
