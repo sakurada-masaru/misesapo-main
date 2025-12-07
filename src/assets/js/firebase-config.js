@@ -25,6 +25,10 @@
     measurementId: "G-KM44PRSSE1"
   };
   
+  // 従業員ページ（/staff/, /admin/）ではFirebaseは不要なので、警告を抑制
+  const currentPath = window.location.pathname || '';
+  const isStaffPage = currentPath.includes('/staff/') || currentPath.includes('/admin/');
+  
   // Firebase初期化
   if (typeof firebase !== 'undefined') {
     try {
@@ -38,22 +42,31 @@
         if (firebase.firestore && firebase.firestore.FieldValue) {
           window.FirebaseFieldValue = firebase.firestore.FieldValue;
         }
-      } else {
+      } else if (!isStaffPage) {
+        // 従業員ページ以外の場合のみ警告を表示
         console.warn('[Firebase] Firestore is not loaded. firebase-firestore-compat.js is required for Firestore features.');
       }
       
       // Storageが読み込まれている場合のみ初期化
       if (typeof firebase.storage === 'function') {
         window.FirebaseStorage = firebase.storage();
-      } else {
+      } else if (!isStaffPage) {
+        // 従業員ページ以外の場合のみ警告を表示
         console.warn('[Firebase] Storage is not loaded. firebase-storage-compat.js is required for Storage features.');
       }
       
-      console.log('[Firebase] Initialized successfully');
+      if (!isStaffPage) {
+        // 従業員ページ以外の場合のみログを表示
+        console.log('[Firebase] Initialized successfully');
+      }
     } catch (error) {
-      console.error('[Firebase] Initialization error:', error);
+      if (!isStaffPage) {
+        // 従業員ページ以外の場合のみエラーを表示
+        console.error('[Firebase] Initialization error:', error);
+      }
     }
-  } else {
+  } else if (!isStaffPage) {
+    // 従業員ページ以外の場合のみ警告を表示
     console.warn('[Firebase] Firebase SDK is not loaded. Make sure firebase-app-compat.js and firebase-auth-compat.js are loaded before this script.');
   }
 })();
