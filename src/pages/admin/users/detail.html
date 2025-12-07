@@ -1153,17 +1153,13 @@
       // クイックアクション
       document.getElementById('email-btn').href = user.email ? `mailto:${user.email}` : '#';
       
-      // マイページリンクを更新（サイドバー）
-      const mypageLink = document.getElementById('user-mypage-link');
-      if (mypageLink && user.id) {
-        mypageLink.href = `/staff/mypage.html?id=${encodeURIComponent(user.id)}`;
-        mypageLink.style.display = 'flex';
-      }
-      
-      // マイページボタンを更新（クイックアクション）
+      // マイページボタンを更新（クイックアクション - 表示中のユーザーのマイページ）
       const mypageBtn = document.getElementById('mypage-btn');
       if (mypageBtn && user.id) {
         mypageBtn.href = `/staff/mypage.html?id=${encodeURIComponent(user.id)}`;
+        mypageBtn.style.display = 'flex';
+      } else if (mypageBtn && user.email && user.email !== '-') {
+        mypageBtn.href = `/staff/mypage.html?email=${encodeURIComponent(user.email)}`;
         mypageBtn.style.display = 'flex';
       }
     }
