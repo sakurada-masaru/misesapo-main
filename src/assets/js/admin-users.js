@@ -129,7 +129,40 @@
       const workers = await response.json();
       
       // レスポンスが配列でない場合の処理
-      const workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+      let workersArray = Array.isArray(workers) ? workers : (workers.items || workers.workers || []);
+      
+      // データの整合性を確保するため、各ユーザーを個別取得APIで最新データに更新
+      // （全ユーザー取得APIが古いデータを返す可能性があるため）
+      console.log('[UserManagement] 全ユーザー取得APIから取得:', workersArray.length, '名');
+      const updatedWorkers = [];
+      for (const worker of workersArray) {
+        const workerId = String(worker.id || worker.user_id || '').trim();
+        if (!workerId || workerId === 'N/A' || workerId === '9999') {
+          continue;
+        }
+        
+        try {
+          // 個別取得APIで最新データを取得（強整合性読み取り）
+          const individualResponse = await fetch(`${API_BASE}/workers/${workerId}?t=${timestamp}&_=${Date.now()}`, {
+            cache: 'no-store'
+          });
+          if (individualResponse.ok) {
+            const latestWorker = await individualResponse.json();
+            updatedWorkers.push(latestWorker);
+          } else {
+            // 個別取得に失敗した場合は、全ユーザー取得APIのデータを使用
+            console.warn(`[UserManagement] 個別取得に失敗: ${workerId}`, individualResponse.status);
+            updatedWorkers.push(worker);
+          }
+        } catch (error) {
+          console.warn(`[UserManagement] 個別取得エラー: ${workerId}`, error);
+          // エラーが発生した場合は、全ユーザー取得APIのデータを使用
+          updatedWorkers.push(worker);
+        }
+      }
+      
+      workersArray = updatedWorkers;
+      console.log('[UserManagement] 個別取得APIで更新後:', workersArray.length, '名');
       
       // 新しいデータ構造に対応
       allUsers = workersArray
