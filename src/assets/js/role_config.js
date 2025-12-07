@@ -12,12 +12,12 @@ const ROLE_CONFIG = {
     },
     customer: { 
       name: 'ユーザー（顧客）', 
-      password: 'customer1234',
+      password: null,
       displayName: 'ユーザー'
     },
     staff: { 
       name: '清掃員', 
-      password: 'staff1234',
+      password: null,
       displayName: '清掃員'
     },
     concierge: { 
@@ -27,12 +27,12 @@ const ROLE_CONFIG = {
     },
     admin: { 
       name: '管理者', 
-      password: 'admin1234',
+      password: null,
       displayName: '管理者'
     },
     developer: { 
       name: '開発者', 
-      password: 'misesapo1234',
+      password: null,
       displayName: '開発者'
     },
     office: { 
@@ -72,7 +72,7 @@ const ROLE_CONFIG = {
     },
     master: { 
       name: 'マスター', 
-      password: 'master1234',
+      password: null,
       displayName: 'マスター'
     }
   },

@@ -102,7 +102,7 @@ if __name__ == '__main__':
         'sales': '2',
         'office': '3',
         'cleaning': '4',
-        'development': '5',
+        'public_relations': '5',
         'designer': '6',
         'general_affairs': '7',
         'director': '8',

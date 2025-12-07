@@ -117,51 +117,16 @@
     <!-- 部署別のセクションはJavaScriptで動的に生成されます -->
   </div>
 
-  <!-- 組織構造レイアウト -->
+  <!-- 組織構造レイアウト（部署ベース） -->
   <div class="organization-layout" id="organization-layout">
     <div class="loading-cell" id="loading-users">
       <i class="fas fa-spinner fa-spin"></i> 読み込み中...
     </div>
     
-    <!-- フロントオフィス -->
-    <section class="office-section front-office">
-      <h2 class="section-title">
-        <i class="fas fa-store"></i> フロントオフィス
-      </h2>
-      <div class="departments-container" id="front-office-departments">
-        <!-- 部署が動的に追加されます -->
-      </div>
-    </section>
-
-    <!-- ミドルオフィス -->
-    <section class="office-section middle-office">
-      <h2 class="section-title">
-        <i class="fas fa-shield-alt"></i> ミドルオフィス
-      </h2>
-      <div class="departments-container" id="middle-office-departments">
-        <!-- 部署が動的に追加されます -->
-      </div>
-    </section>
-
-    <!-- バックオフィス -->
-    <section class="office-section back-office">
-      <h2 class="section-title">
-        <i class="fas fa-cogs"></i> バックオフィス
-      </h2>
-      <div class="departments-container" id="back-office-departments">
-        <!-- 部署が動的に追加されます -->
-      </div>
-    </section>
-
-    <!-- 運営本部（清掃員、スペシャルバイザーなど） -->
-    <section class="office-section board-of-directors">
-      <h2 class="section-title">
-        <i class="fas fa-crown"></i> 運営本部
-      </h2>
-      <div class="departments-container" id="board-departments">
-        <!-- 部署が動的に追加されます -->
-      </div>
-    </section>
+    <!-- 部署ごとのコンテナ（動的に生成されます） -->
+    <div class="departments-container" id="departments-container">
+      <!-- 部署が動的に追加されます -->
+    </div>
   </div>
 
   <!-- 新規/編集モーダル -->

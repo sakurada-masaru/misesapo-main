@@ -389,6 +389,24 @@
   margin-bottom: 12px;
 }
 
+.job-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.job-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .user-card-actions {
   display: flex;
   gap: 8px;
@@ -500,6 +518,7 @@
   font-weight: 600;
 }
 .role-admin { background: #fce7f3; color: #be185d; }
+.role-none { background: #f1f5f9; color: #64748b; }
 .role-sales { background: #dcfce7; color: #15803d; }
 .role-office { background: #e0e7ff; color: #3730a3; }
 .role-staff { background: #ffedd5; color: #c2410c; }

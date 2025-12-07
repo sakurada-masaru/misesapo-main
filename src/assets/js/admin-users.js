@@ -205,6 +205,7 @@
             phone: (w.phone || w.phone_number || '').trim() || '-',
             role: role,
             department: (w.department || w.team || '').trim() || '-', // DB上の実際の部署データを使用
+            job: (w.job || w.job_title || w.responsibility || '').trim() || '', // 担当業務
             team: w.team || '-',
             status: w.status || (w.active !== undefined ? (w.active ? 'active' : 'inactive') : 'active'),
             created_at: w.created_at || w.created_date,
@@ -286,102 +287,7 @@
     return 'staff';
   }
 
-  // 部署名を正規化（組織図に合わせる）
-  function normalizeDepartmentName(department, role) {
-    const dept = (department || '').trim();
-    
-    // ロールに基づいて部署名を正規化
-    // 管理者ロール（admin）は総務部
-    if (role === 'admin') {
-      return '総務部';
-    }
-    
-    // 人事ロールは人事部
-    if (role === 'human_resources') {
-      return '人事部';
-    }
-    
-    // 経理ロールは経理部（officeロールで経理部署の場合は経理部）
-    if (role === 'accounting') {
-      return '経理部';
-    }
-    
-    // 開発ロールは開発部
-    if (role === 'developer' || role === 'designer' || role === 'engineer') {
-      return '開発部';
-    }
-    
-    // 営業ロールは営業部
-    if (role === 'sales' || role === 'field_sales' || role === 'inside_sales') {
-      return '営業部';
-    }
-    
-    // 事務ロールは営業事務（ただし、部署が経理の場合は経理部）
-    if (role === 'office') {
-      // DB上の部署を確認して、経理の場合は経理部に
-      const dept = (department || '').trim();
-      if (dept === '経理' || dept === '経理部') {
-        return '経理部';
-      }
-      return '営業事務';
-    }
-    
-    // 清掃ロールは清掃員
-    if (role === 'staff') {
-      return '清掃員';
-    }
-    
-    // スペシャルバイザー
-    if (role === 'special_advisor') {
-      return 'スペシャルバイザー';
-    }
-    
-    // 運営ロールは運営本部（ただし表示から除外されているため、別の部署に変更が必要かも）
-    if (role === 'operation') {
-      return '運営本部';
-    }
-    
-    // 既存の部署名をそのまま使用
-    return dept;
-  }
 
-  // 部署をセクションに割り当て（組織図に基づいて設定）
-  function getSectionForDepartment(department) {
-    const dept = (department || '').trim();
-    
-    // 削除対象の部署はnullを返す（表示しない）
-    if (dept === '現場清掃' || dept === '経営本部' || dept === '運営') {
-      return null; // 表示しない
-    }
-    
-    // フロントオフィス: 営業事務、営業部（FS営業、IS営業）
-    if (dept === '営業事務' || dept === '営業' || dept === 'FS営業' || dept === 'IS営業') {
-      return 'front-office';
-    }
-    
-    // ミドルオフィス: 開発部
-    if (dept === '開発' || dept === '開発部') {
-      return 'middle-office';
-    }
-    
-    // バックオフィス: 人事部、総務部、経理部、広報・SNS対策部
-    if (dept === '人事' || dept === '人事部' || 
-        dept === '総務' || dept === '総務部' ||
-        dept === '経理' || dept === '経理部' ||
-        dept === '広報・SNS対策部' || dept === '広報') {
-      return 'back-office';
-    }
-    
-    // 運営本部: 清掃員、スペシャルバイザー、取締役
-    if (dept === '清掃' || dept === '清掃員' ||
-        dept === 'スペシャルバイザー' ||
-        dept === '取締役' || dept === '代表取締役') {
-      return 'board';
-    }
-    
-    // デフォルトはバックオフィス
-    return 'back-office';
-  }
 
   // 権限の優先順位（数値が小さいほど権限が大きい）
   function getRolePriority(role) {
@@ -450,50 +356,42 @@
     const usersByDepartment = {};
     for (const user of filteredUsers) {
       const dept = user.department || '未分類';
+      // 削除対象の部署はスキップ
+      if (dept === '現場清掃' || dept === '経営本部') {
+        continue;
+      }
       if (!usersByDepartment[dept]) {
         usersByDepartment[dept] = [];
       }
       usersByDepartment[dept].push(user);
     }
 
-    // 各部署内のユーザーを権限の大きい順にソート
+    // 各部署内のユーザーを権限の大きい順にソート（管理者を先に）
     for (const dept in usersByDepartment) {
       usersByDepartment[dept].sort((a, b) => {
-        const priorityA = getRolePriority(a.role);
-        const priorityB = getRolePriority(b.role);
-        return priorityA - priorityB; // 数値が小さいほど権限が大きい
+        const aIsAdmin = isAdminRole(a.role);
+        const bIsAdmin = isAdminRole(b.role);
+        if (aIsAdmin && !bIsAdmin) return -1;
+        if (!aIsAdmin && bIsAdmin) return 1;
+        // 両方同じ権限の場合はID順
+        return (a.id || '').localeCompare(b.id || '');
       });
     }
 
-    // セクションごとに部署を分類
-    const sections = {
-      'front-office': [],
-      'middle-office': [],
-      'back-office': [],
-      'board': [] // 運営本部
-    };
-
-    for (const dept in usersByDepartment) {
-      const section = getSectionForDepartment(dept);
-      // nullの場合はスキップ（表示しない）
-      if (section === null) {
-        continue;
-      }
-      sections[section].push({
+    // 部署を配列に変換してソート（部署名順）
+    const departments = Object.keys(usersByDepartment)
+      .sort()
+      .map(dept => ({
         name: dept,
         users: usersByDepartment[dept]
-      });
-    }
+      }));
 
-    // 各セクションをレンダリング
-    renderSection('front-office-departments', sections['front-office']);
-    renderSection('middle-office-departments', sections['middle-office']);
-    renderSection('back-office-departments', sections['back-office']);
-    renderSection('board-departments', sections['board']);
+    // 部署ベースでレンダリング
+    renderDepartments(departments);
   }
 
-  function renderSection(containerId, departments) {
-    const container = document.getElementById(containerId);
+  function renderDepartments(departments) {
+    const container = document.getElementById('departments-container');
     if (!container) return;
 
     if (departments.length === 0) {
@@ -510,6 +408,12 @@
         } else if (user.email && user.email !== '-') {
           mypageUrl = `/staff/mypage.html?email=${encodeURIComponent(user.email)}`;
         }
+
+        // 担当業務をバッジとして表示（「・」で区切られた複数の業務を複数のバッジとして表示）
+        const jobBadges = getUserJobBadges(user);
+
+        // ロール表示（管理者 or なし）
+        const roleDisplay = isAdminRole(user.role) ? '管理者' : 'なし';
 
         return `
           <div class="user-card" data-role="${user.role}">
@@ -531,8 +435,9 @@
                 <i class="fas fa-phone"></i>
                 <span>${escapeHtml(user.phone || '-')}</span>
               </div>
+              ${jobBadges ? `<div class="job-badges">${jobBadges}</div>` : ''}
               <div class="user-card-footer">
-                <span class="role-badge role-${user.role}">${getRoleLabel(user.role)}</span>
+                <span class="role-badge role-${isAdminRole(user.role) ? 'admin' : 'none'}">${roleDisplay}</span>
                 <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
               </div>
             </div>
@@ -563,6 +468,25 @@
         </div>
       `;
     }).join('');
+  }
+
+  // ユーザーの担当業務をバッジとして取得
+  function getUserJobBadges(user) {
+    // DB上の担当業務情報を取得
+    const jobInfo = user.job || '';
+    if (!jobInfo) return '';
+
+    // 「・」で区切られた複数の業務を分割
+    const jobs = jobInfo.split('・').map(j => j.trim()).filter(j => j);
+    if (jobs.length === 0) return '';
+
+    // 各業務をバッジとして表示
+    return jobs.map(job => `<span class="job-badge">${escapeHtml(job)}</span>`).join('');
+  }
+
+  // ロールが管理者かどうかを判定
+  function isAdminRole(role) {
+    return role === 'admin' || role === '管理者';
   }
 
   function escapeHtml(text) {

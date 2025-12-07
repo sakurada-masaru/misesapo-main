@@ -3764,6 +3764,7 @@ def create_worker(event, headers):
             'role': body_json.get('role', 'cleaning'),
             'role_code': body_json.get('role_code', '4'),
             'department': body_json.get('department', ''),
+            'job': body_json.get('job', ''),  # 担当業務
             'status': body_json.get('status', 'active'),
             'created_at': body_json.get('created_at', now),
             'updated_at': now
@@ -3882,7 +3883,7 @@ def update_worker(worker_id, event, headers):
         expression_attribute_names = {}
         
         updatable_fields = [
-            'name', 'email', 'phone', 'role', 'role_code', 'department', 'status',
+            'name', 'email', 'phone', 'role', 'role_code', 'department', 'job', 'status',
             'scheduled_start_time', 'scheduled_end_time', 'scheduled_work_hours', 'work_pattern'
         ]
         
