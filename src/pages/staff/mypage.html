@@ -104,12 +104,20 @@
     <!-- メインコンテンツ -->
     <div class="mypage-grid stack-on-sm" id="mypage-grid">
       <!-- 出退勤記録セクション -->
-      <section class="section draggable-section" data-section-id="attendance" draggable="false">
-        <h2 class="section-title drag-handle">
-          <i class="fas fa-grip-vertical"></i>
-          <i class="fas fa-clock"></i>
-          出退勤記録
-        </h2>
+      <section class="section draggable-section section-size-normal" data-section-id="attendance" data-section-size="normal" draggable="false">
+        <div class="section-header">
+          <h2 class="section-title drag-handle">
+            <i class="fas fa-grip-vertical"></i>
+            <i class="fas fa-clock"></i>
+            出退勤記録
+          </h2>
+          <div class="section-size-controls" style="display: none;">
+            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
+            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
+            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
+            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
+          </div>
+        </div>
           <div class="card attendance-card">
             <!-- 今日の出退勤状況 -->
             <div class="attendance-today-grid">
@@ -167,12 +175,20 @@
         </section>
 
       <!-- 業務連絡通知セクション -->
-      <section class="section draggable-section announcements-section" data-section-id="announcements" draggable="false">
-        <h2 class="section-title drag-handle">
-          <i class="fas fa-grip-vertical"></i>
-          <i class="fas fa-bullhorn"></i>
-          業務連絡
-        </h2>
+      <section class="section draggable-section announcements-section section-size-normal" data-section-id="announcements" data-section-size="normal" draggable="false">
+        <div class="section-header">
+          <h2 class="section-title drag-handle">
+            <i class="fas fa-grip-vertical"></i>
+            <i class="fas fa-bullhorn"></i>
+            業務連絡
+          </h2>
+          <div class="section-size-controls" style="display: none;">
+            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
+            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
+            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
+            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
+          </div>
+        </div>
           <div class="card announcements-card">
             <div id="announcements-list">
               <div class="empty-state">業務連絡はありません</div>
@@ -181,13 +197,21 @@
         </section>
 
       <!-- TODOリスト -->
-      <section class="section draggable-section" data-section-id="todo" draggable="false">
-        <h2 class="section-title drag-handle">
-          <i class="fas fa-grip-vertical"></i>
-          <i class="fas fa-tasks"></i>
-          TODOリスト
-          <span class="todo-count" id="todo-count">0</span>
-        </h2>
+      <section class="section draggable-section section-size-normal" data-section-id="todo" data-section-size="normal" draggable="false">
+        <div class="section-header">
+          <h2 class="section-title drag-handle">
+            <i class="fas fa-grip-vertical"></i>
+            <i class="fas fa-tasks"></i>
+            TODOリスト
+            <span class="todo-count" id="todo-count">0</span>
+          </h2>
+          <div class="section-size-controls" style="display: none;">
+            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
+            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
+            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
+            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
+          </div>
+        </div>
           <div class="card todo-card">
             <div class="todo-input-wrapper">
               <input type="text" id="todo-input" class="todo-input" placeholder="新しいタスクを追加..." />
@@ -207,12 +231,20 @@
         </section>
 
       <!-- 今週のスケジュール -->
-      <section class="section draggable-section" data-section-id="weekly-schedule" draggable="false">
-        <h2 class="section-title drag-handle">
-          <i class="fas fa-grip-vertical"></i>
-          <i class="fas fa-calendar-alt"></i>
-          今週のスケジュール
-        </h2>
+      <section class="section draggable-section section-size-normal" data-section-id="weekly-schedule" data-section-size="normal" draggable="false">
+        <div class="section-header">
+          <h2 class="section-title drag-handle">
+            <i class="fas fa-grip-vertical"></i>
+            <i class="fas fa-calendar-alt"></i>
+            今週のスケジュール
+          </h2>
+          <div class="section-size-controls" style="display: none;">
+            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
+            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
+            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
+            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
+          </div>
+        </div>
           <div class="card">
             <div id="weekly-schedule">
               <div class="empty-state">予定はありません</div>
@@ -221,12 +253,20 @@
         </section>
 
       <!-- 今月のカレンダー -->
-      <section class="section draggable-section calendar-section" data-section-id="calendar" draggable="false">
-        <h2 class="section-title drag-handle">
-          <i class="fas fa-grip-vertical"></i>
-          <i class="fas fa-calendar-alt"></i>
-          カレンダー
-        </h2>
+      <section class="section draggable-section calendar-section section-size-normal" data-section-id="calendar" data-section-size="normal" draggable="false">
+        <div class="section-header">
+          <h2 class="section-title drag-handle">
+            <i class="fas fa-grip-vertical"></i>
+            <i class="fas fa-calendar-alt"></i>
+            カレンダー
+          </h2>
+          <div class="section-size-controls" style="display: none;">
+            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
+            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
+            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
+            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
+          </div>
+        </div>
           <div class="calendar-head">
             <a class="calendar-nav" href="#" id="calendar-prev" aria-label="前へ">
               <i class="fa-solid fa-chevron-left"></i>
@@ -244,12 +284,20 @@
         </section>
 
       <!-- 基本情報 -->
-      <section class="section draggable-section" data-section-id="user-info" draggable="false">
-        <h2 class="section-title drag-handle">
-          <i class="fas fa-grip-vertical"></i>
-          <i class="fas fa-user"></i>
-          基本情報
-        </h2>
+      <section class="section draggable-section section-size-normal" data-section-id="user-info" data-section-size="normal" draggable="false">
+        <div class="section-header">
+          <h2 class="section-title drag-handle">
+            <i class="fas fa-grip-vertical"></i>
+            <i class="fas fa-user"></i>
+            基本情報
+          </h2>
+          <div class="section-size-controls" style="display: none;">
+            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
+            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
+            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
+            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
+          </div>
+        </div>
           <div class="card">
             <div class="info-item">
               <span class="info-item-label">ユーザーID</span>
@@ -298,10 +346,53 @@
     }
     .mypage-grid {
       display: grid !important;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(12, 1fr);
       gap: 24px;
       width: 100%;
       align-items: start;
+    }
+    /* セクションサイズパターン */
+    .section-size-normal {
+      grid-column: span 4;
+      grid-row: span 1;
+    }
+    .section-size-wide {
+      grid-column: span 8;
+      grid-row: span 1;
+    }
+    .section-size-tall {
+      grid-column: span 4;
+      grid-row: span 2;
+    }
+    .section-size-large {
+      grid-column: span 8;
+      grid-row: span 2;
+    }
+    @media (max-width: 1400px) {
+      .section-size-normal {
+        grid-column: span 6;
+      }
+      .section-size-wide {
+        grid-column: span 12;
+      }
+      .section-size-tall {
+        grid-column: span 6;
+      }
+      .section-size-large {
+        grid-column: span 12;
+      }
+    }
+    @media (max-width: 1024px) {
+      .mypage-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .section-size-normal,
+      .section-size-wide,
+      .section-size-tall,
+      .section-size-large {
+        grid-column: span 1 !important;
+        grid-row: span 1 !important;
+      }
     }
     .draggable-section {
       cursor: default;
@@ -445,14 +536,54 @@
     .mypage-sidebar-right .section {
       padding: 20px;
     }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
     .section-title {
       font-size: 1.25rem;
       font-weight: 600;
       color: #111827;
-      margin: 0 0 16px 0;
+      margin: 0;
       display: flex;
       align-items: center;
       gap: 8px;
+      flex: 1;
+    }
+    .section-size-controls {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .edit-mode .section-size-controls {
+      display: flex !important;
+    }
+    .size-btn {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+    .size-btn:hover {
+      background: #f3f4f6;
+      border-color: var(--primary, #3b82f6);
+      color: var(--primary, #3b82f6);
+    }
+    .size-btn.active {
+      background: var(--primary, #3b82f6);
+      border-color: var(--primary, #3b82f6);
+      color: #fff;
     }
     .section-title i {
       color: var(--primary);
@@ -3108,6 +3239,10 @@
         document.querySelectorAll('.draggable-section').forEach(section => {
           section.draggable = true;
         });
+        // サイズコントロールを表示
+        document.querySelectorAll('.section-size-controls').forEach(controls => {
+          controls.style.display = 'flex';
+        });
       } else {
         grid.classList.remove('edit-mode');
         toggleBtn.classList.remove('active');
@@ -3117,36 +3252,62 @@
           section.draggable = false;
           section.classList.remove('dragging', 'drag-over');
         });
+        // サイズコントロールを非表示
+        document.querySelectorAll('.section-size-controls').forEach(controls => {
+          controls.style.display = 'none';
+        });
       }
     }
 
-    // セクションの並び順を保存
+    // セクションの並び順とサイズを保存
     function saveSectionOrder() {
       const grid = document.getElementById('mypage-grid');
       const sections = Array.from(grid.querySelectorAll('.draggable-section'));
-      const order = sections.map(section => section.dataset.sectionId);
-      localStorage.setItem('mypage_section_order', JSON.stringify(order));
+      const data = sections.map(section => ({
+        id: section.dataset.sectionId,
+        size: section.dataset.sectionSize || 'normal'
+      }));
+      localStorage.setItem('mypage_section_data', JSON.stringify(data));
     }
 
-    // セクションの並び順を復元
+    // セクションの並び順とサイズを復元
     function restoreSectionOrder() {
       try {
-        const savedOrder = localStorage.getItem('mypage_section_order');
-        if (!savedOrder) return;
+        const savedData = localStorage.getItem('mypage_section_data');
+        if (!savedData) return;
         
-        const order = JSON.parse(savedOrder);
+        const data = JSON.parse(savedData);
         const grid = document.getElementById('mypage-grid');
         const sections = Array.from(grid.querySelectorAll('.draggable-section'));
         
-        // 保存された順序に並べ替え
-        order.forEach(sectionId => {
-          const section = sections.find(s => s.dataset.sectionId === sectionId);
+        // 保存された順序に並べ替え、サイズを適用
+        data.forEach(item => {
+          const section = sections.find(s => s.dataset.sectionId === item.id);
           if (section) {
+            // サイズを適用
+            setSectionSize(section, item.size);
             grid.appendChild(section);
           }
         });
       } catch (error) {
         console.warn('Failed to restore section order:', error);
+      }
+    }
+
+    // セクションのサイズを設定
+    function setSectionSize(section, size) {
+      // 既存のサイズクラスを削除
+      section.classList.remove('section-size-normal', 'section-size-wide', 'section-size-tall', 'section-size-large');
+      // 新しいサイズクラスを追加
+      section.classList.add(`section-size-${size}`);
+      section.dataset.sectionSize = size;
+      
+      // サイズボタンのアクティブ状態を更新
+      const controls = section.querySelector('.section-size-controls');
+      if (controls) {
+        controls.querySelectorAll('.size-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.size === size);
+        });
       }
     }
 
@@ -3257,6 +3418,19 @@
       
       // セクションの並び順を復元
       restoreSectionOrder();
+      
+      // サイズボタンのイベントリスナーを設定
+      document.querySelectorAll('.size-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const section = btn.closest('.draggable-section');
+          const size = btn.dataset.size;
+          if (section && size) {
+            setSectionSize(section, size);
+            saveSectionOrder();
+          }
+        });
+      });
       
       // ユーザー読み込み後にTODOを読み込む
       const originalLoadCurrentUser = loadCurrentUser;
