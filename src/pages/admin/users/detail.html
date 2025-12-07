@@ -222,10 +222,10 @@
               <input type="tel" id="edit-phone" placeholder="090-1234-5678">
             </div>
             <div class="form-group">
-              <label for="edit-role">ロール（役職） <span class="required">*</span></label>
+              <label for="edit-role">ロール <span class="required">*</span></label>
               <select id="edit-role" required>
                 <option value="admin">管理者</option>
-                <option value="staff">なし（平社員）</option>
+                <option value="staff">なし</option>
               </select>
               <small class="form-hint">管理ダッシュボードへのアクセス権限を表します</small>
             </div>
@@ -1141,11 +1141,18 @@
       document.getElementById('user-name').textContent = user.name || '-';
       document.getElementById('user-email').textContent = user.email || '-';
       
-      // ロールバッジ
+      // ロールバッジ（管理者のみ表示）
       const roleLabel = getRoleLabel(user.role);
       const roleBadge = document.getElementById('role-badge');
-      roleBadge.textContent = roleLabel;
-      roleBadge.className = `role-badge role-${user.role}`;
+      if (roleBadge) {
+        if (roleLabel) {
+          roleBadge.textContent = roleLabel;
+          roleBadge.className = 'role-badge role-admin';
+          roleBadge.style.display = 'inline-block';
+        } else {
+          roleBadge.style.display = 'none';
+        }
+      }
       
       // ステータスバッジ
       const status = user.status || 'active';
