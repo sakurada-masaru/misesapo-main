@@ -172,13 +172,29 @@
       }
 
       tbody.innerHTML = pageReports.map(r => {
-        // DataUtilsで正規化
-        const normalized = DataUtils.normalizeReport(r);
-        const store = DataUtils.findStore(allStores, r.store_id) || {};
+        // DataUtilsで正規化（フォールバック付き）
+        const normalized = (window.DataUtils && window.DataUtils.normalizeReport) 
+          ? window.DataUtils.normalizeReport(r)
+          : {
+              id: r.report_id || r.id,
+              worker_id: r.staff_id || r.worker_id,
+              date: r.cleaning_date || r.work_date || r.created_at?.split('T')[0],
+              start_time: r.cleaning_start_time || r.start_time,
+              end_time: r.cleaning_end_time || r.end_time,
+              status: r.status,
+              store_name: r.store_name
+            };
+        const store = (window.DataUtils && window.DataUtils.findStore) 
+          ? window.DataUtils.findStore(allStores, r.store_id) || {}
+          : allStores.find(s => s.id === r.store_id) || {};
         const worker = allWorkers.find(w => w.id === normalized.worker_id) || {};
         const status = normalized.status === 'approved' ? 'approved' : (normalized.status === 'rejected' ? 'rejected' : 'pending');
-        const statusLabel = DataUtils.getStatusLabel(status);
-        const displayStoreName = DataUtils.getStoreName(allStores, r.store_id, normalized.store_name);
+        const statusLabel = (window.DataUtils && window.DataUtils.getStatusLabel)
+          ? window.DataUtils.getStatusLabel(status)
+          : (status === 'approved' ? '承認済み' : status === 'rejected' ? '却下' : '承認待ち');
+        const displayStoreName = (window.DataUtils && window.DataUtils.getStoreName)
+          ? window.DataUtils.getStoreName(allStores, r.store_id, normalized.store_name)
+          : (store.name || normalized.store_name || r.store_name || '-');
         
         // 再提出通知バッジ
         const resubmittedBadge = (r.resubmitted || normalized.resubmitted) 
