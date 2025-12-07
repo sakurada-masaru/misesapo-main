@@ -603,6 +603,10 @@
     document.getElementById('reset-filters').addEventListener('click', () => {
       document.getElementById('search-input').value = '';
       document.getElementById('role-filter').value = '';
+      const departmentFilter = document.getElementById('department-filter');
+      if (departmentFilter) {
+        departmentFilter.value = '';
+      }
       document.getElementById('status-filter').value = '';
       filterAndRender();
     });
