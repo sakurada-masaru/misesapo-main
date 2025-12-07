@@ -221,12 +221,228 @@
   min-width: 140px;
 }
 
-/* テーブル */
+/* 組織構造レイアウト */
+.organization-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 24px 0;
+}
+
+.office-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.office-section.front-office {
+  border-left: 4px solid #3b82f6; /* 青 */
+}
+
+.office-section.middle-office {
+  border-left: 4px solid #f59e0b; /* オレンジ */
+}
+
+.office-section.back-office {
+  border-left: 4px solid #10b981; /* 緑 */
+}
+
+.office-section.board-of-directors {
+  border-left: 4px solid #8b5cf6; /* 紫 */
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title i {
+  font-size: 1.25rem;
+}
+
+.departments-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.department-group {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  background: #f9fafb;
+}
+
+.department-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.user-count {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.user-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.user-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.user-avatar-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.user-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-card-info .user-name {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.user-card-info .user-name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.user-card-info .user-name a:hover {
+  color: #3b82f6;
+}
+
+.user-id {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-family: monospace;
+}
+
+.user-card-body {
+  flex: 1;
+  margin-bottom: 12px;
+}
+
+.user-detail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.user-detail i {
+  width: 16px;
+  color: #9ca3af;
+}
+
+.user-card-footer {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.user-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.user-card-actions .btn-icon {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.user-card-actions .btn-icon:hover {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.user-card-actions .btn-icon.delete:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.no-departments {
+  text-align: center;
+  color: #9ca3af;
+  padding: 24px;
+  font-size: 0.875rem;
+}
+
+.loading-cell {
+  text-align: center;
+  padding: 48px !important;
+  color: #94a3b8;
+}
+
+/* テーブル表示（後方互換性のため残す） */
 .table-container {
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  display: none; /* 新しいレイアウトでは非表示 */
 }
 .users-table {
   width: 100%;
@@ -249,11 +465,6 @@
 }
 .users-table tbody tr:hover {
   background: #f8fafc;
-}
-.loading-cell {
-  text-align: center;
-  padding: 48px !important;
-  color: #94a3b8;
 }
 .user-name-cell {
   display: flex;
