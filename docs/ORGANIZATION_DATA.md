@@ -3,49 +3,205 @@
 ## 📋 入力ガイド
 このドキュメントに組織図の情報を入力してください。入力が完了したら、このデータを基に実装を行います。
 
+各ユーザーに対して以下を入力してください：
+- 役職（ロール）
+- 担当業務
+- 部署
+
 ---
 
-## 🏢 組織構造
+## 👥 全ユーザー一覧（ID順）
+
+### W001: 正田和輝
+- ID: W001
+- メール: frappe.manma@gmail.com
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W002: 梅岡アレサンドレユウジ
+- ID: W002
+- メール: umeoka@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W003: 中島郁哉
+- ID: W003
+- メール: nakajima@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W004: 板橋隆二
+- ID: W004
+- メール: itabashi@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W005: 吉井奎吾
+- ID: W005
+- メール: yoshii@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W006: 佐々木一真
+- ID: W006
+- メール: sasaki@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W007: 大野幹太
+- ID: W007
+- メール: ono@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W008: 平鋭未
+- ID: W008
+- メール: taira@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W009: 沖智弘
+- ID: W009
+- メール: oki@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W010: 北野康平
+- ID: W010
+- メール: okitano@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W011: 熊谷円
+- ID: W011
+- メール: kumagai@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W012: 増田優香
+- ID: W012
+- メール: masuda@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W013: 生井剛
+- ID: W013
+- メール: namai@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W014: 太田真也
+- ID: W014
+- メール: ota@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W017: 岡本涼子
+- ID: W017
+- メール: okamoto@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W018: 山村明広
+- ID: W018
+- メール: yamamura@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W019: 夏目倫之助
+- ID: W019
+- メール: natsume@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W020: 竹内那海
+- ID: W020
+- メール: takeuchi@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W021: 遠藤虹輝
+- ID: W021
+- メール: endo@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W022: 関口栄一
+- ID: W022
+- メール: eiichi@prf.tokyo
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+### W999: 櫻田傑
+- ID: W999
+- メール: sakurada@misesapo.co.jp
+- 役職（ロール）: []
+- 担当業務: []
+- 部署: []
+
+---
+
+## 🏢 組織構造（セクション別）
 
 ### セクション1: フロントオフィス
 
 #### 部署: 営業事務
-- [ ] 増田優香 (ID: W012, メール: masuda@misesapo.co.jp, ロール: office)
-- [ ] 沖智弘 (ID: W009, メール: oki@misesapo.co.jp, ロール: sales)
-- [ ] 熊谷円 (ID: W011, メール: kumagai@misesapo.co.jp, ロール: office)
-- [ ] パンデ (ID: [要確認], メール: [要確認], ロール: [要確認])
+- [ ] 増田優香 (ID: W012, メール: masuda@misesapo.co.jp)
+- [ ] 沖智弘 (ID: W009, メール: oki@misesapo.co.jp)
+- [ ] 熊谷円 (ID: W011, メール: kumagai@misesapo.co.jp)
+- [ ] パンデ (ID: [要確認], メール: [要確認])
 
 #### 部署: 営業部
-- [ ] 生井剛 (ID: W013, メール: namai@misesapo.co.jp, ロール: sales)
-- [ ] 梅岡ユウジ (ID: W002, メール: umeoka@misesapo.co.jp, ロール: staff)
-- [ ] 平鋭未 (ID: W008, メール: taira@misesapo.co.jp, ロール: sales)
-- [ ] 中澤裕 (ID: [要確認], メール: [要確認], ロール: [要確認])
-- [ ] lullaby (ID: [要確認], メール: [要確認], ロール: [要確認])
-- [ ] 下田 (ID: [要確認], メール: [要確認], ロール: [要確認])
-- [ ] 坂口 (ID: [要確認], メール: [要確認], ロール: [要確認])
+- [ ] 生井剛 (ID: W013, メール: namai@misesapo.co.jp)
+- [ ] 梅岡ユウジ (ID: W002, メール: umeoka@misesapo.co.jp)
+- [ ] 平鋭未 (ID: W008, メール: taira@misesapo.co.jp)
+- [ ] 中澤裕 (ID: [要確認], メール: [要確認])
+- [ ] lullaby (ID: [要確認], メール: [要確認])
+- [ ] 下田 (ID: [要確認], メール: [要確認])
+- [ ] 坂口 (ID: [要確認], メール: [要確認])
 
 ---
 
 ### セクション2: ミドルオフィス
 
 #### 部署: 開発部
-- [ ] 山村明広 (ID: W018, メール: yamamura@misesapo.co.jp, ロール: developer)
-- [ ] 竹内那海 (ID: W020, メール: takeuchi@misesapo.co.jp, ロール: developer)
-- [ ] 夏目倫之介 (ID: W019, メール: natsume@misesapo.co.jp, ロール: developer)
-- [ ] 外部スタッフ: 森田未希 (ID: [要確認], メール: [要確認], ロール: [要確認])
+- [ ] 山村明広 (ID: W018, メール: yamamura@misesapo.co.jp)
+- [ ] 竹内那海 (ID: W020, メール: takeuchi@misesapo.co.jp)
+- [ ] 夏目倫之介 (ID: W019, メール: natsume@misesapo.co.jp)
+- [ ] 外部スタッフ: 森田未希 (ID: [要確認], メール: [要確認])
 
 ---
 
 ### セクション3: バックオフィス
 
 #### 部署: 人事部
-- [ ] 関口栄一 (ID: W022, メール: eiichi@prf.tokyo, ロール: human_resources)
+- [ ] 関口栄一 (ID: W022, メール: eiichi@prf.tokyo)
 
 #### 部署: 総務部
-- [ ] 櫻田傑 (ID: W999, メール: sakurada@misesapo.co.jp, ロール: admin) ← 管理者ロール
+- [ ] 櫻田傑 (ID: W999, メール: sakurada@misesapo.co.jp) ← 管理者ロール
 
 #### 部署: 経理部
-- [ ] 岡本涼子 (ID: W017, メール: okamoto@misesapo.co.jp, ロール: office)
+- [ ] 岡本涼子 (ID: W017, メール: okamoto@misesapo.co.jp)
 
 #### 部署: 広報・SNS対策部
 - [ ] [メンバー未記載]
@@ -55,35 +211,23 @@
 ### セクション4: 運営本部
 
 #### 部署: 清掃員
-- [ ] 梅岡ユウジ (ID: W002, メール: umeoka@misesapo.co.jp, ロール: staff)
-  - [ ] ガブリエラ (ID: [要確認], メール: [要確認], ロール: [要確認])
-  - [ ] ガブリエレ (ID: [要確認], メール: [要確認], ロール: [要確認])
-- [ ] 遠藤虹輝 (ID: W021, メール: endo@misesapo.co.jp, ロール: admin)
-  - [ ] 板橋隆二 (ID: W004, メール: itabashi@misesapo.co.jp, ロール: staff)
-  - [ ] 大野幹太 (ID: W007, メール: ono@misesapo.co.jp, ロール: staff)
-  - [ ] 平鋭未 (ID: W008, メール: taira@misesapo.co.jp, ロール: sales) ← 重複？
-  - [ ] 佐々木一真 (ID: W006, メール: sasaki@misesapo.co.jp, ロール: staff)
-  - [ ] 中島郁哉 (ID: W003, メール: nakajima@misesapo.co.jp, ロール: staff)
-  - [ ] 中澤裕 (ID: [要確認], メール: [要確認], ロール: [要確認])
-  - [ ] 吉井奎吾 (ID: W005, メール: yoshii@misesapo.co.jp, ロール: staff)
-- [ ] 松岡 (ID: [要確認], メール: [要確認], ロール: [要確認])
-- [ ] レムエル (ID: [要確認], メール: [要確認], ロール: [要確認])
+- [ ] 梅岡ユウジ (ID: W002, メール: umeoka@misesapo.co.jp)
+  - [ ] ガブリエラ (ID: [要確認], メール: [要確認])
+  - [ ] ガブリエレ (ID: [要確認], メール: [要確認])
+- [ ] 遠藤虹輝 (ID: W021, メール: endo@misesapo.co.jp)
+  - [ ] 板橋隆二 (ID: W004, メール: itabashi@misesapo.co.jp)
+  - [ ] 大野幹太 (ID: W007, メール: ono@misesapo.co.jp)
+  - [ ] 平鋭未 (ID: W008, メール: taira@misesapo.co.jp) ← 重複？
+  - [ ] 佐々木一真 (ID: W006, メール: sasaki@misesapo.co.jp)
+  - [ ] 中島郁哉 (ID: W003, メール: nakajima@misesapo.co.jp)
+  - [ ] 中澤裕 (ID: [要確認], メール: [要確認])
+  - [ ] 吉井奎吾 (ID: W005, メール: yoshii@misesapo.co.jp)
+- [ ] 松岡 (ID: [要確認], メール: [要確認])
+- [ ] レムエル (ID: [要確認], メール: [要確認])
 
 #### 部署: スペシャルバイザー
-- [ ] 高木直人 (ID: [要確認], メール: [要確認], ロール: special_advisor)
-- [ ] 太田真也 (ID: W014, メール: ota@misesapo.co.jp, ロール: admin)
-
----
-
-## 🔑 役職とロールの対応
-
-### 管理者ロール（役職持ち）
-- [x] `admin` → 総務部: 櫻田傑 (ID: W999, メール: sakurada@misesapo.co.jp)
-- [ ] `admin` → 清掃員: 遠藤虹輝 (ID: W021, メール: endo@misesapo.co.jp) ← 確認必要
-- [ ] `admin` → 開発: 太田真也 (ID: W014, メール: ota@misesapo.co.jp) ← スペシャルバイザー？
-
-### 平社員（それ以外）
-- 各部署のメンバーは、業務内容に応じたロールを持つ
+- [ ] 高木直人 (ID: [要確認], メール: [要確認])
+- [ ] 太田真也 (ID: W014, メール: ota@misesapo.co.jp)
 
 ---
 
@@ -133,9 +277,6 @@
 - [ ] レムエル
 - [ ] 高木直人
 
-### ロールが不明なユーザー
-- [ ] 上記のID不明ユーザー全員
-
 ### 管理者ロールの配置
 - [ ] 遠藤虹輝 (W021, メール: endo@misesapo.co.jp): adminロールだが清掃員に配置？
 - [ ] 太田真也 (W014, メール: ota@misesapo.co.jp): adminロールだがスペシャルバイザー？
@@ -157,4 +298,4 @@
 ## 🔄 更新履歴
 
 - 2025-12-07 - 初期データ入力（組織図より）
-
+- 2025-12-07 - IDとメールアドレスを記入、ID順に並べ替え
