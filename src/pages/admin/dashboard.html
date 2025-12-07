@@ -1011,6 +1011,9 @@
       // レポートAPIは認証が必要なため、別途取得
       const idToken = await getCognitoIdToken();
       
+      // today変数を関数内で定義
+      const today = new Date();
+      
       const [storesRes, schedulesRes, workersRes, reportsRes] = await Promise.all([
         fetch(`${API_BASE}/stores`),
         fetch(`${API_BASE}/schedules`),
@@ -1031,7 +1034,7 @@
       
       const workersData = await workersRes.json();
       const workers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
-      
+
       // レポートデータの取得（エラーハンドリング付き）
       let reports = [];
       if (reportsRes.ok) {
@@ -1094,10 +1097,10 @@
       });
       
       if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Unauthorized: Invalid or expired token');
-        } else {
-          console.error('Failed to load announcements:', response.status, response.statusText);
+        // 401エラーは正常（認証が必要な場合やAPIが実装されていない場合）
+        // エラーログを抑制し、バナーを非表示にする
+        if (response.status !== 401) {
+          console.warn('Failed to load announcements:', response.status, response.statusText);
         }
         const banner = document.getElementById('announcements-banner');
         if (banner) {
@@ -1111,7 +1114,10 @@
       
       renderAnnouncements(announcements);
     } catch (error) {
-      console.error('Error loading announcements:', error);
+      // ネットワークエラーなどの場合のみ警告を出力（401は除外）
+      if (error && error.message && !error.message.includes('401')) {
+        console.warn('Error loading announcements:', error);
+      }
       const banner = document.getElementById('announcements-banner');
       if (banner) {
         banner.style.display = 'none';
