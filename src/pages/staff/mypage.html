@@ -277,21 +277,29 @@
 
   <style>
     .staff-mypage {
-      width: 100%;
-      max-width: none;
+      width: 100% !important;
+      max-width: none !important;
       margin: 0;
-      margin-left: var(--sidebar-width, 240px);
+      margin-left: var(--sidebar-width, 240px) !important;
       padding: 24px;
       background: #f9fafb;
       min-height: 100vh;
       box-sizing: border-box;
     }
     .staff-mypage.main-content {
-      margin-left: var(--sidebar-width, 240px);
+      margin-left: var(--sidebar-width, 240px) !important;
+      width: calc(100% - var(--sidebar-width, 240px)) !important;
     }
     .sidebar.collapsed ~ .staff-mypage.main-content,
     .sidebar.collapsed + .staff-mypage.main-content {
-      margin-left: var(--sidebar-width-collapsed, 64px);
+      margin-left: var(--sidebar-width-collapsed, 64px) !important;
+      width: calc(100% - var(--sidebar-width-collapsed, 64px)) !important;
+    }
+    .mypage-grid {
+      display: grid !important;
+      grid-template-columns: 320px 1fr 360px !important;
+      gap: 24px;
+      width: 100%;
     }
     .loading {
       text-align: center;
@@ -319,11 +327,7 @@
       margin: 0;
       padding: 0;
     }
-    .mypage-grid {
-      display: grid;
-      grid-template-columns: 320px 1fr 360px;
-      gap: 24px;
-    }
+    /* .mypage-grid のスタイルは上で定義済み */
     @media (max-width: 1400px) {
       .mypage-grid {
         grid-template-columns: 280px 1fr 320px;
