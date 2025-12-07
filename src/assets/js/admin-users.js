@@ -301,6 +301,11 @@
       return '人事部';
     }
     
+    // 経理ロールは経理部（officeロールで経理部署の場合は経理部）
+    if (role === 'accounting') {
+      return '経理部';
+    }
+    
     // 開発ロールは開発部
     if (role === 'developer' || role === 'designer' || role === 'engineer') {
       return '開発部';
@@ -311,8 +316,13 @@
       return '営業部';
     }
     
-    // 事務ロールは営業事務
+    // 事務ロールは営業事務（ただし、部署が経理の場合は経理部）
     if (role === 'office') {
+      // DB上の部署を確認して、経理の場合は経理部に
+      const dept = (department || '').trim();
+      if (dept === '経理' || dept === '経理部') {
+        return '経理部';
+      }
       return '営業事務';
     }
     
@@ -354,9 +364,10 @@
       return 'middle-office';
     }
     
-    // バックオフィス: 人事部、総務部、広報・SNS対策部
+    // バックオフィス: 人事部、総務部、経理部、広報・SNS対策部
     if (dept === '人事' || dept === '人事部' || 
         dept === '総務' || dept === '総務部' ||
+        dept === '経理' || dept === '経理部' ||
         dept === '広報・SNS対策部' || dept === '広報') {
       return 'back-office';
     }
