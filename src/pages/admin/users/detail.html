@@ -1156,14 +1156,14 @@
       // マイページリンクを更新（サイドバー）
       const mypageLink = document.getElementById('user-mypage-link');
       if (mypageLink && user.id) {
-        mypageLink.href = `/staff/mypage.html?id=${user.id}`;
+        mypageLink.href = `/staff/mypage.html?id=${encodeURIComponent(user.id)}`;
         mypageLink.style.display = 'flex';
       }
       
       // マイページボタンを更新（クイックアクション）
       const mypageBtn = document.getElementById('mypage-btn');
       if (mypageBtn && user.id) {
-        mypageBtn.href = `/staff/mypage.html?id=${user.id}`;
+        mypageBtn.href = `/staff/mypage.html?id=${encodeURIComponent(user.id)}`;
         mypageBtn.style.display = 'flex';
       }
     }
