@@ -31,8 +31,63 @@
     // 出退勤データの読み込み
     loadAttendanceRecords();
     
+    // ユーザー詳細画面から戻ってきた場合、リロードする
+    const needsReload = sessionStorage.getItem('users_list_needs_reload');
+    const updatedUserId = sessionStorage.getItem('users_list_updated_user_id');
+    
+    if (needsReload === 'true') {
+      // フラグをクリア
+      sessionStorage.removeItem('users_list_needs_reload');
+      sessionStorage.removeItem('users_list_updated_user_id');
+      
+      // リロード前に少し待つ（DynamoDBの反映を待つ）
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
     // 従業員リストの読み込み（最重要）
     await loadUsers();
+    
+    // 更新されたユーザーが特定されている場合、そのユーザーを個別取得APIで最新データに更新
+    if (updatedUserId) {
+      try {
+        const timestamp = new Date().getTime();
+        const individualResponse = await fetch(`${API_BASE}/workers/${updatedUserId}?t=${timestamp}&_=${Date.now()}`, {
+          cache: 'no-store'
+        });
+        if (individualResponse.ok) {
+          const latestWorker = await individualResponse.json();
+          // allUsers内の該当ユーザーを更新
+          const userIndex = allUsers.findIndex(u => String(u.id) === String(updatedUserId));
+          if (userIndex !== -1) {
+            // ロールの判定
+            let role = latestWorker.role || 'staff';
+            if (latestWorker.role_code !== undefined) {
+              role = getRoleFromCode(latestWorker.role_code);
+            }
+            
+            // ユーザー情報を更新
+            allUsers[userIndex] = {
+              ...allUsers[userIndex],
+              name: (latestWorker.name || latestWorker.display_name || '').trim() || '名前未設定',
+              email: (latestWorker.email || latestWorker.email_address || '').trim() || '-',
+              phone: (latestWorker.phone || latestWorker.phone_number || '').trim() || '-',
+              role: role,
+              department: (latestWorker.department || latestWorker.team || '').trim() || '-',
+              status: latestWorker.status || 'active',
+              updated_at: latestWorker.updated_at
+            };
+            
+            // フィルタリングとテーブルを再描画
+            applyFilters();
+            renderTable();
+            updateStats();
+            console.log(`Updated user ${updatedUserId} with latest data from API`);
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to update user ${updatedUserId} with latest data:`, error);
+      }
+    }
     
     // イベントリスナーの設定
     setupEventListeners();
