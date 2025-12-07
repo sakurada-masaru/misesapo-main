@@ -198,16 +198,13 @@
           // IDを正規化（文字列として扱う）
           const workerId = String(w.id || w.user_id || '').trim();
           
-          // ロールから部署を決定
-          const department = getDepartmentFromRole(role);
-          
           return {
             id: workerId,
             name: (w.name || w.display_name || '').trim() || '名前未設定',
             email: (w.email || w.email_address || '').trim() || '-',
             phone: (w.phone || w.phone_number || '').trim() || '-',
             role: role,
-            department: department, // ロールから決定した部署を使用
+            department: (w.department || w.team || '').trim() || '-', // DB上の実際の部署データを使用
             team: w.team || '-',
             status: w.status || (w.active !== undefined ? (w.active ? 'active' : 'inactive') : 'active'),
             created_at: w.created_at || w.created_date,
