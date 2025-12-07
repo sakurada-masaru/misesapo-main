@@ -913,6 +913,20 @@
       // CognitoAuthが読み込まれているか確認
       if (!window.CognitoAuth) {
         console.error('[Dashboard] CognitoAuth is not loaded');
+        // 少し待ってから再試行（スクリプトの読み込み待ち）
+        await new Promise(resolve => setTimeout(resolve, 500));
+        if (!window.CognitoAuth) {
+          window.location.href = '/staff/signin.html?redirect=' + encodeURIComponent(window.location.pathname);
+          return false;
+        }
+      }
+
+      // まず、localStorageにトークンがあるか確認
+      const idToken = localStorage.getItem('cognito_id_token');
+      const storedUser = localStorage.getItem('cognito_user');
+      
+      if (!idToken && !storedUser) {
+        console.warn('[Dashboard] No authentication data found, redirecting to login');
         window.location.href = '/staff/signin.html?redirect=' + encodeURIComponent(window.location.pathname);
         return false;
       }
@@ -921,20 +935,27 @@
       const isAuth = window.CognitoAuth.isAuthenticated();
       console.log('[Dashboard] Authentication check:', isAuth);
       
-      if (!isAuth) {
-        console.warn('[Dashboard] Not authenticated, redirecting to login');
-        // localStorageの状態を確認（デバッグ用）
-        const idToken = localStorage.getItem('cognito_id_token');
-        const cognitoUser = localStorage.getItem('cognito_user');
-        console.log('[Dashboard] Debug - idToken exists:', !!idToken);
-        console.log('[Dashboard] Debug - cognito_user exists:', !!cognitoUser);
-        window.location.href = '/staff/signin.html?redirect=' + encodeURIComponent(window.location.pathname);
-        return false;
+      // 現在のユーザー情報を取得（認証チェックと並行して実行）
+      let cognitoUser = null;
+      try {
+        cognitoUser = await window.CognitoAuth.getCurrentUser();
+        console.log('[Dashboard] Current user:', cognitoUser);
+      } catch (userError) {
+        console.warn('[Dashboard] Error getting current user:', userError);
       }
-
-      // 現在のユーザー情報を取得
-      const cognitoUser = await window.CognitoAuth.getCurrentUser();
-      console.log('[Dashboard] Current user:', cognitoUser);
+      
+      // ユーザー情報が取得できない場合、localStorageから取得を試みる
+      if (!cognitoUser && storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser && parsedUser.id) {
+            console.log('[Dashboard] Using stored user from localStorage:', parsedUser);
+            cognitoUser = parsedUser;
+          }
+        } catch (parseError) {
+          console.warn('[Dashboard] Error parsing stored user:', parseError);
+        }
+      }
       
       if (!cognitoUser) {
         console.warn('[Dashboard] User not found, redirecting to login');
@@ -943,17 +964,22 @@
       }
 
       // ロールを確認（管理者ロールのみ許可）
-      const userRole = cognitoUser.role;
+      const userRole = cognitoUser.role || cognitoUser.role_code;
       console.log('[Dashboard] User role:', userRole);
       
       if (userRole !== 'admin' && userRole !== '管理者') {
         console.warn('[Dashboard] Access denied. User role:', userRole);
         alert('このページにアクセスする権限がありません。管理者のみアクセス可能です。');
-        window.location.href = '/staff/mypage.html?id=' + encodeURIComponent(cognitoUser.id);
+        const userId = cognitoUser.id || (storedUser ? JSON.parse(storedUser).id : null);
+        if (userId) {
+          window.location.href = '/staff/mypage.html?id=' + encodeURIComponent(userId);
+        } else {
+          window.location.href = '/staff/signin.html';
+        }
         return false;
       }
 
-      console.log('[Dashboard] Access granted for admin user:', cognitoUser.name);
+      console.log('[Dashboard] Access granted for admin user:', cognitoUser.name || cognitoUser.email);
       return true;
     } catch (error) {
       console.error('[Dashboard] Error checking access:', error);
