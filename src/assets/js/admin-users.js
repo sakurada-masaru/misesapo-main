@@ -457,6 +457,9 @@
 
         // 担当業務をバッジとして表示（「・」で区切られた複数の業務を複数のバッジとして表示）
         const jobBadges = getUserJobBadges(user);
+        
+        // 管理者のみロールバッジを表示
+        const roleBadge = isAdminRole(user.role) ? '<span class="role-badge role-admin">管理者</span>' : '';
 
         return `
           <div class="user-card" data-role="${user.role}">
@@ -480,6 +483,7 @@
               </div>
               ${jobBadges ? `<div class="job-badges">${jobBadges}</div>` : ''}
               <div class="user-card-footer">
+                ${roleBadge}
                 <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
               </div>
             </div>
