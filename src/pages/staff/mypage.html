@@ -1126,17 +1126,6 @@
             }
           }
           
-          // Firebase認証を確認（フォールバック）
-          if (!userId && !userEmail) {
-            const authData = window.Auth?.getAuthData?.();
-            if (authData && authData.user) {
-              if (authData.user.id) {
-                userId = authData.user.id;
-              } else if (authData.user.email || authData.email) {
-                userEmail = authData.user.email || authData.email;
-              }
-            }
-          }
         }
         
         if (!userId && !userEmail) {
@@ -1233,15 +1222,6 @@
               }
             }
             
-            // Firebase UIDで検索（フォールバック）
-            if ((!fallbackResponse || !fallbackResponse.ok) && !currentUser) {
-              const authData = window.Auth?.getAuthData?.();
-              if (authData && authData.user && authData.user.firebase_uid) {
-                fallbackResponse = await fetch(`${API_BASE}/workers?firebase_uid=${encodeURIComponent(authData.user.firebase_uid)}&t=${timestamp}&_=${Date.now()}`, {
-                  cache: 'no-store'
-                });
-              }
-            }
             
             if (fallbackResponse && fallbackResponse.ok) {
               const users = await fallbackResponse.json();
@@ -2168,7 +2148,7 @@
       if (!currentUser) return;
       
       try {
-        const idToken = await getFirebaseIdToken();
+        const idToken = await getCognitoIdToken();
         const response = await fetch(`${REPORT_API}/staff/announcements`, {
           method: 'GET',
           headers: {
@@ -2246,7 +2226,7 @@
           
           // 既読マーク
           try {
-            const idToken = await getFirebaseIdToken();
+            const idToken = await getCognitoIdToken();
             await fetch(`${REPORT_API}/staff/announcements/${announcementId}/read`, {
               method: 'POST',
               headers: {
@@ -2267,8 +2247,8 @@
       });
     }
 
-    // Firebase ID Token取得（既存の関数がある場合はそれを使用）
-    async function getFirebaseIdToken() {
+    // Cognito ID Token取得（従業員認証用）
+    async function getCognitoIdToken() {
       try {
         // Cognito認証から取得
         const cognitoIdToken = localStorage.getItem('cognito_id_token');
@@ -2287,7 +2267,7 @@
         
         return 'mock-token';
       } catch (error) {
-        console.error('Error getting Firebase ID token:', error);
+        console.error('Error getting Cognito ID token:', error);
         return 'mock-token';
       }
     }

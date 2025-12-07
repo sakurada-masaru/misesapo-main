@@ -186,15 +186,48 @@
   /**
    * ロールバッジを更新
    */
-  function updateRoleBadge() {
+  async function updateRoleBadge() {
     const roleBadge = document.getElementById('sidebar-role-badge');
     if (!roleBadge) return;
 
-    if (window.Auth && window.Auth.getCurrentUser) {
-      const user = window.Auth.getCurrentUser();
-      if (user && user.role) {
+    try {
+      let userRole = null;
+      let userDepartment = null;
+
+      // Cognito認証からユーザー情報を取得（最優先）
+      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+        try {
+          const cognitoUser = await window.CognitoAuth.getCurrentUser();
+          if (cognitoUser) {
+            userRole = cognitoUser.role;
+            userDepartment = cognitoUser.department;
+          }
+        } catch (e) {
+          console.warn('[AdminSidebar] Error getting user from Cognito:', e);
+        }
+      }
+
+      // Cognito認証から取得できない場合、ローカルストレージから取得
+      if (!userRole) {
+        try {
+          const storedCognitoUser = localStorage.getItem('cognito_user');
+          if (storedCognitoUser) {
+            const parsedUser = JSON.parse(storedCognitoUser);
+            userRole = parsedUser.role;
+            userDepartment = parsedUser.department;
+          }
+        } catch (e) {
+          console.warn('[AdminSidebar] Error parsing stored cognito_user:', e);
+        }
+      }
+
+      // ロールバッジを更新（部署があれば部署を表示、なければロールを表示）
+      if (userDepartment) {
+        roleBadge.textContent = userDepartment;
+      } else if (userRole) {
         const roleLabels = {
           'admin': '管理者',
+          '管理者': '管理者',
           'customer': '顧客',
           'sales': '営業',
           'office': '事務',
@@ -209,8 +242,10 @@
           'human_resources': '人事',
           'master': 'マスター'
         };
-        roleBadge.textContent = roleLabels[user.role] || 'ユーザー';
+        roleBadge.textContent = roleLabels[userRole] || 'ユーザー';
       }
+    } catch (error) {
+      console.error('[AdminSidebar] Error in updateRoleBadge:', error);
     }
   }
 
@@ -254,14 +289,6 @@
         }
       }
 
-      // Firebase認証をフォールバックとして使用（後方互換性のため）
-      if (!userRole && window.Auth && window.Auth.getCurrentUser) {
-        const user = window.Auth.getCurrentUser();
-        if (user && user.role) {
-          userRole = user.role;
-          console.log('[AdminSidebar] User role from Firebase Auth:', userRole);
-        }
-      }
 
       // 管理者ロールのみ管理ダッシュボードを表示
       if (userRole === 'admin' || userRole === '管理者') {
@@ -428,13 +455,6 @@
         console.warn('[AdminSidebar] Error parsing stored cognito_user:', e);
       }
 
-      // Firebase認証をフォールバックとして使用（後方互換性のため）
-      if (window.Auth && window.Auth.getCurrentUser) {
-        const user = window.Auth.getCurrentUser();
-        if (user && user.role) {
-          return user.role;
-        }
-      }
     } catch (error) {
       console.error('[AdminSidebar] Error in getCurrentUserRole:', error);
     }
@@ -459,7 +479,7 @@
       document.addEventListener('DOMContentLoaded', async function() {
         setActiveNavItem();
         initSidebarToggle();
-        updateRoleBadge();
+        await updateRoleBadge();
         await toggleSidebarElementsByRole();
         setupMypageLink();
       });
