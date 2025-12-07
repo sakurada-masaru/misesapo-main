@@ -3076,6 +3076,154 @@
       }
     }
 
+    // ドラッグ&ドロップ機能
+    let editMode = false;
+    let draggedElement = null;
+
+    // 編集モードの切り替え
+    function toggleEditMode() {
+      editMode = !editMode;
+      const grid = document.getElementById('mypage-grid');
+      const toggleBtn = document.getElementById('edit-mode-toggle');
+      
+      if (editMode) {
+        grid.classList.add('edit-mode');
+        toggleBtn.classList.add('active');
+        toggleBtn.querySelector('span').textContent = '編集モード ON';
+        // すべてのセクションをドラッグ可能に
+        document.querySelectorAll('.draggable-section').forEach(section => {
+          section.draggable = true;
+        });
+      } else {
+        grid.classList.remove('edit-mode');
+        toggleBtn.classList.remove('active');
+        toggleBtn.querySelector('span').textContent = '編集モード';
+        // すべてのセクションをドラッグ不可に
+        document.querySelectorAll('.draggable-section').forEach(section => {
+          section.draggable = false;
+          section.classList.remove('dragging', 'drag-over');
+        });
+      }
+    }
+
+    // セクションの並び順を保存
+    function saveSectionOrder() {
+      const grid = document.getElementById('mypage-grid');
+      const sections = Array.from(grid.querySelectorAll('.draggable-section'));
+      const order = sections.map(section => section.dataset.sectionId);
+      localStorage.setItem('mypage_section_order', JSON.stringify(order));
+    }
+
+    // セクションの並び順を復元
+    function restoreSectionOrder() {
+      try {
+        const savedOrder = localStorage.getItem('mypage_section_order');
+        if (!savedOrder) return;
+        
+        const order = JSON.parse(savedOrder);
+        const grid = document.getElementById('mypage-grid');
+        const sections = Array.from(grid.querySelectorAll('.draggable-section'));
+        
+        // 保存された順序に並べ替え
+        order.forEach(sectionId => {
+          const section = sections.find(s => s.dataset.sectionId === sectionId);
+          if (section) {
+            grid.appendChild(section);
+          }
+        });
+      } catch (error) {
+        console.warn('Failed to restore section order:', error);
+      }
+    }
+
+    // ドラッグ&ドロップイベントの設定
+    function setupDragAndDrop() {
+      const grid = document.getElementById('mypage-grid');
+      if (!grid) return;
+
+      grid.addEventListener('dragstart', (e) => {
+        if (!editMode || !e.target.classList.contains('draggable-section')) return;
+        
+        draggedElement = e.target;
+        draggedElement.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', draggedElement.innerHTML);
+      });
+
+      grid.addEventListener('dragend', (e) => {
+        if (!editMode) return;
+        
+        if (draggedElement) {
+          draggedElement.classList.remove('dragging');
+          draggedElement = null;
+        }
+        // すべてのセクションからdrag-overクラスを削除
+        document.querySelectorAll('.draggable-section').forEach(section => {
+          section.classList.remove('drag-over');
+        });
+      });
+
+      grid.addEventListener('dragover', (e) => {
+        if (!editMode) return;
+        
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        const afterElement = getDragAfterElement(grid, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        
+        if (dragging && afterElement == null) {
+          grid.appendChild(dragging);
+        } else if (dragging && afterElement) {
+          grid.insertBefore(dragging, afterElement);
+        }
+      });
+
+      grid.addEventListener('dragenter', (e) => {
+        if (!editMode) return;
+        
+        if (e.target.classList.contains('draggable-section') && e.target !== draggedElement) {
+          e.target.classList.add('drag-over');
+        }
+      });
+
+      grid.addEventListener('dragleave', (e) => {
+        if (!editMode) return;
+        
+        if (e.target.classList.contains('draggable-section')) {
+          e.target.classList.remove('drag-over');
+        }
+      });
+
+      grid.addEventListener('drop', (e) => {
+        if (!editMode) return;
+        
+        e.preventDefault();
+        saveSectionOrder();
+        
+        // すべてのセクションからdrag-overクラスを削除
+        document.querySelectorAll('.draggable-section').forEach(section => {
+          section.classList.remove('drag-over');
+        });
+      });
+    }
+
+    // ドラッグ後の位置を計算
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll('.draggable-section:not(.dragging)')];
+      
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
     // 初期化
     document.addEventListener('DOMContentLoaded', () => {
       loadCurrentUser();
@@ -3083,6 +3231,18 @@
       setupCorrectionRequestButton();
       setupBreakButtons();
       setupTodoListeners();
+      
+      // 編集モード切り替えボタン
+      const editModeToggle = document.getElementById('edit-mode-toggle');
+      if (editModeToggle) {
+        editModeToggle.addEventListener('click', toggleEditMode);
+      }
+      
+      // ドラッグ&ドロップの設定
+      setupDragAndDrop();
+      
+      // セクションの並び順を復元
+      restoreSectionOrder();
       
       // ユーザー読み込み後にTODOを読み込む
       const originalLoadCurrentUser = loadCurrentUser;
