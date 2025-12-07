@@ -239,7 +239,11 @@
       
       if (allUsers.length === 0) {
         console.warn('No users found. API response:', workers);
-        tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">ユーザーが見つかりませんでした</td></tr>';
+        const loadingEl = document.getElementById('loading-users');
+        if (loadingEl) {
+          loadingEl.style.display = 'block';
+          loadingEl.textContent = 'ユーザーが見つかりませんでした';
+        }
         // 出退勤セクションも空にする
         renderAttendanceSections();
         return;
@@ -251,7 +255,11 @@
     } catch (error) {
       console.error('Failed to load users:', error);
       console.error('Error details:', error.message, error.stack);
-      tbody.innerHTML = `<tr><td colspan="8" class="loading-cell">読み込みに失敗しました: ${error.message}</td></tr>`;
+      const loadingEl = document.getElementById('loading-users');
+      if (loadingEl) {
+        loadingEl.style.display = 'block';
+        loadingEl.textContent = `読み込みに失敗しました: ${error.message}`;
+      }
       // エラー時も出退勤セクションを表示（空の状態）
       renderAttendanceSections();
     }
@@ -484,16 +492,26 @@
     }).join('');
   }
 
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   function getRoleLabel(role) {
     const labels = {
       admin: '管理者',
       sales: '営業',
       office: '事務',
       cleaning: '清掃',
+      staff: '清掃員',
+      developer: '開発者',
       public_relations: '広報',
       designer: 'デザイナー',
       general_affairs: '総務',
       director: '取締役',
+      operation: '運営',
       contractor: '外部委託',
       accounting: '経理',
       human_resources: '人事',
