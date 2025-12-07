@@ -102,21 +102,55 @@
     </div>
     
     <!-- メインコンテンツ -->
-    <div class="mypage-grid stack-on-sm" id="mypage-grid">
-      <!-- 出退勤記録セクション -->
-      <section class="section draggable-section section-size-normal" data-section-id="attendance" data-section-size="normal" draggable="false">
+    <div class="mypage-layout">
+      <!-- サイドバー -->
+      <aside class="mypage-sidebar">
+        <!-- 基本情報 -->
+        <section class="section draggable-section" data-section-id="user-info" data-section-cost="2" draggable="false">
+          <div class="section-header">
+            <h2 class="section-title drag-handle">
+              <i class="fas fa-grip-vertical"></i>
+              <i class="fas fa-user"></i>
+              基本情報
+            </h2>
+          </div>
+          <div class="card">
+            <div class="info-item">
+              <span class="info-item-label">ユーザーID</span>
+              <span class="info-item-value" id="info-user-id">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-label">メールアドレス</span>
+              <span class="info-item-value" id="info-email">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-label">電話番号</span>
+              <span class="info-item-value" id="info-phone">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-label">部署</span>
+              <span class="info-item-value" id="info-department">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-label">登録日</span>
+              <span class="info-item-value" id="info-created-at">-</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- メインコンテンツ（5×3グリッド） -->
+      <div class="mypage-main-grid-container">
+        <div class="mypage-main-grid" id="mypage-grid">
+          <!-- 出退勤記録セクション -->
+          <section class="section draggable-section" data-section-id="attendance" data-section-cost="3" data-grid-position="1,1" draggable="false">
         <div class="section-header">
           <h2 class="section-title drag-handle">
             <i class="fas fa-grip-vertical"></i>
             <i class="fas fa-clock"></i>
             出退勤記録
+            <span class="section-cost-badge">3マス</span>
           </h2>
-          <div class="section-size-controls" style="display: none;">
-            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
-            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
-            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
-            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
-          </div>
         </div>
           <div class="card attendance-card">
             <!-- 今日の出退勤状況 -->
@@ -175,19 +209,14 @@
         </section>
 
       <!-- 業務連絡通知セクション -->
-      <section class="section draggable-section announcements-section section-size-normal" data-section-id="announcements" data-section-size="normal" draggable="false">
+      <section class="section draggable-section announcements-section" data-section-id="announcements" data-section-cost="2" data-grid-position="4,1" draggable="false">
         <div class="section-header">
           <h2 class="section-title drag-handle">
             <i class="fas fa-grip-vertical"></i>
             <i class="fas fa-bullhorn"></i>
             業務連絡
+            <span class="section-cost-badge">2マス</span>
           </h2>
-          <div class="section-size-controls" style="display: none;">
-            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
-            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
-            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
-            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
-          </div>
         </div>
           <div class="card announcements-card">
             <div id="announcements-list">
@@ -197,20 +226,15 @@
         </section>
 
       <!-- TODOリスト -->
-      <section class="section draggable-section section-size-normal" data-section-id="todo" data-section-size="normal" draggable="false">
+      <section class="section draggable-section" data-section-id="todo" data-section-cost="3" data-grid-position="1,2" draggable="false">
         <div class="section-header">
           <h2 class="section-title drag-handle">
             <i class="fas fa-grip-vertical"></i>
             <i class="fas fa-tasks"></i>
             TODOリスト
             <span class="todo-count" id="todo-count">0</span>
+            <span class="section-cost-badge">3マス</span>
           </h2>
-          <div class="section-size-controls" style="display: none;">
-            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
-            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
-            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
-            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
-          </div>
         </div>
           <div class="card todo-card">
             <div class="todo-input-wrapper">
@@ -231,19 +255,14 @@
         </section>
 
       <!-- 今週のスケジュール -->
-      <section class="section draggable-section section-size-normal" data-section-id="weekly-schedule" data-section-size="normal" draggable="false">
+      <section class="section draggable-section" data-section-id="weekly-schedule" data-section-cost="2" data-grid-position="4,2" draggable="false">
         <div class="section-header">
           <h2 class="section-title drag-handle">
             <i class="fas fa-grip-vertical"></i>
             <i class="fas fa-calendar-alt"></i>
             今週のスケジュール
+            <span class="section-cost-badge">2マス</span>
           </h2>
-          <div class="section-size-controls" style="display: none;">
-            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
-            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
-            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
-            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
-          </div>
         </div>
           <div class="card">
             <div id="weekly-schedule">
@@ -253,19 +272,14 @@
         </section>
 
       <!-- 今月のカレンダー -->
-      <section class="section draggable-section calendar-section section-size-normal" data-section-id="calendar" data-section-size="normal" draggable="false">
+      <section class="section draggable-section calendar-section" data-section-id="calendar" data-section-cost="3" data-grid-position="1,3" draggable="false">
         <div class="section-header">
           <h2 class="section-title drag-handle">
             <i class="fas fa-grip-vertical"></i>
             <i class="fas fa-calendar-alt"></i>
             カレンダー
+            <span class="section-cost-badge">3マス</span>
           </h2>
-          <div class="section-size-controls" style="display: none;">
-            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
-            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
-            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
-            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
-          </div>
         </div>
           <div class="calendar-head">
             <a class="calendar-nav" href="#" id="calendar-prev" aria-label="前へ">
@@ -283,44 +297,9 @@
           </div>
         </section>
 
-      <!-- 基本情報 -->
-      <section class="section draggable-section section-size-normal" data-section-id="user-info" data-section-size="normal" draggable="false">
-        <div class="section-header">
-          <h2 class="section-title drag-handle">
-            <i class="fas fa-grip-vertical"></i>
-            <i class="fas fa-user"></i>
-            基本情報
-          </h2>
-          <div class="section-size-controls" style="display: none;">
-            <button class="size-btn" data-size="normal" title="通常"><i class="fas fa-square"></i></button>
-            <button class="size-btn" data-size="wide" title="横長"><i class="fas fa-arrows-alt-h"></i></button>
-            <button class="size-btn" data-size="tall" title="縦長"><i class="fas fa-arrows-alt-v"></i></button>
-            <button class="size-btn" data-size="large" title="大きい"><i class="fas fa-expand"></i></button>
-          </div>
-        </div>
-          <div class="card">
-            <div class="info-item">
-              <span class="info-item-label">ユーザーID</span>
-              <span class="info-item-value" id="info-user-id">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-item-label">メールアドレス</span>
-              <span class="info-item-value" id="info-email">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-item-label">電話番号</span>
-              <span class="info-item-value" id="info-phone">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-item-label">部署</span>
-              <span class="info-item-value" id="info-department">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-item-label">登録日</span>
-              <span class="info-item-value" id="info-created-at">-</span>
-            </div>
-          </div>
         </section>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -344,54 +323,68 @@
       margin-left: var(--sidebar-width-collapsed, 64px) !important;
       width: calc(100% - var(--sidebar-width-collapsed, 64px)) !important;
     }
-    .mypage-grid {
-      display: grid !important;
-      grid-template-columns: repeat(12, 1fr);
+    /* 2カラムレイアウト（サイドバー + メインコンテンツ） */
+    .mypage-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
       gap: 24px;
+      width: 100%;
+    }
+    .mypage-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    /* メインコンテンツ：5×3グリッド（15マス） */
+    .mypage-main-grid-container {
+      position: relative;
+    }
+    .mypage-main-grid {
+      display: grid !important;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(3, minmax(200px, auto));
+      gap: 16px;
       width: 100%;
       align-items: start;
     }
-    /* セクションサイズパターン */
-    .section-size-normal {
-      grid-column: span 4;
-      grid-row: span 1;
+    /* 編集モード時にグリッドを可視化 */
+    .edit-mode .mypage-main-grid::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        repeating-linear-gradient(0deg, transparent, transparent calc(100% / 3 - 1px), rgba(59, 130, 246, 0.1) calc(100% / 3 - 1px), rgba(59, 130, 246, 0.1) calc(100% / 3)),
+        repeating-linear-gradient(90deg, transparent, transparent calc(100% / 5 - 1px), rgba(59, 130, 246, 0.1) calc(100% / 5 - 1px), rgba(59, 130, 246, 0.1) calc(100% / 5));
+      pointer-events: none;
+      z-index: 0;
     }
-    .section-size-wide {
-      grid-column: span 8;
-      grid-row: span 1;
+    .edit-mode .mypage-main-grid > * {
+      position: relative;
+      z-index: 1;
     }
-    .section-size-tall {
-      grid-column: span 4;
-      grid-row: span 2;
+    /* セクションのコスト表示 */
+    .section-cost-badge {
+      font-size: 0.75rem;
+      color: #6b7280;
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: auto;
     }
-    .section-size-large {
-      grid-column: span 8;
-      grid-row: span 2;
-    }
-    @media (max-width: 1400px) {
-      .section-size-normal {
-        grid-column: span 6;
-      }
-      .section-size-wide {
-        grid-column: span 12;
-      }
-      .section-size-tall {
-        grid-column: span 6;
-      }
-      .section-size-large {
-        grid-column: span 12;
-      }
+    .edit-mode .section-cost-badge {
+      background: #dbeafe;
+      color: #1e40af;
     }
     @media (max-width: 1024px) {
-      .mypage-grid {
-        grid-template-columns: 1fr !important;
+      .mypage-layout {
+        grid-template-columns: 1fr;
       }
-      .section-size-normal,
-      .section-size-wide,
-      .section-size-tall,
-      .section-size-large {
-        grid-column: span 1 !important;
-        grid-row: span 1 !important;
+      .mypage-main-grid {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto !important;
       }
     }
     .draggable-section {
@@ -3232,19 +3225,17 @@
       const toggleBtn = document.getElementById('edit-mode-toggle');
       
       if (editMode) {
-        grid.classList.add('edit-mode');
+        if (grid) grid.classList.add('edit-mode');
         toggleBtn.classList.add('active');
         toggleBtn.querySelector('span').textContent = '編集モード ON';
-        // すべてのセクションをドラッグ可能に
-        document.querySelectorAll('.draggable-section').forEach(section => {
-          section.draggable = true;
-        });
-        // サイズコントロールを表示
-        document.querySelectorAll('.section-size-controls').forEach(controls => {
-          controls.style.display = 'flex';
-        });
+        // メイングリッド内のセクションのみドラッグ可能に
+        if (grid) {
+          grid.querySelectorAll('.draggable-section').forEach(section => {
+            section.draggable = true;
+          });
+        }
       } else {
-        grid.classList.remove('edit-mode');
+        if (grid) grid.classList.remove('edit-mode');
         toggleBtn.classList.remove('active');
         toggleBtn.querySelector('span').textContent = '編集モード';
         // すべてのセクションをドラッグ不可に
@@ -3252,63 +3243,147 @@
           section.draggable = false;
           section.classList.remove('dragging', 'drag-over');
         });
-        // サイズコントロールを非表示
-        document.querySelectorAll('.section-size-controls').forEach(controls => {
-          controls.style.display = 'none';
-        });
       }
     }
 
-    // セクションの並び順とサイズを保存
-    function saveSectionOrder() {
-      const grid = document.getElementById('mypage-grid');
-      const sections = Array.from(grid.querySelectorAll('.draggable-section'));
-      const data = sections.map(section => ({
-        id: section.dataset.sectionId,
-        size: section.dataset.sectionSize || 'normal'
-      }));
-      localStorage.setItem('mypage_section_data', JSON.stringify(data));
+    // グリッド位置を計算（列、行からgrid-column/rowを設定）
+    function setGridPosition(section, col, row) {
+      const cost = parseInt(section.dataset.sectionCost) || 1;
+      // コストに応じて幅を決定（1マス=1列、2マス=2列、3マス=3列など）
+      const colSpan = Math.min(cost, 5); // 最大5列
+      const rowSpan = Math.ceil(cost / 5); // 必要に応じて複数行
+      
+      section.style.gridColumn = `${col} / ${col + colSpan}`;
+      section.style.gridRow = `${row} / ${row + rowSpan}`;
+      section.dataset.gridPosition = `${col},${row}`;
     }
 
-    // セクションの並び順とサイズを復元
-    function restoreSectionOrder() {
+    // グリッド位置を取得（data-grid-positionから）
+    function getGridPosition(section) {
+      const pos = section.dataset.gridPosition;
+      if (pos) {
+        const [col, row] = pos.split(',').map(Number);
+        return { col, row };
+      }
+      return null;
+    }
+
+    // セクションの配置を保存
+    function saveSectionLayout() {
+      const grid = document.getElementById('mypage-grid');
+      if (!grid) return;
+      
+      const sections = Array.from(grid.querySelectorAll('.draggable-section'));
+      const layout = sections.map(section => {
+        const pos = getGridPosition(section);
+        return {
+          id: section.dataset.sectionId,
+          cost: parseInt(section.dataset.sectionCost) || 1,
+          position: pos ? `${pos.col},${pos.row}` : null
+        };
+      });
+      localStorage.setItem('mypage_section_layout', JSON.stringify(layout));
+    }
+
+    // セクションの配置を復元
+    function restoreSectionLayout() {
       try {
-        const savedData = localStorage.getItem('mypage_section_data');
-        if (!savedData) return;
+        const savedLayout = localStorage.getItem('mypage_section_layout');
+        if (!savedLayout) {
+          // デフォルト配置を適用
+          applyDefaultLayout();
+          return;
+        }
         
-        const data = JSON.parse(savedData);
+        const layout = JSON.parse(savedLayout);
         const grid = document.getElementById('mypage-grid');
-        const sections = Array.from(grid.querySelectorAll('.draggable-section'));
+        if (!grid) return;
         
-        // 保存された順序に並べ替え、サイズを適用
-        data.forEach(item => {
-          const section = sections.find(s => s.dataset.sectionId === item.id);
-          if (section) {
-            // サイズを適用
-            setSectionSize(section, item.size);
-            grid.appendChild(section);
+        layout.forEach(item => {
+          const section = grid.querySelector(`[data-section-id="${item.id}"]`);
+          if (section && item.position) {
+            const [col, row] = item.position.split(',').map(Number);
+            setGridPosition(section, col, row);
           }
         });
       } catch (error) {
-        console.warn('Failed to restore section order:', error);
+        console.warn('Failed to restore section layout:', error);
+        applyDefaultLayout();
       }
     }
 
-    // セクションのサイズを設定
-    function setSectionSize(section, size) {
-      // 既存のサイズクラスを削除
-      section.classList.remove('section-size-normal', 'section-size-wide', 'section-size-tall', 'section-size-large');
-      // 新しいサイズクラスを追加
-      section.classList.add(`section-size-${size}`);
-      section.dataset.sectionSize = size;
+    // デフォルト配置を適用
+    function applyDefaultLayout() {
+      const grid = document.getElementById('mypage-grid');
+      if (!grid) return;
       
-      // サイズボタンのアクティブ状態を更新
-      const controls = section.querySelector('.section-size-controls');
-      if (controls) {
-        controls.querySelectorAll('.size-btn').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.size === size);
-        });
+      const sections = Array.from(grid.querySelectorAll('.draggable-section'));
+      let currentCol = 1;
+      let currentRow = 1;
+      
+      sections.forEach(section => {
+        const cost = parseInt(section.dataset.sectionCost) || 1;
+        // 現在の行に収まるかチェック
+        if (currentCol + cost > 6) {
+          currentRow++;
+          currentCol = 1;
+        }
+        setGridPosition(section, currentCol, currentRow);
+        currentCol += cost;
+        // 5列を超えたら次の行へ
+        if (currentCol > 5) {
+          currentRow++;
+          currentCol = 1;
+        }
+      });
+    }
+
+    // マウス位置からグリッド位置（列、行）を計算
+    function getGridPositionFromMouse(grid, x, y) {
+      const rect = grid.getBoundingClientRect();
+      const gridX = x - rect.left;
+      const gridY = y - rect.top;
+      
+      const colWidth = rect.width / 5;
+      const rowHeight = rect.height / 3;
+      
+      const col = Math.min(Math.floor(gridX / colWidth) + 1, 5);
+      const row = Math.min(Math.floor(gridY / rowHeight) + 1, 3);
+      
+      return { col, row };
+    }
+
+    // グリッド位置が有効かチェック（他のセクションと重複しないか）
+    function isValidPosition(grid, section, col, row) {
+      const cost = parseInt(section.dataset.sectionCost) || 1;
+      const colSpan = Math.min(cost, 5);
+      const rowSpan = Math.ceil(cost / 5);
+      
+      // グリッド範囲外チェック
+      if (col + colSpan - 1 > 5 || row + rowSpan - 1 > 3) {
+        return false;
       }
+      
+      // 他のセクションとの重複チェック
+      const otherSections = Array.from(grid.querySelectorAll('.draggable-section:not(.dragging)'));
+      for (const other of otherSections) {
+        if (other === section) continue;
+        
+        const otherPos = getGridPosition(other);
+        if (!otherPos) continue;
+        
+        const otherCost = parseInt(other.dataset.sectionCost) || 1;
+        const otherColSpan = Math.min(otherCost, 5);
+        const otherRowSpan = Math.ceil(otherCost / 5);
+        
+        // 重複チェック
+        if (!(col + colSpan <= otherPos.col || col >= otherPos.col + otherColSpan ||
+              row + rowSpan <= otherPos.row || row >= otherPos.row + otherRowSpan)) {
+          return false;
+        }
+      }
+      
+      return true;
     }
 
     // ドラッグ&ドロップイベントの設定
@@ -3322,7 +3397,6 @@
         draggedElement = e.target;
         draggedElement.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', draggedElement.innerHTML);
       });
 
       grid.addEventListener('dragend', (e) => {
@@ -3333,70 +3407,46 @@
           draggedElement = null;
         }
         // すべてのセクションからdrag-overクラスを削除
-        document.querySelectorAll('.draggable-section').forEach(section => {
+        grid.querySelectorAll('.draggable-section').forEach(section => {
           section.classList.remove('drag-over');
         });
       });
 
       grid.addEventListener('dragover', (e) => {
-        if (!editMode) return;
+        if (!editMode || !draggedElement) return;
         
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         
-        const afterElement = getDragAfterElement(grid, e.clientY);
-        const dragging = document.querySelector('.dragging');
+        const { col, row } = getGridPositionFromMouse(grid, e.clientX, e.clientY);
         
-        if (dragging && afterElement == null) {
-          grid.appendChild(dragging);
-        } else if (dragging && afterElement) {
-          grid.insertBefore(dragging, afterElement);
-        }
-      });
-
-      grid.addEventListener('dragenter', (e) => {
-        if (!editMode) return;
-        
-        if (e.target.classList.contains('draggable-section') && e.target !== draggedElement) {
-          e.target.classList.add('drag-over');
-        }
-      });
-
-      grid.addEventListener('dragleave', (e) => {
-        if (!editMode) return;
-        
-        if (e.target.classList.contains('draggable-section')) {
-          e.target.classList.remove('drag-over');
+        // 有効な位置かチェック
+        if (isValidPosition(grid, draggedElement, col, row)) {
+          // プレビュー位置を表示（オプション）
+          grid.querySelectorAll('.draggable-section').forEach(section => {
+            section.classList.remove('drag-over');
+          });
         }
       });
 
       grid.addEventListener('drop', (e) => {
-        if (!editMode) return;
+        if (!editMode || !draggedElement) return;
         
         e.preventDefault();
-        saveSectionOrder();
+        
+        const { col, row } = getGridPositionFromMouse(grid, e.clientX, e.clientY);
+        
+        // 有効な位置なら配置
+        if (isValidPosition(grid, draggedElement, col, row)) {
+          setGridPosition(draggedElement, col, row);
+          saveSectionLayout();
+        }
         
         // すべてのセクションからdrag-overクラスを削除
-        document.querySelectorAll('.draggable-section').forEach(section => {
+        grid.querySelectorAll('.draggable-section').forEach(section => {
           section.classList.remove('drag-over');
         });
       });
-    }
-
-    // ドラッグ後の位置を計算
-    function getDragAfterElement(container, y) {
-      const draggableElements = [...container.querySelectorAll('.draggable-section:not(.dragging)')];
-      
-      return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        
-        if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
-        } else {
-          return closest;
-        }
-      }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
     // 初期化
@@ -3416,21 +3466,8 @@
       // ドラッグ&ドロップの設定
       setupDragAndDrop();
       
-      // セクションの並び順を復元
-      restoreSectionOrder();
-      
-      // サイズボタンのイベントリスナーを設定
-      document.querySelectorAll('.size-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const section = btn.closest('.draggable-section');
-          const size = btn.dataset.size;
-          if (section && size) {
-            setSectionSize(section, size);
-            saveSectionOrder();
-          }
-        });
-      });
+      // セクションの配置を復元
+      restoreSectionLayout();
       
       // ユーザー読み込み後にTODOを読み込む
       const originalLoadCurrentUser = loadCurrentUser;
