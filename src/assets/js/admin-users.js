@@ -401,7 +401,7 @@
       'front-office': [],
       'middle-office': [],
       'back-office': [],
-      'board': []
+      'board': [] // 運営本部
     };
 
     for (const dept in usersByDepartment) {
