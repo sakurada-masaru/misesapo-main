@@ -75,10 +75,13 @@
     async function loadWorkers() {
       try {
         const res = await fetch(`${API_BASE}/workers`);
-        allWorkers = await res.json();
+        const workersData = await res.json();
+        // レスポンスが配列でない場合の処理（itemsやworkersプロパティから取得）
+        allWorkers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
         populateWorkerSelect();
       } catch (e) {
         console.error('Failed to load workers:', e);
+        allWorkers = []; // エラー時は空配列を設定
       }
     }
 
