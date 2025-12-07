@@ -290,13 +290,18 @@
   function getSectionForDepartment(department) {
     const dept = (department || '').trim();
     
+    // 削除対象の部署はnullを返す（表示しない）
+    if (dept === '現場清掃' || dept === '経営本部' || dept === '運営') {
+      return null; // 表示しない
+    }
+    
     // フロントオフィス: 営業
     if (dept === '営業') {
       return 'front-office';
     }
     
-    // ミドルオフィス: 営業事務、現場清掃、清掃
-    if (dept === '営業事務' || dept === '現場清掃' || dept === '清掃') {
+    // ミドルオフィス: 営業事務、清掃
+    if (dept === '営業事務' || dept === '清掃') {
       return 'middle-office';
     }
     
@@ -305,9 +310,9 @@
       return 'back-office';
     }
     
-    // 運営本部: 人事、総務、経理、取締役、経営本部、運営
+    // 運営本部: 人事、総務、経理、取締役
     if (dept === '人事' || dept === '総務' || 
-        dept === '経理' || dept === '取締役' || dept === '経営本部' || dept === '運営') {
+        dept === '経理' || dept === '取締役') {
       return 'board';
     }
     
@@ -407,6 +412,10 @@
 
     for (const dept in usersByDepartment) {
       const section = getSectionForDepartment(dept);
+      // nullの場合はスキップ（表示しない）
+      if (section === null) {
+        continue;
+      }
       sections[section].push({
         name: dept,
         users: usersByDepartment[dept]
