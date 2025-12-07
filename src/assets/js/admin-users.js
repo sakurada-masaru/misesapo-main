@@ -290,24 +290,25 @@
   function getSectionForDepartment(department) {
     const dept = (department || '').trim();
     
-    // フロントオフィス
-    if (dept === '営業' || dept === '現場清掃' || dept === '清掃') {
+    // フロントオフィス: 営業
+    if (dept === '営業') {
       return 'front-office';
     }
     
-    // ミドルオフィス
-    if (dept === '運営') {
-      return 'middle-office';
-    }
-    
-    // バックオフィス
-    if (dept === '営業事務' || dept === '開発') {
+    // バックオフィス: 営業事務、開発、事務
+    if (dept === '営業事務' || dept === '開発' || dept === '事務') {
       return 'back-office';
     }
     
-    // 取締役会
-    if (dept === '経営本部') {
+    // 運営本部: 人事、総務、スペシャルバイザー、経理、取締役、経営本部
+    if (dept === '人事' || dept === '総務' || dept === 'スペシャルバイザー' || 
+        dept === '経理' || dept === '取締役' || dept === '経営本部' || dept === '運営') {
       return 'board';
+    }
+    
+    // ミドルオフィス: 現場清掃、清掃（清掃スタッフは顧客と直接接するため、フロントオフィス寄りだが、ミドルオフィスに配置）
+    if (dept === '現場清掃' || dept === '清掃') {
+      return 'middle-office';
     }
     
     // デフォルトはバックオフィス
