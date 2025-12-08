@@ -344,12 +344,7 @@ function getRoleColor(role) {
 
 // ユーザー情報を表示
 function renderUser(user) {
-  // ページヘッダーにユーザー名を表示
-  const userNameEl = document.getElementById('mypage-user-name');
-  if (userNameEl) {
-    userNameEl.textContent = user.name || '-';
-  }
-  
+  // ユーザー名表示は削除（サイドバーに移動）
   // 基本情報を表示
   renderBasicInfo(user);
   
@@ -2155,20 +2150,20 @@ function toggleEditMode() {
   }
 }
 
-// グリッド位置を計算（Bento Gridスタイル: grid-column/row spanを使用）
+// グリッド位置を計算（Bento Gridスタイル: 位置とサイズを明示的に指定）
 function setGridPosition(container, col, row) {
   if (!container) return;
   
-  // data-container-widthとdata-container-heightを使用（span値として使用）
+  // data-container-widthとdata-container-heightを使用
   const width = parseInt(container.dataset.containerWidth) || 1;
   const height = parseInt(container.dataset.containerHeight) || 1;
   
-  // Bento Gridスタイル: grid-column: span X と grid-row: span Y を使用
-  // 位置は自動配置（grid-auto-flow: dense）または明示的に指定
-  container.style.gridColumn = `span ${width}`;
-  container.style.gridRow = `span ${height}`;
+  // Bento Gridスタイル: 位置とサイズを明示的に指定
+  // grid-column: col / col + width と grid-row: row / row + height
+  container.style.gridColumn = `${col} / ${col + width}`;
+  container.style.gridRow = `${row} / ${row + height}`;
   
-  // 位置を保存（必要に応じて使用）
+  // 位置を保存
   container.dataset.gridPosition = `${col},${row}`;
   
   // サイズが正しく設定されているか確認
@@ -2446,15 +2441,15 @@ function showDropPreview(grid, container, col, row) {
   const width = parseInt(container.dataset.containerWidth) || 1;
   const height = parseInt(container.dataset.containerHeight) || 1;
   
-  // プレビュー要素を作成（Bento Gridスタイル: spanを使用）
+  // プレビュー要素を作成（Bento Gridスタイル: 位置とサイズを明示的に指定）
   const preview = document.createElement('div');
   preview.className = 'drop-preview-guide';
-  preview.style.gridColumn = `span ${width}`;
-  preview.style.gridRow = `span ${height}`;
+  preview.style.gridColumn = `${col} / ${col + width}`;
+  preview.style.gridRow = `${row} / ${row + height}`;
   preview.style.borderRadius = '20px';
   
   grid.appendChild(preview);
-  console.log('[Drag] Preview shown at col:', col, 'row:', row, 'span:', width, 'x', height);
+  console.log('[Drag] Preview shown at col:', col, 'row:', row, 'size:', width, 'x', height);
 }
 
 // ドロッププレビューガイドを削除

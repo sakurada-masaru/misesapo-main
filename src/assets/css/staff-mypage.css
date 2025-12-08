@@ -212,33 +212,48 @@
   margin-bottom: 24px;
   text-align: center;
 }
-.mypage-header {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 100;
-  pointer-events: auto;
+/* サイドバー内のマイページ編集ボタン */
+.mypage-sidebar-actions {
+  margin-top: 8px;
+  padding: 8px 16px;
 }
-.mypage-user-name {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-  padding: 0;
-  flex: 1;
-}
-.mypage-header-actions {
+
+.btn-sidebar {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  pointer-events: auto;
-  z-index: 10;
+  padding: 10px 16px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.btn-sidebar:last-child {
+  margin-bottom: 0;
+}
+
+.btn-sidebar:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.btn-sidebar.active {
+  background: var(--primary, #3b82f6);
+  color: #fff;
+  border-color: var(--primary, #3b82f6);
+}
+
+.btn-sidebar.active:hover {
+  background: var(--primary, #3b82f6);
+  color: #fff;
 }
 .btn-edit-mode,
 .btn-auto-align {
