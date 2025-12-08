@@ -884,13 +884,19 @@
   color: #9ca3af;
   cursor: pointer;
   padding: 0;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: color 0.2s;
+  transition: color 0.2s, transform 0.1s;
+}
+
+.toast-close:active {
+  transform: scale(0.9);
 }
 
 .toast-close:hover {
@@ -1136,8 +1142,10 @@
 }
 
 .section-delete {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1147,6 +1155,12 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.8rem;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.section-delete:active {
+  transform: scale(0.9);
+  background: #fecaca;
 }
 
 .section-body {
@@ -1297,8 +1311,10 @@
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
   background: rgba(239, 68, 68, 0.9);
   color: #fff;
   border: none;
@@ -1308,11 +1324,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.image-thumb-remove:active {
+  transform: scale(0.9);
+  background: rgba(220, 38, 38, 0.9);
 }
 
 .image-add-btn {
   width: 56px;
   height: 56px;
+  min-width: 56px;
+  min-height: 56px;
   border: 2px dashed #d1d5db;
   border-radius: 8px;
   background: #f9fafb;
@@ -1324,6 +1348,7 @@
   color: #9ca3af;
   font-size: 0.65rem;
   gap: 2px;
+  transition: transform 0.1s, background 0.2s, border-color 0.2s;
 }
 
 .image-add-btn i {
@@ -1999,77 +2024,348 @@ body.dark-mode .modal-footer {
   border-color: #374151;
 }
 
-/* スマホ表示の調整 */
-@media (max-width: 768px) {
-  .report-header-section {
-    padding: 12px;
-    margin-left: 0;
-    margin-right: 0;
+/* ========================================
+   レスポンシブ対応（モバイルファースト）
+   ======================================== */
+
+/* 超小型デバイス（320px以下） */
+@media (max-width: 320px) {
+  .page-header-fixed {
+    padding: 0 8px;
   }
   
-  .form-row {
-    margin-left: 0;
-    margin-right: 0;
+  .page-title {
+    font-size: 0.95rem;
+  }
+  
+  .back-btn,
+  .help-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .tab-btn {
+    font-size: 0.8rem;
+    padding: 10px 8px;
+  }
+  
+  .tab-btn span {
+    display: none;
+  }
+  
+  .report-header-section {
+    padding: 10px;
   }
   
   .form-row.two-col {
+    grid-template-columns: 1fr;
     gap: 8px;
-  }
-  
-  .form-row.three-col-inline {
-    gap: 6px;
-    flex-wrap: nowrap;
-  }
-  
-  .form-row.three-col-inline .date-time-group {
-    flex: 1;
-    min-width: 0;
-    gap: 2px;
-    padding-right: 8px;
-    border-right: 1px solid rgba(255, 255, 255, 0.3);
-  }
-  
-  .form-row.three-col-inline .date-time-group:first-child {
-    gap: 6px;
-  }
-  
-  .form-row.three-col-inline .date-time-group:last-child {
-    border-right: none;
-    padding-right: 0;
-  }
-  
-  .date-time-label {
-    font-size: 0.75rem;
-    min-width: 40px;
-    text-align: center;
-  }
-  
-  .date-time-input-wrapper {
-    gap: 4px;
-  }
-  
-  .date-time-icon {
-    font-size: 0.75rem;
-    color: #9ca3af;
-  }
-  
-  .date-time-input {
-    font-size: 0.8rem;
-    padding: 8px 8px;
-  }
-  
-  .date-time-input::placeholder {
-    color: #9ca3af;
-    opacity: 0.7;
   }
   
   .form-input,
   .form-select {
-    padding: 8px 12px;
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+  
+  .btn-add {
+    font-size: 0.75rem;
+    padding: 10px 8px;
+  }
+  
+  .btn-add span {
+    display: none;
+  }
+}
+
+/* 小型デバイス（480px以下） */
+@media (max-width: 480px) {
+  .page-header-fixed {
+    padding: 0 10px;
+  }
+  
+  .page-title {
+    font-size: 1rem;
+  }
+  
+  .report-header-section {
+    padding: 12px;
+  }
+  
+  .form-row.two-col {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .form-row.three-col {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .form-row.three-col-inline {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .form-row.three-col-inline .date-time-group {
+    flex: 1 1 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-right: 0;
+    padding-bottom: 8px;
+  }
+  
+  .form-row.three-col-inline .date-time-group:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  .date-time-label {
+    font-size: 0.8rem;
+    min-width: 50px;
+  }
+  
+  .date-time-input {
+    font-size: 0.85rem;
+    padding: 10px 8px;
+  }
+  
+  .form-input,
+  .form-select {
+    font-size: 0.9rem;
+    padding: 10px 12px;
+    min-height: 44px; /* タッチターゲットサイズ */
   }
   
   .image-stock-section {
-    background: #fff5f8;
+    padding: 12px;
+  }
+  
+  .image-stock-grid {
+    gap: 6px;
+  }
+  
+  .image-stock-item {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .section-card {
+    margin: 8px;
+    padding: 12px;
+  }
+  
+  .section-header {
+    padding: 8px 0;
+  }
+  
+  .section-title {
+    font-size: 0.9rem;
+  }
+  
+  .btn-add {
+    min-height: 44px; /* タッチターゲットサイズ */
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .add-buttons-footer {
+    padding: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .add-buttons-footer .btn-add {
+    flex: 1 1 calc(50% - 4px);
+    min-width: calc(50% - 4px);
+  }
+  
+  .submit-section {
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .btn-submit,
+  .btn-preview {
+    min-height: 48px; /* タッチターゲットサイズ */
+    font-size: 0.9rem;
+    padding: 12px 20px;
+  }
+  
+  .modal-content {
+    width: 95vw;
+    max-width: 95vw;
+    margin: 10px;
+    max-height: calc(100vh - 20px);
+  }
+  
+  .modal-header,
+  .modal-footer {
+    padding: 12px;
+  }
+  
+  .modal-body {
+    padding: 12px;
+  }
+  
+  .toast-container {
+    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
+    left: 10px;
+    transform: none;
+  }
+  
+  .confirm-dialog {
+    width: 90vw;
+    max-width: 90vw;
+  }
+  
+  .image-list {
+    gap: 6px;
+  }
+  
+  .image-thumb {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+/* タブレット（768px以下） */
+@media (max-width: 768px) {
+  .report-header-section {
+    padding: 12px 14px;
+  }
+  
+  .form-row.two-col {
+    gap: 10px;
+  }
+  
+  .form-row.three-col-inline {
+    gap: 8px;
+  }
+  
+  .form-row.three-col-inline .date-time-group {
+    gap: 4px;
+    padding-right: 10px;
+  }
+  
+  .date-time-label {
+    font-size: 0.8rem;
+    min-width: 45px;
+  }
+  
+  .date-time-input {
+    font-size: 0.85rem;
+    padding: 9px 10px;
+  }
+  
+  .date-time-icon {
+    font-size: 0.8rem;
+  }
+  
+  .form-input,
+  .form-select {
+    padding: 9px 12px;
+    font-size: 0.9rem;
+  }
+  
+  .image-stock-section {
+    padding: 14px;
+  }
+  
+  .section-card {
+    margin: 10px 12px;
+  }
+  
+  .btn-add {
+    padding: 11px 14px;
+  }
+  
+  .add-buttons-footer {
+    padding: 14px;
+  }
+  
+  .submit-section {
+    padding: 14px;
+  }
+  
+  .modal-content {
+    width: 90vw;
+    max-width: 600px;
+  }
+  
+  .confirm-dialog {
+    width: 85vw;
+    max-width: 400px;
+  }
+}
+
+/* タブレット横向き・小型デスクトップ（1024px以下） */
+@media (max-width: 1024px) {
+  .report-header-section {
+    padding: 14px 16px;
+  }
+  
+  .form-row.two-col {
+    gap: 12px;
+  }
+  
+  .section-card {
+    margin: 12px 16px;
+  }
+  
+  .modal-content {
+    max-width: 700px;
+  }
+}
+
+/* タッチデバイス向けの最適化 */
+@media (hover: none) and (pointer: coarse) {
+  /* タッチデバイスでのホバー効果を無効化 */
+  .image-stock-item:hover {
+    transform: none;
+  }
+  
+  .image-stock-item-remove {
+    opacity: 1; /* タッチデバイスでは常に表示 */
+  }
+  
+  /* タップフィードバック */
+  .btn-add:active,
+  .btn-submit:active,
+  .btn-preview:active,
+  .section-delete:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+  }
+  
+  /* タッチターゲットの最小サイズ確保 */
+  .dropdown-arrow-btn,
+  .section-delete,
+  .image-thumb-remove,
+  .image-stock-item-remove {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* スクロールの改善 */
+  .tab-content,
+  .modal-body,
+  .preview-body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* 高解像度ディスプレイ対応 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .image-thumb img,
+  .image-stock-item img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 }
 
