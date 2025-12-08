@@ -2377,8 +2377,8 @@ body.dark-mode .modal-footer {
   }
 }
 
-/* 小型デバイス（480px以下） */
-@media (max-width: 480px) {
+/* 小型デバイス（375px以下） */
+@media (max-width: 375px) {
   .page-header-fixed {
     padding: 0 10px;
   }
