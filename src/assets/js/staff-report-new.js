@@ -539,8 +539,11 @@
       }
     }
     
-    // プレースホルダーを更新
-    updateStorePlaceholder();
+    // 店舗名の入力フィールドを更新
+    const storeSearchInput = document.getElementById('report-store-search');
+    if (storeSearchInput && storeName) {
+      storeSearchInput.value = storeName;
+    }
     
     document.getElementById('report-date').value = report.cleaning_date || '';
     document.getElementById('report-start').value = report.cleaning_start_time || '';
