@@ -2568,15 +2568,11 @@ function getAbsolutePositionFromMouse(grid, x, y) {
     const gridX = x - rect.left;
     const gridY = y - rect.top;
     
-    // 80px間隔のグリッド線にスナップ（マスの左上に配置）
-    const CELL_SIZE = 80;
-    // Math.floorを使用して、マスの左上にスナップ（切り捨て）
-    const snappedX = Math.floor(gridX / CELL_SIZE) * CELL_SIZE;
-    const snappedY = Math.floor(gridY / CELL_SIZE) * CELL_SIZE;
-    
-    // グリッド範囲内に制限（負の値は0に）
-    const clampedX = Math.max(0, snappedX);
-    const clampedY = Math.max(0, snappedY);
+    // グリッドスナップを無効化（自由な位置に配置できるように）
+    // マウス位置をそのまま使用（ピクセル単位で配置可能）
+    // ただし、負の値は0に制限（グリッドの左上を超えないように）
+    const clampedX = Math.max(0, gridX);
+    const clampedY = Math.max(0, gridY);
     
     return {
       x: clampedX,
@@ -2586,14 +2582,11 @@ function getAbsolutePositionFromMouse(grid, x, y) {
     console.error('[Position] Error calculating absolute position:', error);
     // エラー時はフォールバック
     const rect = grid.getBoundingClientRect();
-    const CELL_SIZE = 80;
     const gridX = x - rect.left;
     const gridY = y - rect.top;
-    const snappedX = Math.floor(gridX / CELL_SIZE) * CELL_SIZE;
-    const snappedY = Math.floor(gridY / CELL_SIZE) * CELL_SIZE;
     return {
-      x: Math.max(0, snappedX),
-      y: Math.max(0, snappedY)
+      x: Math.max(0, gridX),
+      y: Math.max(0, gridY)
     };
   }
 }
@@ -2672,6 +2665,7 @@ function isValidContainerSize(container, width, height) {
 
 // 絶対位置が有効かチェック（他のコンテナと重複しないか、範囲内か）
 // 全てのマスに設置できるように、重複チェックを緩和
+// 自由な位置に配置できるように、制約を緩和
 function isValidAbsolutePosition(grid, container, x, y) {
   const width = parseInt(container.dataset.containerWidth) || 3;
   const height = parseInt(container.dataset.containerHeight) || 3;
@@ -2684,25 +2678,23 @@ function isValidAbsolutePosition(grid, container, x, y) {
     return false;
   }
   
-  // グリッド範囲外チェック（画面幅が小さくなると使える領域が減るだけ）
+  // グリッド範囲外チェックを緩和（コンテナが少しはみ出しても許容）
   const gridWidth = grid.offsetWidth;
   const gridHeight = grid.offsetHeight;
   
-  // 左端・上端が範囲外の場合は無効
-  if (x < 0 || y < 0) {
+  // 左端・上端が大きく範囲外の場合は無効（-20pxまで許容）
+  if (x < -20 || y < -20) {
     return false;
   }
   
-  // 右端・下端が範囲外の場合は無効（ただし、少しの余裕を持たせる）
-  // コンテナが少しはみ出しても許容（スクロール可能な場合など）
-  if (x + containerWidth > gridWidth + 40 || y + containerHeight > gridHeight + 40) {
+  // 右端・下端が大きく範囲外の場合は無効（コンテナが少しはみ出しても許容）
+  // グリッドの幅・高さを超えても許容（スクロール可能な場合など）
+  if (x + containerWidth > gridWidth + 100 || y + containerHeight > gridHeight + 100) {
     return false;
   }
   
-  // 位置が80pxの倍数（グリッド線に合っている）かチェック
-  if (x % CELL_SIZE !== 0 || y % CELL_SIZE !== 0) {
-    return false;
-  }
+  // グリッドスナップチェックを削除（自由な位置に配置できるように）
+  // 位置が80pxの倍数でなくても配置可能にする
   
   // 重複チェックは削除（全てのマスに設置できるように）
   // ユーザーが自由に配置できるようにする
