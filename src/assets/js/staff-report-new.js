@@ -174,7 +174,14 @@
     // 自動保存データの復元を試行（新規作成タブがアクティブな場合のみ）
     const newTab = document.getElementById('tab-new');
     if (newTab && newTab.classList.contains('active')) {
-      loadAutoSaveData();
+      const restored = await loadAutoSaveData();
+      // 自動保存データが復元されなかった場合、デフォルトで清掃項目セクションを追加
+      if (!restored && window.addCleaningItemSection) {
+        window.addCleaningItemSection();
+      }
+    } else {
+      // 新規作成タブがアクティブでない場合でも、タブが切り替わったときに追加
+      // これはsetupTabs内で処理される
     }
     
     // 自動保存のイベントリスナーを設定
@@ -346,6 +353,10 @@
         // 新規作成タブに切り替えた場合はフォームと画像ストックをリセット
         if (targetTab === 'new') {
           await resetFormForNewReport();
+          // リセット後、セクションが空の場合はデフォルトで清掃項目セクションを追加
+          if (Object.keys(sections).length === 0 && window.addCleaningItemSection) {
+            window.addCleaningItemSection();
+          }
         }
         
         // 修正タブに切り替えた場合は再読み込み
@@ -1830,6 +1841,63 @@
     if (addCommentBtn) addCommentBtn.addEventListener('click', addCommentSection);
     if (addWorkContentBtn) addWorkContentBtn.addEventListener('click', addWorkContentSection);
     
+    // セクション追加アイコンエリアのイベントリスナー
+    const sectionAddToggleBtn = document.getElementById('section-add-toggle-btn');
+    const sectionAddIcons = document.getElementById('section-add-icons');
+    const sectionAddCleaningBtn = document.getElementById('section-add-cleaning');
+    const sectionAddCommentBtn = document.getElementById('section-add-comment');
+    const sectionAddImageBtn = document.getElementById('section-add-image');
+    
+    if (sectionAddToggleBtn && sectionAddIcons) {
+      sectionAddToggleBtn.addEventListener('click', function() {
+        const isVisible = sectionAddIcons.style.display !== 'none';
+        if (isVisible) {
+          sectionAddIcons.style.display = 'none';
+          sectionAddToggleBtn.classList.remove('active');
+        } else {
+          sectionAddIcons.style.display = 'flex';
+          sectionAddToggleBtn.classList.add('active');
+        }
+      });
+    }
+    
+    if (sectionAddCleaningBtn) {
+      sectionAddCleaningBtn.addEventListener('click', function() {
+        if (window.addCleaningItemSection) {
+          window.addCleaningItemSection();
+        }
+        // アイコンを非表示にする
+        if (sectionAddIcons) {
+          sectionAddIcons.style.display = 'none';
+          if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
+        }
+      });
+    }
+    
+    if (sectionAddCommentBtn) {
+      sectionAddCommentBtn.addEventListener('click', function() {
+        if (window.addCommentSection) {
+          window.addCommentSection();
+        }
+        // アイコンを非表示にする
+        if (sectionAddIcons) {
+          sectionAddIcons.style.display = 'none';
+          if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
+        }
+      });
+    }
+    
+    if (sectionAddImageBtn) {
+      sectionAddImageBtn.addEventListener('click', function() {
+        openImageSectionTypeModal();
+        // アイコンを非表示にする
+        if (sectionAddIcons) {
+          sectionAddIcons.style.display = 'none';
+          if (sectionAddToggleBtn) sectionAddToggleBtn.classList.remove('active');
+        }
+      });
+    }
+    
     // セクションが存在する場合は選択モードボタンを表示
     if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
       sectionSelectModeBtn.style.display = 'flex';
@@ -2606,7 +2674,7 @@
   };
 
   // 清掃項目セクション追加
-  function addCleaningItemSection() {
+  window.addCleaningItemSection = function() {
     sectionCounter++;
     const sectionId = `section-${sectionCounter}`;
     sections[sectionId] = { type: 'cleaning', item_name: '' };
