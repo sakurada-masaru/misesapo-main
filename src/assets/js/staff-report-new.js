@@ -30,6 +30,12 @@
   let imageStock = []; // ローカル保存された画像データ配列 { id, file, blobUrl, fileName, uploaded: false }
   const STOCK_DB_NAME = 'report-image-stock';
   const STOCK_DB_VERSION = 1;
+  
+  // 一括操作用
+  let isMultiSelectMode = false; // 複数選択モード（画像用）
+  let selectedImageIds = new Set(); // 選択された画像ID
+  let isSectionSelectMode = false; // セクション複数選択モード
+  let selectedSectionIds = new Set(); // 選択されたセクションID
 
   // ブランド名のselect要素を初期化
   function initBrandSelect() {
@@ -107,7 +113,7 @@
       const hasBrandName = brandNameInput || brandNameHidden;
       
       if (!selectedBrandId && !hasBrandName) {
-        alert('まずブランド名を選択または入力してください');
+        showWarning('まずブランド名を選択または入力してください');
         return;
       }
       
@@ -164,6 +170,18 @@
     // ブランド名と店舗名のselect要素を初期化
     initBrandSelect();
     initStoreSelect();
+    
+    // 自動保存データの復元を試行（新規作成タブがアクティブな場合のみ）
+    const newTab = document.getElementById('tab-new');
+    if (newTab && newTab.classList.contains('active')) {
+      loadAutoSaveData();
+    }
+    
+    // 自動保存のイベントリスナーを設定
+    setupAutoSaveListeners();
+    
+    // リアルタイムバリデーションを設定
+    setupRealTimeValidation();
   });
   
   // モバイルキーボード表示時のスクロール問題を修正
@@ -312,7 +330,7 @@
     const tabContents = document.querySelectorAll('.tab-content');
     
     tabButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const targetTab = btn.dataset.tab;
         
         // タブボタンのアクティブ状態を更新
@@ -325,11 +343,418 @@
         });
         document.getElementById(`tab-content-${targetTab}`).classList.add('active');
         
+        // 新規作成タブに切り替えた場合はフォームと画像ストックをリセット
+        if (targetTab === 'new') {
+          await resetFormForNewReport();
+        }
+        
         // 修正タブに切り替えた場合は再読み込み
         if (targetTab === 'edit') {
           loadRevisionRequests();
         }
       });
+    });
+  }
+
+  // 新規レポート作成時のフォームリセット
+  async function resetFormForNewReport() {
+    // フォームをリセット
+    const form = document.getElementById('report-form');
+    if (form) {
+      form.reset();
+      form.dataset.reportId = '';
+    }
+    
+    // セクションをクリア
+    sections = {};
+    sectionCounter = 0;
+    const reportContent = document.getElementById('report-content');
+    if (reportContent) {
+      reportContent.innerHTML = '';
+    }
+    
+    // 清掃項目リストをリセット
+    const cleaningItemsList = document.getElementById('cleaning-items-list');
+    if (cleaningItemsList) {
+      cleaningItemsList.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
+    }
+    
+    // 画像ストックをリセット
+    await clearImageStockDB();
+    imageStock = [];
+    renderImageStock();
+    
+    // 日付を今日に設定
+    setDefaultDate();
+    
+    // 自動保存データをクリア
+    clearAutoSaveData();
+  }
+
+  // 自動保存機能（localStorage使用）
+  const AUTO_SAVE_KEY = 'report_draft_autosave';
+  const AUTO_SAVE_DEBOUNCE_MS = 1000; // 1秒後に自動保存
+  let autoSaveTimer = null;
+
+  // 自動保存を実行
+  function autoSave() {
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+    }
+    
+    autoSaveTimer = setTimeout(() => {
+      try {
+        const formData = {
+          brandId: document.getElementById('report-brand')?.value || '',
+          brandName: document.getElementById('report-brand-search')?.value || '',
+          storeId: document.getElementById('report-store')?.value || '',
+          storeName: document.getElementById('report-store-search')?.value || '',
+          date: document.getElementById('report-date')?.value || '',
+          startTime: document.getElementById('report-start')?.value || '',
+          endTime: document.getElementById('report-end')?.value || '',
+          sections: JSON.parse(JSON.stringify(sections)), // ディープコピー
+          sectionCounter: sectionCounter,
+          timestamp: Date.now()
+        };
+        
+        localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(formData));
+        console.log('[AutoSave] Saved draft');
+      } catch (error) {
+        console.error('[AutoSave] Error saving:', error);
+      }
+    }, AUTO_SAVE_DEBOUNCE_MS);
+  }
+
+  // 自動保存データを読み込み
+  async function loadAutoSaveData() {
+    try {
+      const saved = localStorage.getItem(AUTO_SAVE_KEY);
+      if (!saved) return false;
+      
+      const formData = JSON.parse(saved);
+      
+      // 24時間以上経過したデータは無効
+      const now = Date.now();
+      if (now - formData.timestamp > 24 * 60 * 60 * 1000) {
+        clearAutoSaveData();
+        return false;
+      }
+      
+      // ユーザーに確認
+      const shouldRestore = await showConfirm('自動保存の復元', '前回の入力内容が保存されています。復元しますか？');
+      if (shouldRestore) {
+        // フォームデータを復元
+        if (formData.brandId) {
+          document.getElementById('report-brand')?.setAttribute('value', formData.brandId);
+          document.getElementById('report-brand-search')?.setAttribute('value', formData.brandName || '');
+        }
+        if (formData.storeId) {
+          document.getElementById('report-store')?.setAttribute('value', formData.storeId);
+          document.getElementById('report-store-search')?.setAttribute('value', formData.storeName || '');
+        }
+        if (formData.date) {
+          document.getElementById('report-date')?.setAttribute('value', formData.date);
+        }
+        if (formData.startTime) {
+          document.getElementById('report-start')?.setAttribute('value', formData.startTime);
+        }
+        if (formData.endTime) {
+          document.getElementById('report-end')?.setAttribute('value', formData.endTime);
+        }
+        
+        // セクションを復元
+        sections = formData.sections || {};
+        sectionCounter = formData.sectionCounter || 0;
+        
+        // セクションを再構築
+        restoreSectionsFromAutoSave();
+        
+        return true;
+      } else {
+        clearAutoSaveData();
+        return false;
+      }
+    } catch (error) {
+      console.error('[AutoSave] Error loading:', error);
+      clearAutoSaveData();
+      return false;
+    }
+  }
+
+  // 自動保存データからセクションを復元
+  function restoreSectionsFromAutoSave() {
+    const reportContent = document.getElementById('report-content');
+    if (!reportContent) return;
+    
+    reportContent.innerHTML = '';
+    
+    // セクションを順番に復元
+    Object.keys(sections).forEach(sectionId => {
+      const section = sections[sectionId];
+      if (section.type === 'cleaning') {
+        // 清掃項目セクション
+        const options = serviceItems.map(si => 
+          `<option value="${escapeHtml(si.title)}" ${(si.title === section.item_name) ? 'selected' : ''}>${escapeHtml(si.title)}</option>`
+        ).join('');
+        
+        const html = `
+          <div class="section-card" data-section-id="${sectionId}">
+            <div class="section-header">
+              <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
+              <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div class="section-body">
+              <select class="cleaning-item-select" onchange="updateCleaningItem('${sectionId}', this.value)">
+                <option value="">項目を選択</option>
+                ${options}
+                <option value="__other__">その他（自由入力）</option>
+              </select>
+              <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${section.item_name && !serviceItems.find(si => si.title === section.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)" value="${escapeHtml(section.item_name || '')}">
+            </div>
+          </div>
+        `;
+        reportContent.insertAdjacentHTML('beforeend', html);
+      } else if (section.type === 'image') {
+        // 画像セクション（簡易復元、画像は再読み込みが必要）
+        // 完全な復元は複雑なため、セクション構造のみ復元
+        console.log('[AutoSave] Image sections cannot be fully restored. Please re-add images.');
+      } else if (section.type === 'comment') {
+        // コメントセクション
+        const html = `
+          <div class="section-card" data-section-id="${sectionId}">
+            <div class="section-header">
+              <span class="section-title"><i class="fas fa-comment"></i> コメント</span>
+              <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div class="section-body">
+              <textarea class="form-input section-textarea" placeholder="コメントを入力..." oninput="updateSectionContent('${sectionId}', this.value)">${escapeHtml(section.content || '')}</textarea>
+            </div>
+          </div>
+        `;
+        reportContent.insertAdjacentHTML('beforeend', html);
+      } else if (section.type === 'work_content') {
+        // 作業内容セクション
+        const html = `
+          <div class="section-card" data-section-id="${sectionId}">
+            <div class="section-header">
+              <span class="section-title"><i class="fas fa-tasks"></i> 作業内容</span>
+              <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div class="section-body">
+              <textarea class="form-input section-textarea" placeholder="作業内容を入力..." oninput="updateSectionContent('${sectionId}', this.value)">${escapeHtml(section.content || '')}</textarea>
+            </div>
+          </div>
+        `;
+        reportContent.insertAdjacentHTML('beforeend', html);
+      }
+    });
+    
+    // ドラッグ&ドロップを再設定
+    setupAllSectionDragAndDrop();
+    updateCleaningItemsList();
+  }
+
+  // 自動保存データをクリア
+  function clearAutoSaveData() {
+    localStorage.removeItem(AUTO_SAVE_KEY);
+    console.log('[AutoSave] Cleared draft');
+  }
+
+  // リアルタイムバリデーション機能
+  function setupRealTimeValidation() {
+    // 必須項目のバリデーション
+    const requiredFields = [
+      { id: 'report-brand-search', name: 'ブランド名', getValue: () => {
+        const brandNameInput = document.getElementById('report-brand-search')?.value.trim() || '';
+        const brandNameHidden = document.getElementById('report-brand-name')?.value || '';
+        return brandNameInput || brandNameHidden;
+      }},
+      { id: 'report-store-search', name: '店舗名', getValue: () => {
+        const storeNameInput = document.getElementById('report-store-search')?.value.trim() || '';
+        const storeNameHidden = document.getElementById('report-store-name')?.value || '';
+        return storeNameInput || storeNameHidden;
+      }},
+      { id: 'report-date', name: '清掃日', getValue: () => document.getElementById('report-date')?.value || ''}
+    ];
+    
+    // バリデーション状態を更新
+    function updateValidationState() {
+      requiredFields.forEach(field => {
+        const element = document.getElementById(field.id);
+        if (!element) return;
+        
+        const value = field.getValue();
+        const isValid = value.length > 0;
+        
+        // エラー表示を追加/削除
+        if (isValid) {
+          element.classList.remove('validation-error');
+          element.classList.add('validation-valid');
+          // エラーメッセージを削除
+          const errorMsg = element.parentElement?.querySelector('.validation-error-message');
+          if (errorMsg) errorMsg.remove();
+        } else {
+          element.classList.remove('validation-valid');
+          element.classList.add('validation-error');
+          // エラーメッセージを追加（まだない場合）
+          if (!element.parentElement?.querySelector('.validation-error-message')) {
+            const errorMsg = document.createElement('span');
+            errorMsg.className = 'validation-error-message';
+            errorMsg.textContent = `${field.name}は必須です`;
+            element.parentElement?.appendChild(errorMsg);
+          }
+        }
+      });
+      
+      // 進捗インジケーターを更新
+      updateProgressIndicator();
+    }
+    
+    // 進捗インジケーターを更新
+    function updateProgressIndicator() {
+      const validCount = requiredFields.filter(f => f.getValue().length > 0).length;
+      const totalCount = requiredFields.length;
+      const progress = Math.round((validCount / totalCount) * 100);
+      
+      // 進捗バーを更新
+      let progressBar = document.getElementById('form-progress-bar');
+      if (!progressBar) {
+        progressBar = document.createElement('div');
+        progressBar.id = 'form-progress-bar';
+        progressBar.className = 'form-progress-bar';
+        const header = document.querySelector('.page-header-fixed');
+        if (header) {
+          header.appendChild(progressBar);
+        }
+      }
+      
+      progressBar.style.width = `${progress}%`;
+      progressBar.setAttribute('data-progress', progress);
+    }
+    
+    // 各フィールドにイベントリスナーを設定
+    requiredFields.forEach(field => {
+      const element = document.getElementById(field.id);
+      if (element) {
+        element.addEventListener('input', updateValidationState);
+        element.addEventListener('change', updateValidationState);
+        element.addEventListener('blur', updateValidationState);
+      }
+    });
+    
+    // ブランド・店舗選択時のバリデーション更新
+    const brandSelect = document.getElementById('report-brand');
+    const storeSelect = document.getElementById('report-store');
+    if (brandSelect) {
+      brandSelect.addEventListener('change', updateValidationState);
+    }
+    if (storeSelect) {
+      storeSelect.addEventListener('change', updateValidationState);
+    }
+    
+    // 初期状態を更新
+    updateValidationState();
+  }
+
+  // 自動保存のイベントリスナーを設定
+  function setupAutoSaveListeners() {
+    // フォーム入力フィールドに自動保存を設定
+    const form = document.getElementById('report-form');
+    if (!form) return;
+    
+    // 基本情報フィールド
+    const fields = [
+      'report-brand-search',
+      'report-store-search',
+      'report-date',
+      'report-start',
+      'report-end'
+    ];
+    
+    fields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.addEventListener('input', autoSave);
+        field.addEventListener('change', autoSave);
+      }
+    });
+    
+    // セクション追加・削除・更新時に自動保存
+    const originalAddCleaningItem = window.addCleaningItemSection;
+    const originalAddImageSection = window.addImageSectionBeforeAfter;
+    const originalAddComment = window.addCommentSection;
+    const originalAddWorkContent = window.addWorkContentSection;
+    const originalDeleteSection = window.deleteSection;
+    const originalUpdateCleaningItem = window.updateCleaningItem;
+    const originalUpdateSectionContent = window.updateSectionContent;
+    
+    if (originalAddCleaningItem) {
+      window.addCleaningItemSection = function() {
+        originalAddCleaningItem();
+        autoSave();
+      };
+    }
+    
+    if (originalAddImageSection) {
+      window.addImageSectionBeforeAfter = function() {
+        originalAddImageSection();
+        autoSave();
+      };
+    }
+    
+    if (originalAddComment) {
+      window.addCommentSection = function() {
+        originalAddComment();
+        autoSave();
+      };
+    }
+    
+    if (originalAddWorkContent) {
+      window.addWorkContentSection = function() {
+        originalAddWorkContent();
+        autoSave();
+      };
+    }
+    
+    if (originalDeleteSection) {
+      window.deleteSection = function(sectionId) {
+        originalDeleteSection(sectionId);
+        autoSave();
+      };
+    }
+    
+    if (originalUpdateCleaningItem) {
+      window.updateCleaningItem = function(sectionId, value) {
+        originalUpdateCleaningItem(sectionId, value);
+        autoSave();
+      };
+    }
+    
+    if (originalUpdateSectionContent) {
+      window.updateSectionContent = function(sectionId, value) {
+        originalUpdateSectionContent(sectionId, value);
+        autoSave();
+      };
+    }
+    
+    // textareaの入力にも自動保存を設定（動的に追加されるセクション用）
+    document.addEventListener('input', (e) => {
+      if (e.target.classList.contains('section-textarea') || 
+          e.target.classList.contains('cleaning-item-select') ||
+          e.target.classList.contains('cleaning-item-custom')) {
+        autoSave();
+      }
+    }, true);
+    
+    // フォーム送信時に自動保存データをクリア
+    form.addEventListener('submit', () => {
+      clearAutoSaveData();
     });
   }
 
@@ -455,7 +880,7 @@
       
     } catch (error) {
       console.error('Error loading report:', error);
-      alert('レポートの読み込みに失敗しました: ' + error.message);
+      showError('レポートの読み込みに失敗しました: ' + getErrorMessage(error));
     }
   };
 
@@ -1319,6 +1744,91 @@
 
     // 初期化時に店舗セレクトボックスを設定（モーダル方式では不要）
 
+    // セクション選択モードボタン
+    const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
+    const sectionCopyBtn = document.getElementById('section-copy-btn');
+    const sectionBulkDeleteBtn = document.getElementById('section-bulk-delete-btn');
+    
+    if (sectionSelectModeBtn) {
+      sectionSelectModeBtn.addEventListener('click', () => {
+        isSectionSelectMode = !isSectionSelectMode;
+        selectedSectionIds.clear();
+        
+        if (isSectionSelectMode) {
+          sectionSelectModeBtn.classList.add('active');
+          sectionSelectModeBtn.innerHTML = '<i class="fas fa-times"></i><span>選択解除</span>';
+          if (sectionCopyBtn) sectionCopyBtn.style.display = 'flex';
+          if (sectionBulkDeleteBtn) sectionBulkDeleteBtn.style.display = 'flex';
+          // セクションカードにチェックボックスを表示
+          updateSectionCardsForSelection();
+        } else {
+          sectionSelectModeBtn.classList.remove('active');
+          sectionSelectModeBtn.innerHTML = '<i class="fas fa-check-square"></i><span>セクション選択</span>';
+          if (sectionCopyBtn) sectionCopyBtn.style.display = 'none';
+          if (sectionBulkDeleteBtn) sectionBulkDeleteBtn.style.display = 'none';
+          // セクションカードからチェックボックスを削除
+          updateSectionCardsForSelection();
+        }
+      });
+    }
+    
+    // セクションコピー
+    if (sectionCopyBtn) {
+      sectionCopyBtn.addEventListener('click', () => {
+        if (selectedSectionIds.size === 0) {
+          showWarning('コピーするセクションを選択してください');
+          return;
+        }
+        
+        // 選択されたセクションをコピー
+        selectedSectionIds.forEach(sectionId => {
+          copySection(sectionId);
+        });
+        
+        // 選択モードを解除
+        isSectionSelectMode = false;
+        selectedSectionIds.clear();
+        if (sectionSelectModeBtn) {
+          sectionSelectModeBtn.classList.remove('active');
+          sectionSelectModeBtn.innerHTML = '<i class="fas fa-check-square"></i><span>セクション選択</span>';
+        }
+        if (sectionCopyBtn) sectionCopyBtn.style.display = 'none';
+        if (sectionBulkDeleteBtn) sectionBulkDeleteBtn.style.display = 'none';
+        updateSectionCardsForSelection();
+      });
+    }
+    
+    // セクション一括削除
+    if (sectionBulkDeleteBtn) {
+      sectionBulkDeleteBtn.addEventListener('click', async () => {
+        if (selectedSectionIds.size === 0) {
+          showWarning('削除するセクションを選択してください');
+          return;
+        }
+        
+        const shouldDelete = await showConfirm('セクションの削除', `選択した${selectedSectionIds.size}個のセクションを削除しますか？`);
+        if (!shouldDelete) {
+          return;
+        }
+        
+        // 選択されたセクションを削除
+        selectedSectionIds.forEach(sectionId => {
+          deleteSection(sectionId);
+        });
+        
+        // 選択モードを解除
+        isSectionSelectMode = false;
+        selectedSectionIds.clear();
+        if (sectionSelectModeBtn) {
+          sectionSelectModeBtn.classList.remove('active');
+          sectionSelectModeBtn.innerHTML = '<i class="fas fa-check-square"></i><span>セクション選択</span>';
+        }
+        if (sectionCopyBtn) sectionCopyBtn.style.display = 'none';
+        if (sectionBulkDeleteBtn) sectionBulkDeleteBtn.style.display = 'none';
+        updateSectionCardsForSelection();
+      });
+    }
+    
     // 追加ボタン
     const addCleaningItemBtn = document.getElementById('add-cleaning-item');
     const addImageBtn = document.getElementById('add-image');
@@ -1329,6 +1839,11 @@
     if (addImageBtn) addImageBtn.addEventListener('click', openImageSectionTypeModal);
     if (addCommentBtn) addCommentBtn.addEventListener('click', addCommentSection);
     if (addWorkContentBtn) addWorkContentBtn.addEventListener('click', addWorkContentSection);
+    
+    // セクションが存在する場合は選択モードボタンを表示
+    if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
+      sectionSelectModeBtn.style.display = 'flex';
+    }
 
     // セクションカードのドラッグ&ドロップ機能を初期設定
     setupAllSectionDragAndDrop();
@@ -1337,6 +1852,15 @@
     const contentArea = document.getElementById('report-content');
     const observer = new MutationObserver(() => {
       setupAllSectionDragAndDrop();
+      // 選択モードの場合はチェックボックスを更新
+      if (isSectionSelectMode) {
+        updateSectionCardsForSelection();
+      }
+      // セクションが存在する場合は選択モードボタンを表示
+      const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
+      if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
+        sectionSelectModeBtn.style.display = 'flex';
+      }
     });
     observer.observe(contentArea, { childList: true, subtree: true });
 
@@ -1344,6 +1868,12 @@
     document.getElementById('help-btn').addEventListener('click', () => {
       document.getElementById('help-dialog').style.display = 'flex';
     });
+
+    // プレビューボタン
+    const previewBtn = document.getElementById('preview-btn');
+    if (previewBtn) {
+      previewBtn.addEventListener('click', openPreviewModal);
+    }
 
     // フォーム送信
     document.getElementById('report-form').addEventListener('submit', handleSubmit);
@@ -1355,6 +1885,11 @@
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         this.classList.add('active');
         document.getElementById(`tab-${this.dataset.tab}`).classList.add('active');
+        
+        // 画像ストックタブに切り替えた場合は選択状態を再表示
+        if (this.dataset.tab === 'stock') {
+          renderStockSelection();
+        }
       });
     });
 
@@ -1376,34 +1911,100 @@
     const stockFileInput = document.getElementById('stock-file-input');
     const stockGrid = document.getElementById('image-stock-grid');
     const clearStockBtn = document.getElementById('clear-stock-btn');
+    const selectModeBtn = document.getElementById('select-mode-btn');
+    const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
 
     // ファイル選択
-    stockFileInput.addEventListener('change', async (e) => {
-      const files = Array.from(e.target.files);
-      if (files.length === 0) return;
+    if (stockFileInput) {
+      stockFileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
 
-      await addImagesToStock(files);
-      e.target.value = ''; // リセット
-    });
+        await addImagesToStock(files);
+        e.target.value = ''; // リセット
+      });
+    }
+
+    // 選択モード切り替え
+    if (selectModeBtn) {
+      selectModeBtn.addEventListener('click', () => {
+        isMultiSelectMode = !isMultiSelectMode;
+        selectedImageIds.clear();
+        
+        if (isMultiSelectMode) {
+          selectModeBtn.classList.add('active');
+          selectModeBtn.innerHTML = '<i class="fas fa-times"></i><span>選択解除</span>';
+          if (bulkDeleteBtn) bulkDeleteBtn.style.display = 'flex';
+        } else {
+          selectModeBtn.classList.remove('active');
+          selectModeBtn.innerHTML = '<i class="fas fa-check-square"></i><span>選択モード</span>';
+          if (bulkDeleteBtn) bulkDeleteBtn.style.display = 'none';
+        }
+        
+        renderImageStock();
+      });
+    }
+
+    // 一括削除
+    if (bulkDeleteBtn) {
+      bulkDeleteBtn.addEventListener('click', async () => {
+        if (selectedImageIds.size === 0) {
+          showWarning('削除する画像を選択してください');
+          return;
+        }
+        
+        const shouldDelete = await showConfirm('画像の削除', `選択した${selectedImageIds.size}枚の画像を削除しますか？`);
+        if (!shouldDelete) {
+          return;
+        }
+        
+        // 選択された画像を削除
+        for (const imageId of selectedImageIds) {
+          const imageData = imageStock.find(img => img.id === imageId);
+          if (imageData && imageData.blobUrl) {
+            URL.revokeObjectURL(imageData.blobUrl);
+          }
+          await deleteImageFromDB(imageId);
+          imageStock = imageStock.filter(img => img.id !== imageId);
+        }
+        
+        selectedImageIds.clear();
+        isMultiSelectMode = false;
+        if (selectModeBtn) {
+          selectModeBtn.classList.remove('active');
+          selectModeBtn.innerHTML = '<i class="fas fa-check-square"></i><span>選択モード</span>';
+        }
+        if (bulkDeleteBtn) bulkDeleteBtn.style.display = 'none';
+        
+        renderImageStock();
+      });
+    }
 
     // すべて削除
-    clearStockBtn.addEventListener('click', async () => {
-      if (confirm('画像ストック内のすべての画像を削除しますか？')) {
-        // Blob URLを解放
-        imageStock.forEach(item => {
-          if (item.blobUrl) {
-            URL.revokeObjectURL(item.blobUrl);
-          }
-        });
-        
-        imageStock = [];
-        await clearImageStockDB();
-        renderImageStock();
-      }
-    });
+    if (clearStockBtn) {
+      clearStockBtn.addEventListener('click', async () => {
+        const shouldClear = await showConfirm('画像ストックのクリア', '画像ストック内のすべての画像を削除しますか？');
+        if (shouldClear) {
+          // Blob URLを解放
+          imageStock.forEach(item => {
+            if (item.blobUrl) {
+              URL.revokeObjectURL(item.blobUrl);
+            }
+          });
+          
+          imageStock = [];
+          await clearImageStockDB();
+          selectedImageIds.clear();
+          isMultiSelectMode = false;
+          renderImageStock();
+        }
+      });
+    }
 
     // 画像ストックグリッドのドロップゾーン設定
-    setupImageStockDropZone(stockGrid);
+    if (stockGrid) {
+      setupImageStockDropZone(stockGrid);
+    }
   }
 
   // IndexedDBの初期化
@@ -1499,43 +2100,146 @@
     });
   }
 
-  // 画像をストックに追加（ローカル保存）
-  async function addImagesToStock(files) {
-    for (const file of files) {
-      try {
-        // 画像IDを生成
-        const imageId = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
-        // Blob URLを作成（プレビュー用）
-        const blobUrl = URL.createObjectURL(file);
-        
-        // ArrayBufferに変換（IndexedDB保存用）
-        const arrayBuffer = await file.arrayBuffer();
-        
-        // 画像データオブジェクト
-        const imageData = {
-          id: imageId,
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-          blobData: arrayBuffer,
-          blobUrl: blobUrl,
-          uploaded: false,
-          createdAt: new Date().toISOString()
+  // 画像を最適化・圧縮
+  async function optimizeImage(file, maxWidth = 1920, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // 最大幅を超える場合はリサイズ
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // JPEG形式で圧縮
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('画像の圧縮に失敗しました'));
+            }
+          }, 'image/jpeg', quality);
         };
-        
-        // IndexedDBに保存
-        await saveImageToDB(imageData);
-        
-        // メモリにも追加
-        imageStock.push(imageData);
-      } catch (error) {
-        console.error('Error adding image to stock:', error);
-        alert(`画像の保存に失敗しました: ${file.name}`);
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 画像をストックに追加（ローカル保存）- 自動最適化付き
+  async function addImagesToStock(files) {
+    const totalFiles = files.length;
+    let processedCount = 0;
+    
+    // 進捗表示（10枚以上の場合）
+    const stockGrid = document.getElementById('image-stock-grid');
+    const originalContent = stockGrid?.innerHTML || '';
+    if (stockGrid && totalFiles > 10) {
+      stockGrid.innerHTML = `
+        <div class="image-stock-loading" style="padding: 20px; text-align: center;">
+          <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6;"></i>
+          <p style="margin-top: 10px; color: #6b7280;">画像を処理中... ${processedCount}/${totalFiles}</p>
+        </div>
+      `;
+    }
+    
+    // バッチ処理（5枚ずつ処理）
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < files.length; i += BATCH_SIZE) {
+      const batch = files.slice(i, i + BATCH_SIZE);
+      
+      // バッチを並列処理
+      const batchPromises = batch.map(async (file) => {
+        try {
+          // 画像を最適化・圧縮
+          const optimizedBlob = await optimizeImage(file);
+          
+          // 画像IDを生成
+          const imageId = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          
+          // Blob URLを作成（プレビュー用）
+          const blobUrl = URL.createObjectURL(optimizedBlob);
+          
+          // ArrayBufferに変換（IndexedDB保存用）
+          const arrayBuffer = await optimizedBlob.arrayBuffer();
+          
+          // 画像データオブジェクト
+          const imageData = {
+            id: imageId,
+            fileName: file.name,
+            fileType: 'image/jpeg', // 最適化後は常にJPEG
+            fileSize: optimizedBlob.size,
+            originalFileSize: file.size,
+            blobData: arrayBuffer,
+            blobUrl: blobUrl,
+            uploaded: false,
+            createdAt: new Date().toISOString()
+          };
+          
+          // IndexedDBに保存
+          await saveImageToDB(imageData);
+          
+          // メモリにも追加
+          imageStock.push(imageData);
+          
+          processedCount++;
+          
+          // 進捗更新（10枚以上の場合）
+          if (stockGrid && totalFiles > 10 && processedCount % BATCH_SIZE === 0) {
+            const loadingDiv = stockGrid.querySelector('.image-stock-loading');
+            if (loadingDiv) {
+              loadingDiv.querySelector('p').textContent = `画像を処理中... ${processedCount}/${totalFiles}`;
+            }
+          }
+          
+          return imageData;
+        } catch (error) {
+          console.error('Error adding image to stock:', error);
+          processedCount++;
+          return null;
+        }
+      });
+      
+      // バッチの完了を待つ
+      await Promise.all(batchPromises);
+      
+      // UIを更新（バッチごとに更新してパフォーマンスを向上）
+      if (i + BATCH_SIZE < files.length) {
+        // 中間更新（軽量版）
+        if (stockGrid && totalFiles > 10) {
+          // 進捗のみ更新
+        } else {
+          renderImageStock();
+        }
+      }
+      
+      // 次のバッチの前に少し待機（UIの応答性を保つ）
+      if (i + BATCH_SIZE < files.length) {
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
     
+    // 最終的なレンダリング
     renderImageStock();
+    
+    // 完了メッセージ
+    if (totalFiles > 10) {
+      console.log(`[ImageStock] Processed ${processedCount} images`);
+    }
   }
 
   // 画像ストックを表示
@@ -1561,25 +2265,67 @@
     }
 
     if (clearStockBtn) clearStockBtn.style.display = 'flex';
+    const selectModeBtn = document.getElementById('select-mode-btn');
+    if (selectModeBtn && imageStock.length > 0) {
+      selectModeBtn.style.display = 'flex';
+    }
+    
     stockGrid.innerHTML = imageStock.map((imageData, index) => {
       if (!imageData.blobUrl) {
         console.warn('Image data missing blobUrl:', imageData);
         return '';
       }
+      const isSelected = selectedImageIds.has(imageData.id);
+      const draggable = !isMultiSelectMode;
       return `
-        <div class="image-stock-item" draggable="true" data-image-id="${imageData.id}" data-stock-index="${index}">
+        <div class="image-stock-item ${isSelected ? 'selected' : ''}" 
+             draggable="${draggable}" 
+             data-image-id="${imageData.id}" 
+             data-stock-index="${index}"
+             ${isMultiSelectMode ? `onclick="toggleImageSelection('${imageData.id}')"` : ''}>
           <img src="${imageData.blobUrl}" alt="Stock image" draggable="false">
-          <button type="button" class="image-stock-item-remove" onclick="removeFromStock('${imageData.id}')">
-            <i class="fas fa-times"></i>
-          </button>
+          ${isMultiSelectMode ? `
+            <div class="image-stock-select-check">
+              <i class="fas fa-check-circle"></i>
+            </div>
+          ` : `
+            <button type="button" class="image-stock-item-remove" onclick="removeFromStock('${imageData.id}')">
+              <i class="fas fa-times"></i>
+            </button>
+          `}
         </div>
       `;
     }).filter(html => html).join('');
 
-    // 各ストックアイテムにドラッグ&ドロップを設定
-    stockGrid.querySelectorAll('.image-stock-item').forEach(item => {
-      setupStockItemDragAndDrop(item);
-    });
+    // 各ストックアイテムにドラッグ&ドロップを設定（選択モードでない場合のみ）
+    if (!isMultiSelectMode) {
+      stockGrid.querySelectorAll('.image-stock-item').forEach(item => {
+        setupStockItemDragAndDrop(item);
+      });
+    }
+  }
+
+  // 画像選択をトグル
+  window.toggleImageSelection = function(imageId) {
+    if (!isMultiSelectMode) return;
+    
+    if (selectedImageIds.has(imageId)) {
+      selectedImageIds.delete(imageId);
+    } else {
+      selectedImageIds.add(imageId);
+    }
+    
+    renderImageStock();
+    
+    // 一括削除ボタンの表示を更新
+    const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+    if (bulkDeleteBtn) {
+      if (selectedImageIds.size > 0) {
+        bulkDeleteBtn.innerHTML = `<i class="fas fa-trash"></i><span>選択を削除 (${selectedImageIds.size})</span>`;
+      } else {
+        bulkDeleteBtn.innerHTML = '<i class="fas fa-trash"></i><span>選択を削除</span>';
+      }
+    }
   }
 
   // モーダル内の画像ストック選択を表示
@@ -1900,7 +2646,18 @@
 
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
-    if (newCard) setupSectionDragAndDrop(newCard);
+    if (newCard) {
+      setupSectionDragAndDrop(newCard);
+      // セクションが追加されたら選択モードボタンを表示
+      const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
+      if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
+        sectionSelectModeBtn.style.display = 'flex';
+      }
+      // 選択モードの場合はチェックボックスを表示
+      if (isSectionSelectMode) {
+        updateSectionCardsForSelection();
+      }
+    }
     updateCleaningItemsList();
   }
 
@@ -1975,6 +2732,15 @@
       const afterList = document.getElementById(`${sectionId}-after`);
       if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before');
       if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after');
+      // セクションが追加されたら選択モードボタンを表示
+      const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
+      if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
+        sectionSelectModeBtn.style.display = 'flex';
+      }
+      // 選択モードの場合はチェックボックスを表示
+      if (isSectionSelectMode) {
+        updateSectionCardsForSelection();
+      }
     }
   };
 
@@ -2019,6 +2785,15 @@
       // 画像リストにドラッグ&ドロップを設定
       const completedList = document.getElementById(`${sectionId}-completed`);
       if (completedList) setupImageListDragAndDrop(completedList, sectionId, 'completed');
+      // セクションが追加されたら選択モードボタンを表示
+      const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
+      if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
+        sectionSelectModeBtn.style.display = 'flex';
+      }
+      // 選択モードの場合はチェックボックスを表示
+      if (isSectionSelectMode) {
+        updateSectionCardsForSelection();
+      }
     }
   };
 
@@ -2044,7 +2819,18 @@
 
     document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
-    if (newCard) setupSectionDragAndDrop(newCard);
+    if (newCard) {
+      setupSectionDragAndDrop(newCard);
+      // セクションが追加されたら選択モードボタンを表示
+      const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
+      if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
+        sectionSelectModeBtn.style.display = 'flex';
+      }
+      // 選択モードの場合はチェックボックスを表示
+      if (isSectionSelectMode) {
+        updateSectionCardsForSelection();
+      }
+    }
   }
 
   // 作業内容セクション追加
@@ -2075,9 +2861,257 @@
   // セクション削除
   window.deleteSection = function(sectionId) {
     delete sections[sectionId];
-    document.querySelector(`[data-section-id="${sectionId}"]`).remove();
+    const sectionElement = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (sectionElement) {
+      sectionElement.remove();
+    }
+    // 選択状態からも削除
+    selectedSectionIds.delete(sectionId);
     updateCleaningItemsList();
+    
+    // セクションがなくなったら選択モードボタンを非表示
+    const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
+    if (sectionSelectModeBtn && Object.keys(sections).length === 0) {
+      sectionSelectModeBtn.style.display = 'none';
+      isSectionSelectMode = false;
+      selectedSectionIds.clear();
+      const sectionCopyBtn = document.getElementById('section-copy-btn');
+      const sectionBulkDeleteBtn = document.getElementById('section-bulk-delete-btn');
+      if (sectionCopyBtn) sectionCopyBtn.style.display = 'none';
+      if (sectionBulkDeleteBtn) sectionBulkDeleteBtn.style.display = 'none';
+    }
   };
+
+  // セクションをコピー
+  function copySection(sectionId) {
+    const originalSection = sections[sectionId];
+    if (!originalSection) return;
+    
+    sectionCounter++;
+    const newSectionId = `section-${sectionCounter}`;
+    
+    // セクションデータをディープコピー
+    const newSection = JSON.parse(JSON.stringify(originalSection));
+    sections[newSectionId] = newSection;
+    
+    // セクションタイプに応じてHTMLを生成
+    const reportContent = document.getElementById('report-content');
+    if (!reportContent) return;
+    
+    let html = '';
+    if (newSection.type === 'cleaning') {
+      const options = serviceItems.map(item => 
+        `<option value="${escapeHtml(item.title)}" ${(item.title === newSection.item_name) ? 'selected' : ''}>${escapeHtml(item.title)}</option>`
+      ).join('');
+      
+      html = `
+        <div class="section-card" data-section-id="${newSectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
+            <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <select class="cleaning-item-select" onchange="updateCleaningItem('${newSectionId}', this.value)">
+              <option value="">項目を選択</option>
+              ${options}
+              <option value="__other__">その他（自由入力）</option>
+            </select>
+            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${newSection.item_name && !serviceItems.find(si => si.title === newSection.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItem('${newSectionId}', this.value)" value="${escapeHtml(newSection.item_name || '')}">
+          </div>
+        </div>
+      `;
+    } else if (newSection.type === 'comment') {
+      html = `
+        <div class="section-card" data-section-id="${newSectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-comment"></i> コメント</span>
+            <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <textarea class="form-input section-textarea" placeholder="コメントを入力..." oninput="updateSectionContent('${newSectionId}', this.value)">${escapeHtml(newSection.content || '')}</textarea>
+          </div>
+        </div>
+      `;
+    } else if (newSection.type === 'work_content') {
+      html = `
+        <div class="section-card" data-section-id="${newSectionId}">
+          <div class="section-header">
+            <span class="section-title"><i class="fas fa-tasks"></i> 作業内容</span>
+            <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="section-body">
+            <textarea class="form-input section-textarea" placeholder="作業内容を入力..." oninput="updateSectionContent('${newSectionId}', this.value)">${escapeHtml(newSection.content || '')}</textarea>
+          </div>
+        </div>
+      `;
+    } else if (newSection.type === 'image') {
+      // 画像セクションのコピーは複雑なため、簡易版（画像は再追加が必要）
+      if (newSection.image_type === 'before_after') {
+        html = `
+          <div class="section-card" data-section-id="${newSectionId}">
+            <div class="section-header">
+              <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
+              <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div class="section-body">
+              <div class="image-grid">
+                <div class="image-category">
+                  <div class="image-category-title before"><i class="fas fa-clock"></i> 作業前</div>
+                  <div class="image-list" id="${newSectionId}-before">
+                    <div class="image-placeholder">
+                      <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                    </div>
+                    <button type="button" class="image-add-btn" onclick="openImageDialog('${newSectionId}', 'before')">
+                      <i class="fas fa-plus"></i>
+                      <span>追加</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="image-category">
+                  <div class="image-category-title after"><i class="fas fa-check-circle"></i> 作業後</div>
+                  <div class="image-list" id="${newSectionId}-after">
+                    <div class="image-placeholder">
+                      <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                    </div>
+                    <button type="button" class="image-add-btn" onclick="openImageDialog('${newSectionId}', 'after')">
+                      <i class="fas fa-plus"></i>
+                      <span>追加</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        // 画像データはクリア（再追加が必要）
+        newSection.photos = { before: [], after: [] };
+      } else if (newSection.image_type === 'completed') {
+        html = `
+          <div class="section-card" data-section-id="${newSectionId}">
+            <div class="section-header">
+              <span class="section-title"><i class="fas fa-star"></i> 画像（施工後）</span>
+              <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div class="section-body">
+              <div class="image-grid image-grid-completed">
+                <div class="image-category image-category-completed">
+                  <div class="image-category-title completed"><i class="fas fa-star"></i> 施工後</div>
+                  <div class="image-list image-list-completed" id="${newSectionId}-completed">
+                    <div class="image-placeholder">
+                      <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
+                    </div>
+                    <button type="button" class="image-add-btn" onclick="openImageDialog('${newSectionId}', 'completed')">
+                      <i class="fas fa-plus"></i>
+                      <span>追加</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        // 画像データはクリア（再追加が必要）
+        newSection.photos = { completed: [] };
+      }
+    }
+    
+    if (html) {
+      // 元のセクションの後に挿入
+      const originalElement = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (originalElement && originalElement.nextSibling) {
+        originalElement.insertAdjacentHTML('afterend', html);
+      } else {
+        reportContent.insertAdjacentHTML('beforeend', html);
+      }
+      
+      // ドラッグ&ドロップを設定
+      const newCard = document.querySelector(`[data-section-id="${newSectionId}"]`);
+      if (newCard) {
+        setupSectionDragAndDrop(newCard);
+      }
+      
+      updateCleaningItemsList();
+      autoSave();
+    }
+  }
+
+  // セクションカードの選択モード表示を更新
+  function updateSectionCardsForSelection() {
+    const sectionCards = document.querySelectorAll('.section-card');
+    sectionCards.forEach(card => {
+      const sectionId = card.dataset.sectionId;
+      if (!sectionId) return;
+      
+      if (isSectionSelectMode) {
+        // チェックボックスを追加
+        if (!card.querySelector('.section-select-checkbox')) {
+          const checkbox = document.createElement('div');
+          checkbox.className = 'section-select-checkbox';
+          checkbox.innerHTML = '<i class="fas fa-check-circle"></i>';
+          checkbox.onclick = (e) => {
+            e.stopPropagation();
+            toggleSectionSelection(sectionId);
+          };
+          card.querySelector('.section-header')?.insertBefore(checkbox, card.querySelector('.section-header').firstChild);
+        }
+        
+        // 選択状態を反映
+        if (selectedSectionIds.has(sectionId)) {
+          card.classList.add('section-selected');
+        } else {
+          card.classList.remove('section-selected');
+        }
+      } else {
+        // チェックボックスを削除
+        const checkbox = card.querySelector('.section-select-checkbox');
+        if (checkbox) {
+          checkbox.remove();
+        }
+        card.classList.remove('section-selected');
+      }
+    });
+  }
+
+  // セクション選択をトグル
+  function toggleSectionSelection(sectionId) {
+    if (!isSectionSelectMode) return;
+    
+    if (selectedSectionIds.has(sectionId)) {
+      selectedSectionIds.delete(sectionId);
+    } else {
+      selectedSectionIds.add(sectionId);
+    }
+    
+    updateSectionCardsForSelection();
+    
+    // ボタンの表示を更新
+    const sectionCopyBtn = document.getElementById('section-copy-btn');
+    const sectionBulkDeleteBtn = document.getElementById('section-bulk-delete-btn');
+    if (sectionCopyBtn) {
+      if (selectedSectionIds.size > 0) {
+        sectionCopyBtn.innerHTML = `<i class="fas fa-copy"></i><span>コピー (${selectedSectionIds.size})</span>`;
+      } else {
+        sectionCopyBtn.innerHTML = '<i class="fas fa-copy"></i><span>コピー</span>';
+      }
+    }
+    if (sectionBulkDeleteBtn) {
+      if (selectedSectionIds.size > 0) {
+        sectionBulkDeleteBtn.innerHTML = `<i class="fas fa-trash"></i><span>削除 (${selectedSectionIds.size})</span>`;
+      } else {
+        sectionBulkDeleteBtn.innerHTML = '<i class="fas fa-trash"></i><span>削除</span>';
+      }
+    }
+  }
 
   // 清掃項目更新
   window.updateCleaningItem = function(sectionId, value) {
@@ -2192,7 +3226,7 @@
     const images = selectedWarehouseImages[category] || [];
 
     if (images.length === 0) {
-      alert('画像を選択してください');
+      showWarning('画像を選択してください');
       return;
     }
 
@@ -2562,17 +3596,17 @@
     const cleaningDate = document.getElementById('report-date').value;
 
     if (!storeId) {
-      alert('店舗を選択してください');
+      showError('店舗を選択してください');
       return;
     }
 
     if (!brandName) {
-      alert('ブランド名を入力してください');
+      showError('ブランド名を入力してください');
       return;
     }
 
     if (!cleaningDate) {
-      alert('清掃日を入力してください');
+      showError('清掃日を入力してください');
       return;
     }
 
@@ -2695,7 +3729,7 @@
 
       const result = await response.json();
       console.log('[Submit] Success:', result);
-      alert(isEditMode ? 'レポートを修正しました！' : 'レポートを提出しました！');
+      showSuccess(isEditMode ? 'レポートを修正しました！' : 'レポートを提出しました！');
       
       // 編集モードの場合はフォームをリセット
       if (isEditMode) {
@@ -2718,7 +3752,7 @@
     } catch (error) {
       console.error('[Submit] Error:', error);
       console.error('[Submit] Report data that failed:', reportData);
-      alert('送信に失敗しました: ' + error.message);
+      showError('送信に失敗しました: ' + getErrorMessage(error));
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> レポートを提出';
@@ -2873,5 +3907,313 @@
     div.textContent = str;
     return div.innerHTML;
   }
+
+  // トースト通知システム
+  function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icons = {
+      success: 'fa-check-circle',
+      error: 'fa-exclamation-circle',
+      warning: 'fa-exclamation-triangle',
+      info: 'fa-info-circle'
+    };
+
+    toast.innerHTML = `
+      <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+      <span class="toast-message">${escapeHtml(message)}</span>
+      <button type="button" class="toast-close" aria-label="閉じる">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+
+    const closeBtn = toast.querySelector('.toast-close');
+    const closeToast = () => {
+      toast.classList.add('toast-exit');
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    };
+
+    closeBtn.addEventListener('click', closeToast);
+    container.appendChild(toast);
+
+    // 自動で閉じる
+    if (duration > 0) {
+      setTimeout(closeToast, duration);
+    }
+
+    return toast;
+  }
+
+  // 成功メッセージ
+  function showSuccess(message, duration = 3000) {
+    return showToast(message, 'success', duration);
+  }
+
+  // エラーメッセージ
+  function showError(message, duration = 5000) {
+    return showToast(message, 'error', duration);
+  }
+
+  // 警告メッセージ
+  function showWarning(message, duration = 4000) {
+    return showToast(message, 'warning', duration);
+  }
+
+  // 情報メッセージ
+  function showInfo(message, duration = 3000) {
+    return showToast(message, 'info', duration);
+  }
+
+  // カスタム確認ダイアログ
+  function showConfirm(title, message, options = {}) {
+    return new Promise((resolve) => {
+      const dialog = document.getElementById('confirm-dialog');
+      const titleEl = document.getElementById('confirm-dialog-title');
+      const messageEl = document.getElementById('confirm-dialog-message');
+      const okBtn = document.getElementById('confirm-dialog-ok');
+      const cancelBtn = document.getElementById('confirm-dialog-cancel');
+
+      if (!dialog || !titleEl || !messageEl || !okBtn || !cancelBtn) {
+        // フォールバック: ネイティブconfirmを使用
+        resolve(confirm(message));
+        return;
+      }
+
+      titleEl.textContent = title || '確認';
+      messageEl.textContent = message;
+      
+      const okText = options.okText || 'OK';
+      const cancelText = options.cancelText || 'キャンセル';
+      okBtn.textContent = okText;
+      cancelBtn.textContent = cancelText;
+
+      // 既存のイベントリスナーを削除
+      const newOkBtn = okBtn.cloneNode(true);
+      const newCancelBtn = cancelBtn.cloneNode(true);
+      okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+      cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+      const closeDialog = (result) => {
+        dialog.style.display = 'none';
+        resolve(result);
+      };
+
+      newOkBtn.addEventListener('click', () => closeDialog(true));
+      newCancelBtn.addEventListener('click', () => closeDialog(false));
+
+      // オーバーレイクリックで閉じる（オプション）
+      if (options.closeOnOverlay !== false) {
+        dialog.addEventListener('click', (e) => {
+          if (e.target === dialog) {
+            closeDialog(false);
+          }
+        });
+      }
+
+      // ESCキーで閉じる
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+          closeDialog(false);
+          document.removeEventListener('keydown', handleEsc);
+        }
+      };
+      document.addEventListener('keydown', handleEsc);
+
+      dialog.style.display = 'flex';
+    });
+  }
+
+  // エラーメッセージを日本語化
+  function getErrorMessage(error) {
+    if (!error) return 'エラーが発生しました';
+    
+    const errorMessage = error.message || error.toString();
+    
+    // ネットワークエラー
+    if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+      return 'ネットワークエラーが発生しました。接続を確認してください。';
+    }
+    
+    // タイムアウトエラー
+    if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
+      return 'リクエストがタイムアウトしました。しばらく待ってから再度お試しください。';
+    }
+    
+    // 認証エラー
+    if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+      return '認証に失敗しました。再度ログインしてください。';
+    }
+    
+    // 権限エラー
+    if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
+      return 'この操作を実行する権限がありません。';
+    }
+    
+    // サーバーエラー
+    if (errorMessage.includes('500') || errorMessage.includes('Internal Server Error')) {
+      return 'サーバーエラーが発生しました。しばらく待ってから再度お試しください。';
+    }
+    
+    // その他のエラー
+    return errorMessage || 'エラーが発生しました';
+  }
+
+  // プレビューモーダルを開く
+  function openPreviewModal() {
+    const previewContent = document.getElementById('preview-report-content');
+    if (!previewContent) return;
+    
+    // 現在のフォームデータからプレビューを生成
+    const brandName = document.getElementById('report-brand-search')?.value || 
+                      document.getElementById('report-brand-name')?.value || '';
+    const storeName = document.getElementById('report-store-search')?.value || 
+                      document.getElementById('report-store-name')?.value || '';
+    const date = document.getElementById('report-date')?.value || '';
+    const startTime = document.getElementById('report-start')?.value || '';
+    const endTime = document.getElementById('report-end')?.value || '';
+    
+    // 日付フォーマット
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}年${month}月${day}日`;
+    };
+    
+    // 時間フォーマット
+    const formatTime = (timeStr) => {
+      if (!timeStr) return '';
+      return timeStr.substring(0, 5); // HH:MM形式
+    };
+    
+    // 清掃項目を取得
+    const cleaningItems = Object.values(sections)
+      .filter(s => s.type === 'cleaning' && s.item_name)
+      .map(s => s.item_name);
+    
+    // プレビューHTMLを生成
+    let html = `
+      <div class="preview-report">
+        <div class="preview-header">
+          <div class="preview-date">${formatDate(date)}</div>
+          <div class="preview-store">${escapeHtml(storeName)}</div>
+          ${brandName ? `<div class="preview-brand">${escapeHtml(brandName)}</div>` : ''}
+          ${startTime || endTime ? `<div class="preview-time">${formatTime(startTime)} - ${formatTime(endTime)}</div>` : ''}
+        </div>
+        
+        ${cleaningItems.length > 0 ? `
+          <div class="preview-items-list">
+            <div class="preview-items-label">実施清掃項目</div>
+            <div class="preview-items-tags">
+              ${cleaningItems.map(item => `<span class="preview-item-tag">${escapeHtml(item)}</span>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+        
+        <div class="preview-sections">
+    `;
+    
+    // セクションを順番に表示
+    Object.keys(sections).forEach(sectionId => {
+      const section = sections[sectionId];
+      
+      if (section.type === 'cleaning' && section.item_name) {
+        // 清掃項目セクション（既に上で表示済み）
+      } else if (section.type === 'image') {
+        // 画像セクション
+        if (section.image_type === 'before_after') {
+          const beforePhotos = section.photos?.before || [];
+          const afterPhotos = section.photos?.after || [];
+          
+          html += `
+            <div class="preview-section preview-image-section">
+              <div class="preview-section-title">画像（作業前・作業後）</div>
+              <div class="preview-image-grid">
+                <div class="preview-image-category">
+                  <div class="preview-category-title">作業前</div>
+                  <div class="preview-image-list">
+                    ${beforePhotos.length > 0 ? 
+                      beforePhotos.map(url => `<img src="${url}" alt="作業前" class="preview-image">`).join('') :
+                      `<div class="preview-no-image">写真を撮り忘れました</div>`
+                    }
+                  </div>
+                </div>
+                <div class="preview-image-category">
+                  <div class="preview-category-title">作業後</div>
+                  <div class="preview-image-list">
+                    ${afterPhotos.length > 0 ? 
+                      afterPhotos.map(url => `<img src="${url}" alt="作業後" class="preview-image">`).join('') :
+                      `<div class="preview-no-image">写真を撮り忘れました</div>`
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (section.image_type === 'completed') {
+          const completedPhotos = section.photos?.completed || [];
+          
+          html += `
+            <div class="preview-section preview-image-section">
+              <div class="preview-section-title">画像（施工後）</div>
+              <div class="preview-image-list">
+                ${completedPhotos.length > 0 ? 
+                  completedPhotos.map(url => `<img src="${url}" alt="施工後" class="preview-image">`).join('') :
+                  `<div class="preview-no-image">写真を撮り忘れました</div>`
+                }
+              </div>
+            </div>
+          `;
+        }
+      } else if (section.type === 'comment' && section.content) {
+        // コメントセクション
+        html += `
+          <div class="preview-section preview-comment-section">
+            <div class="preview-section-title">コメント</div>
+            <div class="preview-content">${escapeHtml(section.content).replace(/\n/g, '<br>')}</div>
+          </div>
+        `;
+      } else if (section.type === 'work_content' && section.content) {
+        // 作業内容セクション
+        html += `
+          <div class="preview-section preview-work-content-section">
+            <div class="preview-section-title">作業内容</div>
+            <div class="preview-content">${escapeHtml(section.content).replace(/\n/g, '<br>')}</div>
+          </div>
+        `;
+      }
+    });
+    
+    html += `
+        </div>
+      </div>
+    `;
+    
+    previewContent.innerHTML = html;
+    
+    // モーダルを表示
+    const previewDialog = document.getElementById('preview-dialog');
+    if (previewDialog) {
+      previewDialog.style.display = 'flex';
+    }
+  }
+
+  // プレビューモーダルを閉じる
+  window.closePreviewModal = function() {
+    const previewDialog = document.getElementById('preview-dialog');
+    if (previewDialog) {
+      previewDialog.style.display = 'none';
+    }
+  };
 })();
 
