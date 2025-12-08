@@ -179,6 +179,7 @@
 .form-row.two-col {
   overflow-x: hidden;
   overflow-y: visible;
+  overflow: hidden;
 }
 
 .form-row:last-child {
@@ -263,6 +264,26 @@
   width: 100%;
 }
 
+/* time入力フィールドのプレースホルダー表示を改善 */
+.date-time-input-wrapper::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  pointer-events: none;
+  z-index: 1;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.date-time-input-wrapper:has(input[value]:not([value=""]))::before,
+.date-time-input-wrapper:has(input:focus)::before {
+  display: none;
+}
+
 .date-time-icon {
   font-size: 0.85rem;
   color: #fff;
@@ -275,6 +296,8 @@
   padding: 8px 12px;
   width: 100%;
   box-sizing: border-box;
+  color: rgba(255, 255, 255, 0.9);
+  background: transparent;
 }
 
 .date-time-input::placeholder {
@@ -283,23 +306,27 @@
   font-weight: 500;
 }
 
-/* time入力フィールドのplaceholder表示を改善 */
-input[type="time"].date-time-input::placeholder {
-  color: rgba(255, 255, 255, 0.8);
-  opacity: 1;
+/* time入力フィールドの表示を改善 */
+input[type="time"].date-time-input {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 input[type="time"].date-time-input::-webkit-datetime-edit-text {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 input[type="time"].date-time-input::-webkit-datetime-edit-hour-field,
 input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 input[type="time"].date-time-input:invalid::-webkit-datetime-edit-text {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 値が入力されていない場合の表示 */
+input[type="time"].date-time-input:invalid {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .form-row.three-col-inline .date-time-group {
