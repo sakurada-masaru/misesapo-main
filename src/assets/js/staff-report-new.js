@@ -511,10 +511,16 @@
         const html = `
           <div class="section-card" data-section-id="${sectionId}">
             <div class="section-header">
+              <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
               <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
-              <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-                <i class="fas fa-trash"></i>
-              </button>
+              <div class="section-header-actions">
+                <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
             </div>
             <div class="section-body">
               <select class="cleaning-item-select" onchange="updateCleaningItem('${sectionId}', this.value)">
@@ -536,10 +542,16 @@
         const html = `
           <div class="section-card" data-section-id="${sectionId}">
             <div class="section-header">
+              <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
               <span class="section-title"><i class="fas fa-comment"></i> コメント</span>
-              <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-                <i class="fas fa-trash"></i>
-              </button>
+              <div class="section-header-actions">
+                <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
             </div>
             <div class="section-body">
               <textarea class="form-input section-textarea" placeholder="コメントを入力..." oninput="updateSectionContent('${sectionId}', this.value)">${escapeHtml(section.content || '')}</textarea>
@@ -552,10 +564,16 @@
         const html = `
           <div class="section-card" data-section-id="${sectionId}">
             <div class="section-header">
+              <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
               <span class="section-title"><i class="fas fa-tasks"></i> 作業内容</span>
-              <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-                <i class="fas fa-trash"></i>
-              </button>
+              <div class="section-header-actions">
+                <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
             </div>
             <div class="section-body">
               <textarea class="form-input section-textarea" placeholder="作業内容を入力..." oninput="updateSectionContent('${sectionId}', this.value)">${escapeHtml(section.content || '')}</textarea>
@@ -2796,10 +2814,16 @@
     const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
+          <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
           <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
-          <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-            <i class="fas fa-trash"></i>
-          </button>
+          <div class="section-header-actions">
+            <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
+              <i class="fas fa-copy"></i>
+            </button>
+            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
         </div>
         <div class="section-body">
           <div class="image-grid">
@@ -2953,10 +2977,16 @@
     const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
+          <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
           <span class="section-title"><i class="fas fa-comment"></i> コメント</span>
-          <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-            <i class="fas fa-trash"></i>
-          </button>
+          <div class="section-header-actions">
+            <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
+              <i class="fas fa-copy"></i>
+            </button>
+            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
         </div>
         <div class="section-body">
           <textarea class="section-textarea" placeholder="コメントを入力..." oninput="updateSectionContent('${sectionId}', this.value)"></textarea>
@@ -3005,10 +3035,16 @@
     const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
+          <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
           <span class="section-title"><i class="fas fa-tasks"></i> 作業内容</span>
-          <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')">
-            <i class="fas fa-trash"></i>
-          </button>
+          <div class="section-header-actions">
+            <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
+              <i class="fas fa-copy"></i>
+            </button>
+            <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
         </div>
         <div class="section-body">
           <textarea class="section-textarea" placeholder="作業内容を入力..." oninput="updateSectionContent('${sectionId}', this.value)"></textarea>
@@ -3133,10 +3169,16 @@
       html = `
         <div class="section-card" data-section-id="${newSectionId}">
           <div class="section-header">
+            <input type="checkbox" class="section-select-checkbox" data-section-id="${newSectionId}" onchange="toggleSectionSelection('${newSectionId}')">
             <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
-            <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')">
-              <i class="fas fa-trash"></i>
-            </button>
+            <div class="section-header-actions">
+              <button type="button" class="section-copy" onclick="copySection('${newSectionId}')" title="コピー">
+                <i class="fas fa-copy"></i>
+              </button>
+              <button type="button" class="section-delete" onclick="deleteSection('${newSectionId}')" title="削除">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
           <div class="section-body">
             <select class="cleaning-item-select" onchange="updateCleaningItem('${newSectionId}', this.value)">
