@@ -2305,11 +2305,23 @@ function getAbsolutePosition(container) {
   const pos = container.dataset.absolutePosition;
   if (pos) {
     const [x, y] = pos.split(',').map(Number);
+    // 異常な値をチェック
+    if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y) ||
+        Math.abs(x) > 100000 || Math.abs(y) > 100000) {
+      console.warn('[Layout] Invalid position in data attribute for container:', container.dataset.containerId, 'position:', pos);
+      return null;
+    }
     return { x, y };
   }
   // styleから取得
   const left = parseInt(container.style.left) || 0;
   const top = parseInt(container.style.top) || 0;
+  // 異常な値をチェック
+  if (isNaN(left) || isNaN(top) || !isFinite(left) || !isFinite(top) ||
+      Math.abs(left) > 100000 || Math.abs(top) > 100000) {
+    console.warn('[Layout] Invalid position in style for container:', container.dataset.containerId, 'left:', left, 'top:', top);
+    return null;
+  }
   if (left !== 0 || top !== 0) {
     return { x: left, y: top };
   }
@@ -2370,23 +2382,50 @@ function restoreSectionLayout() {
       return;
     }
     
+    const gridWidth = grid.offsetWidth;
+    const gridHeight = grid.offsetHeight;
+    let hasInvalidPosition = false;
+    
     layout.forEach(item => {
       const container = grid.querySelector(`[data-container-id="${item.id}"]`);
       if (container && item.position) {
         // 旧形式（col,row）と新形式（x,y）の両方に対応
         const parts = item.position.split(',').map(Number);
         if (parts.length === 2) {
+          // 異常な値（NaN、無限大、極端に大きい/小さい値）をチェック
+          if (isNaN(parts[0]) || isNaN(parts[1]) || 
+              !isFinite(parts[0]) || !isFinite(parts[1]) ||
+              Math.abs(parts[0]) > 100000 || Math.abs(parts[1]) > 100000) {
+            console.warn('[Layout] Invalid position data for container:', item.id, 'position:', item.position);
+            hasInvalidPosition = true;
+            return;
+          }
+          
           // 数値が小さい場合は旧形式（col,row）、大きい場合は新形式（x,y）と判断
           if (parts[0] < 100 && parts[1] < 100) {
             // 旧形式: col, row
             setGridPosition(container, parts[0], parts[1]);
           } else {
             // 新形式: x, y
-            setAbsolutePosition(container, parts[0], parts[1]);
+            // 位置が有効な範囲内かチェック
+            if (parts[0] >= 0 && parts[1] >= 0 && 
+                parts[0] < gridWidth && parts[1] < gridHeight) {
+              setAbsolutePosition(container, parts[0], parts[1]);
+            } else {
+              console.warn('[Layout] Position out of bounds for container:', item.id, 'x:', parts[0], 'y:', parts[1]);
+              hasInvalidPosition = true;
+            }
           }
         }
       }
     });
+    
+    // 異常な位置データが見つかった場合、デフォルト配置を適用
+    if (hasInvalidPosition) {
+      console.warn('[Layout] Invalid position data detected, applying default layout');
+      applyDefaultLayout();
+      return;
+    }
     
     // 保存されていないコンテナ（新規追加など）にもサイズを設定
     const allContainers = Array.from(grid.querySelectorAll('.draggable-container'));
