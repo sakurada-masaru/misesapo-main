@@ -346,6 +346,42 @@
   position: relative;
 }
 
+.input-with-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-with-dropdown .form-input {
+  padding-right: 40px;
+}
+
+.dropdown-arrow-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  font-size: 0.85rem;
+}
+
+.dropdown-arrow-btn:hover {
+  color: #374151;
+}
+
+.dropdown-arrow-btn:active {
+  color: #111827;
+}
+
 .store-search-results {
   position: absolute;
   top: 100%;

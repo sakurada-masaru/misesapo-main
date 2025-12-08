@@ -38,10 +38,15 @@
       <div class="form-row two-col">
         <div class="form-group store-search-group">
           <div class="store-search-wrapper">
-            <select id="report-brand-select" class="form-select" name="brand_id">
-              <option value="">①ブランド名 *</option>
-            </select>
-            <input type="text" id="report-brand-search" class="form-input" placeholder="①ブランド名 *" autocomplete="off" style="display: none;">
+            <div class="input-with-dropdown">
+              <input type="text" id="report-brand-search" class="form-input" placeholder="①ブランド名 *" autocomplete="off" readonly>
+              <button type="button" class="dropdown-arrow-btn" id="brand-dropdown-btn" aria-label="ドロップダウンを開く">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <select id="report-brand-select" class="form-select" name="brand_id" style="display: none;">
+                <option value="">①ブランド名 *</option>
+              </select>
+            </div>
             <input type="hidden" id="report-brand" name="brand_id">
             <input type="hidden" id="report-brand-name" name="brand_name">
             <div id="brand-search-results" class="store-search-results" style="display: none;"></div>
@@ -49,12 +54,18 @@
         </div>
         <div class="form-group store-search-group">
           <div class="store-search-wrapper">
-            <select id="report-store-select" class="form-select" name="store_id">
-              <option value="">②店舗名 *</option>
-            </select>
-            <input type="text" id="report-store-search" class="form-input" placeholder="②店舗名 *" autocomplete="off" style="display: none;">
+            <div class="input-with-dropdown">
+              <input type="text" id="report-store-search" class="form-input" placeholder="②店舗名 *" autocomplete="off" readonly>
+              <button type="button" class="dropdown-arrow-btn" id="store-dropdown-btn" aria-label="ドロップダウンを開く">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <select id="report-store-select" class="form-select" name="store_id" style="display: none;">
+                <option value="">②店舗名 *</option>
+              </select>
+            </div>
             <input type="hidden" id="report-store" name="store_id">
             <input type="hidden" id="report-store-name" name="store_name">
+            <div id="store-search-results" class="store-search-results" style="display: none;"></div>
           </div>
         </div>
       </div>
