@@ -193,6 +193,12 @@
   gap: 8px;
 }
 
+.form-row.two-col .date-time-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .form-row.three-col {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
