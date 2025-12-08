@@ -91,9 +91,17 @@
     function populateStoreFilters() {
       const filterSelect = document.getElementById('filter-store');
       const formSelect = document.getElementById('report-store');
+      const formSelectModal = document.getElementById('report-store-select-modal');
       const options = allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
-      filterSelect.innerHTML = '<option value="">すべての店舗</option>' + options;
-      formSelect.innerHTML = '<option value="">選択してください</option>' + options;
+      if (filterSelect) {
+        filterSelect.innerHTML = '<option value="">すべての店舗</option>' + options;
+      }
+      if (formSelect) {
+        formSelect.innerHTML = '<option value="">選択してください</option>' + options;
+      }
+      if (formSelectModal) {
+        formSelectModal.innerHTML = '<option value="">選択してください</option>' + options;
+      }
     }
 
     function populateWorkerSelect() {
@@ -580,22 +588,36 @@
         return;
       }
 
-      document.getElementById('form-title').textContent = 'レポート編集';
-      document.getElementById('report-id').value = report.report_id || report.id;
+      const formTitle = document.getElementById('form-title');
+      if (formTitle) formTitle.textContent = 'レポート編集';
       
-      // 基本情報を設定
-      const storeSelect = document.getElementById('report-store');
+      const reportId = document.getElementById('report-id');
+      if (reportId) reportId.value = report.report_id || report.id;
+      
+      // 基本情報を設定（モーダル用のIDを使用）
+      const storeSelect = document.getElementById('report-store-select-modal');
+      const storeNameInput = document.getElementById('report-store-name-modal');
+      const storeIdInput = document.getElementById('report-store-modal');
+      const storeSearchInput = document.getElementById('report-store-search-modal');
+      
       if (storeSelect) {
         storeSelect.value = report.store_id || '';
         const selectedOption = storeSelect.options[storeSelect.selectedIndex];
         if (selectedOption) {
-          document.getElementById('report-store-name').value = selectedOption.text;
+          const storeName = selectedOption.text;
+          if (storeNameInput) storeNameInput.value = storeName;
+          if (storeIdInput) storeIdInput.value = report.store_id || '';
+          if (storeSearchInput) storeSearchInput.value = storeName;
         }
       }
       
-      document.getElementById('report-date').value = report.cleaning_date || report.work_date || '';
-      document.getElementById('report-start').value = report.cleaning_start_time || report.start_time || '';
-      document.getElementById('report-end').value = report.cleaning_end_time || report.end_time || '';
+      const reportDate = document.getElementById('report-date-modal');
+      const reportStart = document.getElementById('report-start-modal');
+      const reportEnd = document.getElementById('report-end-modal');
+      
+      if (reportDate) reportDate.value = report.cleaning_date || report.work_date || '';
+      if (reportStart) reportStart.value = report.cleaning_start_time || report.start_time || '';
+      if (reportEnd) reportEnd.value = report.cleaning_end_time || report.end_time || '';
       
       // 担当者情報を設定
       const workerSelect = document.getElementById('report-worker');

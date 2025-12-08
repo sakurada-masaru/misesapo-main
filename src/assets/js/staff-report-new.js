@@ -1309,10 +1309,15 @@
     // 初期化時に店舗セレクトボックスを設定（モーダル方式では不要）
 
     // 追加ボタン
-    document.getElementById('add-cleaning-item').addEventListener('click', addCleaningItemSection);
-    document.getElementById('add-image').addEventListener('click', openImageSectionTypeModal);
-    document.getElementById('add-comment').addEventListener('click', addCommentSection);
-    document.getElementById('add-work-content').addEventListener('click', addWorkContentSection);
+    const addCleaningItemBtn = document.getElementById('add-cleaning-item');
+    const addImageBtn = document.getElementById('add-image');
+    const addCommentBtn = document.getElementById('add-comment');
+    const addWorkContentBtn = document.getElementById('add-work-content');
+    
+    if (addCleaningItemBtn) addCleaningItemBtn.addEventListener('click', addCleaningItemSection);
+    if (addImageBtn) addImageBtn.addEventListener('click', openImageSectionTypeModal);
+    if (addCommentBtn) addCommentBtn.addEventListener('click', addCommentSection);
+    if (addWorkContentBtn) addWorkContentBtn.addEventListener('click', addWorkContentSection);
 
     // セクションカードのドラッグ&ドロップ機能を初期設定
     setupAllSectionDragAndDrop();
