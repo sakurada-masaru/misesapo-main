@@ -2212,8 +2212,11 @@ function toggleEditMode() {
     const span = toggleBtn.querySelector('span');
     if (span) span.textContent = '編集モード ON';
     
-    // 既存の位置スタイルをクリア（異常な値が適用されている可能性があるため）
+    // 既存の位置スタイルをクリアし、アンカーにスナップ（異常な値が適用されている可能性があるため）
     if (grid) {
+      // グリッドアンカーを計算
+      getGridAnchors(grid);
+      
       grid.querySelectorAll('.draggable-container').forEach(container => {
         const left = parseInt(container.style.left) || 0;
         const top = parseInt(container.style.top) || 0;
@@ -2224,6 +2227,13 @@ function toggleEditMode() {
           container.style.removeProperty('left');
           container.style.removeProperty('top');
           container.dataset.absolutePosition = '';
+        } else {
+          // 既存の位置をアンカーにスナップ
+          const snapped = findNearestAnchor(grid, left, top);
+          if (snapped.x !== left || snapped.y !== top) {
+            console.log('[EditMode] Snapping container to anchor:', container.dataset.containerId, 'from', left, top, 'to', snapped.x, snapped.y);
+            setAbsolutePosition(container, snapped.x, snapped.y);
+          }
         }
       });
     }
@@ -2789,20 +2799,24 @@ function getGridAnchors(grid) {
   }
   
   const CELL_SIZE = 80;
-  const gridWidth = grid.offsetWidth;
-  const gridHeight = grid.offsetHeight;
+  // グリッドコンテナのサイズを取得（grid要素ではなく、親のコンテナ要素）
+  const container = grid.closest('.mypage-main-grid-container') || grid.parentElement;
+  const gridWidth = container ? container.offsetWidth : grid.offsetWidth;
+  const gridHeight = container ? container.offsetHeight : grid.offsetHeight;
   
   // グリッドの交点（アンカー）を計算
+  // 画面に表示されているマス目の交点を確定
   const anchors = [];
-  const maxCols = Math.ceil(gridWidth / CELL_SIZE);
-  const maxRows = Math.ceil(gridHeight / CELL_SIZE);
+  const maxCols = Math.floor(gridWidth / CELL_SIZE);
+  const maxRows = Math.floor(gridHeight / CELL_SIZE);
   
+  // 0からmaxCols/maxRowsまで、すべての交点を計算
   for (let row = 0; row <= maxRows; row++) {
     for (let col = 0; col <= maxCols; col++) {
       const x = col * CELL_SIZE;
       const y = row * CELL_SIZE;
-      // グリッド範囲内のアンカーのみ追加
-      if (x <= gridWidth && y <= gridHeight) {
+      // グリッド範囲内のアンカーのみ追加（画面からはみ出さないように）
+      if (x < gridWidth && y < gridHeight) {
         anchors.push({ x, y });
       }
     }
@@ -2811,7 +2825,7 @@ function getGridAnchors(grid) {
   gridAnchors = anchors;
   gridAnchorsCacheTimestamp = now;
   
-  console.log('[Grid] Calculated grid anchors:', anchors.length, 'anchors');
+  console.log('[Grid] Calculated grid anchors:', anchors.length, 'anchors', 'gridWidth:', gridWidth, 'gridHeight:', gridHeight, 'maxCols:', maxCols, 'maxRows:', maxRows);
   return anchors;
 }
 
