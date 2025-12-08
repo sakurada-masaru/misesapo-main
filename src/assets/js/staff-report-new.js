@@ -167,6 +167,7 @@
     setDefaultDate();
     loadRevisionRequests();
     setupMobileKeyboardHandling();
+    setupScrollIndicator(); // スクロール位置インジケーターを設定
     // ブランド名と店舗名のselect要素を初期化
     initBrandSelect();
     initStoreSelect();
@@ -4501,5 +4502,71 @@
       previewDialog.style.display = 'none';
     }
   };
+
+  // スクロール位置インジケーターを設定（SP版のみ）
+  function setupScrollIndicator() {
+    // SP版（375px以下）でのみ動作
+    if (window.innerWidth > 375) return;
+
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabContents.forEach(tabContent => {
+      // スクロールインジケーター要素を作成
+      const indicator = document.createElement('div');
+      indicator.className = 'scroll-indicator';
+      document.body.appendChild(indicator);
+
+      let scrollTimeout;
+      let isScrolling = false;
+
+      // スクロールイベント
+      tabContent.addEventListener('scroll', () => {
+        if (!isScrolling) {
+          indicator.classList.add('visible');
+          isScrolling = true;
+        }
+
+        // スクロール位置を計算
+        const scrollTop = tabContent.scrollTop;
+        const scrollHeight = tabContent.scrollHeight;
+        const clientHeight = tabContent.clientHeight;
+        const scrollableHeight = scrollHeight - clientHeight;
+        
+        if (scrollableHeight > 0) {
+          // スクロール位置の割合（0-1）
+          const scrollPercent = scrollTop / scrollableHeight;
+          
+          // 画面の高さを取得
+          const viewportHeight = window.innerHeight;
+          const headerHeight = 98; // ヘッダー + タブナビゲーション
+          const availableHeight = viewportHeight - headerHeight;
+          
+          // インジケーターの位置を計算（ヘッダー下から開始）
+          const indicatorTop = headerHeight + (availableHeight - 20) * scrollPercent;
+          
+          indicator.style.top = `${indicatorTop}px`;
+        }
+
+        // スクロール停止時に非表示
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          indicator.classList.remove('visible');
+          isScrolling = false;
+        }, 1000);
+      });
+
+      // タブが切り替わったときにインジケーターをリセット
+      const observer = new MutationObserver(() => {
+        if (tabContent.classList.contains('active')) {
+          indicator.classList.remove('visible');
+        }
+      });
+      
+      observer.observe(tabContent, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    });
+  }
 })();
 

@@ -106,6 +106,57 @@
   height: calc(100dvh - 98px); /* 動的ビューポート高さ（キーボード対応） */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  position: relative;
+  padding-right: 0;
+}
+
+/* SP版：カスタムスクロールバー */
+@media (max-width: 375px) {
+  .tab-content {
+    /* スクロールバーを常に表示 */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+  }
+  
+  .tab-content::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .tab-content::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+  
+  .tab-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .tab-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  
+  /* スクロール位置インジケーター（◯） */
+  .scroll-indicator {
+    position: fixed;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    background: rgba(255, 103, 156, 0.8);
+    border-radius: 50%;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.1s ease;
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+  }
+  
+  .scroll-indicator.visible {
+    opacity: 1;
+  }
 }
 
 #tab-content-new {
