@@ -117,9 +117,21 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   box-sizing: border-box;
   /* Bento Gridスタイル: サイズはgrid-column/row spanで制御 */
+  /* タッチデバイスでのテキスト選択を防ぐ */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .edit-mode .draggable-container {
   cursor: move;
+  /* 編集モード中はテキスト選択を完全に無効化 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .draggable-container.dragging {
   opacity: 0.6;
@@ -130,6 +142,11 @@
   /* サイズを維持 */
   width: var(--dragging-width, auto);
   height: var(--dragging-height, auto);
+  /* ドラッグ中はテキスト選択を完全に無効化 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .draggable-container.drag-over {
   border: 2px dashed var(--primary, #3b82f6);

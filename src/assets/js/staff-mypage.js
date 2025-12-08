@@ -2022,6 +2022,13 @@ let gridPositionCache = null;
 let gridPositionCacheTimestamp = 0;
 const GRID_CACHE_DURATION = 100; // キャッシュの有効期限（ms）
 
+// タッチイベント用の変数
+let touchStartPos = { x: 0, y: 0 };
+let touchStartTime = 0;
+let isTouchDragging = false;
+const TOUCH_DRAG_THRESHOLD = 10; // ドラッグと判定する移動距離（px）
+const TOUCH_DRAG_TIME_THRESHOLD = 200; // ドラッグと判定する時間（ms）
+
 // コンテナのドラッグ開始ハンドラ（グローバルスコープで定義）
 function handleContainerDragStart(e) {
   if (!editMode) {
@@ -2051,7 +2058,123 @@ function handleContainerDragStart(e) {
   dragOffset.x = e.clientX - rect.left;
   dragOffset.y = e.clientY - rect.top;
   
+  // テキスト選択を防ぐ
+  document.body.style.userSelect = 'none';
+  document.body.style.webkitUserSelect = 'none';
+  
   return true;
+}
+
+// タッチイベント用の変数（グローバル）
+let touchStartContainer = null;
+
+// タッチイベントの開始ハンドラ
+function handleTouchStart(e) {
+  if (!editMode) return;
+  
+  const container = e.currentTarget.closest('.draggable-container');
+  if (!container || !container.draggable) {
+    touchStartContainer = null;
+    return;
+  }
+  
+  touchStartContainer = container;
+  const touch = e.touches[0];
+  touchStartPos = { x: touch.clientX, y: touch.clientY };
+  touchStartTime = Date.now();
+  isTouchDragging = false;
+  
+  // テキスト選択を防ぐ
+  e.preventDefault();
+  document.body.style.userSelect = 'none';
+  document.body.style.webkitUserSelect = 'none';
+}
+
+// タッチイベントの移動ハンドラ
+function handleTouchMove(e) {
+  if (!editMode || !touchStartContainer) return;
+  
+  const touch = e.touches[0];
+  const deltaX = Math.abs(touch.clientX - touchStartPos.x);
+  const deltaY = Math.abs(touch.clientY - touchStartPos.y);
+  const deltaTime = Date.now() - touchStartTime;
+  
+  // 一定距離以上移動したらドラッグ開始
+  if ((deltaX > TOUCH_DRAG_THRESHOLD || deltaY > TOUCH_DRAG_THRESHOLD) && 
+      deltaTime < TOUCH_DRAG_TIME_THRESHOLD) {
+    if (!isTouchDragging) {
+      isTouchDragging = true;
+      draggedElement = touchStartContainer;
+      draggedElement.classList.add('dragging');
+      
+      const rect = draggedElement.getBoundingClientRect();
+      draggedElement.style.setProperty('--dragging-width', `${rect.width}px`);
+      draggedElement.style.setProperty('--dragging-height', `${rect.height}px`);
+      
+      dragOffset.x = touch.clientX - rect.left;
+      dragOffset.y = touch.clientY - rect.top;
+      
+      console.log('[Touch] Touch drag start:', draggedElement.dataset.containerId);
+    }
+    
+    // ドラッグ中の処理（マウスイベントと同様）
+    const grid = document.getElementById('mypage-grid');
+    if (grid && draggedElement) {
+      const containerLeftX = touch.clientX - dragOffset.x;
+      const containerTopY = touch.clientY - dragOffset.y;
+      const { col, row } = getGridPositionFromMouse(grid, containerLeftX, containerTopY);
+      
+      if (isValidPosition(grid, draggedElement, col, row)) {
+        showDropPreview(grid, draggedElement, col, row);
+      } else {
+        hideDropPreview(grid);
+      }
+    }
+    
+    e.preventDefault();
+  }
+}
+
+// タッチイベントの終了ハンドラ
+function handleTouchEnd(e) {
+  if (!editMode) {
+    touchStartContainer = null;
+    return;
+  }
+  
+  if (isTouchDragging && draggedElement) {
+    const touch = e.changedTouches[0];
+    const grid = document.getElementById('mypage-grid');
+    
+    if (grid) {
+      const containerLeftX = touch.clientX - dragOffset.x;
+      const containerTopY = touch.clientY - dragOffset.y;
+      const { col, row } = getGridPositionFromMouse(grid, containerLeftX, containerTopY);
+      
+      hideDropPreview(grid);
+      
+      if (isValidPosition(grid, draggedElement, col, row)) {
+        setGridPosition(draggedElement, col, row);
+        saveSectionLayout();
+      }
+    }
+    
+    draggedElement.classList.remove('dragging');
+    draggedElement.style.removeProperty('--dragging-width');
+    draggedElement.style.removeProperty('--dragging-height');
+    draggedElement = null;
+    isTouchDragging = false;
+    
+    console.log('[Touch] Touch drag end');
+  }
+  
+  touchStartContainer = null;
+  
+  // テキスト選択を復元
+  document.body.style.userSelect = '';
+  document.body.style.webkitUserSelect = '';
+  
+  e.preventDefault();
 }
 
 // Bento Gridスタイル: グリッド列数を取得（固定4列、レスポンシブで2列または1列）
@@ -2070,13 +2193,29 @@ function getGridDimensions() {
   
   if (colsMatch) {
     cols = parseInt(colsMatch[1], 10);
-  } else if (gridTemplateColumns === '1fr') {
+  } else if (gridTemplateColumns === '1fr' || gridTemplateColumns.trim() === '1fr') {
     // スマホの場合は1列
     cols = 1;
   }
   
-  // Bento Gridでは行数は自動（grid-auto-rows）なので、固定値を返す
-  return { cols, rows: 1 };
+  // Bento Gridでは行数は自動（grid-auto-rows）なので、実際の行数を計算
+  // 実際のコンテナの配置から行数を推定
+  const containers = grid.querySelectorAll('.draggable-container');
+  let maxRow = 0;
+  containers.forEach(container => {
+    const gridRow = container.style.gridRow || window.getComputedStyle(container).gridRow;
+    // grid-row: "row / row + height" の形式から最大行を取得
+    const rowMatch = gridRow.match(/(\d+)\s*\/\s*(\d+)/);
+    if (rowMatch) {
+      const endRow = parseInt(rowMatch[2], 10);
+      maxRow = Math.max(maxRow, endRow);
+    }
+  });
+  
+  // 行数が取得できない場合は、デフォルト値を返す
+  const rows = maxRow > 0 ? maxRow : 1;
+  
+  return { cols, rows };
 }
 
 // グリッド線を描画（Bento Gridスタイルでは不要、gapで視覚的に分離される）
@@ -2486,8 +2625,18 @@ function attachDragListeners() {
   grid.querySelectorAll('.draggable-container').forEach(container => {
     // 既存のリスナーを削除（重複を防ぐ）
     container.removeEventListener('dragstart', handleContainerDragStart);
-    // 新しいリスナーを追加
+    container.removeEventListener('touchstart', handleTouchStart);
+    container.removeEventListener('touchmove', handleTouchMove);
+    container.removeEventListener('touchend', handleTouchEnd);
+    
+    // 新しいリスナーを追加（マウスイベント）
     container.addEventListener('dragstart', handleContainerDragStart);
+    
+    // タッチイベントを追加（タブレット対応）
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
     console.log('[Drag] Attached listener to:', container.dataset.containerId, 'draggable:', container.draggable);
   });
 }
