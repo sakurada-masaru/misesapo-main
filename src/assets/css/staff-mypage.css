@@ -101,7 +101,66 @@
   z-index: 1;
 }
 /* セクションのコスト表示 */
-@media (max-width: 1024px) {
+/* パターン1: グリッド総数を画面サイズに応じて変更（コンテナサイズは固定・絶対に小さくしない） */
+/* 計算基準: 利用可能幅 = 画面幅 - サイドバー(240px) - パディング(48px) */
+/* 最小コンテナサイズ: 約120px以上を維持（フォント12px + パディング16px + 余白を考慮） */
+
+/* 1. 超大画面デスクトップ（1400px以上）: 10x6 = 60マス */
+/* 利用可能幅: 1400-240-48=1112px → 1マス=111.2px（余裕あり） */
+@media (min-width: 1400px) {
+  .mypage-main-grid {
+    grid-template-columns: repeat(10, 1fr) !important;
+    grid-template-rows: repeat(6, 1fr) !important;
+  }
+}
+
+/* 2. 大画面デスクトップ（1280px〜1399px）: 9x6 = 54マス */
+/* 利用可能幅: 1280-240-48=992px → 1マス=110.2px（適切） */
+@media (min-width: 1280px) and (max-width: 1399px) {
+  .mypage-main-grid {
+    grid-template-columns: repeat(9, 1fr) !important;
+    grid-template-rows: repeat(6, 1fr) !important;
+  }
+}
+
+/* 3. 中画面デスクトップ（1024px〜1279px）: 6x6 = 36マス */
+/* 利用可能幅: 1024-240-48=736px → 1マス=122.7px（120px以上を維持） */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .mypage-main-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    grid-template-rows: repeat(6, 1fr) !important;
+  }
+}
+
+/* 4. 大タブレット横向き（900px〜1023px）: 5x5 = 25マス */
+/* 利用可能幅: 900-240-48=612px → 1マス=122.4px（120px以上を維持） */
+@media (min-width: 900px) and (max-width: 1023px) {
+  .mypage-main-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    grid-template-rows: repeat(5, 1fr) !important;
+  }
+}
+
+/* 5. タブレット横向き（768px〜899px）: 4x5 = 20マス */
+/* 利用可能幅: 768-240-48=480px → 1マス=120px（最小サイズを維持） */
+@media (min-width: 768px) and (max-width: 899px) {
+  .mypage-main-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    grid-template-rows: repeat(5, 1fr) !important;
+  }
+}
+
+/* 6. タブレット縦向き・大きいスマホ（600px〜767px）: 4x4 = 16マス */
+/* 利用可能幅: 600-0-24=576px（サイドバー非表示想定） → 1マス=144px（余裕あり） */
+@media (min-width: 600px) and (max-width: 767px) {
+  .mypage-main-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    grid-template-rows: repeat(4, 1fr) !important;
+  }
+}
+
+/* スマホ（〜599px）: 1列（縦積み） */
+@media (max-width: 599px) {
   .mypage-main-grid {
     grid-template-columns: 1fr !important;
     grid-template-rows: auto !important;
@@ -336,6 +395,10 @@
   padding: 8px;
   transition: background-color 0.3s ease;
 }
+/* 時計コンテナ専用のパディング調整 */
+.digital-clock-section .container-section {
+  padding: 6px;
+}
 
 /* ライトモード */
 [data-mypage-theme="light"] .container-section,
@@ -361,6 +424,11 @@
   margin-bottom: 8px;
   flex-shrink: 0;
   padding: 0 4px;
+}
+/* 時計コンテナのヘッダー調整 */
+.digital-clock-section .container-header {
+  margin-bottom: 4px;
+  padding: 0 2px;
 }
 .container-title {
   font-size: 0.875rem;
@@ -970,60 +1038,78 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
   justify-content: center;
   background: transparent;
   border-radius: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 .digital-clock-display {
-  font-size: 1.8rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #fff;
   text-align: center;
   font-family: 'Courier New', monospace;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  line-height: 1.2;
+  line-height: 1.1;
+  margin: 0;
+  padding: 0;
 }
 .digital-clock-date {
-  font-size: 0.6rem;
+  font-size: 0.5rem;
   color: #fff;
   text-align: center;
   opacity: 0.9;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
 }
 .digital-clock-alarm {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
-  padding: 4px 6px;
+  padding: 2px 4px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  border-radius: 3px;
+  margin-top: 2px;
 }
 .alarm-status {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.65rem;
+  gap: 3px;
+  font-size: 0.55rem;
   color: #fff;
   flex: 1;
+  min-width: 0;
 }
 .alarm-status i {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
+  flex-shrink: 0;
+}
+.alarm-status span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .btn-alarm-toggle,
 .btn-alarm-set {
-  padding: 4px 8px;
-  font-size: 0.6rem;
-  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.5rem;
+  border-radius: 3px;
   white-space: nowrap;
+  line-height: 1.2;
+  min-height: auto;
 }
 .btn-alarm-toggle {
   background: rgba(255, 255, 255, 0.3);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
 }
 .btn-alarm-toggle:hover {
   background: rgba(255, 255, 255, 0.4);
@@ -1033,6 +1119,7 @@
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.3);
   width: 100%;
+  margin-top: 2px;
 }
 .btn-alarm-set:hover {
   background: rgba(255, 255, 255, 0.3);
