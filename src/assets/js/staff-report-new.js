@@ -1908,6 +1908,20 @@
     
     // セクションが追加されたときにドラッグ&ドロップを設定するため、MutationObserverを使用
     const contentArea = document.getElementById('report-content');
+    const sectionAddIconsArea = document.getElementById('section-add-icons-area');
+    
+    // セクション追加アイコンエリアを常に最後に配置する関数
+    function moveSectionAddIconsToBottom() {
+      if (sectionAddIconsArea && contentArea) {
+        // 既に最後にある場合は何もしない
+        if (contentArea.lastElementChild === sectionAddIconsArea) {
+          return;
+        }
+        // 最後に移動
+        contentArea.appendChild(sectionAddIconsArea);
+      }
+    }
+    
     const observer = new MutationObserver(() => {
       setupAllSectionDragAndDrop();
       // 選択モードの場合はチェックボックスを更新
@@ -1919,8 +1933,13 @@
       if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
         sectionSelectModeBtn.style.display = 'flex';
       }
+      // セクション追加アイコンエリアを常に最後に配置
+      moveSectionAddIconsToBottom();
     });
     observer.observe(contentArea, { childList: true, subtree: true });
+    
+    // 初期配置
+    moveSectionAddIconsToBottom();
 
     // ヘルプボタン
     document.getElementById('help-btn').addEventListener('click', () => {
@@ -2782,7 +2801,15 @@
     `;
 
     const reportContent = document.getElementById('report-content');
-    reportContent.insertAdjacentHTML('beforeend', html);
+    const sectionAddIconsArea = document.getElementById('section-add-icons-area');
+    
+    // セクション追加アイコンエリアの前に挿入
+    if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
+      sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
+    } else {
+      reportContent.insertAdjacentHTML('beforeend', html);
+    }
+    
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -2802,6 +2829,11 @@
       }
       // セクションの下にプラスアイコンを追加
       addSectionAddButtonAfter(newCard);
+    }
+    
+    // セクション追加アイコンエリアを常に最後に配置
+    if (sectionAddIconsArea && reportContent) {
+      reportContent.appendChild(sectionAddIconsArea);
     }
   };
 
@@ -2840,7 +2872,15 @@
     `;
 
     const reportContent = document.getElementById('report-content');
-    reportContent.insertAdjacentHTML('beforeend', html);
+    const sectionAddIconsArea = document.getElementById('section-add-icons-area');
+    
+    // セクション追加アイコンエリアの前に挿入
+    if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
+      sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
+    } else {
+      reportContent.insertAdjacentHTML('beforeend', html);
+    }
+    
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -2858,6 +2898,11 @@
       }
       // セクションの下にプラスアイコンを追加
       addSectionAddButtonAfter(newCard);
+    }
+    
+    // セクション追加アイコンエリアを常に最後に配置
+    if (sectionAddIconsArea && reportContent) {
+      reportContent.appendChild(sectionAddIconsArea);
     }
   };
 
@@ -2882,7 +2927,15 @@
     `;
 
     const reportContent = document.getElementById('report-content');
-    reportContent.insertAdjacentHTML('beforeend', html);
+    const sectionAddIconsArea = document.getElementById('section-add-icons-area');
+    
+    // セクション追加アイコンエリアの前に挿入
+    if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
+      sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
+    } else {
+      reportContent.insertAdjacentHTML('beforeend', html);
+    }
+    
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -2897,6 +2950,11 @@
       }
       // セクションの下にプラスアイコンを追加
       addSectionAddButtonAfter(newCard);
+    }
+    
+    // セクション追加アイコンエリアを常に最後に配置
+    if (sectionAddIconsArea && reportContent) {
+      reportContent.appendChild(sectionAddIconsArea);
     }
   };
 
@@ -2921,12 +2979,25 @@
     `;
 
     const reportContent = document.getElementById('report-content');
-    reportContent.insertAdjacentHTML('beforeend', html);
+    const sectionAddIconsArea = document.getElementById('section-add-icons-area');
+    
+    // セクション追加アイコンエリアの前に挿入
+    if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
+      sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
+    } else {
+      reportContent.insertAdjacentHTML('beforeend', html);
+    }
+    
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
       // セクションの下にプラスアイコンを追加
       addSectionAddButtonAfter(newCard);
+    }
+    
+    // セクション追加アイコンエリアを常に最後に配置
+    if (sectionAddIconsArea && reportContent) {
+      reportContent.appendChild(sectionAddIconsArea);
     }
   }
 
