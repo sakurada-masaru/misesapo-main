@@ -2212,8 +2212,23 @@ function toggleEditMode() {
     const span = toggleBtn.querySelector('span');
     if (span) span.textContent = '編集モード ON';
     
-    // 現在の位置を保存してから復元（位置を維持）
-    saveSectionLayout();
+    // 既存の位置スタイルをクリア（異常な値が適用されている可能性があるため）
+    if (grid) {
+      grid.querySelectorAll('.draggable-container').forEach(container => {
+        const left = parseInt(container.style.left) || 0;
+        const top = parseInt(container.style.top) || 0;
+        // 異常な値が検出された場合はスタイルをクリア
+        if (isNaN(left) || isNaN(top) || !isFinite(left) || !isFinite(top) ||
+            Math.abs(left) > 100000 || Math.abs(top) > 100000) {
+          console.warn('[EditMode] Clearing invalid position for container:', container.dataset.containerId);
+          container.style.removeProperty('left');
+          container.style.removeProperty('top');
+          container.dataset.absolutePosition = '';
+        }
+      });
+    }
+    
+    // 保存されたレイアウトを検証してから復元
     setTimeout(() => {
       restoreSectionLayout();
       
@@ -2420,9 +2435,10 @@ function restoreSectionLayout() {
       }
     });
     
-    // 異常な位置データが見つかった場合、デフォルト配置を適用
+    // 異常な位置データが見つかった場合、localStorageをクリアしてデフォルト配置を適用
     if (hasInvalidPosition) {
-      console.warn('[Layout] Invalid position data detected, applying default layout');
+      console.warn('[Layout] Invalid position data detected, clearing localStorage and applying default layout');
+      localStorage.removeItem('mypage_section_layout');
       applyDefaultLayout();
       return;
     }
