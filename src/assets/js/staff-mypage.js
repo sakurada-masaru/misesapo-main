@@ -2059,24 +2059,19 @@ function handleContainerDragStart(e) {
   return true;
 }
 
-// CSSのメディアクエリで設定されたグリッド列数・行数を取得
+// Bento Gridスタイル: グリッド列数を取得（固定4列、レスポンシブで2列または1列）
 function getGridDimensions() {
   const grid = document.getElementById('mypage-grid');
-  if (!grid) {
-    return { cols: 10, rows: 6 }; // デフォルト値
-  }
+  if (!grid) return { cols: 4, rows: 1 }; // デフォルト値
   
   // getComputedStyleで実際のCSS値を取得
   const computedStyle = window.getComputedStyle(grid);
   const gridTemplateColumns = computedStyle.gridTemplateColumns;
-  const gridTemplateRows = computedStyle.gridTemplateRows;
   
-  // "repeat(10, 1fr)" のような形式から数値を抽出
+  // "repeat(X, 1fr)" のような形式から数値を抽出
   const colsMatch = gridTemplateColumns.match(/repeat\((\d+)/);
-  const rowsMatch = gridTemplateRows.match(/repeat\((\d+)/);
   
-  let cols = 10; // デフォルト値
-  let rows = 6;  // デフォルト値
+  let cols = 4; // デフォルト値（Bento Gridは4列）
   
   if (colsMatch) {
     cols = parseInt(colsMatch[1], 10);
@@ -2085,154 +2080,15 @@ function getGridDimensions() {
     cols = 1;
   }
   
-  if (rowsMatch) {
-    rows = parseInt(rowsMatch[1], 10);
-  } else if (gridTemplateRows === 'auto') {
-    // スマホの場合は行数は動的
-    rows = 1;
-  }
-  
-  return { cols, rows };
+  // Bento Gridでは行数は自動（grid-auto-rows）なので、固定値を返す
+  return { cols, rows: 1 };
 }
 
-// グリッド線を描画（最善策: 実際のグリッドセルの位置を正確に取得）
+// グリッド線を描画（Bento Gridスタイルでは不要、gapで視覚的に分離される）
 function drawGridLines() {
-  const grid = document.getElementById('mypage-grid');
-  const container = document.querySelector('.mypage-main-grid-container');
-  if (!grid || !container) return;
-  
-  // 既存のグリッド線を削除
-  const existingGrid = container.querySelector('.grid-lines-overlay');
-  if (existingGrid) {
-    existingGrid.remove();
-  }
-  
-  // 現在の画面サイズに応じたグリッド数を取得
-  const { cols, rows } = getGridDimensions();
-  
-  // スマホの場合はグリッド線を描画しない
-  if (cols === 1) {
-    return;
-  }
-  
-  // グリッド線のオーバーレイを作成
-  const overlay = document.createElement('div');
-  overlay.className = 'grid-lines-overlay';
-  overlay.style.cssText = `
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    z-index: 0;
-  `;
-  
-  const gridRect = grid.getBoundingClientRect();
-  const containerRect = container.getBoundingClientRect();
-  
-  // グリッドの相対位置を計算（containerRectからのオフセット）
-  const gridOffsetX = gridRect.left - containerRect.left;
-  const gridOffsetY = gridRect.top - containerRect.top;
-  
-  // 実際のグリッドセルの位置を取得するため、一時的なマーカー要素を作成
-  // パフォーマンス向上のため、一度に全ての位置を取得
-  const tempMarkers = [];
-  const verticalPositions = new Set();
-  const horizontalPositions = new Set();
-  
-  // 縦線の位置を取得（各列の境界）
-  for (let col = 1; col <= cols + 1; col++) {
-    const marker = document.createElement('div');
-    marker.style.cssText = `
-      position: absolute;
-      grid-column: ${col} / ${col};
-      grid-row: 1 / 1;
-      width: 0;
-      height: 0;
-      visibility: hidden;
-      pointer-events: none;
-    `;
-    grid.appendChild(marker);
-    tempMarkers.push(marker);
-    
-    // レイアウトを強制的に再計算
-    void marker.offsetHeight;
-    
-    const markerRect = marker.getBoundingClientRect();
-    const x = markerRect.left - containerRect.left;
-    // 小数点第2位で丸めて重複を避ける
-    const roundedX = Math.round(x * 100) / 100;
-    verticalPositions.add(roundedX);
-  }
-  
-  // 横線の位置を取得（各行の境界）
-  for (let row = 1; row <= rows + 1; row++) {
-    const marker = document.createElement('div');
-    marker.style.cssText = `
-      position: absolute;
-      grid-column: 1 / 1;
-      grid-row: ${row} / ${row};
-      width: 0;
-      height: 0;
-      visibility: hidden;
-      pointer-events: none;
-    `;
-    grid.appendChild(marker);
-    tempMarkers.push(marker);
-    
-    // レイアウトを強制的に再計算
-    void marker.offsetHeight;
-    
-    const markerRect = marker.getBoundingClientRect();
-    const y = markerRect.top - containerRect.top;
-    // 小数点第2位で丸めて重複を避ける
-    const roundedY = Math.round(y * 100) / 100;
-    horizontalPositions.add(roundedY);
-  }
-  
-  // 一時的なマーカーを削除
-  tempMarkers.forEach(marker => {
-    if (marker.parentNode) {
-      marker.parentNode.removeChild(marker);
-    }
-  });
-  
-  // SVGでグリッド線を描画（取得した実際の位置を使用）
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', '100%');
-  svg.setAttribute('height', '100%');
-  svg.setAttribute('viewBox', `0 0 ${containerRect.width} ${containerRect.height}`);
-  svg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%;';
-  
-  // 縦線を描画
-  Array.from(verticalPositions).sort((a, b) => a - b).forEach(x => {
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x);
-    line.setAttribute('y1', gridOffsetY);
-    line.setAttribute('x2', x);
-    line.setAttribute('y2', gridOffsetY + gridRect.height);
-    line.setAttribute('stroke', 'rgba(255, 192, 203, 0.8)');
-    line.setAttribute('stroke-width', '1');
-    line.setAttribute('vector-effect', 'non-scaling-stroke'); // ズーム時も線幅を維持
-    svg.appendChild(line);
-  });
-  
-  // 横線を描画
-  Array.from(horizontalPositions).sort((a, b) => a - b).forEach(y => {
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', gridOffsetX);
-    line.setAttribute('y1', y);
-    line.setAttribute('x2', gridOffsetX + gridRect.width);
-    line.setAttribute('y2', y);
-    line.setAttribute('stroke', 'rgba(255, 192, 203, 0.8)');
-    line.setAttribute('stroke-width', '1');
-    line.setAttribute('vector-effect', 'non-scaling-stroke'); // ズーム時も線幅を維持
-    svg.appendChild(line);
-  });
-  
-  overlay.appendChild(svg);
-  container.appendChild(overlay);
+  // Bento Gridスタイルではグリッド線は不要
+  // gapで視覚的に分離されるため、この関数は何もしない
+  return;
 }
 
 // 編集モードの切り替え
@@ -2299,17 +2155,20 @@ function toggleEditMode() {
   }
 }
 
-// グリッド位置を計算（列、行からgrid-column/rowを設定）
+// グリッド位置を計算（Bento Gridスタイル: grid-column/row spanを使用）
 function setGridPosition(container, col, row) {
   if (!container) return;
   
-  // data-container-widthとdata-container-heightを使用
+  // data-container-widthとdata-container-heightを使用（span値として使用）
   const width = parseInt(container.dataset.containerWidth) || 1;
   const height = parseInt(container.dataset.containerHeight) || 1;
   
-  // グリッド位置を設定
-  container.style.gridColumn = `${col} / ${col + width}`;
-  container.style.gridRow = `${row} / ${row + height}`;
+  // Bento Gridスタイル: grid-column: span X と grid-row: span Y を使用
+  // 位置は自動配置（grid-auto-flow: dense）または明示的に指定
+  container.style.gridColumn = `span ${width}`;
+  container.style.gridRow = `span ${height}`;
+  
+  // 位置を保存（必要に応じて使用）
   container.dataset.gridPosition = `${col},${row}`;
   
   // サイズが正しく設定されているか確認
@@ -2385,27 +2244,31 @@ function restoreSectionLayout() {
   }
 }
 
-// デフォルト配置を適用
+// デフォルト配置を適用（Bento Gridスタイル）
 function applyDefaultLayout() {
   const grid = document.getElementById('mypage-grid');
   if (!grid) return;
   
-  // 各コンテナのデフォルト位置を設定
+  // Bento Gridスタイル: 各コンテナのデフォルト位置とサイズを設定
+  // サイズはgrid-column/row spanで管理
   const defaultLayout = {
-    'attendance': { col: 1, row: 1 },      // 出退勤記録: 3×1マス
-    'announcements': { col: 4, row: 1 },   // 業務連絡: 2×1マス
-    'basic-info': { col: 6, row: 1 },      // 基本情報: 1×2マス
-    'weekly-schedule': { col: 9, row: 1 }, // 今週のスケジュール: 2×2マス
-    'digital-clock': { col: 7, row: 1 },   // デジタル時計: 1×1マス
-    'todo': { col: 1, row: 3 },            // TODOリスト: 2×4マス
-    'calendar': { col: 3, row: 3 }         // カレンダー: 3×3マス
+    'attendance': { col: 1, row: 1, width: 2, height: 1 },      // 出退勤記録: 2×1
+    'announcements': { col: 3, row: 1, width: 2, height: 1 },   // 業務連絡: 2×1
+    'basic-info': { col: 1, row: 2, width: 1, height: 2 },      // 基本情報: 1×2
+    'digital-clock': { col: 2, row: 2, width: 1, height: 1 },   // デジタル時計: 1×1
+    'todo': { col: 3, row: 2, width: 2, height: 2 },            // TODOリスト: 2×2
+    'calendar': { col: 1, row: 4, width: 2, height: 2 },        // カレンダー: 2×2
+    'daily-reports': { col: 3, row: 4, width: 2, height: 2 }    // 日報: 2×2
   };
   
   const containers = Array.from(grid.querySelectorAll('.draggable-container'));
   containers.forEach(container => {
     const containerId = container.dataset.containerId;
     if (defaultLayout[containerId]) {
-      const { col, row } = defaultLayout[containerId];
+      const { col, row, width, height } = defaultLayout[containerId];
+      // data属性を更新
+      container.dataset.containerWidth = width;
+      container.dataset.containerHeight = height;
       setGridPosition(container, col, row);
     }
   });
@@ -2428,17 +2291,18 @@ function getGridCellPositions(grid) {
     rect: rect
   };
   
-  // 各列の境界位置を取得
+  // 各列の境界位置を取得（グリッドアイテムとして配置）
   for (let col = 1; col <= cols; col++) {
     const marker = document.createElement('div');
     marker.style.cssText = `
-      position: absolute;
       grid-column: ${col} / ${col};
       grid-row: 1 / 1;
-      width: 0;
-      height: 0;
+      width: 1px;
+      height: 1px;
       visibility: hidden;
       pointer-events: none;
+      margin: 0;
+      padding: 0;
     `;
     grid.appendChild(marker);
     void marker.offsetHeight; // レイアウト再計算
@@ -2456,17 +2320,18 @@ function getGridCellPositions(grid) {
     });
   }
   
-  // 各行の境界位置を取得
+  // 各行の境界位置を取得（グリッドアイテムとして配置）
   for (let row = 1; row <= rows; row++) {
     const marker = document.createElement('div');
     marker.style.cssText = `
-      position: absolute;
       grid-column: 1 / 1;
       grid-row: ${row} / ${row};
-      width: 0;
-      height: 0;
+      width: 1px;
+      height: 1px;
       visibility: hidden;
       pointer-events: none;
+      margin: 0;
+      padding: 0;
     `;
     grid.appendChild(marker);
     void marker.offsetHeight; // レイアウト再計算
@@ -2499,43 +2364,81 @@ function clearGridPositionCache() {
 
 // マウス位置からグリッド位置（列、行）を計算（最善策: 実際のグリッドセルの位置を使用）
 function getGridPositionFromMouse(grid, x, y) {
-  const rect = grid.getBoundingClientRect();
-  const gridX = x - rect.left;
-  const gridY = y - rect.top;
-  
-  // キャッシュからグリッドセルの位置情報を取得
-  const cellPositions = getGridCellPositions(grid);
-  
-  // 縦方向の位置を特定
-  let col = 1;
-  for (let i = 0; i < cellPositions.cols.length; i++) {
-    const cell = cellPositions.cols[i];
-    if (gridX >= cell.left && gridX < cell.right) {
-      col = i + 1;
-      break;
-    } else if (gridX >= cell.right && i === cellPositions.cols.length - 1) {
+  try {
+    const rect = grid.getBoundingClientRect();
+    const gridX = x - rect.left;
+    const gridY = y - rect.top;
+    
+    // グリッド範囲外の場合はデフォルト値を返す
+    if (gridX < 0 || gridY < 0 || gridX > rect.width || gridY > rect.height) {
+      const { cols, rows } = getGridDimensions();
+      return { 
+        col: Math.max(1, Math.min(Math.floor((gridX / rect.width) * cols) + 1, cols)),
+        row: Math.max(1, Math.min(Math.floor((gridY / rect.height) * rows) + 1, rows))
+      };
+    }
+    
+    // キャッシュからグリッドセルの位置情報を取得
+    const cellPositions = getGridCellPositions(grid);
+    
+    if (!cellPositions || !cellPositions.cols || !cellPositions.rows || 
+        cellPositions.cols.length === 0 || cellPositions.rows.length === 0) {
+      // フォールバック: 計算で位置を取得
+      const { cols, rows } = getGridDimensions();
+      const colWidth = rect.width / cols;
+      const rowHeight = rect.height / rows;
+      return {
+        col: Math.max(1, Math.min(Math.floor(gridX / colWidth) + 1, cols)),
+        row: Math.max(1, Math.min(Math.floor(gridY / rowHeight) + 1, rows))
+      };
+    }
+    
+    // 縦方向の位置を特定
+    let col = 1;
+    for (let i = 0; i < cellPositions.cols.length; i++) {
+      const cell = cellPositions.cols[i];
+      if (gridX >= cell.left && gridX < cell.right) {
+        col = i + 1;
+        break;
+      }
+    }
+    // 最後のセルの右端を超えている場合
+    if (gridX >= cellPositions.cols[cellPositions.cols.length - 1].right) {
       col = cellPositions.cols.length;
-      break;
     }
-  }
-  
-  // 横方向の位置を特定
-  let row = 1;
-  for (let i = 0; i < cellPositions.rows.length; i++) {
-    const cell = cellPositions.rows[i];
-    if (gridY >= cell.top && gridY < cell.bottom) {
-      row = i + 1;
-      break;
-    } else if (gridY >= cell.bottom && i === cellPositions.rows.length - 1) {
+    
+    // 横方向の位置を特定
+    let row = 1;
+    for (let i = 0; i < cellPositions.rows.length; i++) {
+      const cell = cellPositions.rows[i];
+      if (gridY >= cell.top && gridY < cell.bottom) {
+        row = i + 1;
+        break;
+      }
+    }
+    // 最後のセルの下端を超えている場合
+    if (gridY >= cellPositions.rows[cellPositions.rows.length - 1].bottom) {
       row = cellPositions.rows.length;
-      break;
     }
+    
+    return { col, row };
+  } catch (error) {
+    console.error('[GridPosition] Error calculating grid position:', error);
+    // エラー時はフォールバック
+    const rect = grid.getBoundingClientRect();
+    const { cols, rows } = getGridDimensions();
+    const gridX = x - rect.left;
+    const gridY = y - rect.top;
+    const colWidth = rect.width / cols;
+    const rowHeight = rect.height / rows;
+    return {
+      col: Math.max(1, Math.min(Math.floor(gridX / colWidth) + 1, cols)),
+      row: Math.max(1, Math.min(Math.floor(gridY / rowHeight) + 1, rows))
+    };
   }
-  
-  return { col, row };
 }
 
-// ドロッププレビューガイドを表示
+// ドロッププレビューガイドを表示（Bento Gridスタイル）
 function showDropPreview(grid, container, col, row) {
   // 既存のプレビューを削除
   hideDropPreview(grid);
@@ -2543,14 +2446,15 @@ function showDropPreview(grid, container, col, row) {
   const width = parseInt(container.dataset.containerWidth) || 1;
   const height = parseInt(container.dataset.containerHeight) || 1;
   
-  // プレビュー要素を作成
+  // プレビュー要素を作成（Bento Gridスタイル: spanを使用）
   const preview = document.createElement('div');
   preview.className = 'drop-preview-guide';
-  preview.style.gridColumn = `${col} / ${col + width}`;
-  preview.style.gridRow = `${row} / ${row + height}`;
+  preview.style.gridColumn = `span ${width}`;
+  preview.style.gridRow = `span ${height}`;
+  preview.style.borderRadius = '20px';
   
   grid.appendChild(preview);
-  console.log('[Drag] Preview shown at col:', col, 'row:', row);
+  console.log('[Drag] Preview shown at col:', col, 'row:', row, 'span:', width, 'x', height);
 }
 
 // ドロッププレビューガイドを削除
@@ -2561,37 +2465,21 @@ function hideDropPreview(grid) {
   }
 }
 
-// グリッド位置が有効かチェック（他のコンテナと重複しないか）
+// グリッド位置が有効かチェック（Bento Gridスタイル: 範囲チェックのみ、重複は自動配置に任せる）
 function isValidPosition(grid, container, col, row) {
   const width = parseInt(container.dataset.containerWidth) || 1;
   const height = parseInt(container.dataset.containerHeight) || 1;
   
   // 現在の画面サイズに応じたグリッド数を取得
-  const { cols, rows } = getGridDimensions();
+  const { cols } = getGridDimensions();
   
-  // グリッド範囲外チェック
-  if (col + width - 1 > cols || row + height - 1 > rows) {
+  // グリッド範囲外チェック（列数のみ、行数は自動）
+  if (col < 1 || col > cols || width < 1 || width > cols) {
     return false;
   }
   
-  // 他のコンテナとの重複チェック
-  const otherContainers = Array.from(grid.querySelectorAll('.draggable-container:not(.dragging)'));
-  for (const other of otherContainers) {
-    if (other === container) continue;
-    
-    const otherPos = getGridPosition(other);
-    if (!otherPos) continue;
-    
-    const otherWidth = parseInt(other.dataset.containerWidth) || 1;
-    const otherHeight = parseInt(other.dataset.containerHeight) || 1;
-    
-    // 重複チェック
-    if (!(col + width <= otherPos.col || col >= otherPos.col + otherWidth ||
-          row + height <= otherPos.row || row >= otherPos.row + otherHeight)) {
-      return false;
-    }
-  }
-  
+  // Bento Gridでは自動配置を利用するため、重複チェックは簡略化
+  // 実際の配置はCSS Gridの自動配置アルゴリズムに任せる
   return true;
 }
 
