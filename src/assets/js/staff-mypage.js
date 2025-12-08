@@ -2212,35 +2212,39 @@ function toggleEditMode() {
     const span = toggleBtn.querySelector('span');
     if (span) span.textContent = '編集モード ON';
     
-    // 既存の位置スタイルをクリアし、アンカーにスナップ（異常な値が適用されている可能性があるため）
-    if (grid) {
-      // グリッドアンカーを計算
-      getGridAnchors(grid);
-      
-      grid.querySelectorAll('.draggable-container').forEach(container => {
-        const left = parseInt(container.style.left) || 0;
-        const top = parseInt(container.style.top) || 0;
-        // 異常な値が検出された場合はスタイルをクリア
-        if (isNaN(left) || isNaN(top) || !isFinite(left) || !isFinite(top) ||
-            Math.abs(left) > 100000 || Math.abs(top) > 100000) {
-          console.warn('[EditMode] Clearing invalid position for container:', container.dataset.containerId);
-          container.style.removeProperty('left');
-          container.style.removeProperty('top');
-          container.dataset.absolutePosition = '';
-        } else {
-          // 既存の位置をアンカーにスナップ
-          const snapped = findNearestAnchor(grid, left, top);
-          if (snapped.x !== left || snapped.y !== top) {
-            console.log('[EditMode] Snapping container to anchor:', container.dataset.containerId, 'from', left, top, 'to', snapped.x, snapped.y);
-            setAbsolutePosition(container, snapped.x, snapped.y);
-          }
-        }
-      });
-    }
-    
-    // 保存されたレイアウトを検証してから復元
+    // 保存されたレイアウトを検証してから復元（先に復元してから、アンカーにスナップ）
     setTimeout(() => {
       restoreSectionLayout();
+      
+      // 復元後に、すべてのコンテナの位置をアンカーにスナップ
+      if (grid) {
+        // グリッドアンカーを計算
+        getGridAnchors(grid);
+        
+        grid.querySelectorAll('.draggable-container').forEach(container => {
+          const left = parseInt(container.style.left) || 0;
+          const top = parseInt(container.style.top) || 0;
+          // 異常な値（負の値、NaN、無限大、極端に大きい値）が検出された場合はスタイルをクリア
+          if (isNaN(left) || isNaN(top) || !isFinite(left) || !isFinite(top) ||
+              Math.abs(left) > 100000 || Math.abs(top) > 100000 ||
+              left < 0 || top < 0) {
+            console.warn('[EditMode] Clearing invalid position for container:', container.dataset.containerId, 'left:', left, 'top:', top);
+            container.style.removeProperty('left');
+            container.style.removeProperty('top');
+            container.dataset.absolutePosition = '';
+          } else {
+            // 既存の位置をアンカーにスナップ
+            const snapped = findNearestAnchor(grid, left, top);
+            if (snapped.x !== left || snapped.y !== top) {
+              console.log('[EditMode] Snapping container to anchor:', container.dataset.containerId, 'from', left, top, 'to', snapped.x, snapped.y);
+              setAbsolutePosition(container, snapped.x, snapped.y);
+            }
+          }
+        });
+        
+        // アンカーにスナップした後、レイアウトを保存
+        saveSectionLayout();
+      }
       
       // メイングリッド内のコンテナのみドラッグ可能に
       if (grid) {
