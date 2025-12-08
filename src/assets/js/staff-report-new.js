@@ -256,21 +256,30 @@
       // readonlyの場合は自由入力モードに切り替え
       if (this.hasAttribute('readonly')) {
         this.removeAttribute('readonly');
+        // 既存の店舗名を保持（hiddenフィールドから取得）
+        const existingStoreName = document.getElementById('report-store-name')?.value || '';
+        if (existingStoreName && !this.value) {
+          this.value = existingStoreName;
+        }
         this.focus();
-        // 店舗IDをクリア
+        // 店舗IDをクリア（自由入力モードに切り替えるため）
         document.getElementById('report-store').value = '';
-        document.getElementById('report-store-name').value = '';
-        this.value = '';
+        // 店舗名は保持（ユーザーが編集できるように）
       }
     });
     
     // 入力フィールドで入力したとき：検索結果を更新
     storeSearchInput.addEventListener('input', function() {
       if (!this.hasAttribute('readonly')) {
+        // 自由入力モード：検索結果を表示
         updateStoreDropdown();
         storeResults.style.display = 'block';
+        // 店舗名を更新（自由入力の場合）
+        const inputValue = this.value.trim();
+        document.getElementById('report-store-name').value = inputValue;
+        document.getElementById('report-store').value = '';
       } else {
-        // readonlyの場合は店舗名を更新
+        // readonlyの場合は店舗名を更新（通常は発生しないが、念のため）
         const inputValue = this.value.trim();
         document.getElementById('report-store-name').value = inputValue;
         document.getElementById('report-store').value = '';
