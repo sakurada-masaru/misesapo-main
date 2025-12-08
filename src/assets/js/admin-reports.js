@@ -99,9 +99,31 @@
     function populateWorkerSelect() {
       const select = document.getElementById('report-worker');
       if (!select) return; // 新しいモーダルには存在しないので、nullチェック
-      const staffWorkers = allWorkers.filter(w => w.role === 'staff');
-      select.innerHTML = '<option value="">選択してください</option>' + 
-        staffWorkers.map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('');
+      
+      // 担当業務に「清掃」が含まれる人を抽出
+      const cleaningWorkers = allWorkers.filter(w => {
+        const job = w.job || '';
+        
+        // jobが文字列の場合
+        if (typeof job === 'string') {
+          return job.includes('清掃') || job.toLowerCase().includes('cleaning');
+        }
+        
+        // jobが配列の場合
+        if (Array.isArray(job)) {
+          return job.some(j => 
+            (typeof j === 'string' && (j.includes('清掃') || j.toLowerCase().includes('cleaning')))
+          );
+        }
+        
+        return false;
+      });
+      
+      // 万が一 清掃担当者が一人もいない場合は、従来どおり全件を使う（フォールバック）
+      const workersToShow = cleaningWorkers.length > 0 ? cleaningWorkers : allWorkers;
+      
+      select.innerHTML = '<option value="">担当者を選択</option>' + 
+        workersToShow.map(w => `<option value="${w.id}">${escapeHtml(w.name || '')}</option>`).join('');
     }
 
     function updateStats() {
