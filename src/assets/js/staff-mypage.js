@@ -2443,12 +2443,10 @@ function applyDefaultLayout() {
     return;
   }
   
+  // 各コンテナのサイズを設定
   containers.forEach(container => {
-    const containerId = container.dataset.containerId;
-    // まずサイズを設定（位置に関係なく）
     const width = parseInt(container.dataset.containerWidth) || 3;
     const height = parseInt(container.dataset.containerHeight) || 3;
-    const CELL_SIZE = 80;
     const containerWidth = width * CELL_SIZE;
     const containerHeight = height * CELL_SIZE;
     
@@ -2457,18 +2455,166 @@ function applyDefaultLayout() {
     container.style.setProperty('height', `${containerHeight}px`, 'important');
     container.style.setProperty('max-width', 'none', 'important');
     container.style.setProperty('max-height', 'none', 'important');
+  });
+  
+  // 自動整列アルゴリズムで配置
+  autoAlignContainers(grid, containers);
+}
+
+// 自動整列アルゴリズム
+// マスの左上から順番に右に配置、画面端まで行ったら左に戻って、すでに設置してあるコンテナの下に密着させて設置
+function autoAlignContainers(grid, containers) {
+  const CELL_SIZE = 80;
+  const gridWidth = grid.offsetWidth;
+  const gridHeight = grid.offsetHeight;
+  
+  // 配置済みのコンテナの矩形を記録
+  const placedRects = [];
+  
+  // 各コンテナを順番に配置
+  containers.forEach(container => {
+    const width = parseInt(container.dataset.containerWidth) || 3;
+    const height = parseInt(container.dataset.containerHeight) || 3;
+    const containerWidth = width * CELL_SIZE;
+    const containerHeight = height * CELL_SIZE;
     
-    // デフォルト位置が指定されている場合は位置も設定
-    if (defaultLayout[containerId]) {
-      const { x, y } = defaultLayout[containerId];
-      container.style.setProperty('left', `${x}px`, 'important');
-      container.style.setProperty('top', `${y}px`, 'important');
-      container.dataset.absolutePosition = `${x},${y}`;
-      console.log('[Layout] Applied default position for:', containerId, 'x:', x, 'y:', y, 'width:', containerWidth, 'height:', containerHeight);
-    } else {
-      console.warn('[Layout] No default layout for container:', containerId, 'but size set to', containerWidth, 'x', containerHeight);
+    // 配置可能な位置を探す
+    let placed = false;
+    let currentY = 0;
+    
+    // 上から下へ、各行をチェック
+    while (currentY + containerHeight <= gridHeight && !placed) {
+      let currentX = 0;
+      
+      // 左から右へ、各列をチェック
+      while (currentX + containerWidth <= gridWidth && !placed) {
+        // この位置に配置できるかチェック
+        const newRect = {
+          left: currentX,
+          top: currentY,
+          right: currentX + containerWidth,
+          bottom: currentY + containerHeight
+        };
+        
+        // 既存のコンテナと重複していないかチェック
+        let overlaps = false;
+        for (const placedRect of placedRects) {
+          if (newRect.left < placedRect.right &&
+              newRect.right > placedRect.left &&
+              newRect.top < placedRect.bottom &&
+              newRect.bottom > placedRect.top) {
+            overlaps = true;
+            break;
+          }
+        }
+        
+        // 重複していない場合、この位置に配置
+        if (!overlaps) {
+          setAbsolutePosition(container, currentX, currentY);
+          placedRects.push(newRect);
+          placed = true;
+          console.log('[Layout] Auto-aligned container:', container.dataset.containerId, 'at x:', currentX, 'y:', currentY);
+        } else {
+          // 重複している場合、次の位置を試す
+          // 重複しているコンテナの右端までスキップ
+          let skipX = currentX + CELL_SIZE;
+          for (const placedRect of placedRects) {
+            if (newRect.top < placedRect.bottom && newRect.bottom > placedRect.top) {
+              // 同じ行にあるコンテナの右端までスキップ
+              if (placedRect.right > skipX) {
+                skipX = placedRect.right;
+              }
+            }
+          }
+          currentX = skipX;
+        }
+      }
+      
+      // この行で配置できなかった場合、次の行へ
+      if (!placed) {
+        // 次の行のY座標を計算（既存のコンテナの下に密着）
+        let nextY = currentY + CELL_SIZE;
+        for (const placedRect of placedRects) {
+          // この行にあるコンテナの下端を確認
+          if (placedRect.top <= currentY && placedRect.bottom > currentY) {
+            if (placedRect.bottom > nextY) {
+              nextY = placedRect.bottom;
+            }
+          }
+        }
+        currentY = nextY;
+      }
+    }
+    
+    // 配置できなかった場合（画面からはみ出す場合）、重ならない範囲で配置
+    if (!placed) {
+      // 画面内で重ならない位置を探す（画面からはみ出しても重ならないように）
+      let found = false;
+      for (let y = 0; y < gridHeight && !found; y += CELL_SIZE) {
+        for (let x = 0; x < gridWidth && !found; x += CELL_SIZE) {
+          const newRect = {
+            left: x,
+            top: y,
+            right: x + containerWidth,
+            bottom: y + containerHeight
+          };
+          
+          // 既存のコンテナと重複していないかチェック
+          let overlaps = false;
+          for (const placedRect of placedRects) {
+            if (newRect.left < placedRect.right &&
+                newRect.right > placedRect.left &&
+                newRect.top < placedRect.bottom &&
+                newRect.bottom > placedRect.top) {
+              overlaps = true;
+              break;
+            }
+          }
+          
+          if (!overlaps) {
+            setAbsolutePosition(container, x, y);
+            placedRects.push(newRect);
+            found = true;
+            console.log('[Layout] Auto-aligned container (fallback):', container.dataset.containerId, 'at x:', x, 'y:', y);
+          }
+        }
+      }
+      
+      // それでも配置できなかった場合、既存のコンテナの下に配置
+      if (!found && placedRects.length > 0) {
+        // 最も下にあるコンテナの下端を取得
+        let maxBottom = 0;
+        for (const placedRect of placedRects) {
+          if (placedRect.bottom > maxBottom) {
+            maxBottom = placedRect.bottom;
+          }
+        }
+        setAbsolutePosition(container, 0, maxBottom);
+        const newRect = {
+          left: 0,
+          top: maxBottom,
+          right: containerWidth,
+          bottom: maxBottom + containerHeight
+        };
+        placedRects.push(newRect);
+        console.log('[Layout] Auto-aligned container (below others):', container.dataset.containerId, 'at x: 0, y:', maxBottom);
+      } else if (!found) {
+        // 最初のコンテナの場合
+        setAbsolutePosition(container, 0, 0);
+        const newRect = {
+          left: 0,
+          top: 0,
+          right: containerWidth,
+          bottom: containerHeight
+        };
+        placedRects.push(newRect);
+        console.log('[Layout] Auto-aligned container (first):', container.dataset.containerId, 'at x: 0, y: 0');
+      }
     }
   });
+  
+  // レイアウトを保存
+  saveSectionLayout();
 }
 
 // グリッドセルの位置情報をキャッシュから取得または計算
@@ -2997,9 +3143,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const autoAlignBtn = document.getElementById('auto-align-btn');
   if (autoAlignBtn) {
     autoAlignBtn.addEventListener('click', () => {
-      if (confirm('すべてのコンテナをデフォルト位置に戻しますか？')) {
-        applyDefaultLayout();
-        saveSectionLayout();
+      if (confirm('すべてのコンテナを自動整列しますか？')) {
+        const grid = document.getElementById('mypage-grid');
+        if (!grid) return;
+        const containers = Array.from(grid.querySelectorAll('.draggable-container'));
+        autoAlignContainers(grid, containers);
         // 編集モード中の場合、グリッド線を再描画
         if (editMode) {
           drawGridLines();
