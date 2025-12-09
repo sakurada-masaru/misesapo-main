@@ -3122,8 +3122,14 @@
       </div>
     `;
 
-    const reportContent = document.getElementById('report-content');
-    const sectionAddIconsArea = document.getElementById('section-add-icons-area');
+    const reportContent = document.getElementById(reportContentId);
+    const sectionAddIconsAreaId = isProposalTab ? 'section-add-icons-area-proposal' : 'section-add-icons-area';
+    const sectionAddIconsArea = document.getElementById(sectionAddIconsAreaId);
+    
+    if (!reportContent) {
+      console.error(`[addCleaningItemSection] reportContent not found: ${reportContentId}`);
+      return;
+    }
     
     // セクション追加アイコンエリアの前に挿入
     if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
