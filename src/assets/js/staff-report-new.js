@@ -530,7 +530,6 @@
                 <option value="__other__">その他（自由入力）</option>
               </select>
               <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${section.item_name && !serviceItems.find(si => si.title === section.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)" value="${escapeHtml(section.item_name || '')}">
-              <textarea class="form-input cleaning-item-notes" placeholder="メモや備考を入力してください" style="margin-top:8px; min-height:80px; resize:vertical;" oninput="updateCleaningItemNotes('${sectionId}', this.value)">${escapeHtml(section.notes || '')}</textarea>
               ${(section.textFields || []).map(textField => `
                 <div class="cleaning-item-text-field-container" style="position:relative; margin-top:8px;">
                   <textarea class="form-input cleaning-item-text-field" placeholder="テキストを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemTextField('${sectionId}', '${textField.id}', this.value)">${escapeHtml(textField.value || '')}</textarea>
@@ -539,18 +538,35 @@
                   </button>
                 </div>
               `).join('')}
-              <div class="cleaning-item-add-actions" style="margin-top:12px; display:flex; gap:8px; position:relative;">
-                <button type="button" class="cleaning-item-add-btn" onclick="showCleaningItemAddMenu('${sectionId}')" title="追加">
-                  <i class="fas fa-plus"></i>
-                </button>
-                <div class="cleaning-item-add-menu" id="cleaning-item-add-menu-${sectionId}" style="display:none; position:absolute; background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1000; margin-top:4px;">
-                  <button type="button" class="cleaning-item-add-menu-item" onclick="addTextToCleaningItem('${sectionId}')">
-                    <i class="fas fa-font"></i> テキスト
-                  </button>
-                  <button type="button" class="cleaning-item-add-menu-item" onclick="addImageToCleaningItem('${sectionId}')">
-                    <i class="fas fa-image"></i> 画像
+              ${(section.subtitles || []).map(subtitle => `
+                <div class="cleaning-item-subtitle-container" style="position:relative; margin-top:8px;">
+                  <input type="text" class="form-input cleaning-item-subtitle" placeholder="サブタイトルを入力" style="width:100%; font-weight:600; font-size:1rem;" oninput="updateCleaningItemSubtitle('${sectionId}', '${subtitle.id}', this.value)" value="${escapeHtml(subtitle.value || '')}">
+                  <button type="button" class="cleaning-item-subtitle-delete" onclick="deleteCleaningItemSubtitle('${sectionId}', '${subtitle.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
+                    <i class="fas fa-times"></i>
                   </button>
                 </div>
+              `).join('')}
+              ${(section.comments || []).map(comment => `
+                <div class="cleaning-item-comment-container" style="position:relative; margin-top:8px;">
+                  <textarea class="form-input cleaning-item-comment" placeholder="コメントを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemComment('${sectionId}', '${comment.id}', this.value)">${escapeHtml(comment.value || '')}</textarea>
+                  <button type="button" class="cleaning-item-comment-delete" onclick="deleteCleaningItemComment('${sectionId}', '${comment.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              `).join('')}
+              <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
+                <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入">
+                  <i class="fas fa-image"></i>
+                  <span>画像挿入</span>
+                </button>
+                <button type="button" class="cleaning-item-insert-btn" onclick="addCommentToCleaningItem('${sectionId}')" title="コメント挿入">
+                  <i class="fas fa-comment"></i>
+                  <span>コメント挿入</span>
+                </button>
+                <button type="button" class="cleaning-item-insert-btn" onclick="addSubtitleToCleaningItem('${sectionId}')" title="サブタイトル挿入">
+                  <i class="fas fa-heading"></i>
+                  <span>サブタイトル挿入</span>
+                </button>
               </div>
             </div>
           </div>
@@ -800,7 +816,9 @@
       if (e.target.classList.contains('section-textarea') || 
           e.target.classList.contains('cleaning-item-select') ||
           e.target.classList.contains('cleaning-item-custom') ||
-          e.target.classList.contains('cleaning-item-notes')) {
+          e.target.classList.contains('cleaning-item-text-field') ||
+          e.target.classList.contains('cleaning-item-comment') ||
+          e.target.classList.contains('cleaning-item-subtitle')) {
         autoSave();
       }
     }, true);
@@ -2837,7 +2855,7 @@
   window.addCleaningItemSection = function() {
     sectionCounter++;
     const sectionId = `section-${sectionCounter}`;
-    sections[sectionId] = { type: 'cleaning', item_name: '', notes: '' };
+    sections[sectionId] = { type: 'cleaning', item_name: '', textFields: [], subtitles: [], comments: [] };
 
     const options = serviceItems.map(item => 
       `<option value="${escapeHtml(item.title)}">${escapeHtml(item.title)}</option>`
@@ -2864,20 +2882,23 @@
             <option value="__other__">その他（自由入力）</option>
           </select>
           <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)">
-          <textarea class="form-input cleaning-item-notes" placeholder="メモや備考を入力してください" style="margin-top:8px; min-height:80px; resize:vertical;" oninput="updateCleaningItemNotes('${sectionId}', this.value)"></textarea>
-          <div class="cleaning-item-add-actions" style="margin-top:12px; display:flex; gap:8px; position:relative;">
-            <button type="button" class="cleaning-item-add-btn" onclick="showCleaningItemAddMenu('${sectionId}')" title="追加">
-              <i class="fas fa-plus"></i>
+          <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
+            <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入">
+              <i class="fas fa-image"></i>
+              <span>画像挿入</span>
             </button>
-            <div class="cleaning-item-add-menu" id="cleaning-item-add-menu-${sectionId}" style="display:none; position:absolute; background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1000; margin-top:4px;">
-              <button type="button" class="cleaning-item-add-menu-item" onclick="addTextToCleaningItem('${sectionId}')">
-                <i class="fas fa-font"></i> テキスト
-              </button>
-              <button type="button" class="cleaning-item-add-menu-item" onclick="addImageToCleaningItem('${sectionId}')">
-                <i class="fas fa-image"></i> 画像
-              </button>
-            </div>
+            <button type="button" class="cleaning-item-insert-btn" onclick="addCommentToCleaningItem('${sectionId}')" title="コメント挿入">
+              <i class="fas fa-comment"></i>
+              <span>コメント挿入</span>
+            </button>
+            <button type="button" class="cleaning-item-insert-btn" onclick="addSubtitleToCleaningItem('${sectionId}')" title="サブタイトル挿入">
+              <i class="fas fa-heading"></i>
+              <span>サブタイトル挿入</span>
+            </button>
           </div>
+        </div>
+      </div>
+    `;
         </div>
       </div>
     `;
@@ -3318,19 +3339,43 @@
               <option value="__other__">その他（自由入力）</option>
             </select>
             <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${newSection.item_name && !serviceItems.find(si => si.title === newSection.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItem('${newSectionId}', this.value)" value="${escapeHtml(newSection.item_name || '')}">
-            <textarea class="form-input cleaning-item-notes" placeholder="メモや備考を入力してください" style="margin-top:8px; min-height:80px; resize:vertical;" oninput="updateCleaningItemNotes('${newSectionId}', this.value)">${escapeHtml(newSection.notes || '')}</textarea>
-            <div class="cleaning-item-add-actions" style="margin-top:12px; display:flex; gap:8px; position:relative;">
-              <button type="button" class="cleaning-item-add-btn" onclick="showCleaningItemAddMenu('${newSectionId}')" title="追加">
-                <i class="fas fa-plus"></i>
-              </button>
-              <div class="cleaning-item-add-menu" id="cleaning-item-add-menu-${newSectionId}" style="display:none; position:absolute; background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1000; margin-top:4px;">
-                <button type="button" class="cleaning-item-add-menu-item" onclick="addTextToCleaningItem('${newSectionId}')">
-                  <i class="fas fa-font"></i> テキスト
-                </button>
-                <button type="button" class="cleaning-item-add-menu-item" onclick="addImageToCleaningItem('${newSectionId}')">
-                  <i class="fas fa-image"></i> 画像
+            ${(newSection.textFields || []).map(textField => `
+              <div class="cleaning-item-text-field-container" style="position:relative; margin-top:8px;">
+                <textarea class="form-input cleaning-item-text-field" placeholder="テキストを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemTextField('${newSectionId}', '${textField.id}', this.value)">${escapeHtml(textField.value || '')}</textarea>
+                <button type="button" class="cleaning-item-text-field-delete" onclick="deleteCleaningItemTextField('${newSectionId}', '${textField.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
+                  <i class="fas fa-times"></i>
                 </button>
               </div>
+            `).join('')}
+            ${(newSection.subtitles || []).map(subtitle => `
+              <div class="cleaning-item-subtitle-container" style="position:relative; margin-top:8px;">
+                <input type="text" class="form-input cleaning-item-subtitle" placeholder="サブタイトルを入力" style="width:100%; font-weight:600; font-size:1rem;" oninput="updateCleaningItemSubtitle('${newSectionId}', '${subtitle.id}', this.value)" value="${escapeHtml(subtitle.value || '')}">
+                <button type="button" class="cleaning-item-subtitle-delete" onclick="deleteCleaningItemSubtitle('${newSectionId}', '${subtitle.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            `).join('')}
+            ${(newSection.comments || []).map(comment => `
+              <div class="cleaning-item-comment-container" style="position:relative; margin-top:8px;">
+                <textarea class="form-input cleaning-item-comment" placeholder="コメントを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemComment('${newSectionId}', '${comment.id}', this.value)">${escapeHtml(comment.value || '')}</textarea>
+                <button type="button" class="cleaning-item-comment-delete" onclick="deleteCleaningItemComment('${newSectionId}', '${comment.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            `).join('')}
+            <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
+              <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${newSectionId}')" title="画像挿入">
+                <i class="fas fa-image"></i>
+                <span>画像挿入</span>
+              </button>
+              <button type="button" class="cleaning-item-insert-btn" onclick="addCommentToCleaningItem('${newSectionId}')" title="コメント挿入">
+                <i class="fas fa-comment"></i>
+                <span>コメント挿入</span>
+              </button>
+              <button type="button" class="cleaning-item-insert-btn" onclick="addSubtitleToCleaningItem('${newSectionId}')" title="サブタイトル挿入">
+                <i class="fas fa-heading"></i>
+                <span>サブタイトル挿入</span>
+              </button>
             </div>
           </div>
         </div>
@@ -3654,16 +3699,185 @@
 
   // 清掃項目セクションに画像セクションを追加
   window.addImageToCleaningItem = function(sectionId) {
-    // メニューを閉じる
-    const menu = document.getElementById(`cleaning-item-add-menu-${sectionId}`);
-    if (menu) {
-      menu.style.display = 'none';
-    }
-    
     // 画像セクションを追加（作業前・作業後タイプ）
     if (window.addImageSectionBeforeAfter) {
       window.addImageSectionBeforeAfter();
     }
+  };
+
+  // 清掃項目セクションにコメントを追加
+  window.addCommentToCleaningItem = function(sectionId) {
+    const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
+    if (!sectionBody) return;
+    
+    const insertActions = sectionBody.querySelector('.cleaning-item-insert-actions');
+    if (!insertActions) return;
+    
+    // 新しいコメントフィールドを作成
+    const commentId = `cleaning-item-comment-${sectionId}-${Date.now()}`;
+    const commentContainer = document.createElement('div');
+    commentContainer.className = 'cleaning-item-comment-container';
+    commentContainer.style.cssText = 'position:relative; margin-top:8px;';
+    
+    const commentField = document.createElement('textarea');
+    commentField.className = 'form-input cleaning-item-comment';
+    commentField.placeholder = 'コメントを入力してください';
+    commentField.style.cssText = 'margin-top:8px; min-height:80px; resize:vertical; width:100%;';
+    commentField.oninput = function() {
+      if (sections[sectionId]) {
+        if (!sections[sectionId].comments) {
+          sections[sectionId].comments = [];
+        }
+        const commentIndex = sections[sectionId].comments.findIndex(c => c.id === commentId);
+        if (commentIndex >= 0) {
+          sections[sectionId].comments[commentIndex].value = this.value;
+        } else {
+          sections[sectionId].comments.push({ id: commentId, value: this.value });
+        }
+        autoSave();
+      }
+    };
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'cleaning-item-comment-delete';
+    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+    deleteBtn.style.cssText = 'position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;';
+    deleteBtn.onclick = function() {
+      deleteCleaningItemComment(sectionId, commentId);
+    };
+    
+    commentContainer.appendChild(commentField);
+    commentContainer.appendChild(deleteBtn);
+    
+    // 挿入アクションボタンの前に挿入
+    insertActions.parentNode.insertBefore(commentContainer, insertActions);
+    
+    // データに保存
+    if (sections[sectionId]) {
+      if (!sections[sectionId].comments) {
+        sections[sectionId].comments = [];
+      }
+      sections[sectionId].comments.push({ id: commentId, value: '' });
+    }
+    
+    autoSave();
+  };
+
+  // 清掃項目セクションにサブタイトルを追加
+  window.addSubtitleToCleaningItem = function(sectionId) {
+    const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
+    if (!sectionBody) return;
+    
+    const insertActions = sectionBody.querySelector('.cleaning-item-insert-actions');
+    if (!insertActions) return;
+    
+    // 新しいサブタイトルフィールドを作成
+    const subtitleId = `cleaning-item-subtitle-${sectionId}-${Date.now()}`;
+    const subtitleContainer = document.createElement('div');
+    subtitleContainer.className = 'cleaning-item-subtitle-container';
+    subtitleContainer.style.cssText = 'position:relative; margin-top:8px;';
+    
+    const subtitleField = document.createElement('input');
+    subtitleField.type = 'text';
+    subtitleField.className = 'form-input cleaning-item-subtitle';
+    subtitleField.placeholder = 'サブタイトルを入力';
+    subtitleField.style.cssText = 'width:100%; font-weight:600; font-size:1rem;';
+    subtitleField.oninput = function() {
+      if (sections[sectionId]) {
+        if (!sections[sectionId].subtitles) {
+          sections[sectionId].subtitles = [];
+        }
+        const subtitleIndex = sections[sectionId].subtitles.findIndex(s => s.id === subtitleId);
+        if (subtitleIndex >= 0) {
+          sections[sectionId].subtitles[subtitleIndex].value = this.value;
+        } else {
+          sections[sectionId].subtitles.push({ id: subtitleId, value: this.value });
+        }
+        autoSave();
+      }
+    };
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'cleaning-item-subtitle-delete';
+    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+    deleteBtn.style.cssText = 'position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;';
+    deleteBtn.onclick = function() {
+      deleteCleaningItemSubtitle(sectionId, subtitleId);
+    };
+    
+    subtitleContainer.appendChild(subtitleField);
+    subtitleContainer.appendChild(deleteBtn);
+    
+    // 挿入アクションボタンの前に挿入
+    insertActions.parentNode.insertBefore(subtitleContainer, insertActions);
+    
+    // データに保存
+    if (sections[sectionId]) {
+      if (!sections[sectionId].subtitles) {
+        sections[sectionId].subtitles = [];
+      }
+      sections[sectionId].subtitles.push({ id: subtitleId, value: '' });
+    }
+    
+    autoSave();
+  };
+
+  // 清掃項目セクションのコメントを更新
+  window.updateCleaningItemComment = function(sectionId, commentId, value) {
+    if (sections[sectionId]) {
+      if (!sections[sectionId].comments) {
+        sections[sectionId].comments = [];
+      }
+      const commentIndex = sections[sectionId].comments.findIndex(c => c.id === commentId);
+      if (commentIndex >= 0) {
+        sections[sectionId].comments[commentIndex].value = value;
+      } else {
+        sections[sectionId].comments.push({ id: commentId, value: value });
+      }
+      autoSave();
+    }
+  };
+
+  // 清掃項目セクションのコメントを削除
+  window.deleteCleaningItemComment = function(sectionId, commentId) {
+    if (sections[sectionId] && sections[sectionId].comments) {
+      sections[sectionId].comments = sections[sectionId].comments.filter(c => c.id !== commentId);
+    }
+    const commentContainer = document.querySelector(`[data-section-id="${sectionId}"] .cleaning-item-comment-container textarea[oninput*="${commentId}"]`)?.closest('.cleaning-item-comment-container');
+    if (commentContainer) {
+      commentContainer.remove();
+    }
+    autoSave();
+  };
+
+  // 清掃項目セクションのサブタイトルを更新
+  window.updateCleaningItemSubtitle = function(sectionId, subtitleId, value) {
+    if (sections[sectionId]) {
+      if (!sections[sectionId].subtitles) {
+        sections[sectionId].subtitles = [];
+      }
+      const subtitleIndex = sections[sectionId].subtitles.findIndex(s => s.id === subtitleId);
+      if (subtitleIndex >= 0) {
+        sections[sectionId].subtitles[subtitleIndex].value = value;
+      } else {
+        sections[sectionId].subtitles.push({ id: subtitleId, value: value });
+      }
+      autoSave();
+    }
+  };
+
+  // 清掃項目セクションのサブタイトルを削除
+  window.deleteCleaningItemSubtitle = function(sectionId, subtitleId) {
+    if (sections[sectionId] && sections[sectionId].subtitles) {
+      sections[sectionId].subtitles = sections[sectionId].subtitles.filter(s => s.id !== subtitleId);
+    }
+    const subtitleContainer = document.querySelector(`[data-section-id="${sectionId}"] .cleaning-item-subtitle-container input[oninput*="${subtitleId}"]`)?.closest('.cleaning-item-subtitle-container');
+    if (subtitleContainer) {
+      subtitleContainer.remove();
+    }
+    autoSave();
   };
 
   // セクション内容更新
