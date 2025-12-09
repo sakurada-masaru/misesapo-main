@@ -182,13 +182,23 @@
     // 自動保存データの復元を試行（新規作成タブがアクティブな場合のみ）
     if (newTab && newTab.classList.contains('active')) {
       const restored = await loadAutoSaveData();
-      // 自動保存データが復元されなかった場合、デフォルトで清掃項目セクションを追加
-      if (!restored && window.addCleaningItemSection) {
+      // 自動保存データが復元されなかった場合、またはセクションが空の場合、デフォルトで清掃項目セクションを追加
+      if ((!restored || Object.keys(sections).length === 0) && window.addCleaningItemSection) {
         window.addCleaningItemSection();
       }
     } else {
       // 新規作成タブがアクティブでない場合でも、タブが切り替わったときに追加
       // これはsetupTabs内で処理される
+    }
+    
+    // 次回ご提案タブがアクティブな場合も同様に処理
+    const proposalTab = document.getElementById('tab-proposal');
+    if (proposalTab && proposalTab.classList.contains('active')) {
+      const restored = await loadAutoSaveData('proposal');
+      // 自動保存データが復元されなかった場合、またはセクションが空の場合、デフォルトで清掃項目セクションを追加
+      if ((!restored || Object.keys(sections).length === 0) && window.addCleaningItemSection) {
+        window.addCleaningItemSection();
+      }
     }
     
     // 自動保存のイベントリスナーを設定
@@ -2185,51 +2195,6 @@
         toggleHint(false); // ヒントを非表示
       });
     }
-    
-    // セクション追加アイコンエリアを常に最後に配置する関数
-    function moveSectionAddIconsToBottom() {
-      if (sectionAddIconsArea && contentArea) {
-        // 既に最後にある場合は何もしない
-        if (contentArea.lastElementChild === sectionAddIconsArea) {
-          return;
-        }
-        // 最後に移動
-        contentArea.appendChild(sectionAddIconsArea);
-      }
-    }
-    
-    const observer = new MutationObserver(() => {
-      setupAllSectionDragAndDrop();
-      // 選択モードの場合はチェックボックスを更新
-      if (isSectionSelectMode) {
-        updateSectionCardsForSelection();
-      }
-      // セクションが存在する場合は選択モードボタンを表示
-      const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
-      if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
-        sectionSelectModeBtn.style.display = 'flex';
-      }
-      // セクション追加アイコンエリアを常に最後に配置
-      moveSectionAddIconsToBottom();
-    });
-    observer.observe(contentArea, { childList: true, subtree: true });
-    
-    // 初期配置
-    moveSectionAddIconsToBottom();
-
-    // ヘルプボタン
-    document.getElementById('help-btn').addEventListener('click', () => {
-      document.getElementById('help-dialog').style.display = 'flex';
-    });
-
-    // プレビューボタン
-    const previewBtn = document.getElementById('preview-btn');
-    if (previewBtn) {
-      previewBtn.addEventListener('click', openPreviewModal);
-    }
-
-    // フォーム送信
-    document.getElementById('report-form').addEventListener('submit', handleSubmit);
 
     // 画像倉庫タブ切り替え
     document.querySelectorAll('.warehouse-tabs .tab-btn').forEach(btn => {
