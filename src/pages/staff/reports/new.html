@@ -34,63 +34,64 @@
     </button>
   </div>
 
-  <!-- 新規作成タブ -->
-  <div id="tab-content-new" class="tab-content active">
-    <form id="report-form" class="report-form">
-    <!-- 基本情報（ピンク背景） -->
-    <div class="report-header-section">
-      <div class="form-row two-col">
-        <div class="form-group store-search-group">
-          <div class="store-search-wrapper">
-            <div class="input-with-dropdown">
-              <input type="text" id="report-brand-search" class="form-input" placeholder="①ブランド名 *" autocomplete="off" readonly>
-              <button type="button" class="dropdown-arrow-btn" id="brand-dropdown-btn" aria-label="ドロップダウンを開く">
-                <i class="fas fa-chevron-down"></i>
-              </button>
-              <select id="report-brand-select" class="form-select" name="brand_id" style="display: none;">
-                <option value="">①ブランド名 *</option>
-              </select>
-            </div>
-            <input type="hidden" id="report-brand" name="brand_id">
-            <input type="hidden" id="report-brand-name" name="brand_name">
-            <div id="brand-search-results" class="store-search-results" style="display: none;"></div>
+  <!-- レポートヘッダーセクション（新規作成・次回ご提案で共用） -->
+  <div class="report-header-section" id="shared-report-header" style="display: none;">
+    <div class="form-row two-col">
+      <div class="form-group store-search-group">
+        <div class="store-search-wrapper">
+          <div class="input-with-dropdown">
+            <input type="text" id="report-brand-search" class="form-input" placeholder="①ブランド名 *" autocomplete="off" readonly>
+            <button type="button" class="dropdown-arrow-btn" id="brand-dropdown-btn" aria-label="ドロップダウンを開く">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <select id="report-brand-select" class="form-select" name="brand_id" style="display: none;">
+              <option value="">①ブランド名 *</option>
+            </select>
           </div>
-        </div>
-        <div class="form-group store-search-group">
-          <div class="store-search-wrapper">
-            <div class="input-with-dropdown">
-              <input type="text" id="report-store-search" class="form-input" placeholder="②店舗名 *" autocomplete="off" readonly>
-              <button type="button" class="dropdown-arrow-btn" id="store-dropdown-btn" aria-label="ドロップダウンを開く">
-                <i class="fas fa-chevron-down"></i>
-              </button>
-              <select id="report-store-select" class="form-select" name="store_id" style="display: none;">
-                <option value="">②店舗名 *</option>
-              </select>
-            </div>
-            <input type="hidden" id="report-store" name="store_id">
-            <input type="hidden" id="report-store-name" name="store_name">
-            <div id="store-search-results" class="store-search-results" style="display: none;"></div>
-          </div>
+          <input type="hidden" id="report-brand" name="brand_id">
+          <input type="hidden" id="report-brand-name" name="brand_name">
+          <div id="brand-search-results" class="store-search-results" style="display: none;"></div>
         </div>
       </div>
-      <div class="form-row three-col date-time-row">
-        <div class="form-group date-time-group">
-          <div class="date-time-input-wrapper">
-            <input type="date" id="report-date" name="cleaning_date" class="form-input date-time-input" required>
+      <div class="form-group store-search-group">
+        <div class="store-search-wrapper">
+          <div class="input-with-dropdown">
+            <input type="text" id="report-store-search" class="form-input" placeholder="②店舗名 *" autocomplete="off" readonly>
+            <button type="button" class="dropdown-arrow-btn" id="store-dropdown-btn" aria-label="ドロップダウンを開く">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <select id="report-store-select" class="form-select" name="store_id" style="display: none;">
+              <option value="">②店舗名 *</option>
+            </select>
           </div>
-        </div>
-        <div class="form-group date-time-group">
-          <div class="date-time-input-wrapper" data-placeholder="始--:--">
-            <input type="time" id="report-start" name="cleaning_start_time" class="form-input date-time-input">
-          </div>
-        </div>
-        <div class="form-group date-time-group">
-          <div class="date-time-input-wrapper" data-placeholder="終了時刻">
-            <input type="time" id="report-end" name="cleaning_end_time" class="form-input date-time-input" placeholder="終了時刻">
-          </div>
+          <input type="hidden" id="report-store" name="store_id">
+          <input type="hidden" id="report-store-name" name="store_name">
+          <div id="store-search-results" class="store-search-results" style="display: none;"></div>
         </div>
       </div>
     </div>
+    <div class="form-row three-col date-time-row">
+      <div class="form-group date-time-group">
+        <div class="date-time-input-wrapper">
+          <input type="date" id="report-date" name="cleaning_date" class="form-input date-time-input" required>
+        </div>
+      </div>
+      <div class="form-group date-time-group">
+        <div class="date-time-input-wrapper" data-placeholder="始--:--">
+          <input type="time" id="report-start" name="cleaning_start_time" class="form-input date-time-input">
+        </div>
+      </div>
+      <div class="form-group date-time-group">
+        <div class="date-time-input-wrapper" data-placeholder="終了時刻">
+          <input type="time" id="report-end" name="cleaning_end_time" class="form-input date-time-input" placeholder="終了時刻">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新規作成タブ -->
+  <div id="tab-content-new" class="tab-content active">
+    <form id="report-form" class="report-form">
 
     <!-- コンテンツエリア -->
     <div class="report-content" id="report-content">

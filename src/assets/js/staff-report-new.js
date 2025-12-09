@@ -336,6 +336,7 @@
   function setupTabs() {
     const tabButtons = document.querySelectorAll('.tabs-navigation .tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
+    const sharedHeader = document.getElementById('shared-report-header');
     
     tabButtons.forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -350,6 +351,15 @@
           content.classList.remove('active');
         });
         document.getElementById(`tab-content-${targetTab}`).classList.add('active');
+        
+        // レポートヘッダーセクションの表示/非表示を切り替え
+        if (sharedHeader) {
+          if (targetTab === 'new' || targetTab === 'proposal') {
+            sharedHeader.style.display = 'block';
+          } else {
+            sharedHeader.style.display = 'none';
+          }
+        }
         
         // 新規作成タブに切り替えた場合はフォームと画像ストックをリセット
         if (targetTab === 'new') {
