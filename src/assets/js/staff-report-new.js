@@ -2935,9 +2935,6 @@
         </div>
       </div>
     `;
-        </div>
-      </div>
-    `;
 
     const reportContent = document.getElementById('report-content');
     const sectionAddIconsArea = document.getElementById('section-add-icons-area');
