@@ -4050,6 +4050,10 @@
   
   // 清掃項目セクション用の画像タイプ選択モーダルを開く
   function openCleaningItemImageTypeModal(sectionId) {
+    // 現在アクティブなタブを確認
+    const activeTab = document.querySelector('.tab-btn.active');
+    const isProposalTab = activeTab && activeTab.dataset.tab === 'proposal';
+    
     const modal = document.getElementById('cleaning-item-image-type-modal');
     if (!modal) {
       // モーダルが存在しない場合は作成
@@ -4058,6 +4062,14 @@
     const modalElement = document.getElementById('cleaning-item-image-type-modal');
     if (modalElement) {
       modalElement.dataset.sectionId = sectionId;
+      modalElement.dataset.isProposal = isProposalTab ? 'true' : 'false';
+      
+      // 次回ご提案タブの場合は、モーダルを表示せずに直接「施工後」タイプを追加
+      if (isProposalTab) {
+        addCleaningItemImageContent(sectionId, 'completed', true);
+        return;
+      }
+      
       modalElement.style.display = 'flex';
     }
   }
@@ -4099,8 +4111,9 @@
       btn.addEventListener('click', function() {
         const imageType = this.dataset.type;
         const sectionId = modal.dataset.sectionId;
+        const isProposal = modal.dataset.isProposal === 'true';
         modal.style.display = 'none';
-        addCleaningItemImageContent(sectionId, imageType);
+        addCleaningItemImageContent(sectionId, imageType, isProposal);
       });
     });
     
@@ -4113,7 +4126,7 @@
   }
   
   // 清掃項目セクションに画像コンテンツを追加（実際の追加処理）
-  function addCleaningItemImageContent(sectionId, imageType = 'before_after') {
+  function addCleaningItemImageContent(sectionId, imageType = 'before_after', isProposal = false) {
     const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
     if (!sectionBody) return;
     
@@ -4165,7 +4178,8 @@
         </div>
       `;
     } else if (imageType === 'completed') {
-      // 施工後タイプ
+      // 施工後タイプ（次回ご提案タブの場合は「ご提案箇所」に変更）
+      const labelText = isProposal ? 'ご提案箇所' : '施工後';
       imageContentHtml = `
         <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
           <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContentId}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
@@ -4175,7 +4189,7 @@
         <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
           <div class="image-category">
             <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
-              <i class="fas fa-star"></i> 施工後
+              <i class="fas fa-star"></i> ${labelText}
             </div>
             <div class="image-list" id="${imageContentId}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
               <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContentId}', 'completed')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
