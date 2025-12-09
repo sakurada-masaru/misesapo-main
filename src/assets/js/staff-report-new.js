@@ -3026,12 +3026,16 @@
       return;
     }
 
+    // warehouseUrlがあればそれを使用、なければblobUrlを使用
+    const imageUrl = imageData.warehouseUrl || imageData.blobUrl;
+    
     // データに追加（画像データオブジェクトとして保存）
     sections[sectionId].photos[category].push({
       imageId: imageData.id,
-      blobUrl: imageData.blobUrl,
+      blobUrl: imageUrl, // warehouseUrlまたはblobUrl
+      warehouseUrl: imageData.warehouseUrl || null,
       fileName: imageData.fileName,
-      uploaded: false
+      uploaded: imageData.uploaded || false
     });
 
     // UIに追加
@@ -3053,7 +3057,7 @@
             placeholder.remove();
           }
           const addBtn = newContainer.querySelector('.image-add-btn');
-          const newThumb = createImageThumb(sectionId, category, imageData.blobUrl, imageData.id);
+          const newThumb = createImageThumb(sectionId, category, imageUrl, imageData.id);
           newContainer.insertBefore(newThumb, addBtn);
           setupImageListDragAndDrop(newContainer, sectionId, category);
         }
@@ -3068,7 +3072,7 @@
     }
     
     const addBtn = container.querySelector('.image-add-btn');
-    const newThumb = createImageThumb(sectionId, category, imageData.blobUrl, imageData.id);
+    const newThumb = createImageThumb(sectionId, category, imageUrl, imageData.id);
     container.insertBefore(newThumb, addBtn);
     setupImageListDragAndDrop(container, sectionId, category);
   }
