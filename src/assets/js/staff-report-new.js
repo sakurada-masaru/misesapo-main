@@ -4145,8 +4145,16 @@
   
   // 清掃項目セクションに画像コンテンツを追加（実際の追加処理）
   function addCleaningItemImageContent(sectionId, imageType = 'before_after', isProposal = false) {
+    // 現在アクティブなタブを確認
+    const activeTab = document.querySelector('.tab-btn.active');
+    const isProposalTab = activeTab && activeTab.dataset.tab === 'proposal';
+    
+    // セクションを検索（タブに関係なく検索）
     const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
-    if (!sectionBody) return;
+    if (!sectionBody) {
+      console.warn(`[addCleaningItemImageContent] sectionBody not found for sectionId: ${sectionId}`);
+      return;
+    }
     
     const insertActions = sectionBody.querySelector('.cleaning-item-insert-actions');
     if (!insertActions) return;
@@ -4670,8 +4678,12 @@
 
   // 清掃項目セクションにコメントを追加
   window.addCommentToCleaningItem = function(sectionId) {
+    // セクションを検索（タブに関係なく検索）
     const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
-    if (!sectionBody) return;
+    if (!sectionBody) {
+      console.warn(`[addCommentToCleaningItem] sectionBody not found for sectionId: ${sectionId}`);
+      return;
+    }
     
     const insertActions = sectionBody.querySelector('.cleaning-item-insert-actions');
     if (!insertActions) return;
@@ -4732,8 +4744,12 @@
 
   // 清掃項目セクションにサブタイトルを追加
   window.addSubtitleToCleaningItem = function(sectionId) {
+    // セクションを検索（タブに関係なく検索）
     const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
-    if (!sectionBody) return;
+    if (!sectionBody) {
+      console.warn(`[addSubtitleToCleaningItem] sectionBody not found for sectionId: ${sectionId}`);
+      return;
+    }
     
     const insertActions = sectionBody.querySelector('.cleaning-item-insert-actions');
     if (!insertActions) return;
