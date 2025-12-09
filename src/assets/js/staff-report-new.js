@@ -2148,11 +2148,11 @@
     if (addCommentBtn) addCommentBtn.addEventListener('click', addCommentSection);
     if (addWorkContentBtn) addWorkContentBtn.addEventListener('click', addWorkContentSection);
     
-    // セクション追加アイコンエリアのイベントリスナー（新規作成タブ用）
-    setupSectionAddButtons('section-add-toggle-btn', 'section-add-icons', 'section-add-cleaning', 'section-add-comment', 'section-add-image', 'section-add-hint');
+    // セクション追加ボタンのイベントリスナー（新規作成タブ用）
+    setupSectionAddButtons('section-add-toggle-btn', 'new');
     
-    // セクション追加アイコンエリアのイベントリスナー（次回ご提案タブ用）
-    setupSectionAddButtons('section-add-toggle-btn-proposal', 'section-add-icons-proposal', 'section-add-cleaning-proposal', 'section-add-comment-proposal', 'section-add-image-proposal', 'section-add-hint-proposal');
+    // セクション追加ボタンのイベントリスナー（次回ご提案タブ用）
+    setupSectionAddButtons('section-add-toggle-btn-proposal', 'proposal');
   }
   
   // セクション追加ボタンのイベントリスナーを設定する共通関数

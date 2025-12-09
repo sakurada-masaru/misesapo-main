@@ -1370,10 +1370,11 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   color: #FF679C;
   font-size: 0.75rem;
   font-weight: 600;
-  margin-top: 4px;
+  margin-bottom: 4px; /* +ボタンの上に表示 */
   animation: bounceHint 1.2s ease-in-out infinite;
   opacity: 1;
-  display: none; /* 初期状態では非表示 */
+  display: block !important; /* 常に表示 */
+  text-align: center;
 }
 
 .section-add-hint span {
@@ -2811,24 +2812,29 @@ body.dark-mode .modal-footer {
   
   /* 日付・開始時刻・終了時刻を2行に分けて配置（320px以下でも2行レイアウト） */
   .form-row.three-col.date-time-row {
-    display: flex;
-    flex-direction: column;
+    display: flex !important; /* 基本スタイルのgridを上書き */
+    flex-direction: column !important;
+    grid-template-columns: none !important; /* grid設定を無効化 */
     gap: 6px;
     margin-bottom: 8px;
   }
   
   /* 日付は1行目（全幅） */
   .form-row.three-col.date-time-row .date-time-group:first-child {
-    width: 100%;
+    width: 100% !important;
     min-width: 0;
+    grid-column: unset !important;
+    grid-row: unset !important;
   }
   
   /* 開始時刻と終了時刻を2行目に2列で配置 */
   .form-row.three-col.date-time-row .date-time-group:nth-child(2),
   .form-row.three-col.date-time-row .date-time-group:nth-child(3) {
-    width: calc(50% - 3px);
-    display: inline-block;
+    width: calc(50% - 3px) !important;
+    display: inline-block !important;
     vertical-align: top;
+    grid-column: unset !important;
+    grid-row: unset !important;
   }
   
   .form-row.three-col.date-time-row .date-time-group:nth-child(2) {
@@ -2898,24 +2904,29 @@ body.dark-mode .modal-footer {
   
   /* 日付・開始時刻・終了時刻を2行に分けて配置（SP版） */
   .form-row.three-col.date-time-row {
-    display: flex;
-    flex-direction: column;
+    display: flex !important; /* 基本スタイルのgridを上書き */
+    flex-direction: column !important;
+    grid-template-columns: none !important; /* grid設定を無効化 */
     gap: 8px;
     margin-bottom: 8px;
   }
   
   /* 日付は1行目（全幅） */
   .form-row.three-col.date-time-row .date-time-group:first-child {
-    width: 100%;
+    width: 100% !important;
     min-width: 0;
+    grid-column: unset !important;
+    grid-row: unset !important;
   }
   
   /* 開始時刻と終了時刻を2行目に2列で配置 */
   .form-row.three-col.date-time-row .date-time-group:nth-child(2),
   .form-row.three-col.date-time-row .date-time-group:nth-child(3) {
-    width: calc(50% - 4px);
-    display: inline-block;
+    width: calc(50% - 4px) !important;
+    display: inline-block !important;
     vertical-align: top;
+    grid-column: unset !important;
+    grid-row: unset !important;
   }
   
   .form-row.three-col.date-time-row .date-time-group:nth-child(2) {
@@ -3165,6 +3176,41 @@ body.dark-mode .modal-footer {
 @media (max-width: 768px) {
   .report-header-section {
     padding: 12px 14px;
+  }
+  
+  /* 日付・開始時刻・終了時刻を2行に分けて配置（768px以下でも2行レイアウト） */
+  .form-row.three-col.date-time-row {
+    display: flex !important; /* 基本スタイルのgridを上書き */
+    flex-direction: column !important;
+    grid-template-columns: none !important; /* grid設定を無効化 */
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  /* 日付は1行目（全幅） */
+  .form-row.three-col.date-time-row .date-time-group:first-child {
+    width: 100% !important;
+    min-width: 0;
+    grid-column: unset !important;
+    grid-row: unset !important;
+  }
+  
+  /* 開始時刻と終了時刻を2行目に2列で配置 */
+  .form-row.three-col.date-time-row .date-time-group:nth-child(2),
+  .form-row.three-col.date-time-row .date-time-group:nth-child(3) {
+    width: calc(50% - 4px) !important;
+    display: inline-block !important;
+    vertical-align: top;
+    grid-column: unset !important;
+    grid-row: unset !important;
+  }
+  
+  .form-row.three-col.date-time-row .date-time-group:nth-child(2) {
+    margin-right: 8px;
+  }
+  
+  .form-row.three-col.date-time-row .date-time-group {
+    min-width: 0;
   }
   
   .form-row.two-col {
