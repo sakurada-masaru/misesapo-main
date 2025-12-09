@@ -570,14 +570,18 @@
                             <i class="fas fa-clock"></i> 作業前
                           </div>
                           <div class="image-list" id="${imageContent.id}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
-                            ${(imageContent.photos?.before || []).map(photo => `
-                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="before" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
-                                <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
-                                <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'before', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
+                            ${(imageContent.photos?.before || []).map(photo => {
+                              const photoUrl = photo.blobUrl || photo;
+                              const photoId = photo.imageId || photo;
+                              return `
+                              <div class="image-thumb" draggable="true" data-image-url="${photoUrl}" data-image-id="${photoId}" data-category="before" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
+                                <img src="${photoUrl}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
+                                <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'before', '${photoId}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
                                   <i class="fas fa-times"></i>
                                 </button>
                               </div>
-                            `).join('')}
+                            `;
+                            }).join('')}
                             <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
                               <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="before" style="display:none;">
                               <i class="fas fa-plus"></i>
@@ -590,14 +594,18 @@
                             <i class="fas fa-check-circle"></i> 作業後
                           </div>
                           <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
-                            ${(imageContent.photos?.after || []).map(photo => `
-                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="after" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
-                                <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
-                                <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'after', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
+                            ${(imageContent.photos?.after || []).map(photo => {
+                              const photoUrl = photo.blobUrl || photo;
+                              const photoId = photo.imageId || photo;
+                              return `
+                              <div class="image-thumb" draggable="true" data-image-url="${photoUrl}" data-image-id="${photoId}" data-category="after" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
+                                <img src="${photoUrl}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
+                                <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'after', '${photoId}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
                                   <i class="fas fa-times"></i>
                                 </button>
                               </div>
-                            `).join('')}
+                            `;
+                            }).join('')}
                             <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
                               <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="after" style="display:none;">
                               <i class="fas fa-plus"></i>
@@ -622,14 +630,18 @@
                       <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
                         <div class="image-category">
                           <div class="image-list" id="${imageContent.id}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
-                            ${(imageContent.photos?.completed || []).map(photo => `
-                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="completed" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
-                                <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
-                                <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'completed', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
+                            ${(imageContent.photos?.completed || []).map(photo => {
+                              const photoUrl = photo.blobUrl || photo;
+                              const photoId = photo.imageId || photo;
+                              return `
+                              <div class="image-thumb" draggable="true" data-image-url="${photoUrl}" data-image-id="${photoId}" data-category="completed" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
+                                <img src="${photoUrl}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
+                                <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'completed', '${photoId}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
                                   <i class="fas fa-times"></i>
                                 </button>
                               </div>
-                            `).join('')}
+                            `;
+                            }).join('')}
                             <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
                               <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="completed" style="display:none;">
                               <i class="fas fa-plus"></i>
@@ -4196,6 +4208,11 @@
       imageThumb.appendChild(img);
       imageThumb.appendChild(removeBtn);
       
+      // セクション内画像コンテンツ用のドラッグ&ドロップを設定
+      imageThumb.dataset.sectionId = sectionId;
+      imageThumb.dataset.imageContentId = imageContentId;
+      setupCleaningItemImageThumbDragAndDrop(imageThumb, sectionId, imageContentId, category, blobUrl, imageId);
+      
       // 追加ボタンの前に挿入
       const addBtn = imageList.querySelector('.image-add-btn');
       if (addBtn) {
@@ -4808,9 +4825,15 @@
   }
 
   // 画像リストのドラッグ&ドロップ設定
-  function setupImageListDragAndDrop(listElement, sectionId, category) {
+  function setupImageListDragAndDrop(listElement, sectionId, category, imageContentId = null) {
     if (listElement.dataset.dragSetup) return;
     listElement.dataset.dragSetup = 'true';
+    
+    // セクション内画像コンテンツの場合は専用の処理を使用
+    if (imageContentId) {
+      setupCleaningItemImageListDragAndDrop(listElement, sectionId, imageContentId, category);
+      return;
+    }
 
     // ドラッグオーバー（PC用）
     listElement.addEventListener('dragover', (e) => {
