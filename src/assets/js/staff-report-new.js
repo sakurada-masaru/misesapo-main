@@ -539,17 +539,17 @@
                 </div>
               `).join('')}
               ${(section.subtitles || []).map(subtitle => `
-                <div class="cleaning-item-subtitle-container" style="position:relative; margin-top:8px;">
+                <div class="cleaning-item-subtitle-container" data-subtitle-id="${subtitle.id}" style="position:relative; margin-top:8px;">
                   <input type="text" class="form-input cleaning-item-subtitle" placeholder="サブタイトルを入力" style="width:100%; font-weight:600; font-size:1rem;" oninput="updateCleaningItemSubtitle('${sectionId}', '${subtitle.id}', this.value)" value="${escapeHtml(subtitle.value || '')}">
-                  <button type="button" class="cleaning-item-subtitle-delete" onclick="deleteCleaningItemSubtitle('${sectionId}', '${subtitle.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
+                  <button type="button" class="cleaning-item-subtitle-delete" data-section-id="${sectionId}" data-subtitle-id="${subtitle.id}" onclick="deleteCleaningItemSubtitle('${sectionId}', '${subtitle.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
               `).join('')}
               ${(section.comments || []).map(comment => `
-                <div class="cleaning-item-comment-container" style="position:relative; margin-top:8px;">
+                <div class="cleaning-item-comment-container" data-comment-id="${comment.id}" style="position:relative; margin-top:8px;">
                   <textarea class="form-input cleaning-item-comment" placeholder="コメントを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemComment('${sectionId}', '${comment.id}', this.value)">${escapeHtml(comment.value || '')}</textarea>
-                  <button type="button" class="cleaning-item-comment-delete" onclick="deleteCleaningItemComment('${sectionId}', '${comment.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
+                  <button type="button" class="cleaning-item-comment-delete" data-section-id="${sectionId}" data-comment-id="${comment.id}" onclick="deleteCleaningItemComment('${sectionId}', '${comment.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
@@ -569,9 +569,9 @@
                           <div class="image-category-title before" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
                             <i class="fas fa-clock"></i> 作業前
                           </div>
-                          <div class="image-list" id="${imageContent.id}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                          <div class="image-list" id="${imageContent.id}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
                             ${(imageContent.photos?.before || []).map(photo => `
-                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="before" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="before" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
                                 <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
                                 <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'before', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
                                   <i class="fas fa-times"></i>
@@ -589,9 +589,9 @@
                           <div class="image-category-title after" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
                             <i class="fas fa-check-circle"></i> 作業後
                           </div>
-                          <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                          <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
                             ${(imageContent.photos?.after || []).map(photo => `
-                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="after" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="after" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
                                 <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
                                 <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'after', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
                                   <i class="fas fa-times"></i>
@@ -621,9 +621,9 @@
                       </div>
                       <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
                         <div class="image-category">
-                          <div class="image-list" id="${imageContent.id}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                          <div class="image-list" id="${imageContent.id}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
                             ${(imageContent.photos?.completed || []).map(photo => `
-                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="completed" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="completed" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
                                 <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
                                 <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'completed', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
                                   <i class="fas fa-times"></i>
@@ -3504,7 +3504,7 @@
                         </div>
                         <div class="image-list" id="${imageContent.id}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
                           ${(imageContent.photos?.before || []).map(photo => `
-                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="before" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="before" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
                               <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
                               <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'before', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
                                 <i class="fas fa-times"></i>
@@ -3522,9 +3522,9 @@
                         <div class="image-category-title after" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
                           <i class="fas fa-check-circle"></i> 作業後
                         </div>
-                        <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                          <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
                           ${(imageContent.photos?.after || []).map(photo => `
-                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="after" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="after" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
                               <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
                               <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'after', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
                                 <i class="fas fa-times"></i>
@@ -3544,19 +3544,19 @@
               } else {
                 return `
                   <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
-                    <div class="cleaning-item-image-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                      <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151;">
-                        <i class="fas fa-star"></i> 施工後
-                      </div>
+                    <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
                       <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${newSectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
                         <i class="fas fa-times"></i>
                       </button>
                     </div>
                     <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
                       <div class="image-category">
-                        <div class="image-list" id="${imageContent.id}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                        <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
+                          <i class="fas fa-star"></i> 施工後
+                        </div>
+                        <div class="image-list" id="${imageContent.id}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
                           ${(imageContent.photos?.completed || []).map(photo => `
-                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="completed" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="completed" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
                               <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
                               <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'completed', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
                                 <i class="fas fa-times"></i>
@@ -4033,7 +4033,7 @@
             <div class="image-category-title after" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
               <i class="fas fa-check-circle"></i> 作業後
             </div>
-            <div class="image-list" id="${imageContentId}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+            <div class="image-list" id="${imageContentId}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
               <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
                 <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContentId}" data-category="after" style="display:none;">
                 <i class="fas fa-plus"></i>
@@ -4046,17 +4046,17 @@
     } else if (imageType === 'completed') {
       // 施工後タイプ
       imageContentHtml = `
-        <div class="cleaning-item-image-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151;">
-            <i class="fas fa-star"></i> 施工後
-          </div>
+        <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
           <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContentId}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
             <i class="fas fa-times"></i>
           </button>
         </div>
         <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
           <div class="image-category">
-            <div class="image-list" id="${imageContentId}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+            <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
+              <i class="fas fa-star"></i> 施工後
+            </div>
+            <div class="image-list" id="${imageContentId}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
               <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
                 <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContentId}" data-category="completed" style="display:none;">
                 <i class="fas fa-plus"></i>
@@ -4176,7 +4176,7 @@
       imageThumb.dataset.imageUrl = blobUrl;
       imageThumb.dataset.imageId = imageId;
       imageThumb.dataset.category = category;
-      imageThumb.style.cssText = 'width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;';
+      imageThumb.style.cssText = 'width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;';
       
       const img = document.createElement('img');
       img.src = blobUrl;
@@ -4396,18 +4396,10 @@
     if (sections[sectionId] && sections[sectionId].comments) {
       sections[sectionId].comments = sections[sectionId].comments.filter(c => c.id !== commentId);
     }
-    // より確実なセレクターで要素を検索
-    const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
-    if (sectionCard) {
-      const commentContainers = sectionCard.querySelectorAll('.cleaning-item-comment-container');
-      commentContainers.forEach(container => {
-        const deleteBtn = container.querySelector('.cleaning-item-comment-delete');
-        if (deleteBtn && deleteBtn.onclick && deleteBtn.onclick.toString().includes(commentId)) {
-          container.remove();
-        } else if (deleteBtn && deleteBtn.getAttribute('onclick') && deleteBtn.getAttribute('onclick').includes(commentId)) {
-          container.remove();
-        }
-      });
+    // data属性を使用して要素を検索
+    const commentContainer = document.querySelector(`[data-section-id="${sectionId}"] .cleaning-item-comment-container[data-comment-id="${commentId}"]`);
+    if (commentContainer) {
+      commentContainer.remove();
     }
     autoSave();
   };
@@ -4433,18 +4425,10 @@
     if (sections[sectionId] && sections[sectionId].subtitles) {
       sections[sectionId].subtitles = sections[sectionId].subtitles.filter(s => s.id !== subtitleId);
     }
-    // より確実なセレクターで要素を検索
-    const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
-    if (sectionCard) {
-      const subtitleContainers = sectionCard.querySelectorAll('.cleaning-item-subtitle-container');
-      subtitleContainers.forEach(container => {
-        const deleteBtn = container.querySelector('.cleaning-item-subtitle-delete');
-        if (deleteBtn && deleteBtn.onclick && deleteBtn.onclick.toString().includes(subtitleId)) {
-          container.remove();
-        } else if (deleteBtn && deleteBtn.getAttribute('onclick') && deleteBtn.getAttribute('onclick').includes(subtitleId)) {
-          container.remove();
-        }
-      });
+    // data属性を使用して要素を検索
+    const subtitleContainer = document.querySelector(`[data-section-id="${sectionId}"] .cleaning-item-subtitle-container[data-subtitle-id="${subtitleId}"]`);
+    if (subtitleContainer) {
+      subtitleContainer.remove();
     }
     autoSave();
   };
