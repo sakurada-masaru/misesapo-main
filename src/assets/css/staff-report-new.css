@@ -1346,6 +1346,30 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   transform: rotate(45deg);
 }
 
+.section-add-hint {
+  color: #FF679C;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 4px;
+  animation: bounceHint 2s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+.section-add-hint span {
+  display: inline-block;
+}
+
+@keyframes bounceHint {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+}
+
 .section-add-icons {
   display: flex;
   gap: 16px;
