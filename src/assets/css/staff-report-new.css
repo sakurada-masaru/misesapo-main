@@ -340,7 +340,7 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: #111827; /* 黒字で表示 */
   font-weight: 500;
   pointer-events: none;
   z-index: 1;
@@ -350,7 +350,7 @@
 }
 
 /* 開始時刻フィールドのプレースホルダーをスピナーボタンの後に表示 */
-.date-time-input-wrapper:has([data-placeholder="始--:--"])::before {
+.date-time-input-wrapper:has([data-placeholder="開始時間"])::before {
   left: 40px; /* スピナーボタンの幅分右にずらす */
 }
 
