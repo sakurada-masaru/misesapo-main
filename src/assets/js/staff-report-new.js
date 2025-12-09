@@ -435,25 +435,45 @@
       // セクション追加アイコンエリアを保持
       const sectionAddIconsAreaId = tabType === 'proposal' ? 'section-add-icons-area-proposal' : 'section-add-icons-area';
       const sectionAddIconsArea = document.getElementById(sectionAddIconsAreaId);
-      const sectionAddIconsAreaHTML = sectionAddIconsArea ? sectionAddIconsArea.outerHTML : '';
       
-      // セクションカードだけを削除
+      // セクションカードだけを削除（section-add-icons-areaは保持）
       const sectionCards = reportContent.querySelectorAll('.section-card');
       sectionCards.forEach(card => card.remove());
       
       // セクション追加アイコンエリアが削除された場合は再追加
-      if (sectionAddIconsAreaHTML && !document.getElementById(sectionAddIconsAreaId)) {
+      if (!sectionAddIconsArea && reportContent) {
+        const toggleBtnId = tabType === 'proposal' ? 'section-add-toggle-btn-proposal' : 'section-add-toggle-btn';
+        const iconsId = tabType === 'proposal' ? 'section-add-icons-proposal' : 'section-add-icons';
+        const cleaningBtnId = tabType === 'proposal' ? 'section-add-cleaning-proposal' : 'section-add-cleaning';
+        const commentBtnId = tabType === 'proposal' ? 'section-add-comment-proposal' : 'section-add-comment';
+        const imageBtnId = tabType === 'proposal' ? 'section-add-image-proposal' : 'section-add-image';
+        const hintId = tabType === 'proposal' ? 'section-add-hint-proposal' : 'section-add-hint';
+        
+        // HTMLを再作成
+        const sectionAddIconsAreaHTML = `
+          <div class="section-add-icons-area" id="${sectionAddIconsAreaId}">
+            <button type="button" class="section-add-toggle-btn" id="${toggleBtnId}">
+              <i class="fas fa-plus"></i>
+            </button>
+            <div class="section-add-hint" id="${hintId}">
+              <span>↓New section↓</span>
+            </div>
+            <div class="section-add-icons" id="${iconsId}" style="display: none;">
+              <button type="button" class="section-add-icon-btn" id="${cleaningBtnId}" data-section-type="cleaning" title="清掃項目">
+                <i class="fas fa-list"></i>
+              </button>
+              <button type="button" class="section-add-icon-btn" id="${commentBtnId}" data-section-type="comment" title="コメント">
+                <i class="fas fa-comment"></i>
+              </button>
+              <button type="button" class="section-add-icon-btn" id="${imageBtnId}" data-section-type="image" title="画像">
+                <i class="fas fa-image"></i>
+              </button>
+            </div>
+          </div>
+        `;
         reportContent.insertAdjacentHTML('beforeend', sectionAddIconsAreaHTML);
         // イベントリスナーを再設定
-        const hintId = tabType === 'proposal' ? 'section-add-hint-proposal' : 'section-add-hint';
-        setupSectionAddButtons(
-          sectionAddIconsAreaId.replace('section-add-icons-area', 'section-add-toggle-btn'),
-          sectionAddIconsAreaId,
-          sectionAddIconsAreaId.replace('section-add-icons-area', 'section-add-cleaning'),
-          sectionAddIconsAreaId.replace('section-add-icons-area', 'section-add-comment'),
-          sectionAddIconsAreaId.replace('section-add-icons-area', 'section-add-image'),
-          hintId
-        );
+        setupSectionAddButtons(toggleBtnId, iconsId, cleaningBtnId, commentBtnId, imageBtnId, hintId);
       }
     }
     
