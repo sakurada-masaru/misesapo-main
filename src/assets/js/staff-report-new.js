@@ -554,59 +554,94 @@
                   </button>
                 </div>
               `).join('')}
-              ${(section.imageContents || []).map(imageContent => `
-                <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
-                  <div class="cleaning-item-image-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <div style="display:flex; gap:16px;">
-                      <div class="image-category-title before" style="font-size:0.875rem; font-weight:600; color:#374151;">
-                        <i class="fas fa-clock"></i> 作業前
+              ${(section.imageContents || []).map(imageContent => {
+                const imageType = imageContent.imageType || 'before_after';
+                if (imageType === 'before_after') {
+                  return `
+                    <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
+                      <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
+                        <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
+                          <i class="fas fa-times"></i>
+                        </button>
                       </div>
-                      <div class="image-category-title after" style="font-size:0.875rem; font-weight:600; color:#374151;">
-                        <i class="fas fa-check-circle"></i> 作業後
-                      </div>
-                    </div>
-                    <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                  <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div class="image-category">
-                      <div class="image-list" id="${imageContent.id}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
-                        ${(imageContent.photos?.before || []).map(photo => `
-                          <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="before" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
-                            <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
-                            <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'before', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
-                              <i class="fas fa-times"></i>
-                            </button>
+                      <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="image-category">
+                          <div class="image-category-title before" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
+                            <i class="fas fa-clock"></i> 作業前
                           </div>
-                        `).join('')}
-                        <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                          <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="before" style="display:none;">
-                          <i class="fas fa-plus"></i>
-                          <span>追加</span>
-                        </label>
-                      </div>
-                    </div>
-                    <div class="image-category">
-                      <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
-                        ${(imageContent.photos?.after || []).map(photo => `
-                          <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="after" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
-                            <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
-                            <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'after', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
-                              <i class="fas fa-times"></i>
-                            </button>
+                          <div class="image-list" id="${imageContent.id}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                            ${(imageContent.photos?.before || []).map(photo => `
+                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="before" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                                <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
+                                <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'before', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
+                                  <i class="fas fa-times"></i>
+                                </button>
+                              </div>
+                            `).join('')}
+                            <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
+                              <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="before" style="display:none;">
+                              <i class="fas fa-plus"></i>
+                              <span>追加</span>
+                            </label>
                           </div>
-                        `).join('')}
-                        <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                          <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="after" style="display:none;">
-                          <i class="fas fa-plus"></i>
-                          <span>追加</span>
-                        </label>
+                        </div>
+                        <div class="image-category">
+                          <div class="image-category-title after" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
+                            <i class="fas fa-check-circle"></i> 作業後
+                          </div>
+                          <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                            ${(imageContent.photos?.after || []).map(photo => `
+                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="after" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                                <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
+                                <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'after', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
+                                  <i class="fas fa-times"></i>
+                                </button>
+                              </div>
+                            `).join('')}
+                            <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
+                              <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="after" style="display:none;">
+                              <i class="fas fa-plus"></i>
+                              <span>追加</span>
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              `).join('')}
+                  `;
+                } else {
+                  return `
+                    <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
+                      <div class="cleaning-item-image-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151;">
+                          <i class="fas fa-star"></i> 施工後
+                        </div>
+                        <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                      <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
+                        <div class="image-category">
+                          <div class="image-list" id="${imageContent.id}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                            ${(imageContent.photos?.completed || []).map(photo => `
+                              <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="completed" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                                <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
+                                <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'completed', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
+                                  <i class="fas fa-times"></i>
+                                </button>
+                              </div>
+                            `).join('')}
+                            <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
+                              <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" data-category="completed" style="display:none;">
+                              <i class="fas fa-plus"></i>
+                              <span>追加</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }
+              }).join('')}
               <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
                 <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入">
                   <i class="fas fa-image"></i>
@@ -629,7 +664,8 @@
         // セクション内画像コンテンツのイベントリスナーを設定
         if (section.imageContents && section.imageContents.length > 0) {
           section.imageContents.forEach(imageContent => {
-            setupCleaningItemImageUpload(imageContent.id, sectionId);
+            const imageType = imageContent.imageType || 'before_after';
+            setupCleaningItemImageUpload(imageContent.id, sectionId, imageType);
           });
         }
       } else if (section.type === 'image') {
@@ -3456,59 +3492,94 @@
                 </button>
               </div>
             `).join('')}
-            ${(newSection.imageContents || []).map(imageContent => `
-              <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
-                <div class="cleaning-item-image-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                  <div style="display:flex; gap:16px;">
-                    <div class="image-category-title before" style="font-size:0.875rem; font-weight:600; color:#374151;">
-                      <i class="fas fa-clock"></i> 作業前
+            ${(newSection.imageContents || []).map(imageContent => {
+              const imageType = imageContent.imageType || 'before_after';
+              if (imageType === 'before_after') {
+                return `
+                  <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
+                    <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
+                      <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${newSectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
+                        <i class="fas fa-times"></i>
+                      </button>
                     </div>
-                    <div class="image-category-title after" style="font-size:0.875rem; font-weight:600; color:#374151;">
-                      <i class="fas fa-check-circle"></i> 作業後
-                    </div>
-                  </div>
-                  <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${newSectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-                <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                  <div class="image-category">
-                    <div class="image-list" id="${imageContent.id}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
-                      ${(imageContent.photos?.before || []).map(photo => `
-                        <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="before" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
-                          <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
-                          <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'before', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
-                            <i class="fas fa-times"></i>
-                          </button>
+                    <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                      <div class="image-category">
+                        <div class="image-category-title before" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
+                          <i class="fas fa-clock"></i> 作業前
                         </div>
-                      `).join('')}
-                      <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                        <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${newSectionId}" data-image-content-id="${imageContent.id}" data-category="before" style="display:none;">
-                        <i class="fas fa-plus"></i>
-                        <span>追加</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div class="image-category">
-                    <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
-                      ${(imageContent.photos?.after || []).map(photo => `
-                        <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="after" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
-                          <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
-                          <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'after', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
-                            <i class="fas fa-times"></i>
-                          </button>
+                        <div class="image-list" id="${imageContent.id}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                          ${(imageContent.photos?.before || []).map(photo => `
+                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="before" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                              <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
+                              <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'before', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
+                                <i class="fas fa-times"></i>
+                              </button>
+                            </div>
+                          `).join('')}
+                          <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
+                            <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${newSectionId}" data-image-content-id="${imageContent.id}" data-category="before" style="display:none;">
+                            <i class="fas fa-plus"></i>
+                            <span>追加</span>
+                          </label>
                         </div>
-                      `).join('')}
-                      <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-                        <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${newSectionId}" data-image-content-id="${imageContent.id}" data-category="after" style="display:none;">
-                        <i class="fas fa-plus"></i>
-                        <span>追加</span>
-                      </label>
+                      </div>
+                      <div class="image-category">
+                        <div class="image-category-title after" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
+                          <i class="fas fa-check-circle"></i> 作業後
+                        </div>
+                        <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                          ${(imageContent.photos?.after || []).map(photo => `
+                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="after" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                              <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
+                              <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'after', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
+                                <i class="fas fa-times"></i>
+                              </button>
+                            </div>
+                          `).join('')}
+                          <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
+                            <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${newSectionId}" data-image-content-id="${imageContent.id}" data-category="after" style="display:none;">
+                            <i class="fas fa-plus"></i>
+                            <span>追加</span>
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            `).join('')}
+                `;
+              } else {
+                return `
+                  <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
+                    <div class="cleaning-item-image-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                      <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151;">
+                        <i class="fas fa-star"></i> 施工後
+                      </div>
+                      <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${newSectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                    <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
+                      <div class="image-category">
+                        <div class="image-list" id="${imageContent.id}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                          ${(imageContent.photos?.completed || []).map(photo => `
+                            <div class="image-thumb" draggable="true" data-image-url="${photo.blobUrl || photo}" data-image-id="${photo.imageId || photo}" data-category="completed" style="width:80px; height:80px; position:relative; border-radius:4px; overflow:hidden;">
+                              <img src="${photo.blobUrl || photo}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
+                              <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${newSectionId}', '${imageContent.id}', 'completed', '${photo.imageId || photo}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
+                                <i class="fas fa-times"></i>
+                              </button>
+                            </div>
+                          `).join('')}
+                          <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
+                            <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${newSectionId}" data-image-content-id="${imageContent.id}" data-category="completed" style="display:none;">
+                            <i class="fas fa-plus"></i>
+                            <span>追加</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }
+            }).join('')}
             <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
               <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${newSectionId}')" title="画像挿入">
                 <i class="fas fa-image"></i>
@@ -3669,7 +3740,8 @@
       if (newSection.type === 'cleaning' && newSection.imageContents && newSection.imageContents.length > 0) {
         setTimeout(() => {
           newSection.imageContents.forEach(imageContent => {
-            setupCleaningItemImageUpload(imageContent.id, newSectionId);
+            const imageType = imageContent.imageType || 'before_after';
+            setupCleaningItemImageUpload(imageContent.id, newSectionId, imageType);
           });
         }, 0);
       }
@@ -3853,7 +3925,77 @@
   };
 
   // 清掃項目セクションに画像コンテンツを追加（セクションタイトルなし）
-  window.addImageToCleaningItem = function(sectionId) {
+  window.addImageToCleaningItem = function(sectionId, imageType = 'before_after') {
+    // 画像タイプ選択モーダルを表示
+    openCleaningItemImageTypeModal(sectionId);
+  };
+  
+  // 清掃項目セクション用の画像タイプ選択モーダルを開く
+  function openCleaningItemImageTypeModal(sectionId) {
+    const modal = document.getElementById('cleaning-item-image-type-modal');
+    if (!modal) {
+      // モーダルが存在しない場合は作成
+      createCleaningItemImageTypeModal();
+    }
+    const modalElement = document.getElementById('cleaning-item-image-type-modal');
+    if (modalElement) {
+      modalElement.dataset.sectionId = sectionId;
+      modalElement.style.display = 'flex';
+    }
+  }
+  
+  // 清掃項目セクション用の画像タイプ選択モーダルを作成
+  function createCleaningItemImageTypeModal() {
+    const modal = document.createElement('div');
+    modal.id = 'cleaning-item-image-type-modal';
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;';
+    modal.innerHTML = `
+      <div class="modal-content" style="background:#fff; border-radius:12px; padding:24px; max-width:400px; width:90%;">
+        <div class="modal-header" style="margin-bottom:20px;">
+          <h3 style="font-size:1.25rem; font-weight:600; color:#111827;">画像タイプを選択</h3>
+        </div>
+        <div class="modal-body" style="display:flex; flex-direction:column; gap:12px;">
+          <button type="button" class="btn-image-type" data-type="before_after" style="padding:16px; background:#f9fafb; border:2px solid #e5e7eb; border-radius:8px; cursor:pointer; text-align:left; transition:all 0.2s;">
+            <div style="font-weight:600; color:#111827; margin-bottom:4px;">
+              <i class="fas fa-images"></i> 作業前・作業後
+            </div>
+            <div style="font-size:0.875rem; color:#6b7280;">作業前と作業後の写真を追加</div>
+          </button>
+          <button type="button" class="btn-image-type" data-type="completed" style="padding:16px; background:#f9fafb; border:2px solid #e5e7eb; border-radius:8px; cursor:pointer; text-align:left; transition:all 0.2s;">
+            <div style="font-weight:600; color:#111827; margin-bottom:4px;">
+              <i class="fas fa-star"></i> 施工後
+            </div>
+            <div style="font-size:0.875rem; color:#6b7280;">施工後の写真を追加</div>
+          </button>
+        </div>
+        <div class="modal-footer" style="margin-top:20px; display:flex; justify-content:flex-end;">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('cleaning-item-image-type-modal').style.display='none'" style="padding:8px 16px; background:#fff; border:1px solid #d1d5db; border-radius:6px; cursor:pointer; color:#374151;">キャンセル</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // ボタンのイベントリスナーを設定
+    modal.querySelectorAll('.btn-image-type').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const imageType = this.dataset.type;
+        const sectionId = modal.dataset.sectionId;
+        modal.style.display = 'none';
+        addCleaningItemImageContent(sectionId, imageType);
+      });
+    });
+    
+    // モーダル外クリックで閉じる
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  }
+  
+  // 清掃項目セクションに画像コンテンツを追加（実際の追加処理）
+  function addCleaningItemImageContent(sectionId, imageType = 'before_after') {
     const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
     if (!sectionBody) return;
     
@@ -3869,41 +4011,67 @@
     imageContentContainer.dataset.imageContentId = imageContentId;
     imageContentContainer.style.cssText = 'margin-top:16px; position:relative;';
     
-    const imageContentHtml = `
-      <div class="cleaning-item-image-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <div style="display:flex; gap:16px;">
-          <div class="image-category-title before" style="font-size:0.875rem; font-weight:600; color:#374151;">
-            <i class="fas fa-clock"></i> 作業前
+    let imageContentHtml = '';
+    
+    if (imageType === 'before_after') {
+      // 作業前・作業後タイプ
+      imageContentHtml = `
+        <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
+          <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContentId}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="image-category">
+            <div class="image-category-title before" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
+              <i class="fas fa-clock"></i> 作業前
+            </div>
+            <div class="image-list" id="${imageContentId}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+              <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
+                <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContentId}" data-category="before" style="display:none;">
+                <i class="fas fa-plus"></i>
+                <span>追加</span>
+              </label>
+            </div>
           </div>
-          <div class="image-category-title after" style="font-size:0.875rem; font-weight:600; color:#374151;">
-            <i class="fas fa-check-circle"></i> 作業後
+          <div class="image-category">
+            <div class="image-category-title after" style="font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:8px;">
+              <i class="fas fa-check-circle"></i> 作業後
+            </div>
+            <div class="image-list" id="${imageContentId}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+              <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
+                <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContentId}" data-category="after" style="display:none;">
+                <i class="fas fa-plus"></i>
+                <span>追加</span>
+              </label>
+            </div>
           </div>
         </div>
-        <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContentId}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div class="image-category">
-          <div class="image-list" id="${imageContentId}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
-            <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-              <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContentId}" data-category="before" style="display:none;">
-              <i class="fas fa-plus"></i>
-              <span>追加</span>
-            </label>
+      `;
+    } else if (imageType === 'completed') {
+      // 施工後タイプ
+      imageContentHtml = `
+        <div class="cleaning-item-image-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151;">
+            <i class="fas fa-star"></i> 施工後
+          </div>
+          <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContentId}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="cleaning-item-image-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
+          <div class="image-category">
+            <div class="image-list" id="${imageContentId}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+              <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
+                <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContentId}" data-category="completed" style="display:none;">
+                <i class="fas fa-plus"></i>
+                <span>追加</span>
+              </label>
+            </div>
           </div>
         </div>
-        <div class="image-category">
-          <div class="image-list" id="${imageContentId}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
-            <label class="image-add-btn" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem;">
-              <input type="file" accept="image/*" multiple class="cleaning-item-image-file-input" data-section-id="${sectionId}" data-image-content-id="${imageContentId}" data-category="after" style="display:none;">
-              <i class="fas fa-plus"></i>
-              <span>追加</span>
-            </label>
-          </div>
-        </div>
-      </div>
-    `;
+      `;
+    }
     
     imageContentContainer.innerHTML = imageContentHtml;
     
@@ -3915,33 +4083,65 @@
       if (!sections[sectionId].imageContents) {
         sections[sectionId].imageContents = [];
       }
-      sections[sectionId].imageContents.push({
-        id: imageContentId,
-        photos: { before: [], after: [] }
-      });
+      if (imageType === 'before_after') {
+        sections[sectionId].imageContents.push({
+          id: imageContentId,
+          imageType: 'before_after',
+          photos: { before: [], after: [] }
+        });
+      } else {
+        sections[sectionId].imageContents.push({
+          id: imageContentId,
+          imageType: 'completed',
+          photos: { completed: [] }
+        });
+      }
     }
     
     // 画像アップロードのイベントリスナーを設定
-    setupCleaningItemImageUpload(imageContentId, sectionId);
+    setupCleaningItemImageUpload(imageContentId, sectionId, imageType);
+    
+    // ドラッグ&ドロップを設定
+    setTimeout(() => {
+      if (imageType === 'before_after') {
+        const beforeList = document.getElementById(`${imageContentId}-before`);
+        const afterList = document.getElementById(`${imageContentId}-after`);
+        if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before', imageContentId);
+        if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after', imageContentId);
+      } else if (imageType === 'completed') {
+        const completedList = document.getElementById(`${imageContentId}-completed`);
+        if (completedList) setupImageListDragAndDrop(completedList, sectionId, 'completed', imageContentId);
+      }
+    }, 0);
     
     autoSave();
-  };
+  }
   
   // セクション内画像コンテンツの画像アップロードを設定
-  function setupCleaningItemImageUpload(imageContentId, sectionId) {
-    const beforeInput = document.querySelector(`input.cleaning-item-image-file-input[data-image-content-id="${imageContentId}"][data-category="before"]`);
-    const afterInput = document.querySelector(`input.cleaning-item-image-file-input[data-image-content-id="${imageContentId}"][data-category="after"]`);
-    
-    if (beforeInput) {
-      beforeInput.addEventListener('change', function(e) {
-        handleCleaningItemImageUpload(e, sectionId, imageContentId, 'before');
-      });
-    }
-    
-    if (afterInput) {
-      afterInput.addEventListener('change', function(e) {
-        handleCleaningItemImageUpload(e, sectionId, imageContentId, 'after');
-      });
+  function setupCleaningItemImageUpload(imageContentId, sectionId, imageType = 'before_after') {
+    if (imageType === 'before_after') {
+      const beforeInput = document.querySelector(`input.cleaning-item-image-file-input[data-image-content-id="${imageContentId}"][data-category="before"]`);
+      const afterInput = document.querySelector(`input.cleaning-item-image-file-input[data-image-content-id="${imageContentId}"][data-category="after"]`);
+      
+      if (beforeInput) {
+        beforeInput.addEventListener('change', function(e) {
+          handleCleaningItemImageUpload(e, sectionId, imageContentId, 'before');
+        });
+      }
+      
+      if (afterInput) {
+        afterInput.addEventListener('change', function(e) {
+          handleCleaningItemImageUpload(e, sectionId, imageContentId, 'after');
+        });
+      }
+    } else if (imageType === 'completed') {
+      const completedInput = document.querySelector(`input.cleaning-item-image-file-input[data-image-content-id="${imageContentId}"][data-category="completed"]`);
+      
+      if (completedInput) {
+        completedInput.addEventListener('change', function(e) {
+          handleCleaningItemImageUpload(e, sectionId, imageContentId, 'completed');
+        });
+      }
     }
   }
   
@@ -4201,9 +4401,18 @@
     if (sections[sectionId] && sections[sectionId].comments) {
       sections[sectionId].comments = sections[sectionId].comments.filter(c => c.id !== commentId);
     }
-    const commentContainer = document.querySelector(`[data-section-id="${sectionId}"] .cleaning-item-comment-container textarea[oninput*="${commentId}"]`)?.closest('.cleaning-item-comment-container');
-    if (commentContainer) {
-      commentContainer.remove();
+    // より確実なセレクターで要素を検索
+    const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (sectionCard) {
+      const commentContainers = sectionCard.querySelectorAll('.cleaning-item-comment-container');
+      commentContainers.forEach(container => {
+        const deleteBtn = container.querySelector('.cleaning-item-comment-delete');
+        if (deleteBtn && deleteBtn.onclick && deleteBtn.onclick.toString().includes(commentId)) {
+          container.remove();
+        } else if (deleteBtn && deleteBtn.getAttribute('onclick') && deleteBtn.getAttribute('onclick').includes(commentId)) {
+          container.remove();
+        }
+      });
     }
     autoSave();
   };
@@ -4229,9 +4438,18 @@
     if (sections[sectionId] && sections[sectionId].subtitles) {
       sections[sectionId].subtitles = sections[sectionId].subtitles.filter(s => s.id !== subtitleId);
     }
-    const subtitleContainer = document.querySelector(`[data-section-id="${sectionId}"] .cleaning-item-subtitle-container input[oninput*="${subtitleId}"]`)?.closest('.cleaning-item-subtitle-container');
-    if (subtitleContainer) {
-      subtitleContainer.remove();
+    // より確実なセレクターで要素を検索
+    const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (sectionCard) {
+      const subtitleContainers = sectionCard.querySelectorAll('.cleaning-item-subtitle-container');
+      subtitleContainers.forEach(container => {
+        const deleteBtn = container.querySelector('.cleaning-item-subtitle-delete');
+        if (deleteBtn && deleteBtn.onclick && deleteBtn.onclick.toString().includes(subtitleId)) {
+          container.remove();
+        } else if (deleteBtn && deleteBtn.getAttribute('onclick') && deleteBtn.getAttribute('onclick').includes(subtitleId)) {
+          container.remove();
+        }
+      });
     }
     autoSave();
   };
