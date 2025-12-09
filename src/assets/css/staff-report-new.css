@@ -70,14 +70,17 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 12px 16px;
+  padding: 12px 8px;
   background: transparent;
   border: none;
   color: #6b7280;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   position: relative;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tab-btn.active {
@@ -87,16 +90,17 @@
 
 .tab-btn .badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 4px;
+  right: 4px;
   background: #ef4444;
   color: #fff;
   font-size: 0.65rem;
   font-weight: 700;
-  padding: 2px 6px;
+  padding: 2px 5px;
   border-radius: 10px;
-  min-width: 18px;
+  min-width: 16px;
   text-align: center;
+  line-height: 1.2;
 }
 
 .tab-content {
