@@ -5057,6 +5057,245 @@
     // 自動保存
     autoSave();
   }
+  
+  // セクション内画像コンテンツの画像サムネイルにドラッグ&ドロップを設定
+  function setupCleaningItemImageThumbDragAndDrop(thumb, sectionId, imageContentId, category, url, imageId) {
+    // ドラッグ開始（PC用）
+    thumb.addEventListener('dragstart', (e) => {
+      thumb.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        source: 'cleaning-item-image',
+        sectionId: sectionId,
+        imageContentId: imageContentId,
+        category: category,
+        url: url,
+        imageId: imageId
+      }));
+    });
+    
+    // ドラッグ終了（PC用）
+    thumb.addEventListener('dragend', (e) => {
+      thumb.classList.remove('dragging');
+      document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
+    });
+    
+    // タッチ開始（スマホ用）
+    let touchStartTime = 0;
+    let isDragging = false;
+    let longPressTimer;
+    const LONG_PRESS_DURATION = 300;
+    
+    thumb.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      touchStartTime = Date.now();
+      isDragging = false;
+      thumb.classList.add('touching');
+      
+      longPressTimer = setTimeout(() => {
+        isDragging = true;
+        thumb.classList.add('dragging');
+        thumb.classList.remove('touching');
+        
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }, LONG_PRESS_DURATION);
+    }, { passive: true });
+    
+    // タッチ移動（スマホ用）
+    thumb.addEventListener('touchmove', (e) => {
+      if (!isDragging) {
+        clearTimeout(longPressTimer);
+        thumb.classList.remove('touching');
+        return;
+      }
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const touch = e.touches[0];
+      const targetList = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.image-list');
+      
+      if (targetList) {
+        document.querySelectorAll('.image-list').forEach(list => {
+          if (list !== targetList) {
+            list.classList.remove('drag-over');
+          } else {
+            list.classList.add('drag-over');
+          }
+        });
+      }
+    });
+    
+    // タッチ終了（スマホ用）
+    thumb.addEventListener('touchend', (e) => {
+      clearTimeout(longPressTimer);
+      thumb.classList.remove('touching', 'dragging');
+      
+      if (!isDragging) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const touch = e.changedTouches[0];
+      const targetList = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.image-list');
+      
+      if (targetList && targetList.id) {
+        const targetIdParts = targetList.id.split('-');
+        const targetImageContentId = targetIdParts.slice(0, -1).join('-');
+        const targetCategory = targetIdParts[targetIdParts.length - 1];
+        
+        // セクション内画像コンテンツ間の移動
+        if (targetImageContentId && targetCategory && 
+            (targetImageContentId !== imageContentId || targetCategory !== category)) {
+          moveCleaningItemImage(sectionId, imageContentId, category, sectionId, targetImageContentId, targetCategory, url, imageId);
+        }
+      }
+      
+      document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
+      isDragging = false;
+    }, { passive: false });
+    
+    thumb.addEventListener('touchcancel', () => {
+      clearTimeout(longPressTimer);
+      thumb.classList.remove('touching', 'dragging');
+      isDragging = false;
+      document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
+    });
+  }
+  
+  // セクション内画像コンテンツの画像リストにドラッグ&ドロップを設定
+  function setupCleaningItemImageListDragAndDrop(listElement, sectionId, imageContentId, category) {
+    // ドラッグオーバー（PC用）
+    listElement.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'move';
+      listElement.classList.add('drag-over');
+    });
+    
+    // ドラッグリーブ（PC用）
+    listElement.addEventListener('dragleave', (e) => {
+      if (!listElement.contains(e.relatedTarget)) {
+        listElement.classList.remove('drag-over');
+      }
+    });
+    
+    // ドロップ（PC用）
+    listElement.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      listElement.classList.remove('drag-over');
+      
+      const data = e.dataTransfer.getData('application/json');
+      if (!data) return;
+      
+      try {
+        const dragData = JSON.parse(data);
+        
+        // セクション内画像コンテンツ間の移動
+        if (dragData.source === 'cleaning-item-image' && 
+            dragData.sectionId && dragData.imageContentId && dragData.category && dragData.url) {
+          const { sectionId: sourceSectionId, imageContentId: sourceImageContentId, category: sourceCategory, url, imageId } = dragData;
+          
+          if ((sourceImageContentId !== imageContentId || sourceCategory !== category)) {
+            moveCleaningItemImage(sourceSectionId, sourceImageContentId, sourceCategory, sectionId, imageContentId, category, url, imageId);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse drag data:', e);
+      }
+    });
+  }
+  
+  // セクション内画像コンテンツの画像を移動
+  function moveCleaningItemImage(sourceSectionId, sourceImageContentId, sourceCategory, targetSectionId, targetImageContentId, targetCategory, url, imageId) {
+    // データから削除
+    if (!sections[sourceSectionId] || !sections[sourceSectionId].imageContents) return;
+    const sourceImageContent = sections[sourceSectionId].imageContents.find(ic => ic.id === sourceImageContentId);
+    if (!sourceImageContent || !sourceImageContent.photos[sourceCategory]) return;
+    
+    const sourcePhotos = sourceImageContent.photos[sourceCategory];
+    let imageData = null;
+    let sourceIndex = -1;
+    
+    for (let i = 0; i < sourcePhotos.length; i++) {
+      const photo = sourcePhotos[i];
+      if (photo.imageId === imageId || photo.blobUrl === url) {
+        imageData = photo;
+        sourceIndex = i;
+        break;
+      }
+    }
+    
+    if (sourceIndex === -1 || !imageData) return;
+    
+    sourcePhotos.splice(sourceIndex, 1);
+    
+    // データに追加
+    if (!sections[targetSectionId] || !sections[targetSectionId].imageContents) return;
+    let targetImageContent = sections[targetSectionId].imageContents.find(ic => ic.id === targetImageContentId);
+    if (!targetImageContent) return;
+    
+    if (!targetImageContent.photos[targetCategory]) {
+      targetImageContent.photos[targetCategory] = [];
+    }
+    targetImageContent.photos[targetCategory].push(imageData);
+    
+    // UIから削除
+    const sourceThumb = document.querySelector(
+      `.image-thumb[data-image-content-id="${sourceImageContentId}"][data-category="${sourceCategory}"][data-image-url="${url}"]`
+    );
+    if (sourceThumb) {
+      sourceThumb.remove();
+    }
+    
+    // UIに追加
+    const targetList = document.getElementById(`${targetImageContentId}-${targetCategory}`);
+    if (!targetList) return;
+    
+    const addBtn = targetList.querySelector('.image-add-btn');
+    const newThumb = document.createElement('div');
+    newThumb.className = 'image-thumb';
+    newThumb.draggable = true;
+    newThumb.dataset.imageUrl = url;
+    newThumb.dataset.imageId = imageId;
+    newThumb.dataset.category = targetCategory;
+    newThumb.dataset.sectionId = targetSectionId;
+    newThumb.dataset.imageContentId = targetImageContentId;
+    newThumb.style.cssText = 'width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;';
+    
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = 'Photo';
+    img.draggable = false;
+    img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'image-thumb-remove';
+    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    removeBtn.style.cssText = 'position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;';
+    removeBtn.onclick = function() {
+      removeCleaningItemImage(targetSectionId, targetImageContentId, targetCategory, imageId, newThumb);
+    };
+    
+    newThumb.appendChild(img);
+    newThumb.appendChild(removeBtn);
+    
+    // ドラッグ&ドロップを設定
+    setupCleaningItemImageThumbDragAndDrop(newThumb, targetSectionId, targetImageContentId, targetCategory, url, imageId);
+    
+    if (addBtn) {
+      targetList.insertBefore(newThumb, addBtn);
+    } else {
+      targetList.appendChild(newThumb);
+    }
+    
+    // 自動保存
+    autoSave();
+  }
 
   // 画像削除
   window.removeImage = function(sectionId, category, url, imageId, btn) {
