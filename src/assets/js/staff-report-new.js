@@ -1917,11 +1917,20 @@
     const sectionAddCommentBtn = document.getElementById('section-add-comment');
     const sectionAddImageBtn = document.getElementById('section-add-image');
     
+    console.log('[SectionAdd] Elements found:', {
+      toggleBtn: !!sectionAddToggleBtn,
+      icons: !!sectionAddIcons,
+      cleaningBtn: !!sectionAddCleaningBtn,
+      commentBtn: !!sectionAddCommentBtn,
+      imageBtn: !!sectionAddImageBtn
+    });
+    
     if (sectionAddToggleBtn && sectionAddIcons) {
       sectionAddToggleBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        const isVisible = sectionAddIcons.style.display !== 'none';
+        console.log('[SectionAdd] Toggle button clicked');
+        const isVisible = sectionAddIcons.style.display !== 'none' && sectionAddIcons.style.display !== '';
         if (isVisible) {
           sectionAddIcons.style.display = 'none';
           sectionAddToggleBtn.classList.remove('active');
@@ -1938,6 +1947,7 @@
       sectionAddCleaningBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        console.log('[SectionAdd] Cleaning button clicked');
         if (window.addCleaningItemSection) {
           window.addCleaningItemSection();
         } else {

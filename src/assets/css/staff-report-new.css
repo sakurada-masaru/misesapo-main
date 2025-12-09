@@ -345,6 +345,11 @@
   line-height: 1.5;
 }
 
+/* 開始時刻フィールドのプレースホルダーをスピナーボタンの後に表示 */
+.date-time-input-wrapper:has([data-placeholder="始--:--"])::before {
+  left: 40px; /* スピナーボタンの幅分右にずらす */
+}
+
 .date-time-input-wrapper:has(input[value]:not([value=""]))::before,
 .date-time-input-wrapper:has(input:focus)::before {
   display: none;
@@ -407,6 +412,9 @@ input[type="date"].date-time-input:invalid {
 /* time入力フィールドの表示を統一 */
 input[type="time"].date-time-input {
   color: #111827;
+  text-align: left;
+  direction: ltr;
+  padding-left: 12px;
 }
 
 input[type="time"].date-time-input::-webkit-datetime-edit-text {
@@ -443,6 +451,31 @@ input[type="time"].date-time-input:invalid {
 .date-time-input-wrapper:has([data-placeholder]) input[type="time"].date-time-input:invalid::-webkit-datetime-edit-hour-field,
 .date-time-input-wrapper:has([data-placeholder]) input[type="time"].date-time-input:invalid::-webkit-datetime-edit-minute-field {
   color: transparent;
+}
+
+/* time入力フィールドのスピナーボタン（プラス/マイナス）を左側に配置 */
+input[type="time"].date-time-input::-webkit-inner-spin-button,
+input[type="time"].date-time-input::-webkit-outer-spin-button {
+  margin-left: 0;
+  margin-right: auto;
+  position: absolute;
+  left: 12px;
+  height: 20px;
+  width: 20px;
+}
+
+/* time入力フィールドのdatetime-edit要素を左寄せ（スピナーの後に配置） */
+input[type="time"].date-time-input::-webkit-datetime-edit {
+  text-align: left;
+  margin-left: 32px; /* スピナーボタンの幅分右にずらす */
+  padding-left: 0;
+}
+
+input[type="time"].date-time-input::-webkit-datetime-edit-hour-field,
+input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
+  text-align: left;
+  padding-left: 0;
+  margin-left: 0;
 }
 
 .form-row.three-col-inline .date-time-group {
@@ -1291,8 +1324,9 @@ input[type="time"].date-time-input:invalid {
   box-shadow: 0 2px 8px rgba(255, 103, 156, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
   position: relative;
-  z-index: 10;
+  z-index: 100;
   pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .section-add-toggle-btn:hover {
