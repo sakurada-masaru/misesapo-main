@@ -340,7 +340,7 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #111827 !important; /* 黒字で表示（重要度を上げて確実に適用） */
+  color: #9ca3af !important; /* 灰色で表示 */
   font-weight: 500;
   pointer-events: none;
   z-index: 2; /* z-indexを上げて確実に表示 */
@@ -357,8 +357,10 @@
   left: 40px; /* スピナーボタンの幅分右にずらす */
 }
 
+/* 値が入力されている場合、またはフォーカス時にプレースホルダーを非表示 */
 .date-time-input-wrapper:has(input[value]:not([value=""]))::before,
-.date-time-input-wrapper:has(input:focus)::before {
+.date-time-input-wrapper:has(input:focus)::before,
+.date-time-input-wrapper:has(input:valid:not(:placeholder-shown))::before {
   display: none;
 }
 
@@ -438,9 +440,14 @@ input[type="time"].date-time-input:invalid::-webkit-datetime-edit-text {
   color: #111827;
 }
 
-/* 値が入力されていない場合の表示 */
+/* 値が入力されていない場合の表示（プレースホルダーが表示されるため、入力フィールド自体は透明に） */
 input[type="time"].date-time-input:invalid {
-  color: rgba(255, 255, 255, 0.6);
+  color: transparent; /* プレースホルダーが表示されるため、入力フィールド自体は透明に */
+}
+
+/* 値が入力されている場合は黒字で表示 */
+input[type="time"].date-time-input:valid {
+  color: #111827;
 }
 
 /* time入力フィールドのプレースホルダーを非表示（data-placeholderがある場合） */
