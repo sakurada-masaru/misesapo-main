@@ -643,11 +643,15 @@
                     </div>
                   `;
                 } else {
+                  // 次回ご提案タブかどうかを判定
+                  const activeTab = document.querySelector('.tab-btn.active');
+                  const isProposal = activeTab && activeTab.dataset.tab === 'proposal';
+                  const labelText = isProposal ? 'ご提案箇所' : '施工後';
                   return `
                     <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
                       <div class="cleaning-item-image-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151;">
-                          <i class="fas fa-star"></i> 施工後
+                          <i class="fas fa-star"></i> ${labelText}
                         </div>
                         <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
                           <i class="fas fa-times"></i>
