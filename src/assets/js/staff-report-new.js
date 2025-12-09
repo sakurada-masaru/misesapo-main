@@ -379,7 +379,7 @@
         
         // 新規作成タブに切り替えた場合はフォームと画像ストックをリセット
         if (targetTab === 'new') {
-          await resetFormForNewReport();
+          await resetFormForNewReport('new');
           // リセット後、セクションが空の場合はデフォルトで清掃項目セクションを追加
           if (Object.keys(sections).length === 0 && window.addCleaningItemSection) {
             window.addCleaningItemSection();
@@ -401,6 +401,18 @@
         }
       });
     });
+    
+    // 初期表示時の処理（アクティブなタブに対してセクションを追加）
+    const activeTab = document.querySelector('.tabs-navigation .tab-btn.active');
+    if (activeTab) {
+      const activeTabType = activeTab.dataset.tab;
+      if (activeTabType === 'new' || activeTabType === 'proposal') {
+        // 初期表示時は自動保存データを読み込まず、直接セクションを追加
+        if (Object.keys(sections).length === 0 && window.addCleaningItemSection) {
+          window.addCleaningItemSection();
+        }
+      }
+    }
   }
 
   // 新規レポート作成時のフォームリセット
