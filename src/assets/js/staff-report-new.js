@@ -442,28 +442,17 @@
         // HTMLを再作成
         const sectionAddIconsAreaHTML = `
           <div class="section-add-icons-area" id="${sectionAddIconsAreaId}">
-            <button type="button" class="section-add-toggle-btn" id="${toggleBtnId}">
-              <i class="fas fa-plus"></i>
-            </button>
             <div class="section-add-hint" id="${hintId}">
               <span>↓New section↓</span>
             </div>
-            <div class="section-add-icons" id="${iconsId}" style="display: none;">
-              <button type="button" class="section-add-icon-btn" id="${cleaningBtnId}" data-section-type="cleaning" title="清掃項目">
-                <i class="fas fa-list"></i>
-              </button>
-              <button type="button" class="section-add-icon-btn" id="${commentBtnId}" data-section-type="comment" title="コメント">
-                <i class="fas fa-comment"></i>
-              </button>
-              <button type="button" class="section-add-icon-btn" id="${imageBtnId}" data-section-type="image" title="画像">
-                <i class="fas fa-image"></i>
-              </button>
-            </div>
+            <button type="button" class="section-add-toggle-btn" id="${toggleBtnId}">
+              <i class="fas fa-plus"></i>
+            </button>
           </div>
         `;
         reportContent.insertAdjacentHTML('beforeend', sectionAddIconsAreaHTML);
         // イベントリスナーを再設定
-        setupSectionAddButtons(toggleBtnId, iconsId, cleaningBtnId, commentBtnId, imageBtnId, hintId);
+        setupSectionAddButtons(toggleBtnId, tabType);
       }
     }
     
