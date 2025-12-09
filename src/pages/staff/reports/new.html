@@ -218,6 +218,13 @@
         
         <!-- 画像ストックタブ -->
         <div id="tab-stock" class="tab-content active">
+          <div class="stock-selection-header" style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+            <label class="btn-upload-stock" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: #FF679C; color: #fff; border-radius: 8px; cursor: pointer; border: none;">
+              <input type="file" accept="image/*" multiple id="warehouse-stock-file-input" style="display:none;">
+              <i class="fas fa-plus"></i>
+              <span>画像を追加</span>
+            </label>
+          </div>
           <div class="stock-selection-grid" id="stock-selection-grid">
             <p class="loading">読み込み中...</p>
           </div>

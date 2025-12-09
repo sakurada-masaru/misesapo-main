@@ -806,8 +806,8 @@ input[type="time"].date-time-input:invalid {
 
 .image-stock-item {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 120px;
+  height: 120px;
   border-radius: 8px;
   overflow: hidden;
   cursor: move;
@@ -838,21 +838,24 @@ input[type="time"].date-time-input:invalid {
 
 .image-stock-item-remove {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 20px;
-  height: 20px;
-  background: rgba(239, 68, 68, 0.9);
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 103, 156, 0.9);
   color: #fff;
   border: none;
   border-radius: 50%;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   transition: opacity 0.2s;
+  padding: 0;
+  min-width: 18px;
+  min-height: 18px;
 }
 
 .image-stock-item:hover .image-stock-item-remove {
@@ -1628,8 +1631,8 @@ input[type="time"].date-time-input:invalid {
 }
 
 .image-thumb {
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -1667,15 +1670,15 @@ input[type="time"].date-time-input:invalid {
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  min-height: 24px;
-  background: rgba(239, 68, 68, 0.9);
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  background: rgba(255, 103, 156, 0.9);
   color: #fff;
   border: none;
   border-radius: 50%;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -2684,8 +2687,8 @@ body.dark-mode .modal-footer {
   }
   
   .image-thumb {
-    width: 70px;
-    height: 70px;
+    width: 120px;
+    height: 120px;
   }
 }
 
@@ -2800,14 +2803,22 @@ body.dark-mode .modal-footer {
   
   /* タッチターゲットの最小サイズ確保 */
   .dropdown-arrow-btn,
-  .section-delete,
-  .image-thumb-remove,
-  .image-stock-item-remove {
+  .section-delete {
     min-width: 44px;
     min-height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  
+  /* 画像削除ボタンのサイズを適切に調整 */
+  .image-thumb-remove,
+  .image-stock-item-remove {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    font-size: 0.6rem;
   }
   
   /* スクロールの改善 */
@@ -2868,7 +2879,7 @@ html {
   font-weight: 600;
   color: #111827;
   margin-bottom: 8px;
-}
+  }
 
 .preview-store {
   font-size: 1rem;

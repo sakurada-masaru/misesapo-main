@@ -94,10 +94,10 @@
       const formSelectModal = document.getElementById('report-store-select-modal');
       const options = allStores.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
       if (filterSelect) {
-        filterSelect.innerHTML = '<option value="">すべての店舗</option>' + options;
+      filterSelect.innerHTML = '<option value="">すべての店舗</option>' + options;
       }
       if (formSelect) {
-        formSelect.innerHTML = '<option value="">選択してください</option>' + options;
+      formSelect.innerHTML = '<option value="">選択してください</option>' + options;
       }
       if (formSelectModal) {
         formSelectModal.innerHTML = '<option value="">選択してください</option>' + options;

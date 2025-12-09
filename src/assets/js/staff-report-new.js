@@ -60,7 +60,7 @@
     function openBrandModal() {
       if (typeof window.openBrandModal === 'function') {
         window.openBrandModal();
-      }
+          }
     }
     
     // 下矢印ボタンをクリックしたとき：モーダルを開く
@@ -530,6 +530,7 @@
                 <option value="__other__">その他（自由入力）</option>
               </select>
               <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${section.item_name && !serviceItems.find(si => si.title === section.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)" value="${escapeHtml(section.item_name || '')}">
+              <textarea class="form-input cleaning-item-notes" placeholder="メモや備考を入力してください" style="margin-top:8px; min-height:80px; resize:vertical;" oninput="updateCleaningItemNotes('${sectionId}', this.value)">${escapeHtml(section.notes || '')}</textarea>
             </div>
           </div>
         `;
@@ -777,7 +778,8 @@
     document.addEventListener('input', (e) => {
       if (e.target.classList.contains('section-textarea') || 
           e.target.classList.contains('cleaning-item-select') ||
-          e.target.classList.contains('cleaning-item-custom')) {
+          e.target.classList.contains('cleaning-item-custom') ||
+          e.target.classList.contains('cleaning-item-notes')) {
         autoSave();
       }
     }, true);
@@ -1086,11 +1088,11 @@
         photos: { completed: photos.completed || [] }
       };
       
-    const html = `
-      <div class="section-card" data-section-id="${sectionId}">
-        <div class="section-header">
+      const html = `
+        <div class="section-card" data-section-id="${sectionId}">
+          <div class="section-header">
           <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
-          <span class="section-title"><i class="fas fa-image"></i> 画像（施工後）</span>
+            <span class="section-title"><i class="fas fa-image"></i> 画像（施工後）</span>
           <div class="section-header-actions">
             <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
               <i class="fas fa-copy"></i>
@@ -1099,7 +1101,7 @@
               <i class="fas fa-trash"></i>
             </button>
           </div>
-        </div>
+          </div>
           <div class="section-body">
             <div class="image-grid image-grid-completed">
               <div class="image-category image-category-completed">
@@ -1118,10 +1120,11 @@
                       </button>
                     </div>
                   `).join('')}
-                  <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'completed')">
+                  <label class="image-add-btn" style="cursor: pointer;">
+                    <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${sectionId}" data-category="completed" style="display:none;">
                     <i class="fas fa-plus"></i>
                     <span>追加</span>
-                  </button>
+                  </label>
                 </div>
               </div>
             </div>
@@ -1172,10 +1175,11 @@
                     </button>
                   </div>
                 `).join('')}
-                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'before')">
+                <label class="image-add-btn" style="cursor: pointer;">
+                  <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${sectionId}" data-category="before" style="display:none;">
                   <i class="fas fa-plus"></i>
                   <span>追加</span>
-                </button>
+                </label>
               </div>
             </div>
             <div class="image-category">
@@ -1189,10 +1193,11 @@
                     </button>
                   </div>
                 `).join('')}
-                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'after')">
+                <label class="image-add-btn" style="cursor: pointer;">
+                  <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${sectionId}" data-category="after" style="display:none;">
                   <i class="fas fa-plus"></i>
                   <span>追加</span>
-                </button>
+                </label>
               </div>
             </div>
           </div>
@@ -1683,13 +1688,13 @@
       
       if (filtered.length === 0) {
         html += '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
-      } else {
-        html += filtered.map(store => {
-          const name = store.store_name || store.name;
-          const id = store.store_id || store.id;
-          const brandId = store.brand_id || store.brandId;
-          return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}" data-brand-id="${brandId || ''}">${escapeHtml(name)}</div>`;
-        }).join('');
+        } else {
+      html += filtered.map(store => {
+        const name = store.store_name || store.name;
+        const id = store.store_id || store.id;
+        const brandId = store.brand_id || store.brandId;
+        return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}" data-brand-id="${brandId || ''}">${escapeHtml(name)}</div>`;
+      }).join('');
       }
       
       modalResults.innerHTML = html;
@@ -1767,7 +1772,7 @@
         closeStoreModal();
       }
     });
-
+    
     // 初期化時に店舗セレクトボックスを設定（モーダル方式では不要）
 
     // セクション選択モードボタン
@@ -1854,7 +1859,7 @@
         updateSectionCardsForSelection();
       });
     }
-    
+
     // 追加ボタン
     const addCleaningItemBtn = document.getElementById('add-cleaning-item');
     const addImageBtn = document.getElementById('add-image');
@@ -2006,8 +2011,52 @@
     // 画像選択確定
     document.getElementById('save-images-btn').addEventListener('click', saveSelectedImages);
 
+    // 画像ストックタブの「画像を追加」ボタン
+    const warehouseStockFileInput = document.getElementById('warehouse-stock-file-input');
+    if (warehouseStockFileInput) {
+      warehouseStockFileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        await addImagesToStock(files);
+        e.target.value = ''; // リセット
+        renderStockSelection(); // 選択グリッドを更新
+      });
+    }
+
     // 画像ストック機能
     setupImageStock();
+    
+    // セクション内の画像追加ボタンのファイル選択イベント
+    document.addEventListener('change', async (e) => {
+      if (e.target.classList.contains('section-image-file-input')) {
+        const sectionId = e.target.dataset.sectionId;
+        const category = e.target.dataset.category;
+        const files = Array.from(e.target.files);
+        
+        if (files.length === 0) return;
+        
+        // 画像を画像ストックに追加（AWS画像倉庫にも同時にアップロード）
+        await addImagesToStock(files);
+        
+        // 選択した画像をセクションに追加
+        const section = sections[sectionId];
+        if (section && section.type === 'image') {
+          const imageList = document.getElementById(`${sectionId}-${category}`);
+          if (imageList) {
+            // 最新の画像ストックから追加された画像を取得
+            const latestImages = imageStock.slice(-files.length);
+            latestImages.forEach(imageData => {
+              if (imageData && imageData.blobUrl) {
+                addImageToSectionFromStock(imageData, sectionId, category);
+              }
+            });
+          }
+        }
+        
+        e.target.value = ''; // リセット
+      }
+    }, true);
     
   }
 
@@ -2021,13 +2070,13 @@
 
     // ファイル選択
     if (stockFileInput) {
-      stockFileInput.addEventListener('change', async (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length === 0) return;
+    stockFileInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
 
-        await addImagesToStock(files);
-        e.target.value = ''; // リセット
-      });
+      await addImagesToStock(files);
+      e.target.value = ''; // リセット
+    });
     }
 
     // 選択モード切り替え
@@ -2087,28 +2136,28 @@
 
     // すべて削除
     if (clearStockBtn) {
-      clearStockBtn.addEventListener('click', async () => {
+    clearStockBtn.addEventListener('click', async () => {
         const shouldClear = await showConfirm('画像ストックのクリア', '画像ストック内のすべての画像を削除しますか？');
         if (shouldClear) {
-          // Blob URLを解放
-          imageStock.forEach(item => {
-            if (item.blobUrl) {
-              URL.revokeObjectURL(item.blobUrl);
-            }
-          });
-          
-          imageStock = [];
-          await clearImageStockDB();
+        // Blob URLを解放
+        imageStock.forEach(item => {
+          if (item.blobUrl) {
+            URL.revokeObjectURL(item.blobUrl);
+          }
+        });
+        
+        imageStock = [];
+        await clearImageStockDB();
           selectedImageIds.clear();
           isMultiSelectMode = false;
-          renderImageStock();
-        }
-      });
+        renderImageStock();
+      }
+    });
     }
 
     // 画像ストックグリッドのドロップゾーン設定
     if (stockGrid) {
-      setupImageStockDropZone(stockGrid);
+    setupImageStockDropZone(stockGrid);
     }
   }
 
@@ -2273,33 +2322,67 @@
           // 画像を最適化・圧縮
           const optimizedBlob = await optimizeImage(file);
           
-          // 画像IDを生成
-          const imageId = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          
-          // Blob URLを作成（プレビュー用）
+        // 画像IDを生成
+        const imageId = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Blob URLを作成（プレビュー用）
           const blobUrl = URL.createObjectURL(optimizedBlob);
-          
-          // ArrayBufferに変換（IndexedDB保存用）
+        
+        // ArrayBufferに変換（IndexedDB保存用）
           const arrayBuffer = await optimizedBlob.arrayBuffer();
-          
-          // 画像データオブジェクト
-          const imageData = {
-            id: imageId,
-            fileName: file.name,
+        
+        // 画像データオブジェクト
+        const imageData = {
+          id: imageId,
+          fileName: file.name,
             fileType: 'image/jpeg', // 最適化後は常にJPEG
             fileSize: optimizedBlob.size,
             originalFileSize: file.size,
-            blobData: arrayBuffer,
-            blobUrl: blobUrl,
-            uploaded: false,
-            createdAt: new Date().toISOString()
+          blobData: arrayBuffer,
+          blobUrl: blobUrl,
+          uploaded: false,
+          warehouseUrl: null, // AWS画像倉庫のURL
+          createdAt: new Date().toISOString()
+        };
+        
+        // AWS画像倉庫に同時にアップロード
+        try {
+          const cleaningDate = document.getElementById('report-date')?.value || new Date().toISOString().split('T')[0];
+          const base64 = await blobToBase64(optimizedBlob);
+          
+          const requestBody = {
+            image: base64,
+            category: 'after', // 画像ストックの画像はデフォルトで'after'カテゴリ
+            cleaning_date: cleaningDate
           };
           
-          // IndexedDBに保存
-          await saveImageToDB(imageData);
+          const response = await fetch(`${REPORT_API}/staff/report-images`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${await getFirebaseIdToken()}`
+            },
+            body: JSON.stringify(requestBody)
+          });
           
-          // メモリにも追加
-          imageStock.push(imageData);
+          if (response.ok) {
+            const result = await response.json();
+            imageData.warehouseUrl = result.image?.url || result.url || null;
+            imageData.uploaded = true;
+            console.log('[ImageStock] Image uploaded to warehouse:', imageData.warehouseUrl);
+          } else {
+            console.warn('[ImageStock] Failed to upload to warehouse:', response.status);
+          }
+        } catch (error) {
+          console.error('[ImageStock] Error uploading to warehouse:', error);
+          // エラーが発生しても画像ストックには追加する
+        }
+        
+        // IndexedDBに保存
+        await saveImageToDB(imageData);
+        
+        // メモリにも追加
+        imageStock.push(imageData);
           
           processedCount++;
           
@@ -2312,8 +2395,8 @@
           }
           
           return imageData;
-        } catch (error) {
-          console.error('Error adding image to stock:', error);
+      } catch (error) {
+        console.error('Error adding image to stock:', error);
           processedCount++;
           return null;
         }
@@ -2394,9 +2477,9 @@
               <i class="fas fa-check-circle"></i>
             </div>
           ` : `
-            <button type="button" class="image-stock-item-remove" onclick="removeFromStock('${imageData.id}')">
-              <i class="fas fa-times"></i>
-            </button>
+          <button type="button" class="image-stock-item-remove" onclick="removeFromStock('${imageData.id}')">
+            <i class="fas fa-times"></i>
+          </button>
           `}
         </div>
       `;
@@ -2404,9 +2487,9 @@
 
     // 各ストックアイテムにドラッグ&ドロップを設定（選択モードでない場合のみ）
     if (!isMultiSelectMode) {
-      stockGrid.querySelectorAll('.image-stock-item').forEach(item => {
-        setupStockItemDragAndDrop(item);
-      });
+    stockGrid.querySelectorAll('.image-stock-item').forEach(item => {
+      setupStockItemDragAndDrop(item);
+    });
     }
   }
 
@@ -2724,7 +2807,7 @@
   window.addCleaningItemSection = function() {
     sectionCounter++;
     const sectionId = `section-${sectionCounter}`;
-    sections[sectionId] = { type: 'cleaning', item_name: '' };
+    sections[sectionId] = { type: 'cleaning', item_name: '', notes: '' };
 
     const options = serviceItems.map(item => 
       `<option value="${escapeHtml(item.title)}">${escapeHtml(item.title)}</option>`
@@ -2740,8 +2823,8 @@
               <i class="fas fa-copy"></i>
             </button>
             <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
-              <i class="fas fa-trash"></i>
-            </button>
+            <i class="fas fa-trash"></i>
+          </button>
           </div>
         </div>
         <div class="section-body">
@@ -2751,6 +2834,7 @@
             <option value="__other__">その他（自由入力）</option>
           </select>
           <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)">
+          <textarea class="form-input cleaning-item-notes" placeholder="メモや備考を入力してください" style="margin-top:8px; min-height:80px; resize:vertical;" oninput="updateCleaningItemNotes('${sectionId}', this.value)"></textarea>
         </div>
       </div>
     `;
@@ -2822,8 +2906,8 @@
               <i class="fas fa-copy"></i>
             </button>
             <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
-              <i class="fas fa-trash"></i>
-            </button>
+            <i class="fas fa-trash"></i>
+          </button>
           </div>
         </div>
         <div class="section-body">
@@ -2834,10 +2918,11 @@
                 <div class="image-placeholder">
                   <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
                 </div>
-                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'before')">
+                <label class="image-add-btn" style="cursor: pointer;">
+                  <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${sectionId}" data-category="before" style="display:none;">
                   <i class="fas fa-plus"></i>
                   <span>追加</span>
-                </button>
+                </label>
               </div>
             </div>
             <div class="image-category">
@@ -2846,10 +2931,11 @@
                 <div class="image-placeholder">
                   <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
                 </div>
-                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'after')">
+                <label class="image-add-btn" style="cursor: pointer;">
+                  <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${sectionId}" data-category="after" style="display:none;">
                   <i class="fas fa-plus"></i>
                   <span>追加</span>
-                </button>
+                </label>
               </div>
             </div>
           </div>
@@ -2911,8 +2997,8 @@
               <i class="fas fa-copy"></i>
             </button>
             <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
-              <i class="fas fa-trash"></i>
-            </button>
+            <i class="fas fa-trash"></i>
+          </button>
           </div>
         </div>
         <div class="section-body">
@@ -2923,10 +3009,11 @@
                 <div class="image-placeholder">
                   <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
                 </div>
-                <button type="button" class="image-add-btn" onclick="openImageDialog('${sectionId}', 'completed')">
-                  <i class="fas fa-plus"></i>
-                  <span>追加</span>
-                </button>
+                  <label class="image-add-btn" style="cursor: pointer;">
+                    <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${sectionId}" data-category="completed" style="display:none;">
+                    <i class="fas fa-plus"></i>
+                    <span>追加</span>
+                  </label>
               </div>
             </div>
           </div>
@@ -2985,8 +3072,8 @@
               <i class="fas fa-copy"></i>
             </button>
             <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
-              <i class="fas fa-trash"></i>
-            </button>
+            <i class="fas fa-trash"></i>
+          </button>
           </div>
         </div>
         <div class="section-body">
@@ -3043,8 +3130,8 @@
               <i class="fas fa-copy"></i>
             </button>
             <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
-              <i class="fas fa-trash"></i>
-            </button>
+            <i class="fas fa-trash"></i>
+          </button>
           </div>
         </div>
         <div class="section-body">
@@ -3188,6 +3275,7 @@
               <option value="__other__">その他（自由入力）</option>
             </select>
             <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${newSection.item_name && !serviceItems.find(si => si.title === newSection.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItem('${newSectionId}', this.value)" value="${escapeHtml(newSection.item_name || '')}">
+            <textarea class="form-input cleaning-item-notes" placeholder="メモや備考を入力してください" style="margin-top:8px; min-height:80px; resize:vertical;" oninput="updateCleaningItemNotes('${newSectionId}', this.value)">${escapeHtml(newSection.notes || '')}</textarea>
           </div>
         </div>
       `;
@@ -3256,10 +3344,11 @@
                     <div class="image-placeholder">
                       <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
                     </div>
-                    <button type="button" class="image-add-btn" onclick="openImageDialog('${newSectionId}', 'before')">
+                    <label class="image-add-btn" style="cursor: pointer;">
+                      <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${newSectionId}" data-category="before" style="display:none;">
                       <i class="fas fa-plus"></i>
                       <span>追加</span>
-                    </button>
+                    </label>
                   </div>
                 </div>
                 <div class="image-category">
@@ -3268,10 +3357,11 @@
                     <div class="image-placeholder">
                       <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
                     </div>
-                    <button type="button" class="image-add-btn" onclick="openImageDialog('${newSectionId}', 'after')">
+                    <label class="image-add-btn" style="cursor: pointer;">
+                      <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${newSectionId}" data-category="after" style="display:none;">
                       <i class="fas fa-plus"></i>
                       <span>追加</span>
-                    </button>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -3303,10 +3393,11 @@
                     <div class="image-placeholder">
                       <img src="${DEFAULT_NO_PHOTO_IMAGE}" alt="写真を撮り忘れました" class="default-no-photo-image">
                     </div>
-                    <button type="button" class="image-add-btn" onclick="openImageDialog('${newSectionId}', 'completed')">
+                    <label class="image-add-btn" style="cursor: pointer;">
+                      <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${newSectionId}" data-category="completed" style="display:none;">
                       <i class="fas fa-plus"></i>
                       <span>追加</span>
-                    </button>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -3415,6 +3506,13 @@
     }
     
     updateCleaningItemsList();
+  };
+
+  // 清掃項目のメモ・備考を更新
+  window.updateCleaningItemNotes = function(sectionId, value) {
+    if (sections[sectionId]) {
+      sections[sectionId].notes = value;
+    }
   };
 
   // セクション内容更新

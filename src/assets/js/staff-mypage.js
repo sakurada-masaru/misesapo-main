@@ -2422,9 +2422,9 @@ function saveSectionLayout() {
                 Math.abs(pos.x) > 100000 || Math.abs(pos.y) > 100000 ||
                 pos.x < 0 || pos.y < 0 || pos.x >= gridWidth || pos.y >= gridHeight)) {
       console.warn('[Layout] Skipping invalid position when saving:', container.dataset.containerId, 'x:', pos.x, 'y:', pos.y);
-      return {
-        id: container.dataset.containerId,
-        cost: parseInt(container.dataset.containerCost) || 1,
+    return {
+      id: container.dataset.containerId,
+      cost: parseInt(container.dataset.containerCost) || 1,
         position: null
       };
     }
@@ -2663,7 +2663,7 @@ function autoAlignContainers(grid, containers) {
           placedRects.push(newRect);
           placed = true;
           console.log('[Layout] Auto-aligned container:', container.dataset.containerId, 'at x:', currentX, 'y:', currentY);
-        } else {
+    } else {
           // 重複している場合、次の位置を試す
           // 重複しているコンテナの右端までスキップ
           let skipX = currentX + CELL_SIZE;
@@ -2758,7 +2758,7 @@ function autoAlignContainers(grid, containers) {
         };
         placedRects.push(newRect);
         console.log('[Layout] Auto-aligned container (first):', container.dataset.containerId, 'at x: 0, y: 0');
-      }
+    }
     }
   });
   
