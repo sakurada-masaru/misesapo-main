@@ -4306,11 +4306,8 @@
           // AWS画像倉庫から選択
           openCleaningItemImageWarehouseDialog(modalSectionId, modalImageContentId, modalCategory);
         } else if (source === 'library') {
-          // ライブラリから選択
+          // スマホから写真を選択
           openCleaningItemImageLibraryPicker(modalSectionId, modalImageContentId, modalCategory);
-        } else if (source === 'camera') {
-          // カメラで撮影
-          openCleaningItemImageCamera(modalSectionId, modalImageContentId, modalCategory);
         }
       });
     });
