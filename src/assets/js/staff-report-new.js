@@ -531,6 +531,27 @@
               </select>
               <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${section.item_name && !serviceItems.find(si => si.title === section.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)" value="${escapeHtml(section.item_name || '')}">
               <textarea class="form-input cleaning-item-notes" placeholder="メモや備考を入力してください" style="margin-top:8px; min-height:80px; resize:vertical;" oninput="updateCleaningItemNotes('${sectionId}', this.value)">${escapeHtml(section.notes || '')}</textarea>
+              ${(section.textFields || []).map(textField => `
+                <div class="cleaning-item-text-field-container" style="position:relative; margin-top:8px;">
+                  <textarea class="form-input cleaning-item-text-field" placeholder="テキストを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemTextField('${sectionId}', '${textField.id}', this.value)">${escapeHtml(textField.value || '')}</textarea>
+                  <button type="button" class="cleaning-item-text-field-delete" onclick="deleteCleaningItemTextField('${sectionId}', '${textField.id}')" style="position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              `).join('')}
+              <div class="cleaning-item-add-actions" style="margin-top:12px; display:flex; gap:8px; position:relative;">
+                <button type="button" class="cleaning-item-add-btn" onclick="showCleaningItemAddMenu('${sectionId}')" title="追加">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <div class="cleaning-item-add-menu" id="cleaning-item-add-menu-${sectionId}" style="display:none; position:absolute; background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1000; margin-top:4px;">
+                  <button type="button" class="cleaning-item-add-menu-item" onclick="addTextToCleaningItem('${sectionId}')">
+                    <i class="fas fa-font"></i> テキスト
+                  </button>
+                  <button type="button" class="cleaning-item-add-menu-item" onclick="addImageToCleaningItem('${sectionId}')">
+                    <i class="fas fa-image"></i> 画像
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -2027,6 +2048,15 @@
     // 画像ストック機能
     setupImageStock();
     
+    // メニュー外をクリックしたときにメニューを閉じる
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.cleaning-item-add-actions')) {
+        document.querySelectorAll('.cleaning-item-add-menu').forEach(menu => {
+          menu.style.display = 'none';
+        });
+      }
+    });
+    
     // セクション内の画像追加ボタンのファイル選択イベント
     document.addEventListener('change', async (e) => {
       if (e.target.classList.contains('section-image-file-input')) {
@@ -2835,6 +2865,19 @@
           </select>
           <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)">
           <textarea class="form-input cleaning-item-notes" placeholder="メモや備考を入力してください" style="margin-top:8px; min-height:80px; resize:vertical;" oninput="updateCleaningItemNotes('${sectionId}', this.value)"></textarea>
+          <div class="cleaning-item-add-actions" style="margin-top:12px; display:flex; gap:8px; position:relative;">
+            <button type="button" class="cleaning-item-add-btn" onclick="showCleaningItemAddMenu('${sectionId}')" title="追加">
+              <i class="fas fa-plus"></i>
+            </button>
+            <div class="cleaning-item-add-menu" id="cleaning-item-add-menu-${sectionId}" style="display:none; position:absolute; background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1000; margin-top:4px;">
+              <button type="button" class="cleaning-item-add-menu-item" onclick="addTextToCleaningItem('${sectionId}')">
+                <i class="fas fa-font"></i> テキスト
+              </button>
+              <button type="button" class="cleaning-item-add-menu-item" onclick="addImageToCleaningItem('${sectionId}')">
+                <i class="fas fa-image"></i> 画像
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -3276,6 +3319,19 @@
             </select>
             <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${newSection.item_name && !serviceItems.find(si => si.title === newSection.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItem('${newSectionId}', this.value)" value="${escapeHtml(newSection.item_name || '')}">
             <textarea class="form-input cleaning-item-notes" placeholder="メモや備考を入力してください" style="margin-top:8px; min-height:80px; resize:vertical;" oninput="updateCleaningItemNotes('${newSectionId}', this.value)">${escapeHtml(newSection.notes || '')}</textarea>
+            <div class="cleaning-item-add-actions" style="margin-top:12px; display:flex; gap:8px; position:relative;">
+              <button type="button" class="cleaning-item-add-btn" onclick="showCleaningItemAddMenu('${newSectionId}')" title="追加">
+                <i class="fas fa-plus"></i>
+              </button>
+              <div class="cleaning-item-add-menu" id="cleaning-item-add-menu-${newSectionId}" style="display:none; position:absolute; background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1000; margin-top:4px;">
+                <button type="button" class="cleaning-item-add-menu-item" onclick="addTextToCleaningItem('${newSectionId}')">
+                  <i class="fas fa-font"></i> テキスト
+                </button>
+                <button type="button" class="cleaning-item-add-menu-item" onclick="addImageToCleaningItem('${newSectionId}')">
+                  <i class="fas fa-image"></i> 画像
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       `;
@@ -3515,9 +3571,132 @@
     }
   };
 
+  // 清掃項目セクションの追加メニューを表示
+  window.showCleaningItemAddMenu = function(sectionId) {
+    // 他のメニューを閉じる
+    document.querySelectorAll('.cleaning-item-add-menu').forEach(menu => {
+      if (menu.id !== `cleaning-item-add-menu-${sectionId}`) {
+        menu.style.display = 'none';
+      }
+    });
+    
+    const menu = document.getElementById(`cleaning-item-add-menu-${sectionId}`);
+    if (menu) {
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+  };
+
+  // 清掃項目セクションにテキスト入力フィールドを追加
+  window.addTextToCleaningItem = function(sectionId) {
+    const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
+    if (!sectionBody) return;
+    
+    const addActions = sectionBody.querySelector('.cleaning-item-add-actions');
+    if (!addActions) return;
+    
+    // 新しいテキスト入力フィールドを作成
+    const textFieldId = `cleaning-item-text-${sectionId}-${Date.now()}`;
+    const textField = document.createElement('textarea');
+    textField.className = 'form-input cleaning-item-text-field';
+    textField.placeholder = 'テキストを入力してください';
+    textField.style.cssText = 'margin-top:8px; min-height:80px; resize:vertical; width:100%;';
+    textField.oninput = function() {
+      if (sections[sectionId]) {
+        if (!sections[sectionId].textFields) {
+          sections[sectionId].textFields = [];
+        }
+        const fieldIndex = sections[sectionId].textFields.findIndex(f => f.id === textFieldId);
+        if (fieldIndex >= 0) {
+          sections[sectionId].textFields[fieldIndex].value = this.value;
+        } else {
+          sections[sectionId].textFields.push({ id: textFieldId, value: this.value });
+        }
+        autoSave();
+      }
+    };
+    
+    // 削除ボタン付きのコンテナを作成
+    const textFieldContainer = document.createElement('div');
+    textFieldContainer.className = 'cleaning-item-text-field-container';
+    textFieldContainer.style.cssText = 'position:relative; margin-top:8px;';
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'cleaning-item-text-field-delete';
+    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+    deleteBtn.style.cssText = 'position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(239, 68, 68, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;';
+    deleteBtn.onclick = function() {
+      deleteCleaningItemTextField(sectionId, textFieldId);
+    };
+    
+    textFieldContainer.appendChild(textField);
+    textFieldContainer.appendChild(deleteBtn);
+    
+    // 追加アクションボタンの前に挿入
+    addActions.parentNode.insertBefore(textFieldContainer, addActions);
+    
+    // メニューを閉じる
+    const menu = document.getElementById(`cleaning-item-add-menu-${sectionId}`);
+    if (menu) {
+      menu.style.display = 'none';
+    }
+    
+    // データに保存
+    if (sections[sectionId]) {
+      if (!sections[sectionId].textFields) {
+        sections[sectionId].textFields = [];
+      }
+      sections[sectionId].textFields.push({ id: textFieldId, value: '' });
+    }
+    
+    autoSave();
+  };
+
+  // 清掃項目セクションに画像セクションを追加
+  window.addImageToCleaningItem = function(sectionId) {
+    // メニューを閉じる
+    const menu = document.getElementById(`cleaning-item-add-menu-${sectionId}`);
+    if (menu) {
+      menu.style.display = 'none';
+    }
+    
+    // 画像セクションを追加（作業前・作業後タイプ）
+    if (window.addImageSectionBeforeAfter) {
+      window.addImageSectionBeforeAfter();
+    }
+  };
+
   // セクション内容更新
   window.updateSectionContent = function(sectionId, value) {
     sections[sectionId].content = value;
+  };
+
+  // 清掃項目セクションのテキストフィールドを更新
+  window.updateCleaningItemTextField = function(sectionId, fieldId, value) {
+    if (sections[sectionId]) {
+      if (!sections[sectionId].textFields) {
+        sections[sectionId].textFields = [];
+      }
+      const fieldIndex = sections[sectionId].textFields.findIndex(f => f.id === fieldId);
+      if (fieldIndex >= 0) {
+        sections[sectionId].textFields[fieldIndex].value = value;
+      } else {
+        sections[sectionId].textFields.push({ id: fieldId, value: value });
+      }
+      autoSave();
+    }
+  };
+
+  // 清掃項目セクションのテキストフィールドを削除
+  window.deleteCleaningItemTextField = function(sectionId, fieldId) {
+    if (sections[sectionId] && sections[sectionId].textFields) {
+      sections[sectionId].textFields = sections[sectionId].textFields.filter(f => f.id !== fieldId);
+    }
+    const fieldContainer = document.querySelector(`[data-section-id="${sectionId}"] .cleaning-item-text-field-container textarea[oninput*="${fieldId}"]`)?.closest('.cleaning-item-text-field-container');
+    if (fieldContainer) {
+      fieldContainer.remove();
+    }
+    autoSave();
   };
 
   // 清掃項目リスト更新
@@ -3880,8 +4059,28 @@
     const sourcePhotos = sections[sourceSectionId]?.photos?.[sourceCategory];
     if (!sourcePhotos) return;
 
-    const sourceIndex = sourcePhotos.indexOf(url);
-    if (sourceIndex === -1) return;
+    // 画像データを検索（オブジェクト形式または文字列形式に対応）
+    let imageData = null;
+    let sourceIndex = -1;
+    
+    for (let i = 0; i < sourcePhotos.length; i++) {
+      const photo = sourcePhotos[i];
+      if (typeof photo === 'string') {
+        if (photo === url) {
+          imageData = photo;
+          sourceIndex = i;
+          break;
+        }
+      } else if (typeof photo === 'object' && photo.blobUrl) {
+        if (photo.blobUrl === url) {
+          imageData = photo;
+          sourceIndex = i;
+          break;
+        }
+      }
+    }
+    
+    if (sourceIndex === -1 || !imageData) return;
 
     sourcePhotos.splice(sourceIndex, 1);
 
@@ -3898,7 +4097,8 @@
     if (!sections[targetSectionId].photos[targetCategory]) {
       sections[targetSectionId].photos[targetCategory] = [];
     }
-    sections[targetSectionId].photos[targetCategory].push(url);
+    // 元のデータ形式を保持（オブジェクト形式または文字列形式）
+    sections[targetSectionId].photos[targetCategory].push(imageData);
 
     // UIから削除
     const sourceThumb = document.querySelector(
@@ -3919,11 +4119,17 @@
     }
     
     const addBtn = targetContainer.querySelector('.image-add-btn');
-    const newThumb = createImageThumb(targetSectionId, targetCategory, url);
+    // imageDataがオブジェクト形式の場合はimageIdも渡す
+    const imageId = (typeof imageData === 'object' && imageData.imageId) ? imageData.imageId : null;
+    const imageUrl = (typeof imageData === 'object' && imageData.blobUrl) ? imageData.blobUrl : imageData;
+    const newThumb = createImageThumb(targetSectionId, targetCategory, imageUrl, imageId);
     targetContainer.insertBefore(newThumb, addBtn);
 
     // ターゲットリストにドラッグ&ドロップを設定（まだ設定されていない場合）
     setupImageListDragAndDrop(targetContainer, targetSectionId, targetCategory);
+    
+    // 自動保存
+    autoSave();
   }
 
   // 画像削除

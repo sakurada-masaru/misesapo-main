@@ -1506,6 +1506,28 @@ input[type="time"].date-time-input:invalid {
   color: #FF679C;
 }
 
+.section-copy {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dbeafe;
+  color: #2563eb;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.section-copy:active {
+  transform: scale(0.9);
+  background: #bfdbfe;
+}
+
 .section-delete {
   width: 32px;
   height: 32px;
@@ -1540,6 +1562,98 @@ input[type="time"].date-time-input:invalid {
   border-radius: 8px;
   font-size: 0.9rem;
   background: #fff;
+}
+
+.cleaning-item-add-actions {
+  position: relative;
+}
+
+.cleaning-item-add-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dbeafe;
+  color: #2563eb;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.cleaning-item-add-btn:hover {
+  background: #bfdbfe;
+}
+
+.cleaning-item-add-btn:active {
+  transform: scale(0.9);
+  background: #93c5fd;
+}
+
+.cleaning-item-add-menu {
+  min-width: 120px;
+  padding: 4px;
+}
+
+.cleaning-item-add-menu-item {
+  width: 100%;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+  transition: background 0.2s;
+  text-align: left;
+}
+
+.cleaning-item-add-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.cleaning-item-add-menu-item i {
+  width: 16px;
+  color: #6b7280;
+}
+
+.cleaning-item-text-field-container {
+  position: relative;
+}
+
+.cleaning-item-text-field-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 103, 156, 0.9);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  z-index: 10;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.cleaning-item-text-field-delete:hover {
+  background: rgba(255, 103, 156, 1);
+  transform: scale(1.1);
+}
+
+.cleaning-item-text-field-delete:active {
+  transform: scale(0.9);
 }
 
 /* 画像セクション */
