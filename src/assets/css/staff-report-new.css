@@ -255,7 +255,7 @@
   min-width: 0;
   margin: 0;
   padding: 0;
-  gap: 0;
+  gap: 4px;
 }
 
 .form-row.three-col {
@@ -306,14 +306,16 @@
 }
 
 .date-time-label {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  opacity: 0.95;
+  opacity: 0.9;
   white-space: nowrap;
   flex-shrink: 0;
   color: #fff;
   min-width: fit-content;
-  text-align: center;
+  text-align: left;
+  margin-bottom: 2px;
+  padding-left: 2px;
 }
 
 .date-time-label .required {
