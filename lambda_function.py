@@ -6,6 +6,16 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from boto3.dynamodb.conditions import Key, Attr
 
+# Google Calendar API用のインポート（オプション）
+# 注意: Lambda Layerまたはrequirements.txtにgoogle-api-python-clientを追加する必要があります
+try:
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
+    GOOGLE_CALENDAR_AVAILABLE = True
+except ImportError:
+    GOOGLE_CALENDAR_AVAILABLE = False
+    print("Warning: Google Calendar API libraries not available. Calendar integration will be disabled.")
+
 # ID生成ヘルパー関数をインポート
 def extract_number_from_id(id_str, prefix):
     """IDから数値部分を抽出"""
@@ -145,6 +155,192 @@ def validate_worker_email(email):
     # 将来的には企業用メールアドレス（@misesapo.app）への移行を推奨
     return {'valid': True}
 
+def get_google_calendar_service():
+    """
+    Google Calendar APIサービスオブジェクトを取得
+    サービスアカウント認証を使用
+    
+    認証情報の取得方法（優先順位）:
+    1. AWS Secrets Managerから取得（GOOGLE_SERVICE_ACCOUNT_SECRET_NAMEが設定されている場合）
+    2. 環境変数から直接取得（GOOGLE_SERVICE_ACCOUNT_JSONが設定されている場合）
+    """
+    if not GOOGLE_CALENDAR_AVAILABLE or not GOOGLE_CALENDAR_ENABLED:
+        return None
+    
+    try:
+        service_account_info = None
+        
+        # 方法1: AWS Secrets Managerから取得（推奨）
+        if GOOGLE_SERVICE_ACCOUNT_SECRET_NAME:
+            try:
+                secrets_client = boto3.client('secretsmanager')
+                secret_response = secrets_client.get_secret_value(
+                    SecretId=GOOGLE_SERVICE_ACCOUNT_SECRET_NAME
+                )
+                secret_string = secret_response['SecretString']
+                service_account_info = json.loads(secret_string)
+                print(f"Successfully retrieved service account info from Secrets Manager: {GOOGLE_SERVICE_ACCOUNT_SECRET_NAME}")
+            except Exception as e:
+                print(f"Error retrieving secret from Secrets Manager: {str(e)}")
+                # Secrets Managerからの取得に失敗した場合は、環境変数から取得を試みる
+                if not GOOGLE_SERVICE_ACCOUNT_JSON:
+                    return None
+        
+        # 方法2: 環境変数から直接取得（開発・テスト用）
+        if not service_account_info and GOOGLE_SERVICE_ACCOUNT_JSON:
+            try:
+                if isinstance(GOOGLE_SERVICE_ACCOUNT_JSON, str):
+                    service_account_info = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
+                else:
+                    service_account_info = GOOGLE_SERVICE_ACCOUNT_JSON
+                print("Successfully loaded service account info from environment variable")
+            except json.JSONDecodeError as e:
+                print(f"Error parsing GOOGLE_SERVICE_ACCOUNT_JSON: {str(e)}")
+                return None
+        
+        # 認証情報が取得できなかった場合
+        if not service_account_info:
+            print("Warning: Google Service Account JSON not configured. Set GOOGLE_SERVICE_ACCOUNT_SECRET_NAME or GOOGLE_SERVICE_ACCOUNT_JSON")
+            return None
+        
+        # 認証情報を作成
+        credentials = service_account.Credentials.from_service_account_info(
+            service_account_info,
+            scopes=['https://www.googleapis.com/auth/calendar']
+        )
+        
+        # Calendar APIサービスを構築
+        service = build('calendar', 'v3', credentials=credentials)
+        return service
+    except Exception as e:
+        print(f"Error creating Google Calendar service: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return None
+
+def create_google_calendar_event(schedule_data):
+    """
+    Google Calendarにイベントを作成
+    
+    Args:
+        schedule_data: スケジュールデータ（辞書形式）
+            - date: 日付 (YYYY-MM-DD)
+            - time_slot: 時間帯 (HH:MM-HH:MM または HH:MM)
+            - store_name: 店舗名
+            - client_name: クライアント名
+            - address: 住所
+            - cleaning_items: 清掃項目のリスト
+            - notes: 備考
+            - schedule_id: スケジュールID
+    
+    Returns:
+        dict: 作成されたイベントの情報、またはエラー情報
+    """
+    if not GOOGLE_CALENDAR_ENABLED:
+        return {'success': False, 'message': 'Google Calendar integration is disabled'}
+    
+    service = get_google_calendar_service()
+    if not service:
+        return {'success': False, 'message': 'Failed to initialize Google Calendar service'}
+    
+    try:
+        # 日付と時間をパース
+        date_str = schedule_data.get('date') or schedule_data.get('scheduled_date', '')
+        time_str = schedule_data.get('time_slot') or schedule_data.get('scheduled_time', '10:00')
+        
+        # 開始時刻を取得（HH:MM形式を想定）
+        if '-' in time_str:
+            start_time_str = time_str.split('-')[0].strip()
+        else:
+            start_time_str = time_str.strip()
+        
+        # 日時を組み合わせてISO形式に変換
+        start_datetime_str = f"{date_str}T{start_time_str}:00"
+        start_datetime = datetime.strptime(start_datetime_str, '%Y-%m-%dT%H:%M:%S')
+        
+        # 終了時刻を計算（デフォルトは1時間後）
+        duration_minutes = schedule_data.get('duration_minutes', 60)
+        end_datetime = start_datetime + timedelta(minutes=duration_minutes)
+        
+        # イベントのタイトルを作成
+        store_name = schedule_data.get('store_name', '')
+        client_name = schedule_data.get('client_name', '')
+        if store_name and client_name:
+            title = f"{client_name} {store_name} - 清掃"
+        elif store_name:
+            title = f"{store_name} - 清掃"
+        else:
+            title = "清掃予定"
+        
+        # イベントの説明を作成
+        description_parts = []
+        
+        # 清掃項目
+        cleaning_items = schedule_data.get('cleaning_items', [])
+        if cleaning_items:
+            items_text = '\n'.join([
+                f"・{item.get('name', '')}" + 
+                (f" ({item.get('quantity', '')}{item.get('unit', '')})" if item.get('quantity') else '')
+                for item in cleaning_items
+            ])
+            description_parts.append(f"【清掃項目】\n{items_text}")
+        
+        # 備考
+        notes = schedule_data.get('notes', '')
+        if notes:
+            description_parts.append(f"【備考】\n{notes}")
+        
+        # 住所
+        address = schedule_data.get('address', '')
+        if address:
+            description_parts.append(f"【住所】\n{address}")
+        
+        # スケジュールID
+        schedule_id = schedule_data.get('schedule_id') or schedule_data.get('id', '')
+        if schedule_id:
+            description_parts.append(f"【スケジュールID】\n{schedule_id}")
+        
+        description = '\n\n'.join(description_parts) if description_parts else ''
+        
+        # イベントオブジェクトを作成
+        event = {
+            'summary': title,
+            'description': description,
+            'start': {
+                'dateTime': start_datetime.isoformat(),
+                'timeZone': 'Asia/Tokyo',
+            },
+            'end': {
+                'dateTime': end_datetime.isoformat(),
+                'timeZone': 'Asia/Tokyo',
+            },
+        }
+        
+        # 住所がある場合は場所として追加
+        if address:
+            event['location'] = address
+        
+        # イベントを作成
+        created_event = service.events().insert(
+            calendarId=GOOGLE_CALENDAR_ID,
+            body=event
+        ).execute()
+        
+        return {
+            'success': True,
+            'event_id': created_event.get('id'),
+            'html_link': created_event.get('htmlLink'),
+            'message': 'Google Calendarイベントを作成しました'
+        }
+    except Exception as e:
+        print(f"Error creating Google Calendar event: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'success': False,
+            'message': f'Failed to create Google Calendar event: {str(e)}'
+        }
+
 # Cognitoクライアントの初期化
 cognito_client = boto3.client('cognito-idp', region_name='ap-northeast-1')
 COGNITO_USER_POOL_ID = 'ap-northeast-1_EDKElIGoC'
@@ -174,6 +370,13 @@ INVENTORY_TRANSACTIONS_TABLE = dynamodb.Table('inventory-transactions')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
 S3_REGION = os.environ.get('S3_REGION', 'ap-northeast-1')
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*').split(',')
+
+# Google Calendar API設定（環境変数から取得）
+GOOGLE_CALENDAR_ENABLED = os.environ.get('GOOGLE_CALENDAR_ENABLED', 'false').lower() == 'true'
+GOOGLE_CALENDAR_ID = os.environ.get('GOOGLE_CALENDAR_ID', 'primary')  # カレンダーID（サービスアカウントのメールアドレスまたは'primary'）
+# サービスアカウントのJSONキーは環境変数またはSecrets Managerから取得
+GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON', None)
+GOOGLE_SERVICE_ACCOUNT_SECRET_NAME = os.environ.get('GOOGLE_SERVICE_ACCOUNT_SECRET_NAME', None)  # Secrets Managerのシークレット名
 
 # データファイルのS3キー
 DATA_KEY = 'cleaning-manual/data.json'
@@ -2730,6 +2933,38 @@ def create_schedule(event, headers):
             except Exception as e:
                 raise e
         
+        # Google Calendarにイベントを作成（オプション）
+        calendar_event_result = None
+        if GOOGLE_CALENDAR_ENABLED:
+            try:
+                # スケジュールデータを準備
+                calendar_schedule_data = {
+                    'date': scheduled_date,
+                    'time_slot': scheduled_time,
+                    'store_name': body_json.get('store_name', ''),
+                    'client_name': body_json.get('client_name', ''),
+                    'address': body_json.get('address', ''),
+                    'cleaning_items': body_json.get('cleaning_items', []),
+                    'notes': body_json.get('notes', ''),
+                    'schedule_id': schedule_id,
+                    'duration_minutes': body_json.get('duration_minutes', 60)
+                }
+                calendar_event_result = create_google_calendar_event(calendar_schedule_data)
+                
+                # スケジュールアイテムにGoogle CalendarイベントIDを保存
+                if calendar_event_result.get('success') and calendar_event_result.get('event_id'):
+                    schedule_item['google_calendar_event_id'] = calendar_event_result.get('event_id')
+                    # DynamoDBアイテムを更新（既に作成済みなので、update_itemを使用）
+                    SCHEDULES_TABLE.update_item(
+                        Key={'id': schedule_id},
+                        UpdateExpression='SET google_calendar_event_id = :event_id',
+                        ExpressionAttributeValues={':event_id': calendar_event_result.get('event_id')}
+                    )
+            except Exception as e:
+                # Google Calendarの作成に失敗しても、スケジュール作成は成功とする
+                print(f"Warning: Failed to create Google Calendar event: {str(e)}")
+                calendar_event_result = {'success': False, 'message': str(e)}
+        
         response_body = {
             'status': 'success',
             'message': 'スケジュールを作成しました',
@@ -2740,6 +2975,10 @@ def create_schedule(event, headers):
         if estimate_id:
             response_body['estimate_id'] = estimate_id
             response_body['message'] = 'スケジュールと見積もりを作成しました'
+        
+        # Google Calendarイベント作成結果を追加
+        if calendar_event_result:
+            response_body['google_calendar'] = calendar_event_result
         
         return {
             'statusCode': 200,

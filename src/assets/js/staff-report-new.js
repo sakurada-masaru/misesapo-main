@@ -603,7 +603,7 @@
                 ${options}
                 <option value="__other__">その他（自由入力）</option>
               </select>
-              <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${section.item_name && !serviceItems.find(si => si.title === section.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)" value="${escapeHtml(section.item_name || '')}">
+              <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${section.item_name && !serviceItems.find(si => si.title === section.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItemCustom('${sectionId}', this.value)" value="${escapeHtml(section.item_name || '')}">
               ${(section.textFields || []).map(textField => `
                 <div class="cleaning-item-text-field-container" style="position:relative; margin-top:8px;">
                   <textarea class="form-input cleaning-item-text-field" placeholder="テキストを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemTextField('${sectionId}', '${textField.id}', this.value)">${escapeHtml(textField.value || '')}</textarea>
@@ -1309,7 +1309,7 @@
               ${options}
               <option value="__other__">その他（自由入力）</option>
             </select>
-            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)">
+            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItemCustom('${sectionId}', this.value)">
           </div>
         </div>
       `;
@@ -2136,6 +2136,30 @@
     if (addImageBtn) addImageBtn.addEventListener('click', openImageSectionTypeModal);
     if (addCommentBtn) addCommentBtn.addEventListener('click', addCommentSection);
     if (addWorkContentBtn) addWorkContentBtn.addEventListener('click', addWorkContentSection);
+    
+    // プレビューボタンのイベントリスナー
+    const previewBtn = document.getElementById('preview-btn');
+    const previewBtnProposal = document.getElementById('preview-btn-proposal');
+    if (previewBtn) {
+      previewBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (window.openPreviewModal) {
+          window.openPreviewModal();
+        } else {
+          console.error('openPreviewModal function not found');
+        }
+      });
+    }
+    if (previewBtnProposal) {
+      previewBtnProposal.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (window.openPreviewModal) {
+          window.openPreviewModal();
+        } else {
+          console.error('openPreviewModal function not found');
+        }
+      });
+    }
     
     // セクション追加ボタンのイベントリスナー（新規作成タブ用）
     setupSectionAddButtons('section-add-toggle-btn', 'new');
@@ -3504,7 +3528,7 @@
               ${options}
               <option value="__other__">その他（自由入力）</option>
             </select>
-            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${newSection.item_name && !serviceItems.find(si => si.title === newSection.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItem('${newSectionId}', this.value)" value="${escapeHtml(newSection.item_name || '')}">
+            <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:${newSection.item_name && !serviceItems.find(si => si.title === newSection.item_name) ? 'block' : 'none'}; margin-top:8px;" oninput="updateCleaningItemCustom('${newSectionId}', this.value)" value="${escapeHtml(newSection.item_name || '')}">
             ${(newSection.textFields || []).map(textField => `
               <div class="cleaning-item-text-field-container" style="position:relative; margin-top:8px;">
                 <textarea class="form-input cleaning-item-text-field" placeholder="テキストを入力してください" style="margin-top:8px; min-height:80px; resize:vertical; width:100%;" oninput="updateCleaningItemTextField('${newSectionId}', '${textField.id}', this.value)">${escapeHtml(textField.value || '')}</textarea>
@@ -3905,15 +3929,49 @@
   // 清掃項目更新
   window.updateCleaningItem = function(sectionId, value) {
     const card = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (!card) return;
+    
     const customInput = card.querySelector('.cleaning-item-custom');
+    const select = card.querySelector('.cleaning-item-select');
     
     if (value === '__other__') {
-      customInput.style.display = 'block';
-      customInput.focus();
-      sections[sectionId].item_name = '';
-    } else {
-      customInput.style.display = 'none';
-      sections[sectionId].item_name = value;
+      // 自由入力を選択した場合
+      if (customInput) {
+        customInput.style.display = 'block';
+        customInput.value = ''; // 入力フィールドをクリア
+        customInput.focus();
+      }
+      if (sections[sectionId]) {
+        sections[sectionId].item_name = '';
+      }
+    } else if (value && value !== '') {
+      // 通常の項目を選択した場合
+      if (customInput) {
+        customInput.style.display = 'none';
+      }
+      if (sections[sectionId]) {
+        sections[sectionId].item_name = value;
+      }
+    }
+    
+    updateCleaningItemsList();
+  };
+
+  // 自由入力フィールドの値を更新
+  window.updateCleaningItemCustom = function(sectionId, value) {
+    const card = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (!card) return;
+    
+    const select = card.querySelector('.cleaning-item-select');
+    
+    // 自由入力フィールドに値が入力された場合、セレクトボックスを「その他（自由入力）」に設定
+    if (select && select.value !== '__other__') {
+      select.value = '__other__';
+    }
+    
+    // セクションのitem_nameを更新
+    if (sections[sectionId]) {
+      sections[sectionId].item_name = value || '';
     }
     
     updateCleaningItemsList();
@@ -6121,7 +6179,7 @@
   }
 
   // プレビューモーダルを開く（レポートURL発行後の表示形式に合わせる）
-  async function openPreviewModal() {
+  window.openPreviewModal = async function() {
     const previewContent = document.getElementById('preview-report-content');
     if (!previewContent) return;
     
@@ -6137,14 +6195,20 @@
     // 日付フォーマット（report-shared-view.jsと同じ形式）
     const formatDate = (dateStr) => {
       if (!dateStr) return '';
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('ja-JP', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      try {
+        // YYYY-MM-DD形式の文字列をDateオブジェクトに変換
+        const date = new Date(dateStr + 'T00:00:00');
+        if (isNaN(date.getTime())) {
+          return dateStr; // 無効な日付の場合はそのまま返す
+        }
+        return date.toLocaleDateString('ja-JP', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric'
+        });
+      } catch (e) {
+        return dateStr; // エラー時はそのまま返す
+      }
     };
     
     // レポートデータを準備（提出時と同じ形式）

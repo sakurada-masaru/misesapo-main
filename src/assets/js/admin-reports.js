@@ -10,6 +10,14 @@
     const perPage = 20;
     let currentReportId = null;
 
+    // HTMLエスケープ関数
+    function escapeHtml(text) {
+      if (text == null) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
     // 初期化
     document.addEventListener('DOMContentLoaded', async () => {
       await Promise.all([loadReports(), loadStores(), loadWorkers(), loadServiceItems()]);
@@ -32,10 +40,26 @@
 
     async function loadReports() {
       try {
+        // 認証トークンを取得
+        const idToken = await getFirebaseIdToken();
+        
         // 新レポートAPI（あなたが作ったシステム）からデータ取得
         const res = await fetch(`${REPORT_API}/staff/reports`, {
-          headers: { 'Authorization': 'Bearer mock-token' }
+          headers: { 
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json'
+          }
         });
+        
+        if (!res.ok) {
+          if (res.status === 401) {
+            console.error('認証エラー: ログインが必要です');
+            document.getElementById('reports-tbody').innerHTML = '<tr><td colspan="6" class="loading-cell">認証エラー: ログインしてください</td></tr>';
+            return;
+          }
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
         const data = await res.json();
         allReports = data.items || [];
         
@@ -58,7 +82,8 @@
         filterAndRender();
       } catch (e) {
         console.error('Failed to load reports:', e);
-        document.getElementById('reports-tbody').innerHTML = '<tr><td colspan="6" class="loading-cell">読み込みに失敗しました</td></tr>';
+        const errorMessage = e.message || '読み込みに失敗しました';
+        document.getElementById('reports-tbody').innerHTML = `<tr><td colspan="6" class="loading-cell">${escapeHtml(errorMessage)}</td></tr>`;
       }
     }
 
@@ -824,15 +849,55 @@
     // Firebase認証からIDトークンを取得
     async function getFirebaseIdToken() {
       try {
-        if (!window.FirebaseAuth) {
-          return 'mock-token';
+        // 1. Cognito ID Token（最優先）
+        const cognitoIdToken = localStorage.getItem('cognito_id_token');
+        if (cognitoIdToken) {
+          return cognitoIdToken;
         }
-        const currentUser = window.FirebaseAuth.currentUser;
-        if (!currentUser) {
-          return 'mock-token';
+        
+        // 2. Cognito認証のユーザーオブジェクトからトークンを取得
+        const cognitoUser = localStorage.getItem('cognito_user');
+        if (cognitoUser) {
+          try {
+            const parsed = JSON.parse(cognitoUser);
+            if (parsed.tokens && parsed.tokens.idToken) {
+              return parsed.tokens.idToken;
+            }
+            if (parsed.idToken) {
+              return parsed.idToken;
+            }
+          } catch (e) {
+            console.warn('Error parsing cognito user:', e);
+          }
         }
-        const idToken = await currentUser.getIdToken();
-        return idToken;
+        
+        // 3. Firebase Authから取得
+        if (window.FirebaseAuth) {
+          const currentUser = window.FirebaseAuth.currentUser;
+          if (currentUser) {
+            const idToken = await currentUser.getIdToken();
+            if (idToken) {
+              return idToken;
+            }
+          }
+        }
+        
+        // 4. misesapo_auth から取得（フォールバック）
+        const authData = localStorage.getItem('misesapo_auth');
+        if (authData) {
+          try {
+            const parsed = JSON.parse(authData);
+            if (parsed.token) {
+              return parsed.token;
+            }
+          } catch (e) {
+            console.warn('Error parsing auth data:', e);
+          }
+        }
+        
+        // 5. トークンが見つからない場合は警告を出してmock-tokenを返す
+        console.warn('No authentication token found, using mock-token');
+        return 'mock-token';
       } catch (error) {
         console.error('Error getting Firebase ID token:', error);
         return 'mock-token';
