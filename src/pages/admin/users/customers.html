@@ -1,0 +1,475 @@
+@layout('layouts.base')
+@json('data/meta/admin_users_customers_title.json', $title)
+@json('data/meta/admin_users_customers_body_class.json', $body_class)
+@json('data/clients.json', clients_data)
+
+<main id="main" class="container admin-users-customers">
+  <div class="page-header">
+    <a href="/admin/users/" class="back-btn">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    <h1 class="page-title">顧客一覧（ユーザーID管理）</h1>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="会社名、店舗名、担当者名、メールアドレスで検索..." class="search-input" id="customer-search" />
+    </div>
+    <div class="filter-options">
+      <select class="filter-select" id="status-filter">
+        <option value="">すべてのステータス</option>
+        <option value="稼働中">稼働中</option>
+        <option value="休止">休止</option>
+        <option value="契約終了">契約終了</option>
+        <option value="アプローチ前">アプローチ前</option>
+        <option value="契約作業中">契約作業中</option>
+        <option value="商談済">商談済</option>
+        <option value="検討中">検討中</option>
+      </select>
+      <select class="filter-select" id="sales-rep-filter">
+        <option value="">すべての営業担当</option>
+        <option value="正田和輝">正田和輝</option>
+        <option value="佐藤大志">佐藤大志</option>
+        <option value="沖 智弘">沖 智弘</option>
+        <option value="遠藤虹輝">遠藤虹輝</option>
+        <option value="林大貴（浅倉麗央）">林大貴（浅倉麗央）</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-label">総顧客数</span>
+      <span class="stat-value" id="total-count">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">稼働中</span>
+      <span class="stat-value" id="active-count">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">休止</span>
+      <span class="stat-value" id="inactive-count">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">契約終了</span>
+      <span class="stat-value" id="terminated-count">0</span>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>会社名</th>
+          <th>店舗名</th>
+          <th>担当者名</th>
+          <th>メールアドレス</th>
+          <th>営業担当</th>
+          <th>ステータス</th>
+          <th>登録日</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="customers-table-body">
+        <!-- Customers will be rendered by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button class="pagination-btn" id="prev-page" disabled>
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span class="pagination-info" id="pagination-info">1 / 1</span>
+    <button class="pagination-btn" id="next-page">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <script type="application/json" id="customers-data">
+    @jsonvar $clients_data
+  </script>
+
+  <style>
+    .admin-users-customers {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #f9fafb;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #6b7280;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+    .filter-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 300px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-box i {
+      position: absolute;
+      left: 12px;
+      color: #6b7280;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 12px 12px 40px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+    }
+    .filter-options {
+      display: flex;
+      gap: 12px;
+    }
+    .filter-select {
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #ffffff;
+      min-width: 150px;
+    }
+    .stats-bar {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .table-container {
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow-x: auto;
+    }
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .users-table thead {
+      background: #f9fafb;
+    }
+    .users-table th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.875rem;
+      border-bottom: 2px solid #e5e7eb;
+      white-space: nowrap;
+    }
+    .users-table td {
+      padding: 16px;
+      border-bottom: 1px solid #f3f4f6;
+      color: #111827;
+      font-size: 0.95rem;
+    }
+    .users-table tbody tr:hover {
+      background: #f9fafb;
+    }
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-稼働中 {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-休止 {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-契約終了 {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .status-アプローチ前 {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .status-契約作業中 {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .status-商談済 {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .status-検討中 {
+      background: #f3e8ff;
+      color: #7c3aed;
+    }
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: 4px;
+      text-decoration: none;
+    }
+    .btn-icon:hover {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .pagination-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pagination-btn:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .pagination-info {
+      font-size: 0.95rem;
+      color: #6b7280;
+    }
+    @media (max-width: 768px) {
+      .admin-users-customers {
+        padding: 16px;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .filter-bar {
+        flex-direction: column;
+      }
+      .search-box {
+        min-width: 100%;
+      }
+      .stats-bar {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .users-table {
+        font-size: 0.875rem;
+      }
+      .users-table th,
+      .users-table td {
+        padding: 12px 8px;
+      }
+    }
+  </style>
+
+  <script>
+    // Load and render customers
+    (function() {
+      const customersDataEl = document.getElementById('customers-data');
+      const tableBody = document.getElementById('customers-table-body');
+      const searchInput = document.getElementById('customer-search');
+      const statusFilter = document.getElementById('status-filter');
+      const salesRepFilter = document.getElementById('sales-rep-filter');
+      
+      if (!customersDataEl || !tableBody) return;
+      
+      const customersData = JSON.parse(customersDataEl.textContent);
+      const customers = customersData.clients || [];
+      
+      let currentPage = 1;
+      const itemsPerPage = 20;
+      let filteredCustomers = [...customers];
+      
+      // Update stats
+      function updateStats() {
+        const total = customers.length;
+        const active = customers.filter(c => c.status === '稼働中').length;
+        const inactive = customers.filter(c => c.status === '休止').length;
+        const terminated = customers.filter(c => c.status === '契約終了').length;
+        
+        document.getElementById('total-count').textContent = total;
+        document.getElementById('active-count').textContent = active;
+        document.getElementById('inactive-count').textContent = inactive;
+        document.getElementById('terminated-count').textContent = terminated;
+      }
+      
+      // Render customers
+      function renderCustomers() {
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageCustomers = filteredCustomers.slice(start, end);
+        
+        tableBody.innerHTML = pageCustomers.map((customer, index) => {
+          const rowNum = start + index + 1;
+          const status = customer.status || '';
+          const statusClass = status ? `status-${status}` : '';
+          
+          return `
+            <tr>
+              <td>${rowNum}</td>
+              <td>${customer.company_name || ''}</td>
+              <td>${customer.store_name || ''}</td>
+              <td>${customer.contact_person || ''}</td>
+              <td>${customer.email || ''}</td>
+              <td>${customer.sales_rep || ''}</td>
+              <td><span class="status-badge ${statusClass}">${status}</span></td>
+              <td>-</td>
+              <td>
+                <a href="/admin/users/customers/${customer.id}" class="btn-icon" title="詳細">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="/admin/users/customers/${customer.id}/edit" class="btn-icon" title="編集">
+                  <i class="fas fa-edit"></i>
+                </a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+        // Update pagination
+        const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+        document.getElementById('pagination-info').textContent = `${currentPage} / ${totalPages || 1}`;
+        document.getElementById('prev-page').disabled = currentPage === 1;
+        document.getElementById('next-page').disabled = currentPage >= totalPages;
+      }
+      
+      // Filter customers
+      function filterCustomers() {
+        const searchQuery = searchInput.value.toLowerCase().trim();
+        const statusValue = statusFilter.value;
+        const salesRepValue = salesRepFilter.value;
+        
+        filteredCustomers = customers.filter(customer => {
+          let match = true;
+          
+          if (searchQuery) {
+            const searchText = `${customer.company_name || ''} ${customer.store_name || ''} ${customer.contact_person || ''} ${customer.email || ''}`.toLowerCase();
+            match = match && searchText.includes(searchQuery);
+          }
+          
+          if (statusValue) {
+            match = match && (customer.status === statusValue);
+          }
+          
+          if (salesRepValue) {
+            match = match && (customer.sales_rep === salesRepValue);
+          }
+          
+          return match;
+        });
+        
+        currentPage = 1;
+        renderCustomers();
+      }
+      
+      // Event listeners
+      searchInput.addEventListener('input', filterCustomers);
+      statusFilter.addEventListener('change', filterCustomers);
+      salesRepFilter.addEventListener('change', filterCustomers);
+      
+      document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderCustomers();
+        }
+      });
+      
+      document.getElementById('next-page').addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderCustomers();
+        }
+      });
+      
+      // Initial render
+      updateStats();
+      renderCustomers();
+    })();
+  </script>
+</main>
+

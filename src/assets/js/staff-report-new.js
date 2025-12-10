@@ -1031,6 +1031,15 @@
       };
     }
     
+    // updateCleaningItemCustomも自動保存を呼ぶようにラップ
+    const originalUpdateCleaningItemCustom = window.updateCleaningItemCustom;
+    if (originalUpdateCleaningItemCustom) {
+      window.updateCleaningItemCustom = function(sectionId, value) {
+        originalUpdateCleaningItemCustom(sectionId, value);
+        autoSave();
+      };
+    }
+    
     if (originalUpdateSectionContent) {
       window.updateSectionContent = function(sectionId, value) {
         originalUpdateSectionContent(sectionId, value);
@@ -3073,7 +3082,7 @@
             ${options}
             <option value="__other__">その他（自由入力）</option>
           </select>
-          <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItem('${sectionId}', this.value)">
+          <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItemCustom('${sectionId}', this.value)">
           <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
             <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入">
               <i class="fas fa-image"></i>

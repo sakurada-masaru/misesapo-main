@@ -1,0 +1,956 @@
+@layout('layouts.base')
+@json('data/meta/staff_attendance_history_title.json', $title)
+@json('data/meta/staff_attendance_history_body_class.json', $body_class)
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/staff/mypage" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">従業員</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/staff/mypage" class="nav-item" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/staff/attendance-history" class="nav-item active" data-page="attendance-history">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">出勤履歴</span>
+    </a>
+    <a href="/staff/daily-reports" class="nav-item" data-page="daily-reports">
+      <i class="fas fa-edit"></i>
+      <span class="nav-label">日報</span>
+    </a>
+    <a href="/staff/schedule" class="nav-item" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/staff/assignments" class="nav-item" data-page="assignments">
+      <i class="fas fa-tasks"></i>
+      <span class="nav-label">作業一覧</span>
+    </a>
+    <a href="/staff/reports" class="nav-item" data-page="reports">
+      <i class="fas fa-clipboard-list"></i>
+      <span class="nav-label">レポート一覧</span>
+    </a>
+    <a href="/cleaning-manual" class="nav-item" data-page="cleaning-manual">
+      <i class="fas fa-book"></i>
+      <span class="nav-label">清掃マニュアル</span>
+    </a>
+    <a href="/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">お知らせ</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/staff/mypage/settings" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <button class="nav-item logout-btn" id="logout-btn">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
+
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<main id="main" class="container staff-page main-content">
+  <div id="loading" class="loading-state">
+    <div class="loading-spinner"></div>
+    <p>読み込み中...</p>
+  </div>
+
+  <div id="error-message" class="error-state" style="display: none;">
+    <i class="fas fa-exclamation-circle"></i>
+    <p id="error-text">エラーが発生しました</p>
+    <button class="btn btn-primary" onclick="location.reload()">再読み込み</button>
+  </div>
+
+  <div id="page-content" class="attendance-history-page" style="display: none;">
+    <!-- ヘッダー -->
+    <div class="page-header">
+      <h1 class="page-title">
+        <i class="fas fa-history"></i>
+        出勤履歴
+      </h1>
+      <div class="month-selector">
+        <button class="btn btn-icon" id="prev-month">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="current-month" id="current-month">2025年12月</span>
+        <button class="btn btn-icon" id="next-month">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- サマリーカード -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="summary-icon working">
+          <i class="fas fa-briefcase"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value" id="total-work-days">0</span>
+          <span class="summary-label">出勤日数</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon休み">
+          <i class="fas fa-bed"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value" id="total-off-days">0</span>
+          <span class="summary-label">休日</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon time">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value" id="total-work-hours">0h</span>
+          <span class="summary-label">総労働時間</span>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon avg">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="summary-content">
+          <span class="summary-value" id="avg-work-hours">0h</span>
+          <span class="summary-label">平均労働時間</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- カレンダービュー -->
+    <div class="calendar-view card">
+      <div class="calendar-header">
+        <div class="day-name">日</div>
+        <div class="day-name">月</div>
+        <div class="day-name">火</div>
+        <div class="day-name">水</div>
+        <div class="day-name">木</div>
+        <div class="day-name">金</div>
+        <div class="day-name">土</div>
+      </div>
+      <div class="calendar-body" id="calendar-body">
+        <!-- カレンダーが動的に生成される -->
+      </div>
+    </div>
+
+    <!-- 詳細リスト -->
+    <div class="history-list card">
+      <div class="card-header">
+        <h2><i class="fas fa-list"></i> 出勤記録一覧</h2>
+      </div>
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>曜日</th>
+              <th>出勤</th>
+              <th>退勤</th>
+              <th>休憩</th>
+              <th>労働時間</th>
+              <th>ステータス</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <!-- データが動的に生成される -->
+          </tbody>
+        </table>
+      </div>
+      <div id="no-data" class="empty-state" style="display: none;">
+        <i class="fas fa-calendar-times"></i>
+        <p>この月の出勤記録はありません</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<style>
+  .staff-page {
+    width: 100%;
+    max-width: none;
+    min-height: 100vh;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+
+  .loading-state, .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: #6b7280;
+  }
+
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e5e7eb;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .error-state i {
+    font-size: 48px;
+    color: #ef4444;
+    margin-bottom: 16px;
+  }
+
+  /* ページヘッダー */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .page-title i {
+    color: var(--primary);
+  }
+
+  .month-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-icon:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  .current-month {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    min-width: 120px;
+    text-align: center;
+  }
+
+  /* サマリーカード */
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .summary-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .summary-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+  }
+
+  .summary-icon.working {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+
+  .summary-icon.休み {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .summary-icon.time {
+    background: #d1fae5;
+    color: #059669;
+  }
+
+  .summary-icon.avg {
+    background: #ede9fe;
+    color: #7c3aed;
+  }
+
+  .summary-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .summary-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  /* カレンダービュー */
+  .calendar-view {
+    margin-bottom: 24px;
+    padding: 20px;
+  }
+
+  .calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .day-name {
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    padding: 8px;
+  }
+
+  .day-name:first-child {
+    color: #ef4444;
+  }
+
+  .day-name:last-child {
+    color: #3b82f6;
+  }
+
+  .calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .calendar-day {
+    aspect-ratio: 1;
+    min-height: 80px;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
+  }
+
+  .calendar-day.other-month {
+    opacity: 0.4;
+  }
+
+  .calendar-day.today {
+    border-color: var(--primary);
+    border-width: 2px;
+  }
+
+  .calendar-day.worked {
+    background: #d1fae5;
+    border-color: #10b981;
+  }
+
+  .calendar-day.off {
+    background: #fef3c7;
+    border-color: #f59e0b;
+  }
+
+  .calendar-day.late {
+    background: #fee2e2;
+    border-color: #ef4444;
+  }
+
+  .calendar-day-date {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .calendar-day:first-child .calendar-day-date,
+  .calendar-day:nth-child(7n+1) .calendar-day-date {
+    color: #ef4444;
+  }
+
+  .calendar-day:nth-child(7n) .calendar-day-date {
+    color: #3b82f6;
+  }
+
+  .calendar-day-hours {
+    margin-top: auto;
+    font-size: 0.75rem;
+    color: #059669;
+    font-weight: 600;
+  }
+
+  .calendar-day-status {
+    font-size: 0.625rem;
+    margin-top: 4px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .calendar-day-status.late {
+    background: #fecaca;
+    color: #dc2626;
+  }
+
+  /* 履歴テーブル */
+  .history-list {
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .card-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .history-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .history-table th {
+    background: #f9fafb;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+  }
+
+  .history-table td {
+    font-size: 0.875rem;
+    color: #374151;
+  }
+
+  .history-table tr:hover {
+    background: #f9fafb;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .status-badge.worked {
+    background: #d1fae5;
+    color: #059669;
+  }
+
+  .status-badge.off {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .status-badge.late {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .empty-state {
+    padding: 48px;
+    text-align: center;
+    color: #9ca3af;
+  }
+
+  .empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  /* レスポンシブ */
+  @media (max-width: 1024px) {
+    .summary-cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .staff-page.main-content {
+      margin-left: 0 !important;
+      width: 100% !important;
+      padding: 16px;
+    }
+
+    .page-header {
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .summary-cards {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .calendar-day {
+      min-height: 60px;
+      padding: 4px;
+    }
+
+    .calendar-day-date {
+      font-size: 0.75rem;
+    }
+
+    .calendar-day-hours {
+      font-size: 0.625rem;
+    }
+
+    .history-table th,
+    .history-table td {
+      padding: 8px;
+      font-size: 0.75rem;
+    }
+  }
+</style>
+
+<script>
+  const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  let currentUser = null;
+  let currentDate = new Date();
+  let attendanceData = [];
+
+  // 初期化
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadCurrentUser();
+    setupEventListeners();
+  });
+
+  // ユーザー情報を読み込み
+  async function loadCurrentUser() {
+    const loadingEl = document.getElementById('loading');
+    const contentEl = document.getElementById('page-content');
+    const errorEl = document.getElementById('error-message');
+
+    try {
+      // Cognito認証を確認
+      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
+        const cognitoUser = await window.CognitoAuth.getCurrentUser();
+        if (cognitoUser) {
+          currentUser = cognitoUser;
+        }
+      }
+
+      if (!currentUser || !currentUser.id) {
+        throw new Error('ログインしてください。');
+      }
+
+      // サイドバーのロールバッジを更新
+      const roleBadge = document.getElementById('sidebar-role-badge');
+      if (roleBadge && currentUser.department) {
+        roleBadge.textContent = currentUser.department;
+      }
+
+      // 出勤データを読み込み
+      await loadAttendanceData();
+
+      loadingEl.style.display = 'none';
+      contentEl.style.display = 'block';
+
+    } catch (error) {
+      console.error('Error loading user:', error);
+      loadingEl.style.display = 'none';
+      errorEl.style.display = 'flex';
+      document.getElementById('error-text').textContent = error.message;
+    }
+  }
+
+  // 出勤データを読み込み
+  async function loadAttendanceData() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    attendanceData = [];
+
+    // 1. まずローカルストレージからデータを読み込む（マイページと同じデータソース）
+    try {
+      const stored = localStorage.getItem('attendanceRecords');
+      if (stored) {
+        const allRecords = JSON.parse(stored);
+        
+        // 該当月のデータを抽出
+        for (const dateStr in allRecords) {
+          const date = new Date(dateStr);
+          if (date.getFullYear() === year && date.getMonth() === month) {
+            const userRecord = allRecords[dateStr][currentUser.id];
+            if (userRecord) {
+              attendanceData.push({
+                date: dateStr,
+                staff_id: currentUser.id,
+                clock_in: userRecord.clock_in,
+                clock_out: userRecord.clock_out,
+                breaks: userRecord.breaks || [],
+                work_hours: userRecord.work_hours,
+                is_late: userRecord.is_late
+              });
+            }
+          }
+        }
+        console.log('[AttendanceHistory] Loaded from localStorage:', attendanceData.length, 'records');
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+    }
+
+    // 2. APIからもデータを取得してマージ（ローカルにないデータを補完）
+    try {
+      const response = await fetch(
+        `${API_BASE}/attendance?staff_id=${currentUser.id}&year=${year}&month=${month + 1}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const apiRecords = Array.isArray(data) ? data : (data.items || []);
+        
+        // APIデータをマージ（ローカルにないものだけ追加）
+        const existingDates = new Set(attendanceData.map(r => r.date));
+        apiRecords.forEach(record => {
+          if (!existingDates.has(record.date)) {
+            attendanceData.push(record);
+          }
+        });
+        console.log('[AttendanceHistory] After API merge:', attendanceData.length, 'records');
+      }
+    } catch (error) {
+      console.error('Error loading from API:', error);
+    }
+
+    // 日付でソート（新しい順）
+    attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    renderPage();
+  }
+
+  // ページをレンダリング
+  function renderPage() {
+    updateMonthDisplay();
+    renderSummary();
+    renderCalendar();
+    renderHistoryTable();
+  }
+
+  // 月表示を更新
+  function updateMonthDisplay() {
+    const monthEl = document.getElementById('current-month');
+    monthEl.textContent = `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月`;
+  }
+
+  // サマリーをレンダリング
+  function renderSummary() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    let workDays = 0;
+    let totalHours = 0;
+
+    attendanceData.forEach(record => {
+      if (record.clock_in && record.clock_out) {
+        workDays++;
+        const hours = record.work_hours || calculateWorkHours(record);
+        totalHours += hours;
+      }
+    });
+
+    // 休日計算（土日 + 祝日を除く）
+    let offDays = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      const dayOfWeek = date.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        offDays++;
+      }
+    }
+
+    const avgHours = workDays > 0 ? (totalHours / workDays) : 0;
+
+    document.getElementById('total-work-days').textContent = workDays + '日';
+    document.getElementById('total-off-days').textContent = offDays + '日';
+    document.getElementById('total-work-hours').textContent = formatHours(totalHours);
+    document.getElementById('avg-work-hours').textContent = formatHours(avgHours);
+  }
+
+  // カレンダーをレンダリング
+  function renderCalendar() {
+    const calendarBody = document.getElementById('calendar-body');
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDay = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    // 出勤データをマップに変換
+    const attendanceMap = {};
+    attendanceData.forEach(record => {
+      attendanceMap[record.date] = record;
+    });
+
+    let html = '';
+
+    // 前月の日付
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = startDay - 1; i >= 0; i--) {
+      html += `<div class="calendar-day other-month">
+        <span class="calendar-day-date">${prevMonthLastDay - i}</span>
+      </div>`;
+    }
+
+    // 今月の日付
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const record = attendanceMap[dateStr];
+      const isToday = dateStr === todayStr;
+
+      let dayClass = 'calendar-day';
+      if (isToday) dayClass += ' today';
+
+      let hoursHtml = '';
+      let statusHtml = '';
+
+      if (record && record.clock_in) {
+        if (record.clock_out) {
+          dayClass += ' worked';
+          const hours = record.work_hours || calculateWorkHours(record);
+          hoursHtml = `<span class="calendar-day-hours">${formatHours(hours)}</span>`;
+        }
+        if (record.is_late) {
+          dayClass += ' late';
+          statusHtml = `<span class="calendar-day-status late">遅刻</span>`;
+        }
+      }
+
+      html += `<div class="${dayClass}">
+        <span class="calendar-day-date">${d}</span>
+        ${hoursHtml}
+        ${statusHtml}
+      </div>`;
+    }
+
+    // 翌月の日付
+    const remainingDays = 42 - (startDay + daysInMonth);
+    for (let d = 1; d <= remainingDays; d++) {
+      html += `<div class="calendar-day other-month">
+        <span class="calendar-day-date">${d}</span>
+      </div>`;
+    }
+
+    calendarBody.innerHTML = html;
+  }
+
+  // 履歴テーブルをレンダリング
+  function renderHistoryTable() {
+    const tbody = document.getElementById('history-table-body');
+    const noData = document.getElementById('no-data');
+
+    if (attendanceData.length === 0) {
+      tbody.innerHTML = '';
+      noData.style.display = 'block';
+      return;
+    }
+
+    noData.style.display = 'none';
+
+    const sortedData = [...attendanceData].sort((a, b) => 
+      new Date(b.date) - new Date(a.date)
+    );
+
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+
+    let html = '';
+    sortedData.forEach(record => {
+      const date = new Date(record.date);
+      const dayOfWeek = dayNames[date.getDay()];
+      const dayClass = date.getDay() === 0 ? 'color: #ef4444;' : 
+                       date.getDay() === 6 ? 'color: #3b82f6;' : '';
+
+      const clockIn = record.clock_in ? formatTime(record.clock_in) : '-';
+      const clockOut = record.clock_out ? formatTime(record.clock_out) : '-';
+      const breakTime = record.breaks ? formatBreakTime(record.breaks) : '-';
+      const workHours = record.clock_out ? formatHours(record.work_hours || calculateWorkHours(record)) : '-';
+
+      let status = '';
+      if (record.clock_out) {
+        if (record.is_late) {
+          status = '<span class="status-badge late"><i class="fas fa-exclamation-circle"></i> 遅刻</span>';
+        } else {
+          status = '<span class="status-badge worked"><i class="fas fa-check"></i> 出勤</span>';
+        }
+      } else if (record.clock_in) {
+        status = '<span class="status-badge" style="background:#dbeafe;color:#2563eb;"><i class="fas fa-briefcase"></i> 勤務中</span>';
+      }
+
+      html += `<tr>
+        <td>${formatDate(record.date)}</td>
+        <td style="${dayClass}">${dayOfWeek}</td>
+        <td>${clockIn}</td>
+        <td>${clockOut}</td>
+        <td>${breakTime}</td>
+        <td><strong>${workHours}</strong></td>
+        <td>${status}</td>
+      </tr>`;
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  // イベントリスナーを設定
+  function setupEventListeners() {
+    document.getElementById('prev-month').addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      loadAttendanceData();
+    });
+
+    document.getElementById('next-month').addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      loadAttendanceData();
+    });
+
+    // ログアウト
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      if (window.CognitoAuth) {
+        await window.CognitoAuth.signOut();
+      }
+      window.location.href = '/staff/signin.html';
+    });
+  }
+
+  // ユーティリティ関数
+  function calculateWorkHours(record) {
+    if (!record.clock_in || !record.clock_out) return 0;
+    const start = new Date(record.clock_in);
+    const end = new Date(record.clock_out);
+    let hours = (end - start) / (1000 * 60 * 60);
+
+    // 休憩時間を引く
+    if (record.breaks && Array.isArray(record.breaks)) {
+      record.breaks.forEach(b => {
+        if (b.start && b.end) {
+          const breakStart = new Date(b.start);
+          const breakEnd = new Date(b.end);
+          hours -= (breakEnd - breakStart) / (1000 * 60 * 60);
+        }
+      });
+    }
+
+    return Math.max(0, hours);
+  }
+
+  function formatHours(hours) {
+    if (!hours || hours === 0) return '0h';
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if (m === 0) return `${h}h`;
+    return `${h}h${m}m`;
+  }
+
+  function formatTime(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
+  function formatBreakTime(breaks) {
+    if (!breaks || breaks.length === 0) return '-';
+    let totalMinutes = 0;
+    breaks.forEach(b => {
+      if (b.start && b.end) {
+        const start = new Date(b.start);
+        const end = new Date(b.end);
+        totalMinutes += (end - start) / (1000 * 60);
+      }
+    });
+    if (totalMinutes === 0) return '-';
+    return `${Math.round(totalMinutes)}分`;
+  }
+</script>
+
