@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ガントチャート | ミセサポ</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .gantt-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .gantt-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .gantt-table th {
+            background: #f8f9fa;
+            padding: 12px 8px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .gantt-table td {
+            padding: 10px 8px;
+            border: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+        .gantt-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .gantt-table tr:hover {
+            background: #e9ecef;
+        }
+        .task-id {
+            font-weight: 600;
+            color: #495057;
+            width: 60px;
+        }
+        .task-name {
+            min-width: 300px;
+        }
+        .task-name.level-1 {
+            font-weight: 700;
+            color: #212529;
+            background: #e3f2fd;
+        }
+        .task-name.level-2 {
+            padding-left: 20px;
+            color: #495057;
+        }
+        .task-name.level-3 {
+            padding-left: 40px;
+            color: #6c757d;
+        }
+        .task-assignee {
+            width: 100px;
+            text-align: center;
+        }
+        .task-deadline {
+            width: 100px;
+            text-align: center;
+        }
+        .period-column {
+            width: 120px;
+            text-align: center;
+            position: relative;
+        }
+        .period-marker {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white;
+        }
+        .marker-filled {
+            background: #3b82f6;
+        }
+        .marker-star {
+            background: #f59e0b;
+        }
+        .marker-arrow-right {
+            background: #10b981;
+        }
+        .marker-arrow-play {
+            background: #ef4444;
+        }
+        .gantt-bar {
+            height: 24px;
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 4px;
+            position: relative;
+            margin: 2px 0;
+        }
+        .gantt-bar.milestone {
+            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+        }
+        .gantt-bar.event {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+        .gantt-bar.final {
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
+        .legend {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .legend h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-marker {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        @media (max-width: 768px) {
+            .gantt-container {
+                padding: 10px;
+                overflow-x: auto;
+            }
+            .gantt-table {
+                font-size: 12px;
+            }
+            .task-name {
+                min-width: 200px;
+            }
+            .period-column {
+                width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gantt-container">
+        <h1>イベント準備ガントチャート</h1>
+        
+        <div style="overflow-x: auto;">
+            <table class="gantt-table" id="gantt-table">
+                <thead>
+                    <tr>
+                        <th class="task-id">ID</th>
+                        <th class="task-name">タスク階層</th>
+                        <th class="task-assignee">担当</th>
+                        <th class="task-deadline">期限日</th>
+                        <th class="period-column">12月上旬</th>
+                        <th class="period-column">12月下旬</th>
+                        <th class="period-column">1月上旬</th>
+                        <th class="period-column">1月12-18日</th>
+                    </tr>
+                </thead>
+                <tbody id="gantt-body">
+                    <!-- データが動的に挿入されます -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="legend">
+            <h3>凡例</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <span class="legend-marker marker-filled"></span>
+                    <span>進行中タスク</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-marker marker-star"></span>
+                    <span>全準備完了（マイルストーン）</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-marker marker-arrow-right"></span>
+                    <span>搬入・設営日</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-marker marker-arrow-play"></span>
+                    <span>イベント開催日</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ガントチャートデータ
+        const ganttData = [
+            { id: '1', name: '【フェーズ I】 初期計画と重要申請の確定', assignee: '事務局', deadline: '12/16', periods: ['', '', '', ''] },
+            { id: '1.1', name: 'S-1: 火気・食品取扱申請等 （最重要）', assignee: '制作', deadline: '12/5', periods: ['■', '', '', ''], level: 2 },
+            { id: '1.2', name: 'S-2: PRプラン申込・広告原稿入稿', assignee: '制作', deadline: '12/11', periods: ['■', '', '', ''], level: 2 },
+            { id: '1.3', name: 'A-1: アタックリスト原案作成', assignee: '事務局', deadline: '12/12', periods: ['■', '', '', ''], level: 2 },
+            { id: '1.4', name: 'D-1: ノベルティ企画決定・発注', assignee: '開発', deadline: '12/16', periods: ['', '■', '', ''], level: 2 },
+            { id: '1.5', name: 'F-1: 収支リスト（初期案）作成・経費連携', assignee: '事務局', deadline: '12/16', periods: ['', '■', '', ''], level: 2 },
+            { id: '2', name: '【フェーズ II】 制作物の発注と営業実行', assignee: '制作', deadline: '1/10', periods: ['', '', '', ''] },
+            { id: '2.1', name: 'P-1: 招待券・IDパスの印刷完了', assignee: '制作', deadline: '12/23', periods: ['', '■', '', ''], level: 2 },
+            { id: '2.2', name: 'A-2: アタックリスト実行と進捗報告', assignee: '営業', deadline: '1/10', periods: ['', '■', '■', '■'], level: 2 },
+            { id: '2.3', name: 'P-2: 会場サイン最終デザイン確定', assignee: '制作', deadline: '1/10', periods: ['', '', '■', ''], level: 2 },
+            { id: '3', name: '【フェーズ III】 最終納品と当日準備', assignee: '事務局', deadline: '1/17', periods: ['', '', '', ''] },
+            { id: '3.1', name: 'F-2: 収支リスト（確定版）の作成', assignee: '事務局', deadline: '1/15', periods: ['', '', '', '■'], level: 2 },
+            { id: '3.2', name: 'P-3: ガイドマップ（最終版）印刷納品', assignee: '制作', deadline: '1/14', periods: ['', '', '', '■'], level: 2 },
+            { id: '3.3', name: 'O-1: 当日イベントの流れ作成', assignee: '事務局', deadline: '1/15', periods: ['', '', '', '■'], level: 2 },
+            { id: '3.4', name: 'P-4: 設営・運営マニュアル最終版作成', assignee: '制作', deadline: '1/15', periods: ['', '', '', '■'], level: 2 },
+            { id: '3.5', name: 'O-2: 事前準備物リストの作成・発注', assignee: '事務局', deadline: '1/16', periods: ['', '', '', '■'], level: 2 },
+            { id: '3.6', name: 'P-5: 全制作物の梱包・搬入リスト確定', assignee: '制作', deadline: '1/16', periods: ['', '', '', '■'], level: 2 },
+            { id: '3.7', name: 'F-3: 搬入車両証・IDパス配布準備完了', assignee: '事務局', deadline: '1/17', periods: ['', '', '', '■'], level: 2 },
+            { id: '4', name: '【最終ゴール】', assignee: '全員', deadline: '1/17', periods: ['', '', '', ''] },
+            { id: '4.1', name: '全準備完了', assignee: '全員', deadline: '1/17', periods: ['', '', '', '★'], level: 2, milestone: true },
+            { id: '4.2', name: '搬入・設営日', assignee: '制作', deadline: '1/19', periods: ['', '', '', '▷'], level: 2, event: true },
+            { id: '4.3', name: 'イベント開催日', assignee: '全員', deadline: '1/20', periods: ['', '', '', '▶'], level: 2, final: true }
+        ];
+
+        function renderGanttChart() {
+            const tbody = document.getElementById('gantt-body');
+            tbody.innerHTML = '';
+
+            ganttData.forEach(task => {
+                const row = document.createElement('tr');
+                const level = task.level || 1;
+                
+                // ID
+                const idCell = document.createElement('td');
+                idCell.className = 'task-id';
+                idCell.textContent = task.id;
+                row.appendChild(idCell);
+
+                // タスク名
+                const nameCell = document.createElement('td');
+                nameCell.className = `task-name level-${level}`;
+                nameCell.textContent = task.name;
+                row.appendChild(nameCell);
+
+                // 担当
+                const assigneeCell = document.createElement('td');
+                assigneeCell.className = 'task-assignee';
+                assigneeCell.textContent = task.assignee;
+                row.appendChild(assigneeCell);
+
+                // 期限日
+                const deadlineCell = document.createElement('td');
+                deadlineCell.className = 'task-deadline';
+                deadlineCell.textContent = task.deadline;
+                row.appendChild(deadlineCell);
+
+                // 期間マーカー
+                task.periods.forEach((marker, index) => {
+                    const periodCell = document.createElement('td');
+                    periodCell.className = 'period-column';
+                    
+                    if (marker) {
+                        const markerSpan = document.createElement('span');
+                        markerSpan.className = 'period-marker';
+                        
+                        if (marker === '■') {
+                            markerSpan.className += ' marker-filled';
+                            markerSpan.textContent = '■';
+                        } else if (marker === '★') {
+                            markerSpan.className += ' marker-star';
+                            markerSpan.textContent = '★';
+                        } else if (marker === '▷') {
+                            markerSpan.className += ' marker-arrow-right';
+                            markerSpan.textContent = '▷';
+                        } else if (marker === '▶') {
+                            markerSpan.className += ' marker-arrow-play';
+                            markerSpan.textContent = '▶';
+                        } else {
+                            // 複数の■がある場合
+                            const count = (marker.match(/■/g) || []).length;
+                            if (count > 0) {
+                                markerSpan.className += ' marker-filled';
+                                markerSpan.textContent = marker;
+                            }
+                        }
+                        
+                        periodCell.appendChild(markerSpan);
+                    }
+                    
+                    row.appendChild(periodCell);
+                });
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // ページ読み込み時にガントチャートを描画
+        document.addEventListener('DOMContentLoaded', renderGanttChart);
+    </script>
+</body>
+</html>
+
