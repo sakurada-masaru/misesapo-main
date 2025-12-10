@@ -695,9 +695,9 @@
                         bar.style.left = `${startPos}px`;
                         bar.style.width = `${width}px`;
                         
+                        // 項目名（ID）のみを表示
                         if (!task.milestone && !task.event && !task.final) {
-                            const shortName = task.name.length > 25 ? task.name.substring(0, 25) + '...' : task.name;
-                            bar.textContent = shortName;
+                            bar.textContent = task.id;
                         }
                         
                         barsArea.appendChild(bar);
