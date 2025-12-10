@@ -3154,7 +3154,7 @@ body.dark-mode .modal-footer {
 /* タブレット（768px以下） */
 @media (max-width: 768px) {
   .report-header-section {
-    padding: 12px 14px;
+    padding: 14px;
   }
   
   /* 日付・開始時刻・終了時刻を水平方向に並べる（768px以下） */
@@ -3171,7 +3171,16 @@ body.dark-mode .modal-footer {
   }
   
   .form-row.two-col {
-    gap: 10px;
+    gap: 12px;
+  }
+  
+  .form-row.three-col.date-time-row {
+    gap: 8px;
+  }
+  
+  .date-time-label {
+    font-size: 0.75rem;
+    margin-bottom: 4px;
   }
   
   .form-row.three-col-inline {
