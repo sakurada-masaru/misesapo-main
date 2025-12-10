@@ -258,6 +258,38 @@
         .legend-bar.final {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover {
+            color: #495057;
+            background: #f8f9fa;
+        }
+        .tab-btn.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+            background: #f0f7ff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
         @media (max-width: 768px) {
             .gantt-container {
                 padding: 15px;
@@ -270,6 +302,13 @@
             .gantt-task-name {
                 font-size: 13px;
             }
+            .tabs {
+                flex-wrap: wrap;
+            }
+            .tab-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -277,7 +316,17 @@
     <div class="gantt-container">
         <h1>イベント準備ガントチャート</h1>
         
-        <div class="gantt-wrapper" id="gantt-wrapper">
+        <!-- タブ -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="office" onclick="switchTab('office')">事務局</button>
+            <button class="tab-btn" data-tab="production" onclick="switchTab('production')">制作・開発</button>
+            <button class="tab-btn" data-tab="sales" onclick="switchTab('sales')">営業</button>
+            <button class="tab-btn" data-tab="goal" onclick="switchTab('goal')">ゴール</button>
+        </div>
+        
+        <!-- 事務局タブ -->
+        <div class="tab-content active" id="tab-office">
+            <div class="gantt-wrapper" id="gantt-wrapper-office">
             <div class="gantt-header">
                 <div class="gantt-task-column">
                     <div class="gantt-task-header">タスク</div>
@@ -286,9 +335,61 @@
                     <!-- タイムラインヘッダーが動的に生成されます -->
                 </div>
             </div>
-            <div id="gantt-body">
+            <div id="gantt-body-office">
                 <!-- ガントチャートの行が動的に生成されます -->
             </div>
+        </div>
+        </div>
+        
+        <!-- 制作・開発タブ -->
+        <div class="tab-content" id="tab-production">
+            <div class="gantt-wrapper" id="gantt-wrapper-production">
+            <div class="gantt-header">
+                <div class="gantt-task-column">
+                    <div class="gantt-task-header">タスク</div>
+                </div>
+                <div class="gantt-timeline-column" id="timeline-header-production">
+                    <!-- タイムラインヘッダーが動的に生成されます -->
+                </div>
+            </div>
+            <div id="gantt-body-production">
+                <!-- ガントチャートの行が動的に生成されます -->
+            </div>
+        </div>
+        </div>
+        
+        <!-- 営業タブ -->
+        <div class="tab-content" id="tab-sales">
+            <div class="gantt-wrapper" id="gantt-wrapper-sales">
+            <div class="gantt-header">
+                <div class="gantt-task-column">
+                    <div class="gantt-task-header">タスク</div>
+                </div>
+                <div class="gantt-timeline-column" id="timeline-header-sales">
+                    <!-- タイムラインヘッダーが動的に生成されます -->
+                </div>
+            </div>
+            <div id="gantt-body-sales">
+                <!-- ガントチャートの行が動的に生成されます -->
+            </div>
+        </div>
+        </div>
+        
+        <!-- ゴールタブ -->
+        <div class="tab-content" id="tab-goal">
+            <div class="gantt-wrapper" id="gantt-wrapper-goal">
+            <div class="gantt-header">
+                <div class="gantt-task-column">
+                    <div class="gantt-task-header">タスク</div>
+                </div>
+                <div class="gantt-timeline-column" id="timeline-header-goal">
+                    <!-- タイムラインヘッダーが動的に生成されます -->
+                </div>
+            </div>
+            <div id="gantt-body-goal">
+                <!-- ガントチャートの行が動的に生成されます -->
+            </div>
+        </div>
         </div>
 
         <div class="legend">
@@ -364,8 +465,10 @@
         }
 
         // タイムラインヘッダーを生成
-        function renderTimelineHeader(dates) {
-            const header = document.getElementById('timeline-header');
+        function renderTimelineHeader(dates, headerId = 'timeline-header') {
+            const header = document.getElementById(headerId);
+            if (!header) return;
+            header.innerHTML = '';
             const monthHeader = document.createElement('div');
             monthHeader.className = 'gantt-month-header';
             
@@ -414,20 +517,56 @@
             header.appendChild(daysContainer);
         }
 
-        // ガントチャートを描画
-        function renderGanttChart() {
+        // タスクを担当者でフィルタリング
+        function filterTasksByAssignee(assignee) {
+            if (assignee === 'office') {
+                return ganttData.filter(task => task.assignee === '事務局');
+            } else if (assignee === 'production') {
+                return ganttData.filter(task => task.assignee === '制作' || task.assignee === '開発');
+            } else if (assignee === 'sales') {
+                return ganttData.filter(task => task.assignee === '営業');
+            } else if (assignee === 'goal') {
+                return ganttData.filter(task => task.assignee === '全員' || task.id.startsWith('4'));
+            }
+            return [];
+        }
+
+        // タブ切り替え
+        function switchTab(tabName) {
+            // すべてのタブボタンとコンテンツを非アクティブに
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 選択されたタブをアクティブに
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            // 該当タブのガントチャートを描画
+            renderGanttChartForTab(tabName);
+        }
+
+        // 特定のタブ用にガントチャートを描画
+        function renderGanttChartForTab(tabName) {
             const dates = generateDateRange();
             const startDate = dates[0];
-            const dayWidth = 30; // 1日あたりの幅（ピクセル）
+            const dayWidth = 30;
             const totalWidth = dates.length * dayWidth;
             
-            // タイムラインヘッダーを生成
-            renderTimelineHeader(dates);
+            const filteredTasks = filterTasksByAssignee(tabName);
             
-            const body = document.getElementById('gantt-body');
+            // タイムラインヘッダーを生成
+            const headerId = tabName === 'office' ? 'timeline-header' : `timeline-header-${tabName}`;
+            renderTimelineHeader(dates, headerId);
+            
+            const bodyId = tabName === 'office' ? 'gantt-body-office' : `gantt-body-${tabName}`;
+            const body = document.getElementById(bodyId);
             body.innerHTML = '';
             
-            ganttData.forEach(task => {
+            filteredTasks.forEach(task => {
                 const row = document.createElement('div');
                 row.className = 'gantt-row';
                 
@@ -527,8 +666,15 @@
             });
         }
 
+        // ガントチャートを描画（後方互換性のため残す）
+        function renderGanttChart() {
+            renderGanttChartForTab('office');
+        }
+
         // ページ読み込み時にガントチャートを描画
-        document.addEventListener('DOMContentLoaded', renderGanttChart);
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGanttChartForTab('office');
+        });
     </script>
 </body>
 </html>
