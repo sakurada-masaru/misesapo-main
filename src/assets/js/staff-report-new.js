@@ -2150,14 +2150,42 @@
     const previewBtn = document.getElementById('preview-btn');
     const previewBtnProposal = document.getElementById('preview-btn-proposal');
     const previewSaveConfirmBtn = document.getElementById('preview-save-confirm-btn');
+    const previewSaveDialogClose = document.getElementById('preview-save-dialog-close');
+    const previewSaveDialogCancel = document.getElementById('preview-save-dialog-cancel');
+    const previewSaveDialog = document.getElementById('preview-save-dialog');
+    
+    // ダイアログを閉じる関数
+    const closePreviewSaveDialog = () => {
+      if (previewSaveDialog) {
+        previewSaveDialog.close();
+      }
+    };
     
     // 保存確認ダイアログを表示する関数
     const showPreviewSaveDialog = () => {
-      const dialog = document.getElementById('preview-save-dialog');
-      if (dialog) {
-        dialog.showModal();
+      if (previewSaveDialog) {
+        previewSaveDialog.showModal();
       }
     };
+    
+    // ダイアログの閉じるボタン
+    if (previewSaveDialogClose) {
+      previewSaveDialogClose.addEventListener('click', closePreviewSaveDialog);
+    }
+    
+    // キャンセルボタン
+    if (previewSaveDialogCancel) {
+      previewSaveDialogCancel.addEventListener('click', closePreviewSaveDialog);
+    }
+    
+    // ダイアログの背景クリックで閉じる
+    if (previewSaveDialog) {
+      previewSaveDialog.addEventListener('click', (e) => {
+        if (e.target === previewSaveDialog) {
+          closePreviewSaveDialog();
+        }
+      });
+    }
     
     if (previewBtn) {
       previewBtn.addEventListener('click', (e) => {
@@ -2175,10 +2203,7 @@
     // 保存してプレビューを表示
     if (previewSaveConfirmBtn) {
       previewSaveConfirmBtn.addEventListener('click', async () => {
-        const dialog = document.getElementById('preview-save-dialog');
-        if (dialog) {
-          dialog.close();
-        }
+        closePreviewSaveDialog();
         
         // レポートを一時保存してからプレビューを表示
         await saveReportForPreview();
