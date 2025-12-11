@@ -1075,10 +1075,52 @@
       }
     }, true);
     
-    // フォーム送信時に自動保存データをクリア
-    form.addEventListener('submit', () => {
+    // フォーム送信時に自動保存データをクリアし、送信処理を実行
+    form.addEventListener('submit', async (e) => {
+      // 送信ボタンがクリックされた場合のみ送信を許可
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (e.submitter !== submitBtn) {
+        e.preventDefault();
+        return;
+      }
       clearAutoSaveData();
+      await handleSubmit(e);
     });
+    
+    // フォーム内のinput要素でエンターキーを押したときにフォーム送信を防ぐ
+    form.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
+        // textarea以外のinput要素でエンターキーを押した場合は送信を防ぐ
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+          e.preventDefault();
+        }
+      }
+    });
+    
+    // 次回ご提案タブのフォームにも送信ハンドラーを設定
+    const proposalForm = document.getElementById('report-form-proposal');
+    if (proposalForm) {
+      proposalForm.addEventListener('submit', async (e) => {
+        // 送信ボタンがクリックされた場合のみ送信を許可
+        const submitBtn = proposalForm.querySelector('button[type="submit"]');
+        if (e.submitter !== submitBtn) {
+          e.preventDefault();
+          return;
+        }
+        clearAutoSaveData('proposal');
+        await handleSubmit(e);
+      });
+      
+      // フォーム内のinput要素でエンターキーを押したときにフォーム送信を防ぐ
+      proposalForm.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
+          // textarea以外のinput要素でエンターキーを押した場合は送信を防ぐ
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+            e.preventDefault();
+          }
+        }
+      });
+    }
   }
 
   // 修正依頼レポートを読み込み
@@ -5776,7 +5818,8 @@
   async function handleSubmit(e) {
     e.preventDefault();
 
-    const form = document.getElementById('report-form');
+    // 送信されたフォームを取得（新規作成タブまたは次回ご提案タブ）
+    const form = e.target;
     const reportId = form.dataset.reportId; // 編集モードかどうか
     const isEditMode = !!reportId;
 
@@ -5884,9 +5927,12 @@
     console.log('[Submit] Report data:', reportData);
 
     try {
-      const submitBtn = document.getElementById('submit-btn');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
+      // 送信ボタンを取得（新規作成タブまたは次回ご提案タブ）
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
+      }
 
       const idToken = await getFirebaseIdToken();
 
@@ -5936,7 +5982,7 @@
         sectionCounter = 0;
         document.getElementById('report-content').innerHTML = '';
         updateCleaningItemsList();
-        const submitBtn = document.getElementById('submit-btn');
+        const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
           submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> レポートを提出';
         }
@@ -5950,9 +5996,11 @@
       console.error('[Submit] Error:', error);
       console.error('[Submit] Report data that failed:', reportData);
       showError('送信に失敗しました: ' + getErrorMessage(error));
-      const submitBtn = document.getElementById('submit-btn');
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> レポートを提出';
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> レポートを提出';
+      }
     }
   }
 
