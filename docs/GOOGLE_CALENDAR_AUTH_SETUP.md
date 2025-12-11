@@ -341,3 +341,5 @@ Lambda関数の「設定」→「環境変数」で、以下の環境変数が�
    - CloudWatch Logsで認証エラーがないか定期的に確認
    - Secrets Managerのアクセスログを確認
 
+
+

@@ -70,3 +70,5 @@ GOOGLE_SERVICE_ACCOUNT_SECRET_NAME = google-calendar-service-account
 
 より詳しい手順やトラブルシューティングは、[認証情報の設定方法](GOOGLE_CALENDAR_AUTH_SETUP.md)を参照してください。
 
+
+

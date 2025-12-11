@@ -18,26 +18,8 @@
     </div>
   </div>
 
-  <!-- 認証フォーム（初回アクセス時のみ表示） -->
-  <div class="auth-form" id="auth-form" style="display: none;">
-    <div class="auth-card">
-      <h2>開発者認証</h2>
-      <p class="auth-description">このページは開発者専用です。パスワードを入力してください。</p>
-      <form id="login-form">
-        <div class="form-group">
-          <label class="form-label">パスワード</label>
-          <input type="password" class="form-input" id="password-input" placeholder="パスワードを入力" required />
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">
-          <i class="fas fa-lock"></i> 認証
-        </button>
-      </form>
-      <p class="auth-error" id="auth-error" style="display: none;"></p>
-    </div>
-  </div>
-
-  <!-- メインコンテンツ（認証後表示） -->
-  <div class="review-content" id="review-content" style="display: none;">
+  <!-- メインコンテンツ（AWS Cognito認証済みの従業員がアクセス） -->
+  <div class="review-content" id="review-content">
     <!-- 変更状況サマリー -->
     <div class="status-summary" id="status-summary">
       <div class="status-card">
@@ -88,76 +70,8 @@
 
   <script>
     (function() {
-      // 認証管理
-      const AUTH_KEY = 'dev_review_authenticated';
-      const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8時間
-      // パスワード（本番環境では環境変数や設定ファイルから取得することを推奨）
-      const DEV_PASSWORD = 'misesapo1234'; // 開発用パスワード
-      
-      const authForm = document.getElementById('auth-form');
-      const reviewContent = document.getElementById('review-content');
-      const loginForm = document.getElementById('login-form');
-      const passwordInput = document.getElementById('password-input');
-      const authError = document.getElementById('auth-error');
-      
-      function checkAuthentication() {
-        const authData = sessionStorage.getItem(AUTH_KEY);
-        if (!authData) return false;
-        
-        try {
-          const { timestamp } = JSON.parse(authData);
-          const now = Date.now();
-          if (now - timestamp > SESSION_DURATION) {
-            sessionStorage.removeItem(AUTH_KEY);
-            return false;
-          }
-          return true;
-        } catch (e) {
-          return false;
-        }
-      }
-      
-      function setAuthentication() {
-        sessionStorage.setItem(AUTH_KEY, JSON.stringify({
-          timestamp: Date.now()
-        }));
-      }
-      
-      function showAuthForm() {
-        authForm.style.display = 'block';
-        reviewContent.style.display = 'none';
-      }
-      
-      function showReviewContent() {
-        authForm.style.display = 'none';
-        reviewContent.style.display = 'block';
-        loadChanges();
-      }
-      
-      // 認証チェック
-      if (checkAuthentication()) {
-        showReviewContent();
-      } else {
-        showAuthForm();
-      }
-      
-      // ログインフォーム
-      if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          const password = passwordInput.value;
-          
-          if (password === DEV_PASSWORD) {
-            setAuthentication();
-            authError.style.display = 'none';
-            showReviewContent();
-          } else {
-            authError.textContent = 'パスワードが正しくありません';
-            authError.style.display = 'block';
-            passwordInput.value = '';
-          }
-        });
-      }
+      // 認証はAWS Cognitoで行われているため、パスワード認証は不要
+      // 従業員は全員ログインアカウントを持っているため、直接コンテンツを表示
       
       // 変更内容の読み込み
       async function loadChanges() {
@@ -563,6 +477,9 @@
           }
         });
       }
+      
+      // ページ読み込み時に変更内容を読み込む
+      loadChanges();
     })();
   </script>
 

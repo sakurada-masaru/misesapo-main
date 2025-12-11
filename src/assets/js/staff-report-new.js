@@ -206,6 +206,22 @@
     
     // リアルタイムバリデーションを設定
     setupRealTimeValidation();
+    
+    // プレビューモーダルが開いていないことを確認（強制的に非表示）
+    const previewDialog = document.getElementById('preview-dialog');
+    if (previewDialog) {
+      previewDialog.classList.remove('show');
+      previewDialog.style.display = 'none';
+      previewDialog.style.setProperty('display', 'none', 'important');
+    }
+    
+    // プレビュー保存確認ダイアログが開いていないことを確認（強制的に閉じる）
+    const previewSaveDialog = document.getElementById('preview-save-dialog');
+    if (previewSaveDialog) {
+      if (previewSaveDialog.open) {
+        previewSaveDialog.close();
+      }
+    }
   });
   
   // モバイルキーボード表示時のスクロール問題を修正
@@ -2157,7 +2173,9 @@
     // ダイアログを閉じる関数
     const closePreviewSaveDialog = () => {
       if (previewSaveDialog) {
-        previewSaveDialog.close();
+        if (previewSaveDialog.open) {
+          previewSaveDialog.close();
+        }
       }
     };
     
@@ -2178,13 +2196,28 @@
       previewSaveDialogCancel.addEventListener('click', closePreviewSaveDialog);
     }
     
-    // ダイアログの背景クリックで閉じる
+    // ダイアログの背景クリックで閉じる（SP対応）
     if (previewSaveDialog) {
+      // 背景クリックで閉じる
       previewSaveDialog.addEventListener('click', (e) => {
         if (e.target === previewSaveDialog) {
           closePreviewSaveDialog();
         }
       });
+      
+      // ESCキーで閉じる
+      previewSaveDialog.addEventListener('cancel', (e) => {
+        e.preventDefault();
+        closePreviewSaveDialog();
+      });
+      
+      // SP画面でのタッチイベント対応
+      previewSaveDialog.addEventListener('touchstart', (e) => {
+        if (e.target === previewSaveDialog) {
+          e.preventDefault();
+          closePreviewSaveDialog();
+        }
+      }, { passive: false });
     }
     
     if (previewBtn) {
@@ -2459,11 +2492,11 @@
         imageStock.forEach(item => {
           if (!item.warehouseUrl) {
             // ローカルのみの画像の場合、Blob URLを再生成
-            if (item.data && !item.blobUrl) {
-              const blob = new Blob([item.data], { type: item.type || 'image/jpeg' });
-              item.blobUrl = URL.createObjectURL(blob);
-            } else if (item.blobData && !item.blobUrl) {
-              item.blobUrl = URL.createObjectURL(new Blob([item.blobData], { type: item.fileType || 'image/jpeg' }));
+          if (item.data && !item.blobUrl) {
+            const blob = new Blob([item.data], { type: item.type || 'image/jpeg' });
+            item.blobUrl = URL.createObjectURL(blob);
+          } else if (item.blobData && !item.blobUrl) {
+            item.blobUrl = URL.createObjectURL(new Blob([item.blobData], { type: item.fileType || 'image/jpeg' }));
             }
           }
         });
@@ -3024,7 +3057,7 @@
 
     // warehouseUrlがあればそれを使用、なければblobUrlを使用
     const imageUrl = imageData.warehouseUrl || imageData.blobUrl;
-    
+
     // データに追加（画像データオブジェクトとして保存）
     sections[sectionId].photos[category].push({
       imageId: imageData.id,
@@ -3320,8 +3353,8 @@
                 </div>
                   <label class="image-add-btn" style="cursor: pointer;">
                     <input type="file" accept="image/*" multiple class="section-image-file-input" data-section-id="${sectionId}" data-category="completed" style="display:none;">
-                    <i class="fas fa-plus"></i>
-                    <span>追加</span>
+                  <i class="fas fa-plus"></i>
+                  <span>追加</span>
                   </label>
               </div>
             </div>
@@ -3989,20 +4022,20 @@
     if (value === '__other__') {
       // 自由入力を選択した場合
       if (customInput) {
-        customInput.style.display = 'block';
+      customInput.style.display = 'block';
         customInput.value = ''; // 入力フィールドをクリア
-        customInput.focus();
+      customInput.focus();
       }
       if (sections[sectionId]) {
-        sections[sectionId].item_name = '';
+      sections[sectionId].item_name = '';
       }
     } else if (value && value !== '') {
       // 通常の項目を選択した場合
       if (customInput) {
-        customInput.style.display = 'none';
+      customInput.style.display = 'none';
       }
       if (sections[sectionId]) {
-        sections[sectionId].item_name = value;
+      sections[sectionId].item_name = value;
       }
     }
     
@@ -6253,8 +6286,24 @@
 
   // プレビューモーダルを開く（レポートURL発行後の表示形式に合わせる）
   window.openPreviewModal = async function() {
+    const previewDialog = document.getElementById('preview-dialog');
+    if (!previewDialog) {
+      console.warn('[openPreviewModal] preview-dialog element not found');
+      return;
+    }
+    
+    // 既にモーダルが開いている場合は何もしない
+    const currentDisplay = previewDialog.style.display || window.getComputedStyle(previewDialog).display;
+    if (currentDisplay === 'flex' || currentDisplay === 'block' || previewDialog.classList.contains('show')) {
+      console.log('[openPreviewModal] Modal is already open, skipping');
+      return;
+    }
+    
     const previewContent = document.getElementById('preview-report-content');
-    if (!previewContent) return;
+    if (!previewContent) {
+      console.warn('[openPreviewModal] preview-report-content element not found');
+      return;
+    }
     
     // 保存されたプレビューデータを取得
     const savedPreviewData = localStorage.getItem('preview_report_data');
@@ -6528,6 +6577,14 @@
     // モーダルを表示
     const previewDialog = document.getElementById('preview-dialog');
     if (previewDialog) {
+      // 既に開いている場合は何もしない
+      const currentDisplay = previewDialog.style.display || window.getComputedStyle(previewDialog).display;
+      if (currentDisplay === 'flex' || currentDisplay === 'block' || previewDialog.classList.contains('show')) {
+        console.log('[openPreviewModal] Modal is already open, skipping');
+        return;
+      }
+      // showクラスを追加して表示
+      previewDialog.classList.add('show');
       previewDialog.style.display = 'flex';
     }
   }
@@ -6594,9 +6651,14 @@
   window.closePreviewModal = function() {
     const previewDialog = document.getElementById('preview-dialog');
     if (previewDialog) {
+      previewDialog.classList.remove('show');
       previewDialog.style.display = 'none';
+      // プレビューデータをクリア（次回は最新のデータを使用）
+      localStorage.removeItem('preview_report_data');
+      console.log('[closePreviewModal] Modal closed and preview data cleared');
     }
   };
+  
 
   // スクロール位置インジケーターを設定（SP版のみ）
   function setupScrollIndicator() {

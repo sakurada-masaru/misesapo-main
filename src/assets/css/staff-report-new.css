@@ -2220,7 +2220,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
-  display: flex;
+  display: none; /* デフォルトで非表示 */
   align-items: flex-end;
   justify-content: center;
 }
@@ -2768,6 +2768,44 @@ body.dark-mode .submit-section {
 .empty-state p {
   font-size: 0.9rem;
   margin: 0;
+}
+
+/* ダイアログ要素のスタイル */
+.modal-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.modal-dialog[open] {
+  display: flex;
+}
+
+.modal-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* SP画面でのダイアログスタイル */
+@media (max-width: 768px) {
+  .modal-dialog {
+    align-items: flex-end;
+  }
+  
+  .modal-dialog .modal-content {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 85vh;
+  }
 }
 
 body.dark-mode .modal-dialog {
@@ -3330,6 +3368,14 @@ html {
 }
 
 /* プレビューモーダル */
+.preview-modal {
+  display: none !important; /* プレビューモーダルはデフォルトで非表示 */
+}
+
+.preview-modal.show {
+  display: flex !important; /* showクラスが付いたときのみ表示 */
+}
+
 .preview-modal .modal-content {
   max-width: 90vw;
   max-height: 90vh;
