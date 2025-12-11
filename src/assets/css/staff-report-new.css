@@ -1158,6 +1158,61 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   color: #3b82f6;
 }
 
+/* 画像アップロード進捗表示用のスタイル */
+.upload-progress-toast {
+  min-width: 320px;
+  max-width: 400px;
+}
+
+.upload-progress-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.upload-progress-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-progress-message {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+}
+
+.upload-progress-status {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.upload-progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.upload-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.upload-progress-percent {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3b82f6;
+  text-align: right;
+}
+
 .toast-message {
   flex: 1;
   font-size: 0.875rem;
@@ -3370,6 +3425,7 @@ html {
 /* プレビューモーダル */
 .preview-modal {
   display: none !important; /* プレビューモーダルはデフォルトで非表示 */
+  background: rgba(255, 255, 255, 0.95) !important; /* 背景を白に */
 }
 
 .preview-modal.show {
@@ -3380,6 +3436,7 @@ html {
   max-width: 90vw;
   max-height: 90vh;
   width: 100%;
+  background: white !important; /* モーダルコンテンツの背景も白に */
 }
 
 .preview-body {
