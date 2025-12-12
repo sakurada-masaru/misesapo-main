@@ -391,15 +391,61 @@
       let currentDate = '';
       let selectedImageId = null;
 
-      // Firebase IDトークン取得
+      // IDトークン取得（Cognito/localStorageから取得）
       async function getFirebaseIdToken() {
-        if (typeof firebase !== 'undefined' && firebase.auth) {
-          const user = firebase.auth().currentUser;
-          if (user) {
-            return await user.getIdToken();
+        try {
+          // 1. Cognito ID Token（最優先）
+          const cognitoIdToken = localStorage.getItem('cognito_id_token');
+          if (cognitoIdToken) {
+            return cognitoIdToken;
           }
+          
+          // 2. Cognito認証のユーザーオブジェクトからトークンを取得
+          const cognitoUser = localStorage.getItem('cognito_user');
+          if (cognitoUser) {
+            try {
+              const parsed = JSON.parse(cognitoUser);
+              if (parsed.tokens && parsed.tokens.idToken) {
+                return parsed.tokens.idToken;
+              }
+              if (parsed.idToken) {
+                return parsed.idToken;
+              }
+            } catch (e) {
+              console.warn('Error parsing cognito user:', e);
+            }
+          }
+          
+          // 3. CognitoAuthから取得
+          if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+            try {
+              const cognitoUser = await window.CognitoAuth.getCurrentUser();
+              if (cognitoUser && cognitoUser.tokens && cognitoUser.tokens.idToken) {
+                return cognitoUser.tokens.idToken;
+              }
+            } catch (e) {
+              console.warn('Error getting token from CognitoAuth:', e);
+            }
+          }
+          
+          // 4. misesapo_auth から取得（フォールバック）
+          const authData = localStorage.getItem('misesapo_auth');
+          if (authData) {
+            try {
+              const parsed = JSON.parse(authData);
+              if (parsed.token) {
+                return parsed.token;
+              }
+            } catch (e) {
+              console.warn('Error parsing auth data:', e);
+            }
+          }
+          
+          return 'dev-token';
+        } catch (error) {
+          console.error('Error getting ID token:', error);
+          return 'dev-token';
         }
-        return 'dev-token';
       }
 
       // 画像をBase64に変換

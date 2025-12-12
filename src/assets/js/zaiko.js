@@ -11,7 +11,7 @@ let currentProductId = null; // 現在選択中の商品ID
 const inventoryGrid = document.getElementById('inventory-grid');
 const loadingSpinner = document.getElementById('loading-spinner');
 
-// Firebase ID Token取得（簡易版）
+// IDトークン取得（Cognito/localStorageから取得）
 async function getFirebaseIdToken() {
     // Cognito ID Token（優先）
     const cognitoIdToken = localStorage.getItem('cognito_id_token');

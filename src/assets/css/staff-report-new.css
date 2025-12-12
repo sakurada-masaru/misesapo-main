@@ -4,7 +4,7 @@
   min-height: 100vh;
   min-height: 100dvh; /* 動的ビューポート高さ（キーボード対応） */
   background: #f5f5f5;
-  padding-top: 50px; /* 固定ヘッダーの高さ分（50px） */
+  padding-top: 0; /* ヘッダーとタブは固定位置なのでpaddingは不要 */
   padding-bottom: 0;
   display: flex;
   flex-direction: column;
@@ -37,7 +37,6 @@
   padding: 0 12px;
   z-index: 100;
   gap: 12px;
-  position: relative;
 }
 
 /* 進捗バー */
@@ -54,7 +53,7 @@
 /* タブナビゲーション */
 .tabs-navigation {
   position: fixed;
-  top: 40px;
+  top: 50px;
   left: 0;
   right: 0;
   height: 40px;
@@ -62,6 +61,7 @@
   display: flex;
   z-index: 99;
   padding: 0;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .tab-btn {
@@ -105,9 +105,10 @@
 
 .tab-content {
   display: none;
-  margin-top: 0;
-  height: calc(100vh - 98px);
-  height: calc(100dvh - 98px); /* 動的ビューポート高さ（キーボード対応） */
+  margin-top: 90px; /* 固定ヘッダー（50px）+ タブ（40px）の高さ分 */
+  padding-top: 0;
+  height: calc(100vh - 90px);
+  height: calc(100dvh - 90px); /* 動的ビューポート高さ（キーボード対応） */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
@@ -193,6 +194,69 @@
   margin: 0;
 }
 
+.details-hint-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.details-hint {
+  font-size: 0.75rem;
+  color: #FF679C;
+  white-space: nowrap;
+  display: none; /* デフォルトでは非表示 */
+  font-weight: 600;
+  animation: none;
+}
+
+.details-hint.visible {
+  display: inline-block;
+  animation: floatHint 2s ease-in-out infinite;
+}
+
+@keyframes floatHint {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 0.8;
+  }
+}
+
+.details-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.details-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.details-btn.active {
+  background: #FF679C;
+  color: #fff;
+}
+
+.details-btn-text {
+  font-size: 0.85rem;
+}
+
 .help-btn {
   width: 36px;
   height: 36px;
@@ -206,12 +270,98 @@
   cursor: pointer;
 }
 
-/* 基本情報セクション */
-.report-header-section {
-  background: linear-gradient(135deg, #FF679C 0%, #FF8FB1 100%);
+/* サイドパネル */
+.side-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  backdrop-filter: blur(2px);
+}
+
+.side-panel-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 85%;
+  max-width: 400px;
+  height: 100vh;
+  height: 100dvh;
+  background: #fff;
+  z-index: 1001;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.side-panel.active {
+  transform: translateX(0);
+}
+
+.side-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #FF679C 0%, #FF8FB1 100%);
   color: #fff;
-  margin-top: 40px;
+  flex-shrink: 0;
+}
+
+.side-panel-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  color: #fff;
+}
+
+.side-panel-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.side-panel-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.side-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+}
+
+/* 基本情報セクション（サイドパネル内） */
+.side-panel-content .report-header-section {
+  background: transparent;
+  padding: 0;
+  color: #111827;
+  margin-top: 0;
   margin-left: 0;
   margin-right: 0;
   flex-shrink: 0;
@@ -220,6 +370,73 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
+}
+
+.side-panel-content .report-header-section .form-input,
+.side-panel-content .report-header-section .form-select {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+.side-panel-content .report-header-section .form-input:focus,
+.side-panel-content .report-header-section .form-select:focus {
+  border-color: #FF679C;
+  background: #fff;
+}
+
+.side-panel-content .report-header-section .date-time-label {
+  color: #374151;
+}
+
+.side-panel-content .report-header-section .dropdown-arrow-btn {
+  color: #6b7280;
+}
+
+/* パネル内の日時・時刻を別々の行に */
+.side-panel-content .report-header-section .form-row.three-col.date-time-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.side-panel-content .report-header-section .form-row.three-col.date-time-row .date-time-group {
+  width: 100% !important;
+  flex: 1 1 auto !important;
+  max-width: 100% !important;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 480px) {
+  .side-panel {
+    width: 90%;
+    max-width: 90%;
+  }
+  
+  .details-btn-text {
+    display: none;
+  }
+  
+  .details-btn {
+    padding: 6px;
+    min-width: 36px;
+  }
+  
+  .details-hint {
+    font-size: 0.7rem;
+  }
+  
+  .details-hint-wrapper {
+    gap: 4px;
+  }
+}
+
+/* タブレット以上ではサイドパネルを少し大きく */
+@media (min-width: 481px) {
+  .side-panel {
+    width: 75%;
+    max-width: 350px;
+  }
 }
 
 .form-row {
@@ -1388,6 +1605,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
 .section-add-icons-area {
   background: transparent;
   padding: 12px 16px;
+  padding-top: 16px; /* タブの下に隠れないように余白を追加 */
   display: flex !important;
   flex-direction: column;
   align-items: center;
@@ -1395,6 +1613,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   flex-shrink: 0;
   position: relative;
   z-index: 10;
+  margin-top: 0; /* タブの直下から始まるように */
 }
 
 .section-add-toggle-btn {
@@ -1582,6 +1801,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
 /* コンテンツエリア */
 .report-content {
   padding: 12px;
+  padding-top: 12px; /* セクション追加ボタンがタブの下に隠れないように */
   flex: 1;
   overflow-y: auto;
   min-height: 0; /* flexboxでスクロール可能にするために必要 */
@@ -2280,6 +2500,12 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   justify-content: center;
 }
 
+/* ブランド選択・店舗選択モーダルをサイドパネルの上に表示 */
+#brand-select-modal,
+#store-select-modal {
+  z-index: 2000 !important;
+}
+
 .modal-overlay .modal-content {
   width: 100%;
   max-width: 100%;
@@ -2295,6 +2521,10 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   display: flex;
   flex-direction: column;
   max-height: 85vh;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .modal-header {
@@ -2303,6 +2533,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   align-items: center;
   padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
 }
 
 .modal-header h3 {
@@ -2329,6 +2560,8 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   flex: 1;
   overflow-y: auto;
   padding: 16px 20px;
+  color: #111827;
+  background: #ffffff;
 }
 
 .modal-footer {
@@ -2336,6 +2569,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   gap: 12px;
   padding: 16px 20px;
   border-top: 1px solid #e5e7eb;
+  background: #ffffff;
 }
 
 .modal-footer .btn {
@@ -2836,8 +3070,8 @@ body.dark-mode .submit-section {
   display: none;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(2px);
 }
 
 .modal-dialog[open] {
@@ -2845,8 +3079,8 @@ body.dark-mode .submit-section {
 }
 
 .modal-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(2px);
 }
 
 /* SP画面でのダイアログスタイル */
@@ -2918,6 +3152,20 @@ body.dark-mode .modal-footer {
     grid-template-columns: 1fr 1fr 1fr !important;
     gap: 6px;
     margin-bottom: 8px;
+  }
+  
+  /* パネル内では別行に */
+  .side-panel-content .report-header-section .form-row.three-col.date-time-row {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    gap: 12px !important;
+  }
+  
+  .side-panel-content .report-header-section .form-row.three-col.date-time-row .date-time-group {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    max-width: 100% !important;
   }
   
   .form-row.three-col.date-time-row .date-time-group {
@@ -3000,6 +3248,20 @@ body.dark-mode .modal-footer {
   .form-row.three-col.date-time-row .date-time-group {
     min-width: 0;
     width: 100%;
+  }
+  
+  /* パネル内では別行に */
+  .side-panel-content .report-header-section .form-row.three-col.date-time-row {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    gap: 12px !important;
+  }
+  
+  .side-panel-content .report-header-section .form-row.three-col.date-time-row .date-time-group {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    max-width: 100% !important;
   }
   
   .form-row.two-col {
@@ -3261,6 +3523,20 @@ body.dark-mode .modal-footer {
   .form-row.three-col.date-time-row .date-time-group {
     min-width: 0;
     width: 100%;
+  }
+  
+  /* パネル内では別行に */
+  .side-panel-content .report-header-section .form-row.three-col.date-time-row {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    gap: 12px !important;
+  }
+  
+  .side-panel-content .report-header-section .form-row.three-col.date-time-row .date-time-group {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    max-width: 100% !important;
   }
   
   .form-row.two-col {

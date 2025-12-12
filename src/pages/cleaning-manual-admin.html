@@ -1244,12 +1244,10 @@
             input.click();
         }
         
-        // 下書き保存
+        // 下書き保存（Firebase削除により無効化）
         async function saveDraft() {
-            if (!isFirebaseAvailable()) {
-                showMessage('⚠️ 下書き保存はFirebaseが必要です。', 'error');
-                return;
-            }
+            showMessage('⚠️ 下書き保存機能は現在利用できません。', 'error');
+            return;
             
             const category = document.getElementById('edit-category').value;
             const index = parseInt(document.getElementById('edit-index').value);

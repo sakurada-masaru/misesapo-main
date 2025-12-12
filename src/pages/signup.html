@@ -132,7 +132,7 @@
             }
             
             try {
-              // Firebase Authenticationで登録（customerロールで登録）
+              // Cognito認証で登録（customerロールで登録）
               const result = await window.Auth.register(email, password);
               
               if (result.success) {

@@ -48,6 +48,12 @@ body {
     flex-direction: column;
     gap: 4px;
 }
+.report-brand {
+    font-size: 1.3rem;
+    font-weight: 700;
+    opacity: 1;
+    margin-bottom: 2px;
+}
 .report-date {
     font-size: 1.2rem;
     font-weight: 600;

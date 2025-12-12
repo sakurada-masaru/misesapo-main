@@ -172,12 +172,15 @@
     initBrandSelect();
     initStoreSelect();
     
-    // レポートヘッダーセクションの初期表示を設定
+    // レポートヘッダーセクションの初期表示を設定（サイドパネル内に移動）
     const sharedHeader = document.getElementById('shared-report-header');
     const newTab = document.getElementById('tab-new');
     if (sharedHeader && newTab && newTab.classList.contains('active')) {
       sharedHeader.style.display = 'block';
     }
+    
+    // サイドパネルの初期化
+    setupSidePanel();
     
     // 自動保存データの復元を試行（新規作成タブがアクティブな場合のみ）
     if (newTab && newTab.classList.contains('active')) {
@@ -373,6 +376,17 @@
     tabButtons.forEach(btn => {
       btn.addEventListener('click', async () => {
         const targetTab = btn.dataset.tab;
+        
+        // サイドパネルが開いている場合は閉じる
+        const sidePanel = document.getElementById('side-panel');
+        const sidePanelOverlay = document.getElementById('side-panel-overlay');
+        const detailsBtn = document.getElementById('details-btn');
+        if (sidePanel && sidePanel.classList.contains('active')) {
+          sidePanel.classList.remove('active');
+          if (sidePanelOverlay) sidePanelOverlay.classList.remove('active');
+          if (detailsBtn) detailsBtn.classList.remove('active');
+          document.body.style.overflow = '';
+        }
         
         // タブボタンのアクティブ状態を更新
         tabButtons.forEach(b => b.classList.remove('active'));
@@ -1810,6 +1824,172 @@
     return brand ? (brand.name || '') : '';
   }
 
+  // 詳細情報の入力状態をチェック
+  function checkDetailsInputStatus() {
+    const brandInput = document.getElementById('report-brand');
+    const brandNameInput = document.getElementById('report-brand-search');
+    const brandNameHidden = document.getElementById('report-brand-name');
+    const storeInput = document.getElementById('report-store');
+    const storeNameInput = document.getElementById('report-store-search');
+    const storeNameHidden = document.getElementById('report-store-name');
+    const dateInput = document.getElementById('report-date');
+    const startTimeInput = document.getElementById('report-start');
+    const endTimeInput = document.getElementById('report-end');
+    const detailsHint = document.getElementById('details-hint');
+    
+    if (!detailsHint) return;
+    
+    // ブランド名が入力されているか（IDまたは名前のいずれか）
+    const hasBrand = (brandInput?.value) || 
+                     (brandNameInput?.value?.trim()) || 
+                     (brandNameHidden?.value?.trim());
+    
+    // 店舗名が入力されているか（IDまたは名前のいずれか）
+    const hasStore = (storeInput?.value) || 
+                     (storeNameInput?.value?.trim()) || 
+                     (storeNameHidden?.value?.trim());
+    
+    // いずれかが未入力の場合、ヒントを表示
+    const isIncomplete = !hasBrand || !hasStore || !dateInput?.value || 
+                         !startTimeInput?.value || !endTimeInput?.value;
+    
+    if (isIncomplete) {
+      detailsHint.classList.add('visible');
+    } else {
+      detailsHint.classList.remove('visible');
+    }
+  }
+
+  // サイドパネルの初期化
+  function setupSidePanel() {
+    const sidePanel = document.getElementById('side-panel');
+    const sidePanelOverlay = document.getElementById('side-panel-overlay');
+    const detailsBtn = document.getElementById('details-btn');
+    const sidePanelClose = document.getElementById('side-panel-close');
+    
+    if (!sidePanel || !sidePanelOverlay || !detailsBtn) return;
+    
+    // 初期状態でヒントをチェック
+    checkDetailsInputStatus();
+    
+    // パネルを開く
+    function openSidePanel() {
+      sidePanel.classList.add('active');
+      sidePanelOverlay.classList.add('active');
+      detailsBtn.classList.add('active');
+      document.body.style.overflow = 'hidden'; // 背景のスクロールを無効化
+    }
+    
+    // パネルを閉じる
+    function closeSidePanel() {
+      sidePanel.classList.remove('active');
+      sidePanelOverlay.classList.remove('active');
+      detailsBtn.classList.remove('active');
+      document.body.style.overflow = ''; // 背景のスクロールを有効化
+    }
+    
+    // 詳細ボタンのクリックイベント
+    detailsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (sidePanel.classList.contains('active')) {
+        closeSidePanel();
+      } else {
+        openSidePanel();
+      }
+    });
+    
+    // 閉じるボタンのクリックイベント
+    if (sidePanelClose) {
+      sidePanelClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeSidePanel();
+      });
+    }
+    
+    // オーバーレイのクリックイベント
+    sidePanelOverlay.addEventListener('click', () => {
+      closeSidePanel();
+    });
+    
+    // スワイプジェスチャー（モバイル対応）
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+    let isSwiping = false;
+    
+    // タッチ開始
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+      isSwiping = false;
+    }, { passive: true });
+    
+    // タッチ移動
+    document.addEventListener('touchmove', (e) => {
+      if (!sidePanel.classList.contains('active')) return;
+      
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+      
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+      
+      // 横方向のスワイプが縦方向より大きい場合
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+        isSwiping = true;
+        
+        // 左方向にスワイプ（パネルを閉じる）
+        if (deltaX < -50) {
+          closeSidePanel();
+        }
+      }
+    }, { passive: true });
+    
+    // タッチ終了
+    document.addEventListener('touchend', () => {
+      isSwiping = false;
+    }, { passive: true });
+    
+    // ESCキーで閉じる
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidePanel.classList.contains('active')) {
+        closeSidePanel();
+      }
+    });
+    
+    // パネルを閉じた時にヒントをチェック
+    const originalCloseSidePanel = closeSidePanel;
+    closeSidePanel = function() {
+      originalCloseSidePanel();
+      setTimeout(checkDetailsInputStatus, 100);
+    };
+    
+    // 詳細情報の入力フィールドにイベントリスナーを追加
+    const brandInput = document.getElementById('report-brand');
+    const storeInput = document.getElementById('report-store');
+    const dateInput = document.getElementById('report-date');
+    const startTimeInput = document.getElementById('report-start');
+    const endTimeInput = document.getElementById('report-end');
+    
+    [brandInput, storeInput, dateInput, startTimeInput, endTimeInput].forEach(input => {
+      if (input) {
+        input.addEventListener('change', checkDetailsInputStatus);
+        input.addEventListener('input', checkDetailsInputStatus);
+      }
+    });
+    
+    // ブランド・店舗選択時にもチェック（モーダル経由の選択に対応）
+    const brandSearchInput = document.getElementById('report-brand-search');
+    const storeSearchInput = document.getElementById('report-store-search');
+    if (brandSearchInput) {
+      brandSearchInput.addEventListener('input', checkDetailsInputStatus);
+    }
+    if (storeSearchInput) {
+      storeSearchInput.addEventListener('input', checkDetailsInputStatus);
+    }
+  }
+
   // イベントリスナー設定
   function setupEventListeners() {
     // ブランド検索
@@ -1904,6 +2084,7 @@
           
           document.getElementById('report-brand').value = id;
           document.getElementById('report-brand-name').value = name;
+          checkDetailsInputStatus();
           brandSearchInput.value = name;
           // ブランド選択時は入力欄をreadonlyにする
           brandSearchInput.setAttribute('readonly', 'readonly');
@@ -2081,6 +2262,8 @@
               brandSearchInput.setAttribute('readonly', 'readonly');
             }
           }
+          
+          checkDetailsInputStatus();
         });
       });
     }
@@ -6105,15 +6288,63 @@
     }
   }
 
-  // Firebase IDトークン取得
+  // IDトークン取得（Cognito/localStorageから取得）
   async function getFirebaseIdToken() {
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-      const user = firebase.auth().currentUser;
-      if (user) {
-        return await user.getIdToken();
+    try {
+      // 1. Cognito ID Token（最優先）
+      const cognitoIdToken = localStorage.getItem('cognito_id_token');
+      if (cognitoIdToken) {
+        return cognitoIdToken;
       }
+      
+      // 2. Cognito認証のユーザーオブジェクトからトークンを取得
+      const cognitoUser = localStorage.getItem('cognito_user');
+      if (cognitoUser) {
+        try {
+          const parsed = JSON.parse(cognitoUser);
+          if (parsed.tokens && parsed.tokens.idToken) {
+            return parsed.tokens.idToken;
+          }
+          if (parsed.idToken) {
+            return parsed.idToken;
+          }
+        } catch (e) {
+          console.warn('Error parsing cognito user:', e);
+        }
+      }
+      
+      // 3. CognitoAuthから取得
+      if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+        try {
+          const cognitoUser = await window.CognitoAuth.getCurrentUser();
+          if (cognitoUser && cognitoUser.tokens && cognitoUser.tokens.idToken) {
+            return cognitoUser.tokens.idToken;
+          }
+        } catch (e) {
+          console.warn('Error getting token from CognitoAuth:', e);
+        }
+      }
+      
+      // 4. misesapo_auth から取得（フォールバック）
+      const authData = localStorage.getItem('misesapo_auth');
+      if (authData) {
+        try {
+          const parsed = JSON.parse(authData);
+          if (parsed.token) {
+            return parsed.token;
+          }
+        } catch (e) {
+          console.warn('Error parsing auth data:', e);
+        }
+      }
+      
+      // 5. 開発環境用のフォールバック
+      console.warn('No authentication token found, using dev-token');
+      return 'dev-token';
+    } catch (error) {
+      console.error('Error getting ID token:', error);
+      return 'dev-token';
     }
-    return 'dev-token';
   }
 
   // 画像アップロード進捗表示用の関数
@@ -6600,6 +6831,12 @@
 
   // プレビューモーダルを開く（レポートURL発行後の表示形式に合わせる）
   window.openPreviewModal = async function() {
+    // 保存確認モーダルが開いていれば確実に閉じる
+    const previewSaveDialog = document.getElementById('preview-save-dialog');
+    if (previewSaveDialog && previewSaveDialog.open) {
+      previewSaveDialog.close();
+    }
+    
     const previewDialog = document.getElementById('preview-dialog');
     if (!previewDialog) {
       console.warn('[openPreviewModal] preview-dialog element not found');
@@ -6962,6 +7199,12 @@
 
   // プレビューモーダルを閉じる
   window.closePreviewModal = function() {
+    // 保存確認モーダルが開いていれば確実に閉じる
+    const previewSaveDialog = document.getElementById('preview-save-dialog');
+    if (previewSaveDialog && previewSaveDialog.open) {
+      previewSaveDialog.close();
+    }
+    
     const previewDialog = document.getElementById('preview-dialog');
     if (previewDialog) {
       previewDialog.classList.remove('show');

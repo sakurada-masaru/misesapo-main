@@ -198,7 +198,7 @@ async function loadCurrentUser() {
         }
       }
       
-      // まだ見つからない場合、Cognito SubまたはFirebase UIDで検索
+      // まだ見つからない場合、Cognito Subで検索
       if (!currentUser || !currentUser.id) {
         let fallbackResponse = null;
         

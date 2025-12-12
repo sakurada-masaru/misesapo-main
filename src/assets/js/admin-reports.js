@@ -326,7 +326,7 @@
         dialog.showModal();
         
         try {
-            const idToken = await firebase.auth().currentUser.getIdToken();
+            const idToken = await getFirebaseIdToken();
             const response = await fetch(`https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod/staff/reports/${id}/feedback`, {
                 headers: { 'Authorization': `Bearer ${idToken}` }
             });
@@ -846,7 +846,7 @@
     };
 
 
-    // Firebase認証からIDトークンを取得
+    // IDトークンを取得（Cognito/localStorageから取得）
     async function getFirebaseIdToken() {
       try {
         // 1. Cognito ID Token（最優先）
@@ -871,14 +871,15 @@
           }
         }
         
-        // 3. Firebase Authから取得
-        if (window.FirebaseAuth) {
-          const currentUser = window.FirebaseAuth.currentUser;
-          if (currentUser) {
-            const idToken = await currentUser.getIdToken();
-            if (idToken) {
-              return idToken;
+        // 3. CognitoAuthから取得
+        if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+          try {
+            const cognitoUser = await window.CognitoAuth.getCurrentUser();
+            if (cognitoUser && cognitoUser.tokens && cognitoUser.tokens.idToken) {
+              return cognitoUser.tokens.idToken;
             }
+          } catch (e) {
+            console.warn('Error getting token from CognitoAuth:', e);
           }
         }
         
@@ -899,7 +900,7 @@
         console.warn('No authentication token found, using mock-token');
         return 'mock-token';
       } catch (error) {
-        console.error('Error getting Firebase ID token:', error);
+        console.error('Error getting ID token:', error);
         return 'mock-token';
       }
     }

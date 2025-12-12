@@ -2147,6 +2147,7 @@ def get_public_report(report_id, headers):
         report = items[0]
         public_report = {
             'report_id': report.get('report_id'),
+            'brand_name': report.get('brand_name'),  # ブランド名
             'store_name': report.get('store_name'),
             'staff_name': report.get('staff_name'),  # 担当者氏名
             'cleaning_date': report.get('cleaning_date'),

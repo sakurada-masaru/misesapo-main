@@ -246,7 +246,7 @@
   let allStaff = [];
   let currentAnnouncementId = null;
 
-  // Firebase ID Token取得
+  // IDトークン取得（Cognito/localStorageから取得）
   async function getFirebaseIdToken() {
     try {
       const cognitoIdToken = localStorage.getItem('cognito_id_token');
@@ -264,7 +264,7 @@
       
       return 'mock-token';
     } catch (error) {
-      console.error('Error getting Firebase ID token:', error);
+      console.error('Error getting ID token:', error);
       return 'mock-token';
     }
   }

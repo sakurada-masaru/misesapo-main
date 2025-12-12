@@ -455,19 +455,21 @@ body {
               return;
             }
             
-            // Firebase Authenticationでメールアドレスからユーザーを取得
-            if (window.FirebaseAuth) {
+            // Cognito認証でメール確認の再送信
+            if (window.Auth && window.Auth.resendEmailVerification) {
               try {
-                // メールアドレスからユーザーを取得（ログインが必要）
-                // 注意: Firebase Authenticationでは、メールアドレスから直接ユーザーを取得できない
-                // そのため、パスワードリセット機能を使用するか、ログイン後に再送信する必要がある
-                alert('メール確認の再送信には、ログインが必要です。\n\nログイン後、マイページからメール確認の再送信を行ってください。');
+                const result = await window.Auth.resendEmailVerification();
+                if (result.success) {
+                  alert(result.message);
+                } else {
+                  alert(result.message || 'メール確認の再送信に失敗しました。');
+                }
               } catch (error) {
                 console.error('メール確認の再送信エラー:', error);
                 alert('メール確認の再送信に失敗しました。');
               }
             } else {
-              alert('Firebase Authenticationが利用できません。');
+              alert('メール確認の再送信には、ログインが必要です。\n\nログイン後、マイページからメール確認の再送信を行ってください。');
             }
           });
         }

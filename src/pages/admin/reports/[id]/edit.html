@@ -411,28 +411,60 @@
     // APIエンドポイント
     const API_BASE_URL = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
     
-    // Firebase認証からIDトークンを取得
+    // IDトークンを取得（Cognito/localStorageから取得）
     async function getFirebaseIdToken() {
       try {
-        // Firebase Authが利用可能か確認
-        if (!window.FirebaseAuth) {
-          console.warn('[Reports] Firebase Auth is not available, using mock token');
-          return 'mock-token';
+        // 1. Cognito ID Token（最優先）
+        const cognitoIdToken = localStorage.getItem('cognito_id_token');
+        if (cognitoIdToken) {
+          return cognitoIdToken;
         }
         
-        // 現在のユーザーを取得
-        const currentUser = window.FirebaseAuth.currentUser;
-        if (!currentUser) {
-          console.warn('[Reports] No authenticated user, using mock token');
-          return 'mock-token';
+        // 2. Cognito認証のユーザーオブジェクトからトークンを取得
+        const cognitoUser = localStorage.getItem('cognito_user');
+        if (cognitoUser) {
+          try {
+            const parsed = JSON.parse(cognitoUser);
+            if (parsed.tokens && parsed.tokens.idToken) {
+              return parsed.tokens.idToken;
+            }
+            if (parsed.idToken) {
+              return parsed.idToken;
+            }
+          } catch (e) {
+            console.warn('Error parsing cognito user:', e);
+          }
         }
         
-        // IDトークンを取得
-        const idToken = await currentUser.getIdToken();
-        return idToken;
+        // 3. CognitoAuthから取得
+        if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+          try {
+            const cognitoUser = await window.CognitoAuth.getCurrentUser();
+            if (cognitoUser && cognitoUser.tokens && cognitoUser.tokens.idToken) {
+              return cognitoUser.tokens.idToken;
+            }
+          } catch (e) {
+            console.warn('Error getting token from CognitoAuth:', e);
+          }
+        }
+        
+        // 4. misesapo_auth から取得（フォールバック）
+        const authData = localStorage.getItem('misesapo_auth');
+        if (authData) {
+          try {
+            const parsed = JSON.parse(authData);
+            if (parsed.token) {
+              return parsed.token;
+            }
+          } catch (e) {
+            console.warn('Error parsing auth data:', e);
+          }
+        }
+        
+        console.warn('[Reports] No authentication token found, using mock token');
+        return 'mock-token';
       } catch (error) {
-        console.error('[Reports] Error getting Firebase ID token:', error);
-        // エラー時はモックトークンを返す（開発環境用）
+        console.error('[Reports] Error getting ID token:', error);
         return 'mock-token';
       }
     }

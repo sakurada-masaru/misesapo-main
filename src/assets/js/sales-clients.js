@@ -27,7 +27,7 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Firebase ID Token取得
+// IDトークン取得（Cognito/localStorageから取得）
 async function getFirebaseIdToken() {
   try {
     const cognitoIdToken = localStorage.getItem('cognito_id_token');
@@ -45,7 +45,7 @@ async function getFirebaseIdToken() {
     
     return 'mock-token';
   } catch (error) {
-    console.error('Error getting Firebase ID token:', error);
+    console.error('Error getting ID token:', error);
     return 'mock-token';
   }
 }

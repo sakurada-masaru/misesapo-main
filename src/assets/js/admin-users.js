@@ -672,7 +672,7 @@
         // ロールコードを設定（管理者=1、それ以外=4）
         data.role_code = (data.role === 'admin') ? '1' : '4';
         
-        // 新規作成時はFirebaseユーザーも作成する
+        // 新規作成時はCognitoユーザーを作成する
         if (!password) {
           alert('新規ユーザー作成にはパスワードが必要です。');
           return;

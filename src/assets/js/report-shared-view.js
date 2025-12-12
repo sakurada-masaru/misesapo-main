@@ -158,11 +158,23 @@ function escapeHtml(str) {
 // レポートを表示
 function renderReport(report) {
     // ヘッダー
+    // ブランド名（brand_name、brand、brandNameのいずれかから取得）
+    const brandEl = document.getElementById('report-brand');
+    if (brandEl) {
+        const brandName = report.brand_name || report.brand || report.brandName || 
+                         (report.store && report.store.brand_name) || 
+                         'ブランド名不明';
+        brandEl.textContent = brandName;
+    }
+    
+    // 清掃日時
     const dateStr = formatDate(report.cleaning_date);
     const timeStr = report.cleaning_start_time && report.cleaning_end_time 
         ? `${report.cleaning_start_time} - ${report.cleaning_end_time}`
         : '';
     document.getElementById('report-date').textContent = `清掃日時: ${dateStr} ${timeStr}`;
+    
+    // 店舗名
     document.getElementById('report-store').textContent = report.store_name || '店舗名不明';
     
     // 担当者氏名

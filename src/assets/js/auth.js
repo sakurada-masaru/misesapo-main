@@ -171,104 +171,24 @@
   /**
    * Firebaseエラーメッセージを日本語に変換
    */
-  function getFirebaseErrorMessage(error) {
-    const errorMessages = {
-      'auth/user-not-found': 'メールアドレスまたはパスワードが正しくありません',
-      'auth/wrong-password': 'メールアドレスまたはパスワードが正しくありません',
-      'auth/invalid-credential': 'メールアドレスまたはパスワードが正しくありません',
-      'auth/invalid-email': 'メールアドレスの形式が正しくありません',
-      'auth/email-already-in-use': 'このメールアドレスは既に使用されています',
-      'auth/weak-password': 'パスワードが弱すぎます。6文字以上で入力してください',
-      'auth/network-request-failed': 'ネットワークエラーが発生しました。接続を確認してください',
-      'auth/too-many-requests': 'ログイン試行回数が多すぎます。しばらく待ってから再度お試しください',
-      'auth/user-disabled': 'このアカウントは無効化されています',
-      'auth/operation-not-allowed': 'この認証方法は許可されていません。Firebase Consoleでメール/パスワード認証を有効化してください',
-      'auth/invalid-value-(email),-starting-an-object-on-a-scalar-field': 'メールアドレスの形式が正しくありません'
-    };
-    
-    return errorMessages[error.code] || error.message || '認証処理でエラーが発生しました';
-  }
+  // Firebase関連の関数は削除済み（Cognitoに移行）
   
   /**
-   * Firebase Authenticationを使用したログイン
-   */
-  async function loginWithFirebase(email, password) {
-    try {
-      // Firebase Authのcompat版では、auth()の結果に対して直接メソッドを呼び出す
-      const userCredential = await window.FirebaseAuth.signInWithEmailAndPassword(
-        email,
-        password
-      );
-      
-      const firebaseUser = userCredential.user;
-      const firebaseUid = firebaseUser.uid;
-      
-      // Firebase Custom Claimsからロールを取得
-      let role = 'customer'; // デフォルトロール
-      try {
-        const idTokenResult = await firebaseUser.getIdTokenResult();
-        role = idTokenResult.claims.role || 'customer';
-      } catch (error) {
-        console.warn('[Auth] Could not get custom claims, using default role:', error);
-      }
-      
-      // Firebase認証はお客様（customer）専用
-      // 従業員はAWS Cognitoを使用するため、customerロールで固定
-      role = 'customer';
-      
-      // DynamoDBのclientsテーブルからユーザー情報を取得（Firebase UIDで検索）
-      let userInfo = null;
-      try {
-        const apiBaseUrl = getApiBaseUrl();
-        if (apiBaseUrl) {
-          const response = await fetch(`${apiBaseUrl}/clients?firebase_uid=${encodeURIComponent(firebaseUid)}`);
-          if (response.ok) {
-            const clients = await response.json();
-            const clientsArray = Array.isArray(clients) ? clients : (clients.items || clients.clients || []);
-            if (clientsArray.length > 0) {
-              userInfo = clientsArray[0];
-            }
-          }
-        }
-      } catch (error) {
-        console.warn('[Auth] Could not fetch client info from DynamoDB:', error);
-      }
-      
-      // ユーザー情報を保存（お客様用）
-      const user = {
-        id: userInfo ? userInfo.id : firebaseUid,  // DynamoDBのID（重要！）
-        firebase_uid: firebaseUid,  // Firebase UID
-        email: firebaseUser.email,
-        role: role,
-        name: userInfo ? userInfo.name : (firebaseUser.displayName || (window.Users && window.Users.findUserByEmail ? (window.Users.findUserByEmail(firebaseUser.email)?.name || email.split('@')[0]) : email.split('@')[0])),
-        company_name: userInfo ? userInfo.company_name : '',
-        store_name: userInfo ? userInfo.store_name : '',
-        emailVerified: firebaseUser.emailVerified
-      };
-      
-      setAuthData(role, user.email, user);
-      
-      return {
-        success: true,
-        user: user,
-        role: role
-      };
-    } catch (error) {
-      console.error('[Auth] Firebase login error:', error);
-      return {
-        success: false,
-        message: getFirebaseErrorMessage(error)
-      };
-    }
-  }
-  
-  /**
-   * ログイン（Firebase → API → クライアントサイド認証の順で試行）
+   * ログイン（Cognito → API → クライアントサイド認証の順で試行）
    */
   async function login(email, password) {
-    // 1. Firebase Authenticationが利用可能な場合はFirebaseを使用（最優先）
-    if (window.FirebaseAuth) {
-      return await loginWithFirebase(email, password);
+    // 1. Cognito認証が利用可能な場合はCognitoを使用（最優先）
+    if (window.CognitoAuth && window.CognitoAuth.login) {
+      try {
+        const result = await window.CognitoAuth.login(email, password);
+        if (result.success) {
+          return result;
+        }
+        // Cognitoログインが失敗した場合は次の方法を試す
+      } catch (error) {
+        console.warn('[Auth] Cognito login failed, trying fallback:', error);
+        // Cognitoエラーの場合は次の方法を試す
+      }
     }
     
     const apiBaseUrl = getApiBaseUrl();
@@ -383,13 +303,12 @@
    * ログアウト
    */
   async function logout() {
-    // Firebase Authenticationからログアウト
-    if (window.FirebaseAuth) {
+    // Cognito認証からログアウト
+    if (window.CognitoAuth && window.CognitoAuth.logout) {
       try {
-        // Firebase Authのcompat版では、auth()の結果に対して直接メソッドを呼び出す
-        await window.FirebaseAuth.signOut();
+        await window.CognitoAuth.logout();
       } catch (error) {
-        console.error('[Auth] Firebase logout error:', error);
+        console.error('[Auth] Cognito logout error:', error);
         // エラーが発生しても続行
       }
     }
@@ -419,61 +338,68 @@
     window.location.href = basePath === '/' ? '/signin' : basePath + 'signin';
   }
   
+  // Firebase関連の関数は削除済み（Cognitoに移行）
+  
   /**
-   * Firebase Authenticationを使用したユーザー登録
+   * ユーザー登録（Cognito経由）
    * 注意: signup.htmlから呼び出される場合は、customerロールで登録されます
+   * 他のロール（staff, concierge, adminなど）は管理者が登録する必要があります
    */
-  async function registerWithFirebase(email, password, name = null, role = 'customer') {
+  async function register(email, password, name = null, role = 'customer') {
     try {
-      // Firebase Authのcompat版では、auth()の結果に対して直接メソッドを呼び出す
-      const userCredential = await window.FirebaseAuth.createUserWithEmailAndPassword(
-        email,
-        password
-      );
-      
-      const firebaseUser = userCredential.user;
-      
-      // 表示名を設定
-      if (name) {
-        await firebaseUser.updateProfile({
-          displayName: name
-        });
+      const apiBaseUrl = getApiBaseUrl();
+      if (!apiBaseUrl) {
+        return {
+          success: false,
+          message: 'ユーザー登録機能は現在利用できません。APIサーバーに接続できません。'
+        };
       }
       
-      // メール確認を送信
-      try {
-        await firebaseUser.sendEmailVerification();
-        console.log('[Auth] Email verification sent to:', firebaseUser.email);
-      } catch (error) {
-        console.error('[Auth] Could not send email verification:', error);
-        // メール確認の送信に失敗しても登録は成功する
-        // ユーザーには後でメール確認の再送信を促す
+      // Lambda関数経由でCognitoユーザーを作成
+      const response = await fetch(`${apiBaseUrl}/admin/cognito/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          name: name || email.split('@')[0],
+          role: role,
+          department: role === 'customer' ? 'お客様' : ''
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        return {
+          success: false,
+          message: errorData.error || errorData.message || 'ユーザー登録に失敗しました'
+        };
       }
       
-      // ロールを設定（Custom Claimsを使用する場合はCloud Functionsが必要）
-      // 現時点では、デフォルトでcustomerロールを使用
-      // 将来的に、Cloud FunctionsでCustom Claimsを設定する必要がある
+      const result = await response.json();
+      const cognitoSub = result.sub;
       
       // DynamoDBのclientsテーブルに登録（お客様専用）
-      try {
-        const apiBaseUrl = getApiBaseUrl();
-        if (apiBaseUrl) {
+      if (role === 'customer') {
+        try {
           const clientId = 'C' + Date.now();
           const clientData = {
             id: clientId,
-            firebase_uid: firebaseUser.uid,
-            email: firebaseUser.email,
+            cognito_sub: cognitoSub,
+            email: email,
             name: name || email.split('@')[0],
             phone: '',
             company_name: '',
             store_name: '',
-            role: 'customer',  // 固定
+            role: 'customer',
             status: 'active',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
           
-          const response = await fetch(`${apiBaseUrl}/clients`, {
+          const clientResponse = await fetch(`${apiBaseUrl}/clients`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -481,28 +407,23 @@
             body: JSON.stringify(clientData)
           });
           
-          if (response.ok) {
-            console.log('[Auth] Client created in DynamoDB:', clientId);
-            // DynamoDBのIDを使用
-            const createdClient = await response.json();
+          if (clientResponse.ok) {
+            const createdClient = await clientResponse.json();
             if (createdClient && createdClient.id) {
               clientData.id = createdClient.id;
             }
-          } else {
-            console.warn('[Auth] Failed to create client in DynamoDB:', await response.text());
-            // DynamoDBへの登録に失敗しても、Firebase登録は成功とする
           }
+        } catch (error) {
+          console.error('[Auth] Error creating client in DynamoDB:', error);
+          // DynamoDBへの登録に失敗しても、Cognito登録は成功とする
         }
-      } catch (error) {
-        console.error('[Auth] Error creating client in DynamoDB:', error);
-        // DynamoDBへの登録に失敗しても、Firebase登録は成功とする
       }
       
-      // 認証情報を保存（customerロールで登録）
-      setAuthData(role, firebaseUser.email, {
-        id: firebaseUser.uid,  // 一時的にFirebase UIDを使用（ログイン時にDynamoDBのIDに更新される）
-        firebase_uid: firebaseUser.uid,
-        email: firebaseUser.email,
+      // 認証情報を保存
+      setAuthData(role, email, {
+        id: cognitoSub,
+        cognito_sub: cognitoSub,
+        email: email,
         role: role,
         name: name || email.split('@')[0],
         emailVerified: false
@@ -511,39 +432,20 @@
       return {
         success: true,
         user: {
-          id: firebaseUser.uid,
-          email: firebaseUser.email,
+          id: cognitoSub,
+          email: email,
           role: role,
           name: name || email.split('@')[0],
           emailVerified: false
         }
       };
     } catch (error) {
-      console.error('[Auth] Firebase registration error:', error);
+      console.error('[Auth] Registration error:', error);
       return {
         success: false,
-        message: getFirebaseErrorMessage(error)
+        message: error.message || 'ユーザー登録に失敗しました'
       };
     }
-  }
-  
-  /**
-   * ユーザー登録（Firebase優先）
-   * 注意: signup.htmlから呼び出される場合は、customerロールで登録されます
-   * 他のロール（staff, concierge, adminなど）は管理者が登録する必要があります
-   */
-  async function register(email, password, name = null, role = 'customer') {
-    // Firebase Authenticationが利用可能な場合はFirebaseを使用
-    if (window.FirebaseAuth) {
-      return await registerWithFirebase(email, password, name, role);
-    }
-    
-    // フォールバック: クライアントサイド登録（localStorageなど）
-    // 将来的に実装可能
-    return {
-      success: false,
-      message: 'ユーザー登録機能は現在利用できません。Firebase Authenticationを設定してください。'
-    };
   }
   
   /**
@@ -587,18 +489,14 @@
       return false;
     }
     
-    // 顧客関連ページ（/mypage/*など）では、Firebase認証（顧客用）をチェック
-    // Firebase Authenticationの認証状態をチェック
-    if (window.FirebaseAuth) {
-      const currentUser = window.FirebaseAuth.currentUser;
-      if (currentUser) {
-        // Firebase認証済みの場合、sessionStorageにも保存されているか確認
+    // 顧客関連ページ（/mypage/*など）では、Cognito認証をチェック
+    // Cognito認証の認証状態をチェック
+    if (window.CognitoAuth && window.CognitoAuth.isAuthenticated) {
+      if (window.CognitoAuth.isAuthenticated()) {
         const authData = getAuthData();
         if (authData) {
           return true;
         }
-        // sessionStorageにない場合は、Firebaseから情報を取得して保存
-        // これは非同期処理なので、ここでは簡易的にtrueを返す
         return true;
       }
     }
@@ -751,18 +649,20 @@
   }
   
   /**
-   * メール確認の再送信
+   * メール確認の再送信（Cognito対応）
    */
   async function resendEmailVerification() {
-    if (!window.FirebaseAuth) {
+    // Cognitoではメール確認の再送信はAPI経由で行う
+    const apiBaseUrl = getApiBaseUrl();
+    if (!apiBaseUrl) {
       return {
         success: false,
-        message: 'Firebase Authenticationが利用できません。'
+        message: 'メール確認の再送信機能は現在利用できません。'
       };
     }
     
-    const currentUser = window.FirebaseAuth.currentUser;
-    if (!currentUser) {
+    const authData = getAuthData();
+    if (!authData || !authData.user || !authData.user.email) {
       return {
         success: false,
         message: 'ログインしていません。'
@@ -770,12 +670,29 @@
     }
     
     try {
-      await currentUser.sendEmailVerification();
-      console.log('[Auth] Email verification resent to:', currentUser.email);
-      return {
-        success: true,
-        message: '確認メールを再送信しました。メールボックスをご確認ください。'
-      };
+      // API経由でメール確認の再送信をリクエスト
+      const response = await fetch(`${apiBaseUrl}/admin/cognito/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: authData.user.email
+        })
+      });
+      
+      if (response.ok) {
+        return {
+          success: true,
+          message: '確認メールを再送信しました。メールボックスをご確認ください。'
+        };
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        return {
+          success: false,
+          message: errorData.error || errorData.message || 'メール確認の再送信に失敗しました。'
+        };
+      }
     } catch (error) {
       console.error('[Auth] Could not resend email verification:', error);
       return {

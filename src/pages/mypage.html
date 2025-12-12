@@ -335,7 +335,7 @@
       }
 
       const userId = authData.user.id; // DynamoDBのID
-      const firebaseUid = authData.user.firebase_uid;
+      const cognitoSub = authData.user.cognito_sub;
 
       // APIからクライアント情報を取得
       try {
@@ -351,10 +351,10 @@
           }
         }
         
-        // IDで見つからない場合、Firebase UIDで検索
-        if (!currentClient && firebaseUid) {
+        // IDで見つからない場合、Cognito Subで検索
+        if (!currentClient && cognitoSub) {
           try {
-            const response = await fetch(`${API_BASE}/clients?firebase_uid=${encodeURIComponent(firebaseUid)}`);
+            const response = await fetch(`${API_BASE}/clients?cognito_sub=${encodeURIComponent(cognitoSub)}`);
             if (response && response.ok) {
               const clients = await response.json();
               const clientsArray = Array.isArray(clients) ? clients : (clients.items || clients.clients || []);
@@ -363,7 +363,7 @@
               }
             }
           } catch (fetchError) {
-            console.error('Error fetching client by Firebase UID:', fetchError);
+            console.error('Error fetching client by Cognito Sub:', fetchError);
           }
         }
       } catch (error) {
