@@ -1,6 +1,6 @@
 // 清掃員在庫管理スキャン画面
 
-const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+const REPORT_API = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 const ALLOWED_EMAIL_DOMAIN = '@misesapo.co.jp';
 
 let cart = []; // カート内の商品
