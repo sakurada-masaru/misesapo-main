@@ -488,14 +488,25 @@ def copy_assets(outputs: List[str]) -> None:
                            content)
             dst_path.write_text(content, encoding="utf-8")
         else:
-            shutil.copy2(src_path, dst_path)
+            # Use copy instead of copy2 to avoid timeout issues with extended attributes
+            # Extended attributes are not needed for the build output
+            try:
+                shutil.copy(src_path, dst_path)
+            except (OSError, IOError) as e:
+                print(f"[build:error] copy failed for {src_path.name}: {e}")
+                raise
         outputs.append(str(dst_path))
     
     # Copy logo_144x144.png to public/favicon.ico for browser auto-detection
     logo_path = ASSETS_DIR / "images" / "logo_144x144.png"
     if logo_path.exists():
         favicon_path = PUBLIC / "favicon.ico"
-        shutil.copy2(logo_path, favicon_path)
+        try:
+            shutil.copy2(logo_path, favicon_path)
+        except (OSError, IOError) as e:
+            # If copy2 fails, use copy
+            print(f"[build:warning] copy2 failed for favicon, using copy: {e}")
+            shutil.copy(logo_path, favicon_path)
         outputs.append(str(favicon_path))
 
 
