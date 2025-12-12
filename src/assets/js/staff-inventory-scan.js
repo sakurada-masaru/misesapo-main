@@ -522,15 +522,22 @@ async function handleNfcTag(tagId) {
         // NFCタグ情報を取得
         const tagInfo = await getNfcTagInfo(tagId);
         
+        // デバッグ: レスポンス全体をログに出力
+        console.log('[NFC Tag Info] Full response:', tagInfo);
+        
+        // レスポンスの構造を確認（statusフィールドがある場合）
+        const productId = tagInfo.product_id || (tagInfo.status === 'success' ? tagInfo.product_id : null);
+        
         // product_idが存在する場合
-        if (tagInfo.product_id) {
-            const product = await loadProduct(tagInfo.product_id);
+        if (productId) {
+            const product = await loadProduct(productId);
             showProduct(product);
             
             // トースト通知を表示
             showToast(`NFCタグを読み取りました: ${tagInfo.description || tagInfo.location_name || tagId}`, 'success');
         } else {
             // product_idが存在しない場合はエラー
+            console.error('[NFC Tag Info] No product_id found. Response:', tagInfo);
             alert('このNFCタグは在庫管理用に設定されていません。\n商品IDが登録されていないタグです。');
         }
     } catch (error) {
