@@ -66,7 +66,10 @@ POLICY_DOC=$(cat <<EOF
     {
       "Effect": "Allow",
       "Action": [
-        "dynamodb:PutItem"
+        "dynamodb:PutItem",
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan"
       ],
       "Resource": "arn:aws:dynamodb:${REGION}:*:table/${TABLE_NAME}"
     }

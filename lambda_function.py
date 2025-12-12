@@ -2038,13 +2038,25 @@ def get_nfc_clock_in_logs(event, headers):
     except Exception as e:
         print(f"Error getting NFC clock-in logs: {str(e)}")
         import traceback
-        print(f"Traceback: {traceback.format_exc()}")
+        traceback_str = traceback.format_exc()
+        print(f"Traceback: {traceback_str}")
+        
+        # エラーの種類に応じて適切なステータスコードを返す
+        error_message = str(e)
+        status_code = 500
+        
+        # DynamoDBのリソースが見つからない場合
+        if 'ResourceNotFoundException' in error_message or 'does not exist' in error_message:
+            status_code = 404
+            error_message = '打刻ログテーブルが見つかりません。テーブルが作成されているか確認してください。'
+        
         return {
-            'statusCode': 500,
+            'statusCode': status_code,
             'headers': headers,
             'body': json.dumps({
+                'status': 'error',
                 'error': 'Internal server error',
-                'message': str(e)
+                'message': error_message
             }, ensure_ascii=False)
         }
 
