@@ -2223,8 +2223,16 @@
             throw error;
           }
 
-          const result = await response.json();
-          console.log('[Clock-in History] Result:', result);
+          let result;
+          try {
+            const responseText = await response.text();
+            console.log('[Clock-in History] Response text:', responseText);
+            result = JSON.parse(responseText);
+            console.log('[Clock-in History] Result:', result);
+          } catch (parseError) {
+            console.error('[Clock-in History] JSON parse error:', parseError);
+            throw new Error('レスポンスの解析に失敗しました');
+          }
           
           const logs = result.logs || [];
 
