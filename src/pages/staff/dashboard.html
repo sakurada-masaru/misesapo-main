@@ -2556,8 +2556,10 @@
               const locationName = tagInfo.location_name || tagInfo.location_id;
               showToast(`打刻完了: ${facilityName} - ${locationName}`, 'success');
               
-              // 打刻履歴を更新
-              window.dispatchEvent(new Event('nfc-clock-in-success'));
+              // 打刻履歴を更新（少し待ってから実行）
+              setTimeout(() => {
+                window.dispatchEvent(new Event('nfc-clock-in-success'));
+              }, 2000);
             } else {
               showToast(`打刻失敗: ${clockInResult.error}`, 'error');
             }
