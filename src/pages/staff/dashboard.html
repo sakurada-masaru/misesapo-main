@@ -2273,10 +2273,19 @@
           // HTTPエラーの場合
           else if (error.response) {
             errorDetail = `HTTP ${error.response.status}: ${error.response.statusText}`;
+            if (error.errorData && error.errorData.message) {
+              errorDetail += ` - ${error.errorData.message}`;
+            }
           }
           // その他のエラー
           else {
             errorDetail = error.toString();
+          }
+          
+          // 403エラーの場合は認証エラーとして表示
+          if (error.response && error.response.status === 403) {
+            errorMessage = '認証エラー: ログインが必要です';
+            errorDetail = 'ページを再読み込みして、再度ログインしてください';
           }
           
           historyList.innerHTML = `
@@ -2284,7 +2293,7 @@
               <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 8px;"></i>
               <p style="margin: 0; font-size: 0.875rem; margin-bottom: 8px; font-weight: 600;">打刻履歴の読み込みに失敗しました</p>
               <p style="margin: 0; font-size: 0.75rem; color: #dc2626; margin-bottom: 4px;">${errorMessage}</p>
-              ${errorDetail ? `<p style="margin: 0; font-size: 0.7rem; color: #9ca3af; word-break: break-all;">${errorDetail}</p>` : ''}
+              ${errorDetail ? `<p style="margin: 0; font-size: 0.7rem; color: #9ca3af; word-break: break-all; margin-bottom: 8px;">${errorDetail}</p>` : ''}
               <button type="button" onclick="location.reload()" style="margin-top: 12px; padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
                 再読み込み
               </button>
