@@ -2196,11 +2196,6 @@
           console.log('[Clock-in History] Loading for user:', user_id);
           console.log('[Clock-in History] Token available:', token !== 'dev-token');
           
-          // 認証チェック
-          if (token === 'dev-token') {
-            throw new Error('認証が必要です。ログインしてください。');
-          }
-          
           const response = await fetch(`${REPORT_API}/staff/nfc/clock-in?user_id=${user_id}&limit=5`, {
             headers: {
               'Authorization': `Bearer ${token}`,
