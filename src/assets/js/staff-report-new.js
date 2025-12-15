@@ -6741,121 +6741,174 @@
       }
       
       // 画像データオブジェクトの場合
-      if (typeof img === 'object' && img.imageId) {
+      if (typeof img === 'object') {
         // 既にアップロード済みの場合はURLを返す
         if (img.uploaded && (img.url || img.warehouseUrl)) {
           uploadedUrls.push(img.url || img.warehouseUrl);
           continue;
         }
         
-        // ローカル画像をS3にアップロード
-        try {
-          const imageData = imageStock.find(stock => stock.id === img.imageId);
-          if (!imageData) {
-            console.warn(`[uploadSectionImages] Image not found in stock: ${img.imageId}`);
-            // warehouseUrlがあればそれを使用
+        // warehouseUrlがある場合はそのまま使用
+        if (img.warehouseUrl) {
+          uploadedUrls.push(img.warehouseUrl);
+          continue;
+        }
+        
+        // urlプロパティがある場合はそのまま使用
+        if (img.url && (img.url.startsWith('http://') || img.url.startsWith('https://'))) {
+          uploadedUrls.push(img.url);
+          continue;
+        }
+        
+        // imageIdがある場合のみアップロード処理を実行
+        if (img.imageId) {
+          // ローカル画像をS3にアップロード
+          try {
+            const imageData = imageStock.find(stock => stock.id === img.imageId);
+            if (!imageData) {
+              console.warn(`[uploadSectionImages] Image not found in stock: ${img.imageId}`);
+              // warehouseUrlがあればそれを使用
+              if (img.warehouseUrl) {
+                uploadedUrls.push(img.warehouseUrl);
+              }
+              continue;
+            }
+            
+            let blob;
+            // blobDataが存在する場合はそれを使用、なければblobUrlから取得
+            if (imageData.blobData) {
+              blob = new Blob([imageData.blobData], { type: imageData.fileType || 'image/jpeg' });
+            } else if (imageData.blobUrl) {
+              // blobUrlからBlobを取得
+              const response = await fetch(imageData.blobUrl);
+              blob = await response.blob();
+            } else if (img.blobUrl) {
+              // セクション内のblobUrlから取得
+              const response = await fetch(img.blobUrl);
+              blob = await response.blob();
+            } else {
+              console.warn(`[uploadSectionImages] No blob data or blobUrl found for image: ${img.imageId}`);
+              // warehouseUrlがあればそれを使用
+              if (img.warehouseUrl || imageData.warehouseUrl) {
+                uploadedUrls.push(img.warehouseUrl || imageData.warehouseUrl);
+              }
+              continue;
+            }
+            
+            // Base64に変換
+            const base64 = await blobToBase64(blob);
+            
+            // categoryが'completed'の場合は'after'として扱う（APIの制約）
+            const apiCategory = category === 'completed' ? 'after' : category;
+            
+            // S3にアップロード
+            const requestBody = {
+              image: base64,
+              category: apiCategory,
+              cleaning_date: cleaningDate
+            };
+            
+            console.log('[uploadSectionImages] Uploading image:', {
+              imageId: img.imageId,
+              base64Length: base64?.length,
+              category: apiCategory,
+              originalCategory: category,
+              cleaning_date: cleaningDate
+            });
+            
+            const response = await fetch(`${REPORT_API}/staff/report-images`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${await getFirebaseIdToken()}`
+              },
+              body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+              let errorText;
+              try {
+                errorText = await response.text();
+                const errorJson = JSON.parse(errorText);
+                console.error('[uploadSectionImages] Upload failed:', {
+                  status: response.status,
+                  statusText: response.statusText,
+                  error: errorJson
+                });
+              } catch (e) {
+                errorText = await response.text();
+                console.error('[uploadSectionImages] Upload failed:', {
+                  status: response.status,
+                  statusText: response.statusText,
+                  errorText: errorText
+                });
+              }
+              throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+            }
+            
+            const result = await response.json();
+            const uploadedUrl = result.image?.url || result.url || null;
+            console.log('[uploadSectionImages] Image uploaded successfully:', uploadedUrl);
+            
+            // 進捗を更新
+            if (onProgress) {
+              onProgress();
+            }
+            
+            if (uploadedUrl) {
+              uploadedUrls.push(uploadedUrl);
+            }
+          } catch (error) {
+            console.error('[uploadSectionImages] Error uploading image:', error);
+            // エラー時もwarehouseUrlがあればそれを使用
             if (img.warehouseUrl) {
               uploadedUrls.push(img.warehouseUrl);
             }
-            continue;
           }
-          
-          let blob;
-          // blobDataが存在する場合はそれを使用、なければblobUrlから取得
-          if (imageData.blobData) {
-            blob = new Blob([imageData.blobData], { type: imageData.fileType || 'image/jpeg' });
-          } else if (imageData.blobUrl) {
-            // blobUrlからBlobを取得
-            const response = await fetch(imageData.blobUrl);
-            blob = await response.blob();
-          } else if (img.blobUrl) {
-            // セクション内のblobUrlから取得
+        } else if (img.blobUrl) {
+          // imageIdがないがblobUrlがある場合、blobUrlからアップロード
+          try {
             const response = await fetch(img.blobUrl);
-            blob = await response.blob();
-          } else {
-            console.warn(`[uploadSectionImages] No blob data or blobUrl found for image: ${img.imageId}`);
-            // warehouseUrlがあればそれを使用
-            if (img.warehouseUrl || imageData.warehouseUrl) {
-              uploadedUrls.push(img.warehouseUrl || imageData.warehouseUrl);
+            const blob = await response.blob();
+            const base64 = await blobToBase64(blob);
+            
+            const apiCategory = category === 'completed' ? 'after' : category;
+            const requestBody = {
+              image: base64,
+              category: apiCategory,
+              cleaning_date: cleaningDate
+            };
+            
+            const uploadResponse = await fetch(`${REPORT_API}/staff/report-images`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${await getFirebaseIdToken()}`
+              },
+              body: JSON.stringify(requestBody)
+            });
+            
+            if (uploadResponse.ok) {
+              const result = await uploadResponse.json();
+              const uploadedUrl = result.image?.url || result.url || null;
+              if (uploadedUrl) {
+                uploadedUrls.push(uploadedUrl);
+                if (onProgress) {
+                  onProgress();
+                }
+              }
+            } else {
+              console.warn('[uploadSectionImages] Failed to upload from blobUrl:', img.blobUrl);
             }
-            continue;
-          }
-          
-          // Base64に変換
-          const base64 = await blobToBase64(blob);
-          
-          // categoryが'completed'の場合は'after'として扱う（APIの制約）
-          const apiCategory = category === 'completed' ? 'after' : category;
-          
-          // S3にアップロード
-          const requestBody = {
-            image: base64,
-            category: apiCategory,
-            cleaning_date: cleaningDate
-          };
-          
-          console.log('[uploadSectionImages] Uploading image:', {
-            imageId: img.imageId,
-            base64Length: base64?.length,
-            category: apiCategory,
-            originalCategory: category,
-            cleaning_date: cleaningDate
-          });
-          
-          const response = await fetch(`${REPORT_API}/staff/report-images`, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await getFirebaseIdToken()}`
-            },
-            body: JSON.stringify(requestBody)
-          });
-          
-          if (!response.ok) {
-            let errorText;
-            try {
-              errorText = await response.text();
-              const errorJson = JSON.parse(errorText);
-              console.error('[uploadSectionImages] Upload failed:', {
-                status: response.status,
-                statusText: response.statusText,
-                error: errorJson
-              });
-            } catch (e) {
-              errorText = await response.text();
-              console.error('[uploadSectionImages] Upload failed:', {
-                status: response.status,
-                statusText: response.statusText,
-                errorText: errorText
-              });
-            }
-            throw new Error(`Upload failed: ${response.status} - ${errorText}`);
-          }
-          
-          const result = await response.json();
-          const uploadedUrl = result.image?.url || result.url || null;
-          console.log('[uploadSectionImages] Image uploaded successfully:', uploadedUrl);
-          
-          // 進捗を更新
-          if (onProgress) {
-            onProgress();
-          }
-          
-          if (uploadedUrl) {
-            uploadedUrls.push(uploadedUrl);
-          }
-        } catch (error) {
-          console.error('[uploadSectionImages] Error uploading image:', error);
-          // エラー時もwarehouseUrlがあればそれを使用
-          if (img.warehouseUrl) {
-            uploadedUrls.push(img.warehouseUrl);
+          } catch (error) {
+            console.error('[uploadSectionImages] Error uploading from blobUrl:', error);
           }
         }
       }
     }
     
     // nullを除外
-    return uploadedUrls.filter(url => url !== null);
+    return uploadedUrls.filter(url => url !== null && url !== undefined);
   }
 
   // BlobをBase64に変換（data:image/jpeg;base64,プレフィックスを除去）
@@ -7114,16 +7167,77 @@
         const imageType = s.image_type || 'before_after';
         const uploadedPhotos = {};
         
+        // 画像データを正規化（オブジェクト形式の場合はURLを抽出）
+        const normalizeImages = (images) => {
+          if (!images || !Array.isArray(images)) return [];
+          return images.map(img => {
+            if (typeof img === 'string') return img;
+            if (typeof img === 'object') {
+              // 既にURLがある場合はそれを使用
+              if (img.url && (img.url.startsWith('http://') || img.url.startsWith('https://'))) {
+                return img.url;
+              }
+              if (img.warehouseUrl) return img.warehouseUrl;
+              // blobUrlがある場合はオブジェクトのまま返す（uploadSectionImagesで処理）
+              if (img.blobUrl) return img;
+              // imageIdがある場合はオブジェクトのまま返す
+              if (img.imageId) return img;
+            }
+            return img;
+          });
+        };
+        
         if (imageType === 'completed') {
-          uploadedPhotos.completed = await uploadSectionImages(s.photos?.completed || [], cleaningDate, 'completed', updateProgress);
+          uploadedPhotos.completed = await uploadSectionImages(normalizeImages(s.photos?.completed), cleaningDate, 'completed', updateProgress);
         } else {
-          uploadedPhotos.before = await uploadSectionImages(s.photos?.before || [], cleaningDate, 'before', updateProgress);
-          uploadedPhotos.after = await uploadSectionImages(s.photos?.after || [], cleaningDate, 'after', updateProgress);
+          uploadedPhotos.before = await uploadSectionImages(normalizeImages(s.photos?.before), cleaningDate, 'before', updateProgress);
+          uploadedPhotos.after = await uploadSectionImages(normalizeImages(s.photos?.after), cleaningDate, 'after', updateProgress);
         }
         
         previewSections[id] = {
           ...s,
           photos: uploadedPhotos
+        };
+      } else if (s.type === 'cleaning' && s.imageContents) {
+        // cleaningセクション内のimageContentsの画像もアップロード
+        const uploadedImageContents = await Promise.all(
+          (s.imageContents || []).map(async (imageContent) => {
+            const imageType = imageContent.imageType || 'before_after';
+            const uploadedPhotos = {};
+            
+            const normalizeImages = (images) => {
+              if (!images || !Array.isArray(images)) return [];
+              return images.map(img => {
+                if (typeof img === 'string') return img;
+                if (typeof img === 'object') {
+                  if (img.url && (img.url.startsWith('http://') || img.url.startsWith('https://'))) {
+                    return img.url;
+                  }
+                  if (img.warehouseUrl) return img.warehouseUrl;
+                  if (img.blobUrl) return img;
+                  if (img.imageId) return img;
+                }
+                return img;
+              });
+            };
+            
+            if (imageType === 'completed') {
+              uploadedPhotos.completed = await uploadSectionImages(normalizeImages(imageContent.photos?.completed), cleaningDate, 'completed', updateProgress);
+            } else {
+              uploadedPhotos.before = await uploadSectionImages(normalizeImages(imageContent.photos?.before), cleaningDate, 'before', updateProgress);
+              uploadedPhotos.after = await uploadSectionImages(normalizeImages(imageContent.photos?.after), cleaningDate, 'after', updateProgress);
+            }
+            
+            return {
+              ...imageContent,
+              photos: uploadedPhotos
+            };
+          })
+        );
+        
+        previewSections[id] = {
+          ...s,
+          imageContents: uploadedImageContents
         };
       } else {
         previewSections[id] = { ...s };
@@ -7288,12 +7402,14 @@
     };
     
     // report-shared-view.jsと同じHTML構造で生成
+    const brandNameDisplay = report.brand_name || report.brand || report.brandName || 'ブランド名不明';
     let html = `
       <div class="report-header" id="preview-report-header">
         <div class="report-header-logo">
           <img src="/images/header-logo.jpg" alt="ミセサポ" onerror="this.style.display='none';">
         </div>
         <div class="report-header-content">
+          <div class="report-brand" id="preview-report-brand">${escapeHtml(brandNameDisplay)}</div>
           <div class="report-date" id="preview-report-date">清掃日時: ${dateStr} ${timeStr}</div>
           <div class="report-store" id="preview-report-store">${escapeHtml(report.store_name || '店舗名不明')}</div>
         </div>
