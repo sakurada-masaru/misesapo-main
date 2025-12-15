@@ -29,7 +29,7 @@
       </div>
       <div class="filter-group">
         <select id="client-filter">
-          <option value="">全取引先</option>
+          <option value="">法人名</option>
         </select>
         <select id="brand-filter">
           <option value="">全ブランド</option>
@@ -1357,6 +1357,10 @@
       if (clientsRes.ok) {
         const clientsData = await clientsRes.json();
         allClients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
+        console.log('Loaded clients:', allClients.length, 'items');
+        if (allClients.length > 0) {
+          console.log('Sample client:', allClients[0]);
+        }
       } else {
         console.warn('Failed to load clients');
         allClients = [];
@@ -1396,7 +1400,7 @@
     }
     
     // 取引先（企業/個人）
-    clientFilter.innerHTML = '<option value="">全取引先</option>' + 
+    clientFilter.innerHTML = '<option value="">法人名</option>' + 
       allClients.map(c => `<option value="${c.id}">${c.name}${c.type === 'individual' ? '（個人）' : ''}</option>`).join('');
     
     // ブランド（取引先に連動）
@@ -1661,7 +1665,24 @@
       }
       
       if (!client) {
-        if (brand && brand.client_id) {
+        // まずstore.client_idから直接取得を試みる
+        if (store.client_id) {
+          // EntityFinderを使用してID形式の違いに対応
+          if (window.DataUtils?.EntityFinder?.findClient) {
+            client = window.DataUtils.EntityFinder.findClient(allClients, store.client_id);
+          } else {
+            // フォールバック: 手動で取得
+            client = allClients.find(c => {
+              const match = c.id === store.client_id || String(c.id) === String(store.client_id);
+              if (match && !c.name) {
+                console.warn('Client found but name is missing:', c);
+              }
+              return match;
+            });
+          }
+        }
+        // store.client_idで取得できなかった場合、brand.client_idから取得
+        if (!client && brand && brand.client_id) {
           // EntityFinderを使用してID形式の違いに対応
           if (window.DataUtils?.EntityFinder?.findClient) {
             client = window.DataUtils.EntityFinder.findClient(allClients, brand.client_id);
@@ -1672,17 +1693,11 @@
             });
           }
         }
-        if (!client && store.client_id) {
-          // EntityFinderを使用してID形式の違いに対応
-          if (window.DataUtils?.EntityFinder?.findClient) {
-            client = window.DataUtils.EntityFinder.findClient(allClients, store.client_id);
-          } else {
-            // フォールバック: 手動で取得
-            client = allClients.find(c => {
-              return c.id === store.client_id || String(c.id) === String(store.client_id);
-            });
-          }
-        }
+      }
+      
+      // デバッグ: clientが見つからない場合
+      if (!client && store.client_id) {
+        console.warn('Client not found for store:', store.id, 'client_id:', store.client_id, 'available clients:', allClients.length);
       }
       
       // 店舗名からブランド名と店舗名（〜店）を分離
@@ -1700,9 +1715,16 @@
       const brandCell = brand 
         ? `<a href="/admin/customers/brands/detail?id=${brand.id}" class="table-link brand-link">${escapeHtml(brandName)}</a>`
         : `<span class="text-muted">${escapeHtml(brandName || '-')}</span>`;
+      // 法人名を取得（nameフィールドを優先、なければcompany_name）
+      const clientName = client ? (client.name || client.company_name || '-') : '-';
       const clientCell = client 
-        ? `<a href="/admin/customers/clients/detail?id=${client.id}" class="table-link client-link">${escapeHtml(client.name || client.company_name || '-')}</a>`
+        ? `<a href="/admin/customers/clients/detail?id=${client.id}" class="table-link client-link">${escapeHtml(clientName)}</a>`
         : `<span class="text-muted">-</span>`;
+      
+      // デバッグ: 法人名が空の場合
+      if (client && !client.name && !client.company_name) {
+        console.warn('Client has no name:', client);
+      }
       
       return `
       <tr data-id="${store.id}">
@@ -1924,16 +1946,27 @@
     // 基本情報グリッド
     // EntityFinderを使用してID形式の違いに対応
     let client = null;
-    if (window.DataUtils?.EntityFinder?.findClient) {
-      client = window.DataUtils.EntityFinder.findClient(allClients, currentDetailStore.client_id);
-    } else {
-      client = allClients.find(c => c.id === currentDetailStore.client_id || String(c.id) === String(currentDetailStore.client_id));
+    // まずstore.client_idから直接取得を試みる
+    if (currentDetailStore.client_id) {
+      if (window.DataUtils?.EntityFinder?.findClient) {
+        client = window.DataUtils.EntityFinder.findClient(allClients, currentDetailStore.client_id);
+      } else {
+        client = allClients.find(c => c.id === currentDetailStore.client_id || String(c.id) === String(currentDetailStore.client_id));
+      }
     }
+    // store.client_idで取得できなかった場合、brand.client_idから取得
     let brand = null;
     if (window.DataUtils?.EntityFinder?.findBrand) {
       brand = window.DataUtils.EntityFinder.findBrand(allBrands, currentDetailStore.brand_id);
     } else {
       brand = allBrands.find(b => b.id === currentDetailStore.brand_id || String(b.id) === String(currentDetailStore.brand_id));
+    }
+    if (!client && brand && brand.client_id) {
+      if (window.DataUtils?.EntityFinder?.findClient) {
+        client = window.DataUtils.EntityFinder.findClient(allClients, brand.client_id);
+      } else {
+        client = allClients.find(c => c.id === brand.client_id || String(c.id) === String(brand.client_id));
+      }
     }
     
     document.getElementById('detail-info-grid').innerHTML = `

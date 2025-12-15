@@ -219,7 +219,7 @@ def get_google_calendar_service():
         print(f"Traceback: {traceback.format_exc()}")
         return None
 
-def create_google_calendar_event(schedule_data):
+def create_google_calendar_event(schedule_data, calendar_id=None):
     """
     Google Calendarにイベントを作成
     
@@ -233,6 +233,7 @@ def create_google_calendar_event(schedule_data):
             - cleaning_items: 清掃項目のリスト
             - notes: 備考
             - schedule_id: スケジュールID
+        calendar_id: カレンダーID（指定がない場合は環境変数のデフォルト値を使用）
     
     Returns:
         dict: 作成されたイベントの情報、またはエラー情報
@@ -243,6 +244,11 @@ def create_google_calendar_event(schedule_data):
     service = get_google_calendar_service()
     if not service:
         return {'success': False, 'message': 'Failed to initialize Google Calendar service'}
+    
+    # カレンダーIDを決定（指定があればそれを使用、なければ環境変数から）
+    target_calendar_id = calendar_id or schedule_data.get('calendar_id') or GOOGLE_CALENDAR_ID
+    if not target_calendar_id:
+        return {'success': False, 'message': 'Calendar ID is required. Set GOOGLE_CALENDAR_ID environment variable or specify calendar_id parameter.'}
     
     try:
         # 日付と時間をパース
@@ -323,7 +329,7 @@ def create_google_calendar_event(schedule_data):
         
         # イベントを作成
         created_event = service.events().insert(
-            calendarId=GOOGLE_CALENDAR_ID,
+            calendarId=target_calendar_id,
             body=event
         ).execute()
         
@@ -340,6 +346,416 @@ def create_google_calendar_event(schedule_data):
         return {
             'success': False,
             'message': f'Failed to create Google Calendar event: {str(e)}'
+        }
+
+def get_google_calendar_event(event_id, calendar_id=None):
+    """
+    Google Calendarから特定のイベントを取得
+    
+    Args:
+        event_id: Google CalendarのイベントID
+        calendar_id: カレンダーID（指定がない場合は環境変数のデフォルト値を使用）
+    
+    Returns:
+        dict: イベント情報、またはエラー情報
+    """
+    if not GOOGLE_CALENDAR_ENABLED:
+        return {'success': False, 'message': 'Google Calendar integration is disabled'}
+    
+    service = get_google_calendar_service()
+    if not service:
+        return {'success': False, 'message': 'Failed to initialize Google Calendar service'}
+    
+    # カレンダーIDを決定（指定があればそれを使用、なければ環境変数から）
+    target_calendar_id = calendar_id or GOOGLE_CALENDAR_ID
+    if not target_calendar_id:
+        return {'success': False, 'message': 'Calendar ID is required. Set GOOGLE_CALENDAR_ID environment variable or specify calendar_id parameter.'}
+    
+    try:
+        event = service.events().get(
+            calendarId=target_calendar_id,
+            eventId=event_id
+        ).execute()
+        
+        # イベント情報を整形
+        result = {
+            'success': True,
+            'event_id': event.get('id'),
+            'summary': event.get('summary', ''),
+            'description': event.get('description', ''),
+            'location': event.get('location', ''),
+            'start': event.get('start', {}),
+            'end': event.get('end', {}),
+            'html_link': event.get('htmlLink', ''),
+            'created': event.get('created', ''),
+            'updated': event.get('updated', ''),
+            'status': event.get('status', '')
+        }
+        
+        # 説明からスケジュールIDを抽出（【スケジュールID】の行を探す）
+        description = event.get('description', '')
+        if description:
+            for line in description.split('\n'):
+                if '【スケジュールID】' in line or 'スケジュールID' in line:
+                    # 次の行にスケジュールIDがある可能性
+                    lines = description.split('\n')
+                    idx = lines.index(line) if line in lines else -1
+                    if idx >= 0 and idx + 1 < len(lines):
+                        schedule_id = lines[idx + 1].strip()
+                        if schedule_id:
+                            result['schedule_id'] = schedule_id
+                    break
+        
+        return result
+    except Exception as e:
+        print(f"Error getting Google Calendar event: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'success': False,
+            'message': f'Failed to get Google Calendar event: {str(e)}'
+        }
+
+def list_google_calendar_events(start_date=None, end_date=None, max_results=100, calendar_id=None):
+    """
+    Google Calendarからイベント一覧を取得
+    
+    Args:
+        start_date: 開始日時 (ISO 8601形式、例: '2025-01-15T00:00:00+09:00')
+        end_date: 終了日時 (ISO 8601形式、例: '2025-01-15T23:59:59+09:00')
+        max_results: 最大取得件数（デフォルト: 100）
+        calendar_id: カレンダーID（指定がない場合は環境変数のデフォルト値を使用）
+    
+    Returns:
+        dict: イベント一覧、またはエラー情報
+    """
+    if not GOOGLE_CALENDAR_ENABLED:
+        return {'success': False, 'message': 'Google Calendar integration is disabled'}
+    
+    service = get_google_calendar_service()
+    if not service:
+        return {'success': False, 'message': 'Failed to initialize Google Calendar service'}
+    
+    # カレンダーIDを決定（指定があればそれを使用、なければ環境変数から）
+    target_calendar_id = calendar_id or GOOGLE_CALENDAR_ID
+    if not target_calendar_id:
+        return {'success': False, 'message': 'Calendar ID is required. Set GOOGLE_CALENDAR_ID environment variable or specify calendar_id parameter.'}
+    
+    try:
+        # デフォルト値の設定
+        if not start_date:
+            # 今日の0時（JST）
+            from datetime import timezone, timedelta
+            jst = timezone(timedelta(hours=9))
+            today = datetime.now(jst).replace(hour=0, minute=0, second=0, microsecond=0)
+            start_date = today.isoformat()
+        elif 'T' not in start_date or '+' not in start_date:
+            # 日付文字列または不完全な形式の場合は、ISO 8601形式に変換
+            if 'T' not in start_date:
+                start_date = f"{start_date}T00:00:00+09:00"
+            elif '+' not in start_date:
+                start_date = start_date + '+09:00'
+        
+        if not end_date:
+            # 30日後（JST）
+            from datetime import timezone, timedelta
+            jst = timezone(timedelta(hours=9))
+            end_date_obj = datetime.now(jst) + timedelta(days=30)
+            end_date = end_date_obj.isoformat()
+        elif 'T' not in end_date or '+' not in end_date:
+            # 日付文字列または不完全な形式の場合は、ISO 8601形式に変換
+            if 'T' not in end_date:
+                end_date = f"{end_date}T23:59:59+09:00"
+            elif '+' not in end_date:
+                end_date = end_date + '+09:00'
+        
+        # イベント一覧を取得
+        events_result = service.events().list(
+            calendarId=target_calendar_id,
+            timeMin=start_date,
+            timeMax=end_date,
+            maxResults=max_results,
+            singleEvents=True,
+            orderBy='startTime'
+        ).execute()
+        
+        events = events_result.get('items', [])
+        
+        # イベント情報を整形
+        formatted_events = []
+        for event in events:
+            formatted_event = {
+                'event_id': event.get('id'),
+                'summary': event.get('summary', ''),
+                'description': event.get('description', ''),
+                'location': event.get('location', ''),
+                'start': event.get('start', {}),
+                'end': event.get('end', {}),
+                'html_link': event.get('htmlLink', ''),
+                'status': event.get('status', '')
+            }
+            
+            # 説明からスケジュールIDを抽出
+            description = event.get('description', '')
+            if description:
+                for line in description.split('\n'):
+                    if '【スケジュールID】' in line or 'スケジュールID' in line:
+                        lines = description.split('\n')
+                        idx = lines.index(line) if line in lines else -1
+                        if idx >= 0 and idx + 1 < len(lines):
+                            schedule_id = lines[idx + 1].strip()
+                            if schedule_id:
+                                formatted_event['schedule_id'] = schedule_id
+                        break
+            
+            formatted_events.append(formatted_event)
+        
+        return {
+            'success': True,
+            'events': formatted_events,
+            'count': len(formatted_events)
+        }
+    except Exception as e:
+        print(f"Error listing Google Calendar events: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'success': False,
+            'message': f'Failed to list Google Calendar events: {str(e)}'
+        }
+
+def sync_google_calendar_event_to_schedule(event_data):
+    """
+    Google CalendarイベントをDynamoDBのschedulesテーブルに同期
+    
+    Args:
+        event_data: Google Calendarイベントデータ（get_google_calendar_eventの結果形式）
+    
+    Returns:
+        dict: 同期結果
+    """
+    try:
+        event_id = event_data.get('event_id')
+        if not event_id:
+            return {'success': False, 'message': 'event_id is required'}
+        
+        # 既存のスケジュールを確認（google_calendar_event_idで検索）
+        existing_schedule = None
+        try:
+            # スキャンでgoogle_calendar_event_idを検索
+            response = SCHEDULES_TABLE.scan(
+                FilterExpression=Attr('google_calendar_event_id').eq(event_id)
+            )
+            items = response.get('Items', [])
+            if items:
+                existing_schedule = items[0]
+        except Exception as e:
+            print(f"Error checking existing schedule: {str(e)}")
+        
+        # イベント情報からスケジュールデータを構築
+        summary = event_data.get('summary', '')
+        description = event_data.get('description', '')
+        location = event_data.get('location', '')
+        start = event_data.get('start', {})
+        end = event_data.get('end', {})
+        
+        # 日付と時間を抽出
+        start_datetime_str = start.get('dateTime') or start.get('date', '')
+        end_datetime_str = end.get('dateTime') or end.get('date', '')
+        
+        # ISO形式の日時をパース
+        if start_datetime_str:
+            if 'T' in start_datetime_str:
+                # dateTime形式
+                start_dt = datetime.fromisoformat(start_datetime_str.replace('Z', '+00:00'))
+                scheduled_date = start_dt.strftime('%Y-%m-%d')
+                scheduled_time = start_dt.strftime('%H:%M')
+            else:
+                # date形式（終日イベント）
+                scheduled_date = start_datetime_str
+                scheduled_time = '10:00'  # デフォルト時刻
+        else:
+            return {'success': False, 'message': 'start time is required'}
+        
+        # 説明から情報を抽出
+        schedule_id = event_data.get('schedule_id')  # 既に抽出済み
+        cleaning_items = []
+        notes = ''
+        store_name = ''
+        client_name = ''
+        
+        if description:
+            lines = description.split('\n')
+            current_section = None
+            for line in lines:
+                line = line.strip()
+                if '【清掃項目】' in line:
+                    current_section = 'cleaning_items'
+                elif '【備考】' in line:
+                    current_section = 'notes'
+                elif '【住所】' in line:
+                    current_section = 'address'
+                elif '【スケジュールID】' in line:
+                    current_section = 'schedule_id'
+                elif line.startswith('・') and current_section == 'cleaning_items':
+                    # 清掃項目を抽出
+                    item_name = line.replace('・', '').strip()
+                    if item_name:
+                        cleaning_items.append({'name': item_name})
+                elif current_section == 'notes' and line:
+                    notes = line
+                elif current_section == 'address' and line:
+                    location = line  # 住所を上書き
+        
+        # タイトルから店舗名とクライアント名を抽出
+        if summary:
+            # "【定期清掃】クライアント名 店舗名（備考）" の形式を想定
+            # または "クライアント名 店舗名 - 清掃" の形式
+            summary_clean = summary
+            # 【定期清掃】などのプレフィックスを削除
+            if '【' in summary_clean and '】' in summary_clean:
+                summary_clean = summary_clean.split('】', 1)[1] if '】' in summary_clean else summary_clean
+            
+            # 括弧内の備考を削除
+            import re
+            summary_clean = re.sub(r'（[^）]*）', '', summary_clean)
+            summary_clean = re.sub(r'\([^)]*\)', '', summary_clean)
+            summary_clean = summary_clean.strip()
+            
+            # 店舗名を抽出（locationがあれば優先、なければsummaryから）
+            if location:
+                # locationから店舗名を抽出（カンマの前の部分）
+                location_parts = location.split(',')
+                if location_parts:
+                    store_name = location_parts[0].strip()
+            
+            if not store_name and summary_clean:
+                # summaryから抽出
+                if ' - ' in summary_clean:
+                    name_part = summary_clean.split(' - ')[0]
+                    parts = name_part.split(' ', 1)
+                    if len(parts) >= 2:
+                        client_name = parts[0]
+                        store_name = parts[1]
+                    else:
+                        store_name = name_part
+                else:
+                    # スペースで分割して最後の部分を店舗名とする
+                    parts = summary_clean.split()
+                    if len(parts) >= 2:
+                        # 最初の部分をクライアント名、残りを店舗名とする
+                        client_name = parts[0]
+                        store_name = ' '.join(parts[1:])
+                    else:
+                        store_name = summary_clean
+        
+        # スケジュールIDが既に存在する場合は更新、なければ新規作成
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        if existing_schedule:
+            # 既存スケジュールを更新
+            schedule_id = existing_schedule.get('id')
+            update_expression_parts = []
+            expression_attribute_values = {}
+            expression_attribute_names = {}
+            
+            update_expression_parts.append('updated_at = :updated_at')
+            expression_attribute_values[':updated_at'] = now
+            
+            if scheduled_date:
+                update_expression_parts.append('#date = :date')
+                expression_attribute_names['#date'] = 'date'
+                expression_attribute_values[':date'] = scheduled_date
+                update_expression_parts.append('scheduled_date = :scheduled_date')
+                expression_attribute_values[':scheduled_date'] = scheduled_date
+            
+            if scheduled_time:
+                update_expression_parts.append('time_slot = :time_slot')
+                expression_attribute_values[':time_slot'] = scheduled_time
+                update_expression_parts.append('scheduled_time = :scheduled_time')
+                expression_attribute_values[':scheduled_time'] = scheduled_time
+            
+            if store_name:
+                update_expression_parts.append('store_name = :store_name')
+                expression_attribute_values[':store_name'] = store_name
+            
+            if client_name:
+                update_expression_parts.append('client_name = :client_name')
+                expression_attribute_values[':client_name'] = client_name
+            
+            if location:
+                update_expression_parts.append('address = :address')
+                expression_attribute_values[':address'] = location
+            
+            if cleaning_items:
+                update_expression_parts.append('cleaning_items = :cleaning_items')
+                expression_attribute_values[':cleaning_items'] = cleaning_items
+            
+            if notes:
+                update_expression_parts.append('notes = :notes')
+                expression_attribute_values[':notes'] = notes
+            
+            # google_calendar_event_idを確実に設定
+            update_expression_parts.append('google_calendar_event_id = :event_id')
+            expression_attribute_values[':event_id'] = event_id
+            
+            update_params = {
+                'Key': {'id': schedule_id},
+                'UpdateExpression': 'SET ' + ', '.join(update_expression_parts),
+                'ExpressionAttributeValues': expression_attribute_values
+            }
+            if expression_attribute_names:
+                update_params['ExpressionAttributeNames'] = expression_attribute_names
+            
+            SCHEDULES_TABLE.update_item(**update_params)
+            
+            return {
+                'success': True,
+                'action': 'updated',
+                'schedule_id': schedule_id,
+                'message': 'スケジュールを更新しました'
+            }
+        else:
+            # 新規スケジュールを作成
+            if not schedule_id:
+                # スケジュールIDがなければ生成
+                schedule_id = generate_schedule_id(scheduled_date, SCHEDULES_TABLE)
+            
+            schedule_item = {
+                'id': schedule_id,
+                'created_at': now,
+                'updated_at': now,
+                'date': scheduled_date,
+                'scheduled_date': scheduled_date,
+                'time_slot': scheduled_time,
+                'scheduled_time': scheduled_time,
+                'order_type': 'regular',
+                'store_id': '',  # 後で設定可能
+                'store_name': store_name,
+                'client_name': client_name,
+                'address': location,
+                'cleaning_items': cleaning_items,
+                'notes': notes,
+                'status': 'draft',
+                'google_calendar_event_id': event_id
+            }
+            
+            SCHEDULES_TABLE.put_item(Item=schedule_item)
+            
+            return {
+                'success': True,
+                'action': 'created',
+                'schedule_id': schedule_id,
+                'message': 'スケジュールを作成しました'
+            }
+            
+    except Exception as e:
+        print(f"Error syncing Google Calendar event to schedule: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'success': False,
+            'message': f'Failed to sync event to schedule: {str(e)}'
         }
 
 # Cognitoクライアントの初期化
@@ -359,9 +775,9 @@ NFC_TAGS_TABLE = dynamodb.Table('nfc-tags')
 SCHEDULES_TABLE = dynamodb.Table('schedules')
 ESTIMATES_TABLE = dynamodb.Table('estimates')
 WORKERS_TABLE = dynamodb.Table('workers')
-CLIENTS_TABLE = dynamodb.Table('clients')
-BRANDS_TABLE = dynamodb.Table('brands')
-STORES_TABLE = dynamodb.Table('stores')
+CLIENTS_TABLE = dynamodb.Table('misesapo-clients')
+BRANDS_TABLE = dynamodb.Table('misesapo-brands')
+STORES_TABLE = dynamodb.Table('misesapo-stores')
 ATTENDANCE_TABLE = dynamodb.Table('attendance')
 ATTENDANCE_ERRORS_TABLE = dynamodb.Table('attendance-errors')
 ATTENDANCE_REQUESTS_TABLE = dynamodb.Table('attendance-requests')
@@ -688,6 +1104,37 @@ def lambda_handler(event, context):
                 return get_schedules(event, headers)
             elif method == 'POST':
                 return create_schedule(event, headers)
+        elif normalized_path == '/google-calendar/events':
+            # Google Calendarイベント一覧の取得
+            if method == 'GET':
+                return get_google_calendar_events(event, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
+        elif normalized_path.startswith('/google-calendar/events/'):
+            # Google Calendarイベント詳細の取得
+            event_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_google_calendar_event_detail(event_id, event, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
+        elif normalized_path == '/google-calendar/sync':
+            # Google CalendarイベントをDynamoDBに同期
+            if method == 'POST':
+                return sync_google_calendar_to_schedules(event, headers)
+            else:
+                return {
+                    'statusCode': 405,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
+                }
         elif normalized_path.startswith('/schedules/'):
             # スケジュール詳細の取得・更新・削除
             schedule_id = normalized_path.split('/')[-1]
@@ -3461,6 +3908,219 @@ def get_schedules(event, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': 'スケジュールの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_google_calendar_events(event, headers):
+    """
+    Google Calendarイベント一覧を取得
+    """
+    try:
+        # クエリパラメータを取得
+        query_params = event.get('queryStringParameters') or {}
+        start_date = query_params.get('start_date')
+        end_date = query_params.get('end_date')
+        max_results = int(query_params.get('max_results', 100))
+        calendar_id = query_params.get('calendar_id')
+        
+        # イベント一覧を取得
+        result = list_google_calendar_events(start_date, end_date, max_results, calendar_id)
+        
+        if result.get('success'):
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(result, ensure_ascii=False, default=str)
+            }
+        else:
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps(result, ensure_ascii=False, default=str)
+            }
+    except Exception as e:
+        print(f"Error getting Google Calendar events: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'success': False,
+                'error': 'Google Calendarイベントの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_google_calendar_event_detail(event_id, event, headers):
+    """
+    Google Calendarイベント詳細を取得
+    """
+    try:
+        # クエリパラメータを取得
+        query_params = event.get('queryStringParameters') or {}
+        calendar_id = query_params.get('calendar_id')
+        
+        # イベントを取得
+        result = get_google_calendar_event(event_id, calendar_id)
+        
+        if result.get('success'):
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(result, ensure_ascii=False, default=str)
+            }
+        else:
+            return {
+                'statusCode': 404 if 'not found' in result.get('message', '').lower() else 500,
+                'headers': headers,
+                'body': json.dumps(result, ensure_ascii=False, default=str)
+            }
+    except Exception as e:
+        print(f"Error getting Google Calendar event detail: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'success': False,
+                'error': 'Google Calendarイベントの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def sync_google_calendar_to_schedules(event, headers):
+    """
+    Google CalendarイベントをDynamoDBのschedulesテーブルに同期
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body) if body else {}
+        else:
+            body_json = json.loads(body.decode('utf-8')) if body else {}
+        
+        # クエリパラメータまたはボディから取得
+        query_params = event.get('queryStringParameters') or {}
+        event_id = body_json.get('event_id') or query_params.get('event_id')
+        calendar_id = body_json.get('calendar_id') or query_params.get('calendar_id') or GOOGLE_CALENDAR_ID
+        
+        # 今日以降のイベントのみ取得（デフォルト）
+        if not event_id:
+            # 日付文字列が渡された場合はISO 8601形式の日時に変換
+            start_date_param = body_json.get('start_date') or query_params.get('start_date')
+            if start_date_param:
+                if 'T' not in start_date_param:
+                    # 日付のみの場合は、その日の0時（JST）に変換
+                    start_date = f"{start_date_param}T00:00:00+09:00"
+                elif '+' not in start_date_param and 'Z' not in start_date_param:
+                    # 日時はあるがタイムゾーンがない場合は、JSTを追加
+                    start_date = start_date_param + '+09:00'
+                else:
+                    start_date = start_date_param
+            else:
+                # デフォルト: 今日の0時（JST）
+                from datetime import timezone, timedelta
+                jst = timezone(timedelta(hours=9))
+                today = datetime.now(jst).replace(hour=0, minute=0, second=0, microsecond=0)
+                start_date = today.isoformat()
+            
+            end_date_param = body_json.get('end_date') or query_params.get('end_date')
+            if end_date_param:
+                if 'T' not in end_date_param:
+                    # 日付のみの場合は、その日の23:59:59（JST）に変換
+                    end_date = f"{end_date_param}T23:59:59+09:00"
+                elif '+' not in end_date_param and 'Z' not in end_date_param:
+                    # 日時はあるがタイムゾーンがない場合は、JSTを追加
+                    end_date = end_date_param + '+09:00'
+                else:
+                    end_date = end_date_param
+            else:
+                end_date = None  # list_google_calendar_eventsで30日後に設定される
+            
+            max_results = int(body_json.get('max_results') or query_params.get('max_results', 100))
+        else:
+            start_date = body_json.get('start_date') or query_params.get('start_date')
+            end_date = body_json.get('end_date') or query_params.get('end_date')
+            max_results = int(body_json.get('max_results') or query_params.get('max_results', 100))
+        
+        results = {
+            'success': True,
+            'synced': [],
+            'errors': [],
+            'total': 0
+        }
+        
+        if event_id:
+            # 特定のイベントを同期
+            event_data = get_google_calendar_event(event_id, calendar_id)
+            if event_data.get('success'):
+                sync_result = sync_google_calendar_event_to_schedule(event_data)
+                if sync_result.get('success'):
+                    results['synced'].append({
+                        'event_id': event_id,
+                        'schedule_id': sync_result.get('schedule_id'),
+                        'action': sync_result.get('action')
+                    })
+                    results['total'] += 1
+                else:
+                    results['errors'].append({
+                        'event_id': event_id,
+                        'error': sync_result.get('message')
+                    })
+            else:
+                results['errors'].append({
+                    'event_id': event_id,
+                    'error': event_data.get('message', 'Failed to get event')
+                })
+        else:
+            # 日付範囲でイベント一覧を取得して同期
+            events_result = list_google_calendar_events(start_date, end_date, max_results, calendar_id)
+            if events_result.get('success'):
+                events = events_result.get('events', [])
+                for event_data in events:
+                    sync_result = sync_google_calendar_event_to_schedule(event_data)
+                    if sync_result.get('success'):
+                        results['synced'].append({
+                            'event_id': event_data.get('event_id'),
+                            'schedule_id': sync_result.get('schedule_id'),
+                            'action': sync_result.get('action')
+                        })
+                        results['total'] += 1
+                    else:
+                        results['errors'].append({
+                            'event_id': event_data.get('event_id'),
+                            'error': sync_result.get('message')
+                        })
+            else:
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps(events_result, ensure_ascii=False, default=str)
+                }
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(results, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error syncing Google Calendar to schedules: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'success': False,
+                'error': 'Google Calendarの同期に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }
