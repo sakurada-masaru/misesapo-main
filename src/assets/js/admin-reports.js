@@ -1293,37 +1293,6 @@
       document.getElementById('btn-new-report').addEventListener('click', () => {
         // PC版レポート作成画面を新規ウィンドウで開く
         window.open('/admin/reports/new-pc.html', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-        if (reportContent) {
-          reportContent.innerHTML = '';
-        }
-        const cleaningItemsList = document.getElementById('cleaning-items-list-modal');
-        if (cleaningItemsList) {
-          cleaningItemsList.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
-        }
-        // 日付を今日に設定
-        const reportDate = document.getElementById('report-date-modal');
-        if (reportDate) {
-          reportDate.value = new Date().toISOString().split('T')[0];
-        }
-        // 画像ストックをクリア
-        const imageStockGrid = document.getElementById('image-stock-grid-modal');
-        if (imageStockGrid) {
-          imageStockGrid.innerHTML = '<div class="image-stock-empty"><i class="fas fa-cloud-upload-alt"></i><p>画像をアップロードしてください</p><small>ドラッグ&ドロップで各セクションに配置できます</small></div>';
-        }
-        // セクションカウンターとセクションをリセット
-        modalSectionCounter = 0;
-        modalSections = {};
-        document.getElementById('new-dialog').showModal();
-        
-        // モーダルが開かれた後にセクション追加ボタンのイベントリスナーを設定
-        setTimeout(() => {
-          setupModalSectionAddButton();
-        }, 100);
-        
-        // モーダル内で清掃員レポート作成ページと同じ機能を初期化
-        if (typeof window.initAdminReportModal === 'function') {
-          window.initAdminReportModal();
-        }
       });
 
       // モーダル用の変数と関数
