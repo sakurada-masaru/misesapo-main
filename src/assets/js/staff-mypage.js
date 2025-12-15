@@ -295,10 +295,10 @@ async function loadCurrentUser() {
     console.log('Button element:', document.getElementById('attendance-toggle-btn'));
     console.log('Content element display:', window.getComputedStyle(contentEl).display);
     
-    // コンテナの配置を復元（コンテンツ表示後）
-    setTimeout(() => {
-      restoreSectionLayout();
-    }, 100);
+    // Bentoグリッドでは配置はCSS Gridで管理されるため、restoreSectionLayoutは不要
+    // setTimeout(() => {
+    //   restoreSectionLayout();
+    // }, 100);
     
     // 出退勤ボタンのイベントリスナーを再設定（コンテンツ表示後）
     // 少し遅延を入れてDOMが完全にレンダリングされるのを待つ
@@ -2455,8 +2455,14 @@ function restoreSectionLayout() {
   try {
     const grid = document.getElementById('mypage-grid');
     if (!grid) {
-      console.warn('Grid not found, retrying...');
-      setTimeout(restoreSectionLayout, 100);
+      // Bentoグリッドでは早期リターン（CSS Gridで配置が管理されるため）
+      return;
+    }
+    
+    // Bentoグリッドの場合は早期リターン（CSS Gridで配置が管理されるため）
+    const bentoCards = grid.querySelectorAll('.bento-card');
+    if (bentoCards.length > 0) {
+      // Bentoグリッドでは配置はCSSで管理されるため、restoreSectionLayoutは不要
       return;
     }
     
@@ -2469,11 +2475,10 @@ function restoreSectionLayout() {
     
     const layout = JSON.parse(savedLayout);
     
-    // コンテナが読み込まれるまで待つ
+    // コンテナが読み込まれるまで待つ（旧グリッドシステム用）
     const containers = grid.querySelectorAll('.draggable-container');
     if (containers.length === 0) {
-      console.warn('Containers not found, retrying...');
-      setTimeout(restoreSectionLayout, 100);
+      // Bentoグリッドの場合は早期リターン
       return;
     }
     
