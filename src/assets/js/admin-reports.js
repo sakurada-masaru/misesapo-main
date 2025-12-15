@@ -1291,6 +1291,10 @@
 
       // 新規作成
       document.getElementById('btn-new-report').addEventListener('click', () => {
+        // PC版レポート作成画面に遷移
+        window.location.href = '/admin/reports/new-pc.html';
+        return;
+        
         document.getElementById('form-title').textContent = '新規レポート作成';
         document.getElementById('report-form-modal').reset();
         document.getElementById('report-id').value = '';
