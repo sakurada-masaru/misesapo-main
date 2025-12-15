@@ -1291,8 +1291,8 @@
 
       // 新規作成
       document.getElementById('btn-new-report').addEventListener('click', () => {
-        // PC版レポート作成画面に遷移
-        window.location.href = '/admin/reports/new-pc.html';
+        // PC版レポート作成画面を新規ウィンドウで開く
+        window.open('/admin/reports/new-pc.html', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
         if (reportContent) {
           reportContent.innerHTML = '';
         }
