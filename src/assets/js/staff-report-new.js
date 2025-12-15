@@ -4597,44 +4597,10 @@
   }
   
   // セクション内画像コンテンツの画像追加モーダルを開く
+  // 管理レポート作成画面では、メディア選択モーダルを直接開く
   window.openCleaningItemImageAddModal = function(sectionId, imageContentId, category) {
-    const modal = document.getElementById('cleaning-item-image-add-modal');
-    if (!modal) return;
-    
-    // モーダルに情報を保存
-    modal.dataset.sectionId = sectionId;
-    modal.dataset.imageContentId = imageContentId;
-    modal.dataset.category = category;
-    
-    // モーダルを表示
-    modal.style.display = 'flex';
-    
-    // 既存のイベントリスナーを削除（重複防止）
-    const existingButtons = modal.querySelectorAll('.btn-image-source');
-    existingButtons.forEach(btn => {
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-    });
-    
-    // イベントリスナーを設定
-    modal.querySelectorAll('.btn-image-source').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const source = this.dataset.source;
-        const modalSectionId = modal.dataset.sectionId;
-        const modalImageContentId = modal.dataset.imageContentId;
-        const modalCategory = modal.dataset.category;
-        
-        modal.style.display = 'none';
-        
-        if (source === 'media') {
-          // メディアから選択
-          openMediaSelectionDialog(modalSectionId, modalImageContentId, modalCategory);
-        } else if (source === 'library') {
-          // スマホから写真を選択
-          openCleaningItemImageLibraryPicker(modalSectionId, modalImageContentId, modalCategory);
-        }
-      });
-    });
+    // メディア選択モーダルを直接開く
+    openMediaSelectionDialog(sectionId, imageContentId, category);
   };
   
   // メディア選択ダイアログを開く
