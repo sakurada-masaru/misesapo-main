@@ -1293,13 +1293,6 @@
       document.getElementById('btn-new-report').addEventListener('click', () => {
         // PC版レポート作成画面に遷移
         window.location.href = '/admin/reports/new-pc.html';
-        return;
-        
-        document.getElementById('form-title').textContent = '新規レポート作成';
-        document.getElementById('report-form-modal').reset();
-        document.getElementById('report-id').value = '';
-        // モーダル内のコンテナをクリア
-        const reportContent = document.getElementById('report-content-modal');
         if (reportContent) {
           reportContent.innerHTML = '';
         }
