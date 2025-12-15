@@ -255,9 +255,15 @@
         const resubmittedBadge = (r.resubmitted || normalized.resubmitted) 
           ? '<span class="resubmitted-badge" title="清掃員から再提出されました"><i class="fas fa-bell"></i> 再提出</span>' 
           : '';
+        
+        // 次回提案バッジ
+        const isProposal = r.proposal_type === 'proposal' || r.type === 'proposal' || normalized.proposal_type === 'proposal';
+        const proposalBadge = isProposal 
+          ? '<span class="proposal-badge" title="次回提案"><i class="fas fa-lightbulb"></i> 次回提案</span>' 
+          : '';
 
         return `
-          <tr ${(r.resubmitted || normalized.resubmitted) ? 'class="resubmitted-row"' : ''}>
+          <tr ${(r.resubmitted || normalized.resubmitted) ? 'class="resubmitted-row"' : ''} ${isProposal ? 'class="proposal-row"' : ''}>
             <td>${(window.DataUtils && window.DataUtils.formatDate) ? window.DataUtils.formatDate(normalized.date) : formatDate(normalized.date)}</td>
             <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(displayStoreName) : escapeHtml(displayStoreName)}</td>
             <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(worker.name || normalized.worker_name || '-') : escapeHtml(worker.name || normalized.worker_name || '-')}</td>
@@ -266,12 +272,14 @@
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span class="status-badge status-${status}">${statusLabel}</span>
                 ${resubmittedBadge}
+                ${proposalBadge}
               </div>
             </td>
             <td>
               <div class="action-btns">
-                <button class="action-btn view" title="詳細" onclick="viewReport('${r.id}')"><i class="fas fa-eye"></i></button>
-                <button class="action-btn edit" title="編集" onclick="editReport('${r.id}')"><i class="fas fa-edit"></i></button>
+                <button class="action-btn preview" title="プレビュー" onclick="previewReport('${r.id}')"><i class="fas fa-eye"></i></button>
+                <button class="action-btn edit" title="${isProposal ? '次回提案を編集' : '編集'}" onclick="editReport('${r.id}')"><i class="fas fa-edit"></i></button>
+                ${!isProposal ? `<button class="action-btn proposal" title="次回提案を作成" onclick="createProposal('${r.id}')"><i class="fas fa-lightbulb"></i></button>` : ''}
                 <button class="action-btn comment" title="コメント" onclick="viewFeedback('${r.id}')"><i class="fas fa-comment"></i></button>
                 <button class="action-btn share" title="URL発行" onclick="shareReport('${r.id}')"><i class="fas fa-share-alt"></i></button>
                 <button class="action-btn delete" title="削除" onclick="deleteReport('${r.id}')"><i class="fas fa-trash"></i></button>
@@ -606,18 +614,32 @@
     };
 
     // 編集
-    window.editReport = function(id) {
-      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
-      if (!report) {
-        alert('レポートが見つかりませんでした');
-        return;
-      }
+    window.editReport = async function(id) {
+      try {
+        // APIからレポート詳細を取得
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {
+          headers: { 'Authorization': `Bearer ${idToken}` }
+        });
 
-      const formTitle = document.getElementById('form-title');
-      if (formTitle) formTitle.textContent = 'レポート編集';
-      
-      const reportId = document.getElementById('report-id');
-      if (reportId) reportId.value = report.report_id || report.id;
+        if (!response.ok) {
+          throw new Error('レポートの取得に失敗しました');
+        }
+
+        const data = await response.json();
+        const report = data.report || data;
+
+        // 次回提案かどうかを判定
+        const isProposal = report.proposal_type === 'proposal' || report.type === 'proposal';
+        
+        // タイトルを設定
+        const formTitle = document.getElementById('form-title');
+        if (formTitle) {
+          formTitle.textContent = isProposal ? '次回提案を編集' : 'レポートを編集';
+        }
+        
+        const reportId = document.getElementById('report-id');
+        if (reportId) reportId.value = report.report_id || report.id;
       
       // 基本情報を設定（モーダル用のIDを使用）
       const storeSelect = document.getElementById('report-store-select-modal');
@@ -768,7 +790,56 @@
         });
       }
 
+      // 提案タイプを設定
+      const proposalTypeInput = document.getElementById('proposal-type-modal');
+      if (isProposal) {
+        if (!proposalTypeInput) {
+          const form = document.getElementById('report-form-modal');
+          const hiddenInput = document.createElement('input');
+          hiddenInput.type = 'hidden';
+          hiddenInput.id = 'proposal-type-modal';
+          hiddenInput.name = 'proposal_type';
+          hiddenInput.value = 'proposal';
+          form.appendChild(hiddenInput);
+        } else {
+          proposalTypeInput.value = 'proposal';
+        }
+      } else {
+        if (proposalTypeInput) {
+          proposalTypeInput.value = '';
+        }
+      }
+
+      // 提案タイプを設定
+      const proposalTypeInput = document.getElementById('proposal-type-modal');
+      if (isProposal) {
+        if (!proposalTypeInput) {
+          const form = document.getElementById('report-form-modal');
+          const hiddenInput = document.createElement('input');
+          hiddenInput.type = 'hidden';
+          hiddenInput.id = 'proposal-type-modal';
+          hiddenInput.name = 'proposal_type';
+          hiddenInput.value = 'proposal';
+          form.appendChild(hiddenInput);
+        } else {
+          proposalTypeInput.value = 'proposal';
+        }
+      } else {
+        if (proposalTypeInput) {
+          proposalTypeInput.value = '';
+        }
+      }
+
       document.getElementById('new-dialog').showModal();
+      
+      // モーダルが開かれた後にセクション追加ボタンのイベントリスナーを設定
+      setTimeout(() => {
+        setupModalSectionAddButton();
+      }, 100);
+      } catch (error) {
+        console.error('Error loading report for editing:', error);
+        alert('レポートの読み込みに失敗しました: ' + error.message);
+      }
     };
 
     // URL発行
@@ -842,6 +913,153 @@
         filterAndRender();
       } catch (e) {
         alert('削除に失敗しました');
+      }
+    };
+
+    // レポートプレビュー機能
+    window.previewReport = async function(id) {
+      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+      if (!report) {
+        alert('レポートが見つかりませんでした');
+        return;
+      }
+
+      const previewDialog = document.getElementById('preview-dialog-modal');
+      const previewContent = document.getElementById('preview-report-content-modal');
+      
+      if (!previewDialog || !previewContent) {
+        alert('プレビューモーダルが見つかりませんでした');
+        return;
+      }
+
+      try {
+        // レポート詳細を取得
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {
+          headers: { 'Authorization': `Bearer ${idToken}` }
+        });
+
+        if (!response.ok) {
+          throw new Error('レポートの取得に失敗しました');
+        }
+
+        const data = await response.json();
+        const reportData = data.report || data;
+
+        // report-shared-view.jsのrenderReport関数を使用して表示
+        if (window.renderReport && typeof window.renderReport === 'function') {
+          previewContent.innerHTML = '';
+          window.renderReport(reportData, previewContent);
+        } else {
+          // フォールバック: シンプルな表示
+          previewContent.innerHTML = `
+            <div style="padding: 20px;">
+              <h2>${escapeHtml(reportData.store_name || '店舗名不明')}</h2>
+              <p>日付: ${escapeHtml(reportData.cleaning_date || '-')}</p>
+              <p>時間: ${escapeHtml(reportData.cleaning_start_time || '-')} 〜 ${escapeHtml(reportData.cleaning_end_time || '-')}</p>
+              <div style="margin-top: 20px;">
+                ${reportData.sections ? reportData.sections.map(section => {
+                  if (section.section_type === 'cleaning') {
+                    return `<div style="margin-bottom: 20px;">
+                      <h3>${escapeHtml(section.item_name || '清掃項目')}</h3>
+                      <p>${escapeHtml(section.work_content || '')}</p>
+                    </div>`;
+                  } else if (section.section_type === 'image') {
+                    return `<div style="margin-bottom: 20px;">
+                      <h3>画像</h3>
+                      <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        ${(section.photos?.before || []).map(photo => 
+                          `<img src="${escapeHtml(photo.url || photo)}" style="max-width: 200px; height: auto;" />`
+                        ).join('')}
+                        ${(section.photos?.after || []).map(photo => 
+                          `<img src="${escapeHtml(photo.url || photo)}" style="max-width: 200px; height: auto;" />`
+                        ).join('')}
+                      </div>
+                    </div>`;
+                  } else if (section.section_type === 'comment') {
+                    return `<div style="margin-bottom: 20px;">
+                      <h3>コメント</h3>
+                      <p>${escapeHtml(section.content || '')}</p>
+                    </div>`;
+                  } else if (section.section_type === 'work_content') {
+                    return `<div style="margin-bottom: 20px;">
+                      <h3>作業内容</h3>
+                      <p>${escapeHtml(section.content || '')}</p>
+                    </div>`;
+                  }
+                  return '';
+                }).join('') : ''}
+              </div>
+            </div>
+          `;
+        }
+
+        // モーダルを表示
+        previewDialog.style.display = 'flex';
+        previewDialog.classList.add('show');
+      } catch (error) {
+        console.error('Error loading report preview:', error);
+        alert('プレビューの読み込みに失敗しました: ' + error.message);
+      }
+    };
+
+    // プレビューモーダルを閉じる
+    window.closePreviewModalAdmin = function() {
+      const previewDialog = document.getElementById('preview-dialog-modal');
+      if (previewDialog) {
+        previewDialog.style.display = 'none';
+        previewDialog.classList.remove('show');
+      }
+    };
+
+    // 次回提案を作成
+    window.createProposal = async function(id) {
+      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+      if (!report) {
+        alert('レポートが見つかりませんでした');
+        return;
+      }
+
+      // レポート詳細を取得して、次回提案として編集モーダルを開く
+      try {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/reports/${id}`, {
+          headers: { 'Authorization': `Bearer ${idToken}` }
+        });
+
+        if (!response.ok) {
+          throw new Error('レポートの取得に失敗しました');
+        }
+
+        const data = await response.json();
+        const reportData = data.report || data;
+
+        // 次回提案として編集モーダルを開く（proposal_typeを設定）
+        document.getElementById('form-title').textContent = '次回提案を作成';
+        document.getElementById('report-form-modal').reset();
+        document.getElementById('report-id').value = '';
+        
+        // レポートデータをモーダルに読み込む
+        await window.editReport(id);
+        
+        // 提案タイプを設定（モーダル内にhidden inputを追加するか、データに含める）
+        const proposalTypeInput = document.getElementById('proposal-type-modal');
+        if (!proposalTypeInput) {
+          const form = document.getElementById('report-form-modal');
+          const hiddenInput = document.createElement('input');
+          hiddenInput.type = 'hidden';
+          hiddenInput.id = 'proposal-type-modal';
+          hiddenInput.name = 'proposal_type';
+          hiddenInput.value = 'proposal';
+          form.appendChild(hiddenInput);
+        } else {
+          proposalTypeInput.value = 'proposal';
+        }
+
+        document.getElementById('new-dialog').showModal();
+      } catch (error) {
+        console.error('Error creating proposal:', error);
+        alert('次回提案の作成に失敗しました: ' + error.message);
       }
     };
 
@@ -1080,6 +1298,31 @@
         filterAndRender();
       });
 
+      // モーダル内のセクション追加ボタンのイベントリスナーを設定
+      function setupModalSectionAddButton() {
+        const sectionAddToggleBtn = document.getElementById('section-add-toggle-btn-modal');
+        if (sectionAddToggleBtn) {
+          // 既存のイベントリスナーを削除
+          const newBtn = sectionAddToggleBtn.cloneNode(true);
+          sectionAddToggleBtn.parentNode.replaceChild(newBtn, sectionAddToggleBtn);
+          
+          newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // +ボタンを押したら直接清掃項目セクションを追加
+            if (window.addCleaningItemSectionModal) {
+              window.addCleaningItemSectionModal();
+            } else if (window.addCleaningItemSection) {
+              // フォールバック: 通常の関数を使用（モーダル用に調整が必要）
+              window.addCleaningItemSection('modal');
+            } else {
+              console.warn('[AdminReports] addCleaningItemSection function not found');
+            }
+          });
+        }
+      }
+
       // 新規作成
       document.getElementById('btn-new-report').addEventListener('click', () => {
         document.getElementById('form-title').textContent = '新規レポート作成';
@@ -1108,6 +1351,12 @@
         modalSectionCounter = 0;
         modalSections = {};
         document.getElementById('new-dialog').showModal();
+        
+        // モーダルが開かれた後にセクション追加ボタンのイベントリスナーを設定
+        setTimeout(() => {
+          setupModalSectionAddButton();
+        }, 100);
+        
         // モーダル内で清掃員レポート作成ページと同じ機能を初期化
         if (typeof window.initAdminReportModal === 'function') {
           window.initAdminReportModal();
@@ -1159,6 +1408,11 @@
       // モーダル用: 清掃項目リストを更新
       window.updateCleaningItemsListModal = function() {
         const container = document.getElementById('cleaning-items-list-modal');
+        // 要素が存在しない場合は何もしない（清掃員側と同じUIではこの要素は不要）
+        if (!container) {
+          return;
+        }
+        
         const items = document.querySelectorAll('.cleaning-section-modal');
         
         if (items.length === 0) {
@@ -2198,16 +2452,25 @@
         e.preventDefault();
         
         try {
+          // 提案タイプを取得
+          const proposalTypeInput = document.getElementById('proposal-type-modal');
+          const proposalType = proposalTypeInput ? proposalTypeInput.value : '';
+          
           const formData = {
-            store_id: document.getElementById('report-store').value,
-            store_name: document.getElementById('report-store-name').value,
-            cleaning_date: document.getElementById('report-date').value,
-            cleaning_start_time: document.getElementById('report-start').value,
-            cleaning_end_time: document.getElementById('report-end').value,
+            store_id: document.getElementById('report-store-modal').value,
+            store_name: document.getElementById('report-store-name-modal').value,
+            cleaning_date: document.getElementById('report-date-modal').value,
+            cleaning_start_time: document.getElementById('report-start-modal').value,
+            cleaning_end_time: document.getElementById('report-end-modal').value,
             staff_id: document.getElementById('report-worker').value || '',
             staff_name: document.getElementById('report-worker-name').value || '',
             work_items: []
           };
+          
+          // 提案タイプが設定されている場合は追加
+          if (proposalType) {
+            formData.proposal_type = proposalType;
+          }
           
           // 清掃項目を収集
           document.querySelectorAll('.cleaning-section-modal').forEach(section => {

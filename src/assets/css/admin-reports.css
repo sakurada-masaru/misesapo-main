@@ -262,6 +262,31 @@
       background-color: #dbeafe !important;
     }
 
+    /* 次回提案バッジ */
+    .proposal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #f59e0b;
+      color: #ffffff;
+    }
+    
+    .proposal-badge i {
+      font-size: 0.7rem;
+    }
+    
+    .proposal-row {
+      background-color: #fffbeb !important;
+    }
+    
+    .proposal-row:hover {
+      background-color: #fef3c7 !important;
+    }
+
     /* アクションボタン */
     .action-btns { display: flex; gap: 8px; }
     .action-btn {

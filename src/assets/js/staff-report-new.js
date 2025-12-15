@@ -2512,12 +2512,21 @@
     });
 
     // 画像倉庫フィルター
-    document.getElementById('library-date').addEventListener('change', loadWarehouseImages);
-    document.getElementById('library-category').addEventListener('change', loadWarehouseImages);
-    document.getElementById('library-date').value = new Date().toISOString().split('T')[0];
+    const libraryDate = document.getElementById('library-date');
+    const libraryCategory = document.getElementById('library-category');
+    if (libraryDate) {
+      libraryDate.addEventListener('change', loadWarehouseImages);
+      libraryDate.value = new Date().toISOString().split('T')[0];
+    }
+    if (libraryCategory) {
+      libraryCategory.addEventListener('change', loadWarehouseImages);
+    }
 
     // 画像選択確定
-    document.getElementById('save-images-btn').addEventListener('click', saveSelectedImages);
+    const saveImagesBtn = document.getElementById('save-images-btn');
+    if (saveImagesBtn) {
+      saveImagesBtn.addEventListener('click', saveSelectedImages);
+    }
 
     // 画像ストックタブの「画像を追加」ボタン
     const warehouseStockFileInput = document.getElementById('warehouse-stock-file-input');
