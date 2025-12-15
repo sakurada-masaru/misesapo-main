@@ -63,16 +63,18 @@ async function loadReportDetail() {
     
     const reportId = getReportIdFromUrl();
     if (!reportId) {
-        loadingEl.style.display = 'none';
-        errorEl.style.display = 'block';
-        errorEl.textContent = 'レポートIDが取得できませんでした';
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl) {
+            errorEl.style.display = 'block';
+            errorEl.textContent = 'レポートIDが取得できませんでした';
+        }
         return;
     }
 
     try {
-        loadingEl.style.display = 'block';
-        contentEl.style.display = 'none';
-        errorEl.style.display = 'none';
+        if (loadingEl) loadingEl.style.display = 'block';
+        if (contentEl) contentEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = 'none';
         
         // APIからレポートデータを取得
         try {
@@ -134,13 +136,15 @@ async function loadReportDetail() {
             }
         }
         
-        loadingEl.style.display = 'none';
-        contentEl.style.display = 'block';
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
     } catch (error) {
         console.error('Error loading report:', error);
-        loadingEl.style.display = 'none';
-        errorEl.style.display = 'block';
-        errorEl.textContent = `エラー: ${error.message}`;
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl) {
+            errorEl.style.display = 'block';
+            errorEl.textContent = `エラー: ${error.message}`;
+        }
     }
 }
 

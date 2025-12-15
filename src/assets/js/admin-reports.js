@@ -810,26 +810,6 @@
         }
       }
 
-      // 提案タイプを設定
-      const proposalTypeInput = document.getElementById('proposal-type-modal');
-      if (isProposal) {
-        if (!proposalTypeInput) {
-          const form = document.getElementById('report-form-modal');
-          const hiddenInput = document.createElement('input');
-          hiddenInput.type = 'hidden';
-          hiddenInput.id = 'proposal-type-modal';
-          hiddenInput.name = 'proposal_type';
-          hiddenInput.value = 'proposal';
-          form.appendChild(hiddenInput);
-        } else {
-          proposalTypeInput.value = 'proposal';
-        }
-      } else {
-        if (proposalTypeInput) {
-          proposalTypeInput.value = '';
-        }
-      }
-
       document.getElementById('new-dialog').showModal();
       
       // モーダルが開かれた後にセクション追加ボタンのイベントリスナーを設定
