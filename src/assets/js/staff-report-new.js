@@ -6583,6 +6583,10 @@
       console.log('[Submit] Success:', result);
       showSuccess(isEditMode ? 'レポートを修正しました！' : 'レポートを提出しました！');
       
+      // 管理画面側のレポート作成画面かどうかを判定
+      const isAdminPage = window.location.pathname.includes('/admin/reports/new-pc') || 
+                         window.location.pathname.includes('/admin/reports/new');
+      
       // 編集モードの場合はフォームをリセット
       if (isEditMode) {
         form.dataset.reportId = '';
@@ -6598,7 +6602,20 @@
         // 修正タブに切り替えて一覧を更新
         document.getElementById('tab-edit').click();
       } else {
-        window.location.href = '/staff/dashboard';
+        // 管理画面側の場合はウィンドウを閉じる（新規ウィンドウで開かれている場合）
+        if (isAdminPage) {
+          // 親ウィンドウのレポート一覧を更新（存在する場合）
+          if (window.opener && typeof window.opener.loadReports === 'function') {
+            window.opener.loadReports();
+          }
+          // 少し待ってからウィンドウを閉じる（成功メッセージを表示するため）
+          setTimeout(() => {
+            window.close();
+          }, 1500);
+        } else {
+          // 清掃員側の場合はダッシュボードにリダイレクト
+          window.location.href = '/staff/dashboard';
+        }
       }
 
     } catch (error) {
