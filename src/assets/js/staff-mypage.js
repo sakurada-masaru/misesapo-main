@@ -3717,4 +3717,56 @@ document.addEventListener('DOMContentLoaded', () => {
       loadTodos(); // ユーザーがなくてもデフォルトで読み込む
     }
   }, 5000);
+  
+  // アコーディオン機能のセットアップ
+  setupAccordion();
 });
+
+// アコーディオン機能の実装
+function setupAccordion() {
+  // 出退勤記録セクション以外のセクションを初期状態で閉じる
+  const allSections = document.querySelectorAll('.container-section');
+  allSections.forEach(section => {
+    const containerId = section.closest('.draggable-container')?.dataset?.containerId;
+    // 出退勤記録セクション（attendance）は開いたまま
+    if (containerId !== 'attendance') {
+      section.classList.add('collapsed');
+      // アイコンも回転状態にする
+      const toggle = section.querySelector('.accordion-toggle');
+      if (toggle) {
+        const icon = toggle.querySelector('i');
+        if (icon) {
+          icon.style.transform = 'rotate(-90deg)';
+        }
+      }
+    }
+  });
+  
+  // すべてのアコーディオントグルボタンを取得
+  const accordionToggles = document.querySelectorAll('.accordion-toggle');
+  
+  accordionToggles.forEach(toggle => {
+    toggle.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // クリックされたボタンの親要素からcontainer-sectionを探す
+      const containerSection = this.closest('.container-section');
+      
+      if (containerSection) {
+        // collapsedクラスのトグル
+        containerSection.classList.toggle('collapsed');
+        
+        // アイコンの回転状態も更新（CSSでも管理されるが、確実にするため）
+        const icon = this.querySelector('i');
+        if (icon) {
+          if (containerSection.classList.contains('collapsed')) {
+            icon.style.transform = 'rotate(-90deg)';
+          } else {
+            icon.style.transform = 'rotate(0deg)';
+          }
+        }
+      }
+    });
+  });
+}

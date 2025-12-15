@@ -1250,3 +1250,99 @@
     font-size: 0.85rem;
   }
 }
+
+/* アコーディオン機能 */
+.accordion-toggle {
+  background-color: var(--primary, #FF679C);
+  border: none;
+  border-radius: 5px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.875rem;
+  transition: transform 0.3s ease, color 0.2s ease;
+  margin-right: 4px;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.accordion-toggle:hover {
+  background-color: var(--primary-600, #E35687);
+}
+
+.accordion-toggle i {
+  transition: transform 0.3s ease;
+}
+
+.container-section.collapsed .accordion-toggle i {
+  transform: rotate(-90deg);
+}
+
+.accordion-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+  max-height: 5000px;
+  opacity: 1;
+}
+
+.container-section.collapsed .accordion-content {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.container-section.collapsed .accordion-content .card {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.container-section.collapsed .accordion-content .calendar-head {
+  display: none;
+}
+
+/* モバイルメニューエリア */
+.mobile-menu-area {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .mobile-menu-area {
+    display: block;
+    width: 100%;
+    background-color: var(--primary, #FF679C);
+    position: fixed;
+    height: 70px;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    top: 0;
+    left: 0;
+  }
+  
+  .mobile-menu-button {
+    position: absolute;
+    top: 50%;
+    left: 16px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+  }
+  
+  .staff-mypage.main-content {
+    padding-top: 70px !important;
+  }
+  
+  .sidebar.open {
+    padding-top: 70px;
+  }
+}
