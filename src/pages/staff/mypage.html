@@ -263,6 +263,16 @@ width: auto !important;
 
 
 </style>
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<link rel="stylesheet" href="/css/staff-mypage.css">
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+<script src="/js/staff-mypage.js"></script>
   </head>
   <body class="theme-pink theme-pink page-staff-mypage">
     <div id="default-header-wrapper">
@@ -337,21 +347,6 @@ width: auto !important;
 
 
     </div>
-    <main id="main">
-      
-
-
-<link rel="stylesheet" href="/css/admin-sidebar.css">
-<link rel="stylesheet" href="/css/staff-mypage.css">
-<!-- AWS SDKの読み込み -->
-<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
-<script src="/js/cognito_config.js"></script>
-<script src="/js/cognito_auth.js"></script>
-<script src="/js/client_auth.js"></script>
-<script src="/js/admin-sidebar.js"></script>
-<script src="/js/staff-mypage.js"></script>
-
 <!-- モバイルメニューボタン -->
 <div class="mobile-menu-area">
 <button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
@@ -732,10 +727,6 @@ width: auto !important;
         </div>
       </div>
     </main>
-
-
-
-    </main>
     <footer class="site-footer">
   <div class="container text-center muted small" style="padding: 16px 0;">
     <p>&copy; 2025 ミセサポ</p>
@@ -743,16 +734,7 @@ width: auto !important;
 </footer>
 
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="/js/firebase-config.js"></script>
-    <script src="/js/role_config.js"></script>
-    <script src="/js/users.js"></script>
-    <script src="/js/auth.js"></script>
-    <script src="/js/navigation.js"></script>
-    <script src="/modal_manager.js"></script>
-    <script src="/app.js"></script>
+    <!-- Additional scripts (if needed) -->
     <script>
       // ログイン画面では通常ヘッダーを表示
       (function() {
