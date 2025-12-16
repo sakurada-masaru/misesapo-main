@@ -1076,8 +1076,8 @@
       const tabBtns = previewContent.querySelectorAll('.tab-btn');
       const tabContents = previewContent.querySelectorAll('.tab-content');
       
+      // 既存のイベントリスナーを削除してから追加（重複を防ぐ）
       tabBtns.forEach(btn => {
-        // 既存のイベントリスナーを削除してから追加
         const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
         
@@ -1085,8 +1085,11 @@
           const targetTab = this.dataset.tab;
           
           // すべてのタブボタンとコンテンツからactiveクラスを削除
-          tabBtns.forEach(b => b.classList.remove('active'));
-          tabContents.forEach(c => {
+          const allTabBtns = previewContent.querySelectorAll('.tab-btn');
+          const allTabContents = previewContent.querySelectorAll('.tab-content');
+          
+          allTabBtns.forEach(b => b.classList.remove('active'));
+          allTabContents.forEach(c => {
             c.classList.remove('active');
             c.style.display = 'none';
           });
