@@ -947,71 +947,86 @@
         const reportData = data.report || data;
 
         // report-shared-view.jsのrenderReport関数を使用して表示
+        // Viewページと同じ表示にするため、一時的に要素IDを変更してrenderReportを直接呼び出す
         if (window.renderReport && typeof window.renderReport === 'function') {
-          // 一時的なコンテナを作成してレンダリング
-          const tempContainer = document.createElement('div');
-          window.renderReport(reportData, tempContainer);
+          // プレビュー用の要素IDを一時的にViewページと同じIDに変更
+          const previewHeader = previewContent.querySelector('#preview-report-header-modal');
+          const previewBrandEl = previewContent.querySelector('#preview-report-brand-modal');
+          const previewDateEl = previewContent.querySelector('#preview-report-date-modal');
+          const previewStoreEl = previewContent.querySelector('#preview-report-store-modal');
+          const previewStaffEl = previewContent.querySelector('#preview-report-staff-modal');
+          const previewItemsEl = previewContent.querySelector('#preview-cleaning-items-modal');
+          const previewMainEl = previewContent.querySelector('#preview-report-main-modal');
           
-          // レンダリングされたHTMLから必要な部分を取得
-          const renderedHeader = tempContainer.querySelector('.report-header');
-          const renderedItemsBar = tempContainer.querySelector('.items-list-bar');
-          const renderedMain = tempContainer.querySelector('.report-main');
+          // 一時的にIDを変更
+          if (previewHeader) previewHeader.id = 'report-header';
+          if (previewBrandEl) previewBrandEl.id = 'report-brand';
+          if (previewDateEl) previewDateEl.id = 'report-date';
+          if (previewStoreEl) previewStoreEl.id = 'report-store';
+          if (previewStaffEl) previewStaffEl.id = 'report-staff';
+          if (previewItemsEl) previewItemsEl.id = 'cleaning-items';
+          if (previewMainEl) previewMainEl.id = 'report-main';
           
-          // プレビュー用の要素にコピー
-          if (renderedHeader) {
-            const previewHeader = previewContent.querySelector('#preview-report-header-modal');
-            if (previewHeader) {
-              const brandEl = renderedHeader.querySelector('.report-brand');
-              const dateEl = renderedHeader.querySelector('.report-date');
-              const storeEl = renderedHeader.querySelector('.report-store');
-              const staffEl = renderedHeader.querySelector('.report-staff');
-              
-              const previewBrandEl = previewContent.querySelector('#preview-report-brand-modal');
-              const previewDateEl = previewContent.querySelector('#preview-report-date-modal');
-              const previewStoreEl = previewContent.querySelector('#preview-report-store-modal');
-              const previewStaffEl = previewContent.querySelector('#preview-report-staff-modal');
-              
-              if (brandEl && previewBrandEl) previewBrandEl.textContent = brandEl.textContent;
-              if (dateEl && previewDateEl) previewDateEl.textContent = dateEl.textContent;
-              if (storeEl && previewStoreEl) previewStoreEl.textContent = storeEl.textContent;
-              if (staffEl && previewStaffEl) previewStaffEl.textContent = staffEl.textContent;
-            }
-          }
+          // renderReportを直接呼び出す（Viewページと同じ方法）
+          window.renderReport(reportData);
           
-          if (renderedItemsBar) {
-            const itemsEl = renderedItemsBar.querySelector('.items-list-items');
-            const previewItemsEl = previewContent.querySelector('#preview-cleaning-items-modal');
-            if (itemsEl && previewItemsEl) {
-              previewItemsEl.innerHTML = itemsEl.innerHTML;
-            }
-          }
+          // IDを元に戻す
+          if (previewHeader) previewHeader.id = 'preview-report-header-modal';
+          if (previewBrandEl) previewBrandEl.id = 'preview-report-brand-modal';
+          if (previewDateEl) previewDateEl.id = 'preview-report-date-modal';
+          if (previewStoreEl) previewStoreEl.id = 'preview-report-store-modal';
+          if (previewStaffEl) previewStaffEl.id = 'preview-report-staff-modal';
+          if (previewItemsEl) previewItemsEl.id = 'preview-cleaning-items-modal';
+          if (previewMainEl) previewMainEl.id = 'preview-report-main-modal';
           
-          if (renderedMain) {
-            const previewMainEl = previewContent.querySelector('#preview-report-main-modal');
-            if (previewMainEl) {
-              previewMainEl.innerHTML = renderedMain.innerHTML;
-            }
-          }
-          
-          // 画像クリックイベントを設定（report-shared-view.jsのsetupImageModalInContainerと同じロジック）
-          // プレビュー用の要素に対して設定
-          const previewImageItems = previewContent.querySelectorAll('#preview-report-main-modal .image-item');
-          previewImageItems.forEach(item => {
-            item.style.cursor = 'pointer';
-            // 既存のイベントリスナーを削除
-            const newItem = item.cloneNode(true);
-            item.parentNode.replaceChild(newItem, item);
+          // 次回ご提案も読み込む（Viewページと同じ）
+          const reportId = reportData.report_id || reportData.id;
+          if (reportId) {
+            // プレビュー用の次回ご提案要素IDを一時的にViewページと同じIDに変更
+            const proposalLoadingEl = previewContent.querySelector('#preview-proposal-loading-modal');
+            const proposalEmptyEl = previewContent.querySelector('#preview-proposal-empty-modal');
+            const proposalItemsBarEl = previewContent.querySelector('#preview-proposal-items-bar-modal');
+            const proposalMainEl = previewContent.querySelector('#preview-proposal-report-main-modal');
+            const proposalItemsEl = previewContent.querySelector('#preview-proposal-cleaning-items-modal');
             
-            newItem.addEventListener('click', function() {
-              const img = this.querySelector('img');
-              if (img && img.src) {
-                // report-shared-view.jsのopenImageModalを使用
-                if (window.openImageModal && typeof window.openImageModal === 'function') {
-                  window.openImageModal(img.src);
-                }
-              }
-            });
-          });
+            // 一時的にIDを変更（loadProposalReportが使用するIDに合わせる）
+            const originalIds = {};
+            if (proposalLoadingEl) {
+              originalIds.loading = proposalLoadingEl.id;
+              proposalLoadingEl.id = 'proposal-loading';
+            }
+            if (proposalEmptyEl) {
+              originalIds.empty = proposalEmptyEl.id;
+              proposalEmptyEl.id = 'proposal-empty';
+            }
+            if (proposalItemsBarEl) {
+              originalIds.itemsBar = proposalItemsBarEl.id;
+              proposalItemsBarEl.id = 'proposal-items-bar';
+            }
+            if (proposalMainEl) {
+              originalIds.main = proposalMainEl.id;
+              proposalMainEl.id = 'proposal-report-main';
+            }
+            if (proposalItemsEl) {
+              originalIds.items = proposalItemsEl.id;
+              proposalItemsEl.id = 'proposal-cleaning-items';
+            }
+            
+            // プレビューでは次回ご提案は表示しない（「プレビューでは次回ご提案は表示されません」を表示）
+            if (proposalEmptyEl) {
+              proposalEmptyEl.style.display = 'block';
+            }
+            if (proposalLoadingEl) proposalLoadingEl.style.display = 'none';
+            if (proposalItemsBarEl) proposalItemsBarEl.style.display = 'none';
+            if (proposalMainEl) proposalMainEl.style.display = 'none';
+            
+            // IDを元に戻す
+            if (proposalLoadingEl && originalIds.loading) proposalLoadingEl.id = originalIds.loading;
+            if (proposalEmptyEl && originalIds.empty) proposalEmptyEl.id = originalIds.empty;
+            if (proposalItemsBarEl && originalIds.itemsBar) proposalItemsBarEl.id = originalIds.itemsBar;
+            if (proposalMainEl && originalIds.main) proposalMainEl.id = originalIds.main;
+            if (proposalItemsEl && originalIds.items) proposalItemsEl.id = originalIds.items;
+          }
           
           // プレビュー用のタブ機能を設定
           setupPreviewTabsAdmin();

@@ -552,9 +552,22 @@
             
             <!-- 次回ご提案タブ -->
             <div class="tab-content" id="preview-tab-content-proposal-modal" style="display: none;">
-              <div class="proposal-empty" id="preview-proposal-empty-modal">
+              <div class="proposal-loading" id="preview-proposal-loading-modal" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>読み込み中...</p>
+              </div>
+              <div class="proposal-empty" id="preview-proposal-empty-modal" style="display: none;">
                 <i class="fas fa-lightbulb"></i>
                 <p>プレビューでは次回ご提案は表示されません</p>
+              </div>
+              <div class="items-list-bar" id="preview-proposal-items-bar-modal" style="display: none;">
+                <div class="items-list">
+                  <span class="items-list-label">ご提案項目</span>
+                  <div class="items-list-items" id="preview-proposal-cleaning-items-modal"></div>
+                </div>
+              </div>
+              <div class="report-main" id="preview-proposal-report-main-modal" style="display: none;">
+                <!-- 次回ご提案の内容が動的に追加される -->
               </div>
             </div>
           </div>
