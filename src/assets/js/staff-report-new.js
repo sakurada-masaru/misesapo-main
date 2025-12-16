@@ -5133,6 +5133,12 @@
         hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
       });
     }
+    
+    // sectionsByTabも更新
+    if (sectionsByTab[currentActiveTab]) {
+      sectionsByTab[currentActiveTab] = { ...sections };
+      console.log('[ImageUpload] Updated sectionsByTab for tab (media):', currentActiveTab);
+    }
   }
   
   // AWS画像倉庫から選択（旧関数、互換性のため残す）
