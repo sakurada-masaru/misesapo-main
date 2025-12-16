@@ -485,8 +485,10 @@ function escapeHtml(str) {
 
 // レポートを表示（グローバルに公開）
 window.renderReport = function(report, container) {
+    console.log('[window.renderReport] Called with container:', container ? 'yes' : 'no');
     // コンテナ要素が指定された場合は、そのコンテナ内にHTMLを生成
     if (container) {
+        console.log('[window.renderReport] Calling renderReportToContainer');
         return renderReportToContainer(report, container);
     }
     
@@ -773,6 +775,8 @@ window.renderReport = function(report, container) {
 
 // コンテナ要素内にレポートを表示（プレビュー用）
 function renderReportToContainer(report, container) {
+    console.log('[renderReportToContainer] Called with report:', report);
+    console.log('[renderReportToContainer] work_items:', report.work_items);
     const dateStr = formatDate(report.cleaning_date);
     const timeStr = report.cleaning_start_time && report.cleaning_end_time 
         ? `${report.cleaning_start_time} - ${report.cleaning_end_time}`
@@ -782,6 +786,7 @@ function renderReportToContainer(report, container) {
                      'ブランド名不明';
     const storeName = report.store_name || '店舗名不明';
     const items = report.work_items || [];
+    console.log('[renderReportToContainer] items:', items);
     const itemNames = items.map(item => item.item_name || item.item_id).filter(Boolean);
     
     // 清掃項目の詳細（項目名、詳細、写真を含む）
