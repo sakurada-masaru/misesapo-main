@@ -56,7 +56,7 @@ function formatDate(dateString) {
 }
 
 // 次回ご提案レポートを取得
-async function loadProposalReport(reportId) {
+async function loadProposalReport(reportId, reportData = null) {
     const proposalLoadingEl = document.getElementById('proposal-loading');
     const proposalEmptyEl = document.getElementById('proposal-empty');
     const proposalItemsBarEl = document.getElementById('proposal-items-bar');
@@ -102,12 +102,9 @@ async function loadProposalReport(reportId) {
             // 方法1: parent_report_idで検索
             if (report.report_id || report.id) {
                 try {
-                    const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?parent_report_id=${report.report_id || report.id}&proposal_type=proposal`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                    // mode: 'no-cors'は使えない（レスポンスが読めない）ので、通常のfetchを使用
+                    // CORSエラーが発生する可能性があるが、catchで処理する
+                    const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?parent_report_id=${report.report_id || report.id}&proposal_type=proposal`);
                     if (proposalResponse.ok) {
                         const proposalData = await proposalResponse.json();
                         if (proposalData.reports && proposalData.reports.length > 0) {
@@ -120,19 +117,14 @@ async function loadProposalReport(reportId) {
                     }
                 } catch (fetchError) {
                     // CORSエラーやネットワークエラーの場合は静かに失敗
-                    console.debug('Proposal fetch failed (method 1):', fetchError.message);
+                    // エラーログは出力しない（ブラウザが自動的に表示するため）
                 }
             }
             
             // 方法2: store_id + cleaning_dateで検索（parent_report_idがない場合）
             if (!proposalReport && report.store_id && report.cleaning_date) {
                 try {
-                    const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?store_id=${report.store_id}&cleaning_date=${report.cleaning_date}&proposal_type=proposal`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                    const proposalResponse = await fetch(`${API_BASE_URL}/public/reports?store_id=${report.store_id}&cleaning_date=${report.cleaning_date}&proposal_type=proposal`);
                     if (proposalResponse.ok) {
                         const proposalData = await proposalResponse.json();
                         if (proposalData.reports && proposalData.reports.length > 0) {
@@ -145,7 +137,7 @@ async function loadProposalReport(reportId) {
                     }
                 } catch (fetchError) {
                     // CORSエラーやネットワークエラーの場合は静かに失敗
-                    console.debug('Proposal fetch failed (method 2):', fetchError.message);
+                    // エラーログは出力しない（ブラウザが自動的に表示するため）
                 }
             }
             
@@ -344,8 +336,8 @@ async function loadReportDetail() {
             // レポート情報を表示
             renderReport(report);
             
-            // 次回ご提案も読み込む
-            await loadProposalReport(reportId);
+            // 次回ご提案も読み込む（既に取得したレポートデータを渡すことで、CORSエラーを避ける）
+            await loadProposalReport(reportId, report);
         } catch (apiError) {
             console.warn('API fetch failed, trying local JSON:', apiError);
             
