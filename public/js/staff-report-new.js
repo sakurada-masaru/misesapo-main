@@ -7649,8 +7649,15 @@
     });
     
     // レポートデータを準備（report-shared-view.jsのrenderReport関数と同じ形式）
+    // item_nameが空でも、画像がある場合はworkItemsに含める
     const workItems = Object.values(savedSections)
-      .filter(s => s.type === 'cleaning' && s.item_name)
+      .filter(s => {
+        if (s.type !== 'cleaning') return false;
+        // item_nameがある場合、または画像がある場合は含める
+        const hasItemName = s.item_name && s.item_name.trim() !== '';
+        const hasImages = s.imageContents && Array.isArray(s.imageContents) && s.imageContents.length > 0;
+        return hasItemName || hasImages;
+      })
       .map(s => {
         // imageContentsから画像を収集
         const photos = { before: [], after: [] };
