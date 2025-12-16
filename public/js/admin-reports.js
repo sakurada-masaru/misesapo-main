@@ -102,6 +102,28 @@
       }
     }
 
+    async function loadBrands() {
+      try {
+        const res = await fetch(`${API_BASE}/brands`);
+        const brandsData = await res.json();
+        allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
+      } catch (e) {
+        console.error('Failed to load brands:', e);
+        allBrands = [];
+      }
+    }
+
+    async function loadClients() {
+      try {
+        const res = await fetch(`${API_BASE}/clients`);
+        const clientsData = await res.json();
+        allClients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
+      } catch (e) {
+        console.error('Failed to load clients:', e);
+        allClients = [];
+      }
+    }
+
     async function loadWorkers() {
       try {
         const res = await fetch(`${API_BASE}/workers`);
