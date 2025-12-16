@@ -534,6 +534,7 @@ window.renderReport = function(report, container) {
     
     // 清掃項目の詳細（項目名、詳細、写真を含む）
     const workItemsHtml = items.map(item => {
+        console.log('[renderReport] Processing work item:', item);
         const details = item.details || {};
         const tags = [];
         if (details.type) tags.push(details.type);
@@ -550,7 +551,7 @@ window.renderReport = function(report, container) {
                             ? photo
                             : resolvePath(photo);
                     } else if (typeof photo === 'object' && photo !== null) {
-                        const url = photo.url || photo.warehouseUrl || photo.imageUrl || '';
+                        const url = photo.url || photo.warehouseUrl || photo.imageUrl || photo.blobUrl || '';
                         return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
                             ? url
                             : resolvePath(url);
@@ -563,6 +564,12 @@ window.renderReport = function(report, container) {
         
         const beforePhotos = normalizePhotoUrls(item.photos?.before);
         const afterPhotos = normalizePhotoUrls(item.photos?.after);
+        console.log('[renderReport] Item photos:', {
+            itemName: item.item_name,
+            before: beforePhotos,
+            after: afterPhotos,
+            rawPhotos: item.photos
+        });
         
         let photosHtml = '';
         if (beforePhotos.length > 0 || afterPhotos.length > 0) {
