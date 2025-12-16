@@ -5139,12 +5139,17 @@
     }
     
     // sectionsByTabも更新
-    const activeTab = typeof currentActiveTab !== 'undefined' ? currentActiveTab : 'new';
-    if (sectionsByTab[activeTab]) {
-      sectionsByTab[activeTab] = { ...sections };
-      console.log('[ImageUpload] Updated sectionsByTab for tab (media):', activeTab);
-    } else {
-      console.warn('[ImageUpload] sectionsByTab not found for tab:', activeTab);
+    try {
+      const activeTab = (typeof currentActiveTab !== 'undefined' && currentActiveTab) ? currentActiveTab : 'new';
+      if (sectionsByTab && sectionsByTab[activeTab]) {
+        sectionsByTab[activeTab] = { ...sections };
+        console.log('[ImageUpload] Updated sectionsByTab for tab (media):', activeTab);
+      } else {
+        console.warn('[ImageUpload] sectionsByTab not found for tab:', activeTab);
+      }
+    } catch (error) {
+      console.warn('[ImageUpload] Error updating sectionsByTab:', error);
+      // エラーが発生しても処理を続行
     }
   }
   
