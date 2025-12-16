@@ -412,8 +412,21 @@
         // タブコンテンツの表示を切り替え
         tabContents.forEach(content => {
           content.classList.remove('active');
+          // 非アクティブなタブのセクション追加ボタンを確実に非表示にする
+          const sectionAddIconsArea = content.querySelector('.section-add-icons-area');
+          if (sectionAddIconsArea) {
+            sectionAddIconsArea.style.display = 'none';
+          }
         });
-        document.getElementById(`tab-content-${targetTab}`).classList.add('active');
+        const activeTabContent = document.getElementById(`tab-content-${targetTab}`);
+        if (activeTabContent) {
+          activeTabContent.classList.add('active');
+          // アクティブなタブのセクション追加ボタンを表示する
+          const activeSectionAddIconsArea = activeTabContent.querySelector('.section-add-icons-area');
+          if (activeSectionAddIconsArea) {
+            activeSectionAddIconsArea.style.display = '';
+          }
+        }
         
         // レポートヘッダーセクションの表示/非表示を切り替え
         if (sharedHeader) {

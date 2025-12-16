@@ -173,6 +173,11 @@
   padding-right: 0;
 }
 
+/* 非アクティブなタブは確実に非表示にする */
+.tab-content:not(.active) {
+  display: none !important;
+}
+
 /* SP版：カスタムスクロールバー */
 @media (max-width: 375px) {
   .tab-content {
