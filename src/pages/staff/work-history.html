@@ -1,0 +1,222 @@
+@layout('layouts.base')
+@json('data/meta/staff_work_history_title.json', $title)
+@json('data/meta/staff_work_history_body_class.json', $body_class)
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<link rel="stylesheet" href="/css/staff-work-history.css">
+<script src="/js/data_utils.js"></script>
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+<script src="/js/staff-work-history.js"></script>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/staff/mypage" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">清掃員</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/admin/dashboard" class="nav-item nav-item-admin" data-page="dashboard" data-role-required="admin,operation,general_affairs" style="display: none;">
+      <i class="fas fa-tachometer-alt"></i>
+      <span class="nav-label">管理ダッシュボード</span>
+    </a>
+    <div class="nav-divider" data-role-required="admin,operation,general_affairs" style="display: none;"></div>
+    <a href="/staff/mypage" class="nav-item" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/staff/attendance-history" class="nav-item" data-page="attendance-history">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">出勤履歴</span>
+    </a>
+    <a href="/staff/daily-reports" class="nav-item" data-page="daily-reports">
+      <i class="fas fa-edit"></i>
+      <span class="nav-label">日報</span>
+    </a>
+    <a href="/staff/schedule" class="nav-item" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/staff/work-history" class="nav-item active" data-page="work-history">
+      <i class="fas fa-clipboard-list"></i>
+      <span class="nav-label">作業履歴</span>
+    </a>
+    <a href="/staff/reports/new" class="nav-item" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート</span>
+    </a>
+    <a href="/wiki" class="nav-item" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
+    </a>
+    <a href="/cleaning-manual" class="nav-item" data-page="cleaning-manual">
+      <i class="fas fa-book"></i>
+      <span class="nav-label">清掃マニュアル</span>
+    </a>
+    <a href="/staff/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">業務連絡</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/staff/mypage/settings" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
+
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<main id="main" class="container staff-work-history main-content">
+  <!-- ヘッダー -->
+  <header class="page-header">
+    <h1 class="page-title">作業履歴</h1>
+    <p class="page-subtitle">案件ごとの作業実績と報酬を確認できます</p>
+  </header>
+
+  <!-- 統計カード -->
+  <div class="stats-section">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-calendar-day"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="today-count">0</div>
+        <div class="stat-label">今日の案件数</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-yen-sign"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="today-earnings">¥0</div>
+        <div class="stat-label">今日の報酬</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="month-count">0</div>
+        <div class="stat-label">今月の案件数</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-wallet"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="month-earnings">¥0</div>
+        <div class="stat-label">今月の報酬</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- フィルター -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label for="date-filter" class="filter-label">日付</label>
+      <input type="date" id="date-filter" class="filter-input">
+    </div>
+    <div class="filter-group">
+      <label for="month-filter" class="filter-label">月</label>
+      <input type="month" id="month-filter" class="filter-input">
+    </div>
+    <div class="filter-group">
+      <label for="store-filter" class="filter-label">店舗</label>
+      <select id="store-filter" class="filter-select">
+        <option value="">すべて</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <button type="button" class="btn btn-outline" id="reset-filters">
+        <i class="fas fa-redo"></i> リセット
+      </button>
+    </div>
+  </div>
+
+  <!-- 作業履歴一覧 -->
+  <div class="work-history-section">
+    <div class="section-header">
+      <h2 class="section-title">作業履歴一覧</h2>
+      <div class="view-toggle">
+        <button type="button" class="view-btn active" data-view="list" id="view-list">
+          <i class="fas fa-list"></i> リスト
+        </button>
+        <button type="button" class="view-btn" data-view="calendar" id="view-calendar">
+          <i class="fas fa-calendar"></i> カレンダー
+        </button>
+      </div>
+    </div>
+
+    <!-- リストビュー -->
+    <div class="work-list-view" id="work-list-view">
+      <div class="work-list" id="work-list">
+        <div class="loading-state">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>読み込み中...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- カレンダービュー -->
+    <div class="work-calendar-view" id="work-calendar-view" style="display: none;">
+      <div class="calendar-container" id="calendar-container">
+        <!-- カレンダーが動的に生成される -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 詳細モーダル -->
+  <dialog id="detail-modal" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>作業詳細</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('detail-modal').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="detail-body">
+        <!-- 動的に挿入 -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('detail-modal').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+</main>
+
+<script>
+  // 従業員用ログアウト関数（グローバル）
+  function staffLogout() {
+    if (window.CognitoAuth && typeof window.CognitoAuth.logout === 'function') {
+      window.CognitoAuth.logout();
+    }
+    localStorage.removeItem('cognito_user');
+    localStorage.removeItem('misesapo_auth');
+    localStorage.removeItem('cognito_id_token');
+    localStorage.removeItem('cognito_access_token');
+    localStorage.removeItem('cognito_refresh_token');
+    window.location.href = '/staff/signin.html';
+  }
+</script>
+
