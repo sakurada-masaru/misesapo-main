@@ -7772,7 +7772,14 @@
     if (window.renderReport && typeof window.renderReport === 'function') {
       // renderReportToContainerを使う（第2引数にコンテナを指定）
       window.renderReport(report, tempContainer);
-      console.log('[Preview] renderReport completed, tempContainer HTML:', tempContainer.innerHTML.substring(0, 500));
+      console.log('[Preview] renderReport completed, tempContainer HTML length:', tempContainer.innerHTML.length);
+      console.log('[Preview] tempContainer HTML (full):', tempContainer.innerHTML);
+      const reportMain = tempContainer.querySelector('.report-main');
+      if (reportMain) {
+        console.log('[Preview] report-main HTML:', reportMain.innerHTML);
+      } else {
+        console.warn('[Preview] report-main not found in tempContainer');
+      }
       
       // レンダリングされたHTMLから必要な部分を取得
       const renderedHeader = tempContainer.querySelector('.report-header');
