@@ -7427,7 +7427,8 @@
       savedAt: new Date().toISOString()
     };
     
-    localStorage.setItem('preview_report_data', JSON.stringify(previewData));
+    // localStorageには保存しない（常に最新のsectionsを使用するため）
+    // localStorage.setItem('preview_report_data', JSON.stringify(previewData));
     
     // オートセーブも実行（念のため）
     await autoSave();
@@ -7791,7 +7792,8 @@
       previewDialog.classList.remove('show');
       previewDialog.style.display = 'none';
       // プレビューデータをクリア（次回は最新のデータを使用）
-      localStorage.removeItem('preview_report_data');
+      // localStorageのpreview_report_dataは使用しないため、削除処理も不要
+      // localStorage.removeItem('preview_report_data');
       console.log('[closePreviewModal] Modal closed and preview data cleared');
     }
   };
