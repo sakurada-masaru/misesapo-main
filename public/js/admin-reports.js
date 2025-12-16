@@ -3,6 +3,8 @@
     const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
     let allReports = [];
     let allStores = [];
+    let allBrands = [];
+    let allClients = [];
     let allWorkers = [];
     let allServiceItems = [];
     let filteredReports = [];
@@ -20,7 +22,7 @@
 
     // 初期化
     document.addEventListener('DOMContentLoaded', async () => {
-      await Promise.all([loadReports(), loadStores(), loadWorkers(), loadServiceItems()]);
+      await Promise.all([loadReports(), loadStores(), loadBrands(), loadClients(), loadWorkers(), loadServiceItems()]);
       setupEventListeners();
         
   });
@@ -54,7 +56,7 @@
         if (!res.ok) {
           if (res.status === 401) {
             console.error('認証エラー: ログインが必要です');
-            document.getElementById('reports-tbody').innerHTML = '<tr><td colspan="6" class="loading-cell">認証エラー: ログインしてください</td></tr>';
+            document.getElementById('reports-tbody').innerHTML = '<tr><td colspan="8" class="loading-cell">認証エラー: ログインしてください</td></tr>';
             return;
           }
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -83,7 +85,7 @@
       } catch (e) {
         console.error('Failed to load reports:', e);
         const errorMessage = e.message || '読み込みに失敗しました';
-        document.getElementById('reports-tbody').innerHTML = `<tr><td colspan="6" class="loading-cell">${escapeHtml(errorMessage)}</td></tr>`;
+        document.getElementById('reports-tbody').innerHTML = `<tr><td colspan="8" class="loading-cell">${escapeHtml(errorMessage)}</td></tr>`;
       }
     }
 
@@ -222,7 +224,7 @@
       const pageReports = filteredReports.slice(start, start + perPage);
 
       if (pageReports.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">レポートがありません</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">レポートがありません</td></tr>';
         return;
       }
 
@@ -242,6 +244,28 @@
         const store = (window.DataUtils && window.DataUtils.findStore) 
           ? window.DataUtils.findStore(allStores, r.store_id) || {}
           : allStores.find(s => s.id === r.store_id) || {};
+        
+        // ブランド名を取得
+        const brandId = store.brand_id || r.brand_id;
+        const brand = (window.DataUtils && window.DataUtils.findBrand && brandId)
+          ? window.DataUtils.findBrand(allBrands, brandId) || {}
+          : (brandId ? allBrands.find(b => b.id === brandId) || {} : {});
+        const displayBrandName = brand.name || r.brand_name || '-';
+        
+        // 法人名を取得（ブランド経由または店舗経由）
+        let clientId = null;
+        if (brand.client_id) {
+          clientId = brand.client_id;
+        } else if (store.client_id) {
+          clientId = store.client_id;
+        } else if (r.client_id) {
+          clientId = r.client_id;
+        }
+        const client = (window.DataUtils && window.DataUtils.findClient && clientId)
+          ? window.DataUtils.findClient(allClients, clientId) || {}
+          : (clientId ? allClients.find(c => c.id === clientId) || {} : {});
+        const displayClientName = client.name || '-';
+        
         const worker = allWorkers.find(w => w.id === normalized.worker_id) || {};
         const status = normalized.status === 'approved' ? 'approved' : (normalized.status === 'rejected' ? 'rejected' : 'pending');
         const statusLabel = (window.DataUtils && window.DataUtils.getStatusLabel)
@@ -265,6 +289,8 @@
         return `
           <tr ${(r.resubmitted || normalized.resubmitted) ? 'class="resubmitted-row"' : ''} ${isProposal ? 'class="proposal-row"' : ''}>
             <td>${(window.DataUtils && window.DataUtils.formatDate) ? window.DataUtils.formatDate(normalized.date) : formatDate(normalized.date)}</td>
+            <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(displayClientName) : escapeHtml(displayClientName)}</td>
+            <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(displayBrandName) : escapeHtml(displayBrandName)}</td>
             <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(displayStoreName) : escapeHtml(displayStoreName)}</td>
             <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(worker.name || normalized.worker_name || '-') : escapeHtml(worker.name || normalized.worker_name || '-')}</td>
             <td>${normalized.start_time || '-'} 〜 ${normalized.end_time || '-'}</td>

@@ -392,6 +392,13 @@ async function loadReportDetail() {
             console.log('[loadReportDetail] API response:', data);
             console.log('[loadReportDetail] Report data:', report);
             console.log('[loadReportDetail] Report sections:', report.sections);
+            console.log('[loadReportDetail] work_items:', report.work_items);
+            if (report.work_items && report.work_items.length > 0) {
+                report.work_items.forEach((item, index) => {
+                    console.log(`[loadReportDetail] work_items[${index}]:`, item);
+                    console.log(`[loadReportDetail] work_items[${index}].photos:`, item.photos);
+                });
+            }
             
             // レポート情報を表示（window.renderReportを使用）
             if (window.renderReport) {
@@ -537,6 +544,7 @@ window.renderReport = function(report, container) {
     // 清掃項目の詳細（項目名、詳細、写真を含む）
     const workItemsHtml = items.map(item => {
         console.log('[renderReport] Processing work item:', item);
+        console.log('[renderReport] Item photos (raw):', item.photos);
         const details = item.details || {};
         const tags = [];
         if (details.type) tags.push(details.type);
@@ -545,28 +553,37 @@ window.renderReport = function(report, container) {
         
         // 画像を正規化
         const normalizePhotoUrls = (photos) => {
-            if (!photos) return [];
+            if (!photos) {
+                console.log('[renderReport] normalizePhotoUrls: photos is null/undefined');
+                return [];
+            }
             if (Array.isArray(photos)) {
                 return photos.map(photo => {
                     if (typeof photo === 'string') {
-                        return photo.startsWith('http://') || photo.startsWith('https://') || photo.startsWith('//')
+                        const resolved = photo.startsWith('http://') || photo.startsWith('https://') || photo.startsWith('//')
                             ? photo
                             : resolvePath(photo);
+                        console.log('[renderReport] normalizePhotoUrls: string photo resolved:', photo, '->', resolved);
+                        return resolved;
                     } else if (typeof photo === 'object' && photo !== null) {
                         const url = photo.url || photo.warehouseUrl || photo.imageUrl || photo.blobUrl || '';
-                        return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
+                        const resolved = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
                             ? url
                             : resolvePath(url);
+                        console.log('[renderReport] normalizePhotoUrls: object photo resolved:', photo, '->', resolved);
+                        return resolved;
                     }
+                    console.log('[renderReport] normalizePhotoUrls: unknown photo type:', typeof photo, photo);
                     return '';
                 }).filter(Boolean);
             }
+            console.log('[renderReport] normalizePhotoUrls: photos is not an array:', typeof photos, photos);
             return [];
         };
         
         const beforePhotos = normalizePhotoUrls(item.photos?.before);
         const afterPhotos = normalizePhotoUrls(item.photos?.after);
-        console.log('[renderReport] Item photos:', {
+        console.log('[renderReport] Item photos (normalized):', {
             itemName: item.item_name,
             before: beforePhotos,
             after: afterPhotos,
