@@ -7844,6 +7844,18 @@
           previewMainEl.innerHTML = renderedMain.innerHTML;
           console.log('[Preview] previewMainEl.innerHTML length after copy:', previewMainEl.innerHTML.length);
           console.log('[Preview] previewMainEl images count:', previewMainEl.querySelectorAll('img').length);
+          
+          // コメントとサブタイトルが実際にDOMに存在するか確認
+          const subtitleElements = previewMainEl.querySelectorAll('.cleaning-item-subtitle-display');
+          const commentElements = previewMainEl.querySelectorAll('.cleaning-item-comment-display');
+          console.log('[Preview] Subtitle elements found in DOM:', subtitleElements.length);
+          console.log('[Preview] Comment elements found in DOM:', commentElements.length);
+          subtitleElements.forEach((el, idx) => {
+            console.log('[Preview] Subtitle element', idx, ':', el.textContent, 'visible:', window.getComputedStyle(el).display !== 'none');
+          });
+          commentElements.forEach((el, idx) => {
+            console.log('[Preview] Comment element', idx, ':', el.textContent, 'visible:', window.getComputedStyle(el).display !== 'none');
+          });
         } else {
           console.warn('[Preview] preview-report-main element not found');
         }
