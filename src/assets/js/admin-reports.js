@@ -948,8 +948,53 @@
 
         // report-shared-view.jsのrenderReport関数を使用して表示
         if (window.renderReport && typeof window.renderReport === 'function') {
-          previewContent.innerHTML = '';
-          window.renderReport(reportData, previewContent);
+          // 一時的なコンテナを作成してレンダリング
+          const tempContainer = document.createElement('div');
+          window.renderReport(reportData, tempContainer);
+          
+          // レンダリングされたHTMLから必要な部分を取得
+          const renderedHeader = tempContainer.querySelector('.report-header');
+          const renderedItemsBar = tempContainer.querySelector('.items-list-bar');
+          const renderedMain = tempContainer.querySelector('.report-main');
+          
+          // プレビュー用の要素にコピー
+          if (renderedHeader) {
+            const previewHeader = previewContent.querySelector('#preview-report-header-modal');
+            if (previewHeader) {
+              const brandEl = renderedHeader.querySelector('.report-brand');
+              const dateEl = renderedHeader.querySelector('.report-date');
+              const storeEl = renderedHeader.querySelector('.report-store');
+              const staffEl = renderedHeader.querySelector('.report-staff');
+              
+              const previewBrandEl = previewContent.querySelector('#preview-report-brand-modal');
+              const previewDateEl = previewContent.querySelector('#preview-report-date-modal');
+              const previewStoreEl = previewContent.querySelector('#preview-report-store-modal');
+              const previewStaffEl = previewContent.querySelector('#preview-report-staff-modal');
+              
+              if (brandEl && previewBrandEl) previewBrandEl.textContent = brandEl.textContent;
+              if (dateEl && previewDateEl) previewDateEl.textContent = dateEl.textContent;
+              if (storeEl && previewStoreEl) previewStoreEl.textContent = storeEl.textContent;
+              if (staffEl && previewStaffEl) previewStaffEl.textContent = staffEl.textContent;
+            }
+          }
+          
+          if (renderedItemsBar) {
+            const itemsEl = renderedItemsBar.querySelector('.items-list-items');
+            const previewItemsEl = previewContent.querySelector('#preview-cleaning-items-modal');
+            if (itemsEl && previewItemsEl) {
+              previewItemsEl.innerHTML = itemsEl.innerHTML;
+            }
+          }
+          
+          if (renderedMain) {
+            const previewMainEl = previewContent.querySelector('#preview-report-main-modal');
+            if (previewMainEl) {
+              previewMainEl.innerHTML = renderedMain.innerHTML;
+            }
+          }
+          
+          // プレビュー用のタブ機能を設定
+          setupPreviewTabsAdmin();
         } else {
           // フォールバック: シンプルな表示
           previewContent.innerHTML = `
@@ -1002,6 +1047,40 @@
         alert('プレビューの読み込みに失敗しました: ' + error.message);
       }
     };
+
+    // プレビュー用のタブ機能を設定（管理画面）
+    function setupPreviewTabsAdmin() {
+      const previewContent = document.getElementById('preview-report-content-modal');
+      if (!previewContent) return;
+      
+      const tabBtns = previewContent.querySelectorAll('.tab-btn');
+      const tabContents = previewContent.querySelectorAll('.tab-content');
+      
+      tabBtns.forEach(btn => {
+        // 既存のイベントリスナーを削除してから追加
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', function() {
+          const targetTab = this.dataset.tab;
+          
+          // すべてのタブボタンとコンテンツからactiveクラスを削除
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => {
+            c.classList.remove('active');
+            c.style.display = 'none';
+          });
+          
+          // クリックされたタブをアクティブにする
+          this.classList.add('active');
+          const targetContent = previewContent.querySelector(`#preview-tab-content-${targetTab}-modal`);
+          if (targetContent) {
+            targetContent.classList.add('active');
+            targetContent.style.display = 'block';
+          }
+        });
+      });
+    }
 
     // プレビューモーダルを閉じる
     window.closePreviewModalAdmin = function() {

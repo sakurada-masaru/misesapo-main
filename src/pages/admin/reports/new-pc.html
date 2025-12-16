@@ -481,6 +481,51 @@
         <div class="shared-report-container" id="preview-report-container" style="background: white;">
           <div id="preview-report-content" style="display: block; background: white;">
             <!-- report-shared-view.jsと同じ構造で表示 -->
+            <div class="report-header" id="preview-report-header">
+              <div class="report-header-logo">
+                <img src="/images/header-logo.jpg" alt="ミセサポ">
+              </div>
+              <div class="report-header-content">
+                <div class="report-brand" id="preview-report-brand"></div>
+                <div class="report-date" id="preview-report-date"></div>
+                <div class="report-store" id="preview-report-store"></div>
+                <div class="report-staff" id="preview-report-staff"></div>
+              </div>
+            </div>
+            
+            <!-- タブナビゲーション -->
+            <div class="report-tabs">
+              <button class="tab-btn active" data-tab="report" id="preview-tab-report">
+                <i class="fas fa-file-alt"></i>
+                <span>レポート</span>
+              </button>
+              <button class="tab-btn" data-tab="proposal" id="preview-tab-proposal">
+                <i class="fas fa-lightbulb"></i>
+                <span>次回ご提案</span>
+              </button>
+            </div>
+            
+            <!-- レポートタブ -->
+            <div class="tab-content active" id="preview-tab-content-report">
+              <div class="items-list-bar">
+                <div class="items-list">
+                  <span class="items-list-label">実施清掃項目</span>
+                  <div class="items-list-items" id="preview-cleaning-items"></div>
+                </div>
+              </div>
+              
+              <div class="report-main" id="preview-report-main">
+                <!-- 清掃項目が動的に追加される -->
+              </div>
+            </div>
+            
+            <!-- 次回ご提案タブ -->
+            <div class="tab-content" id="preview-tab-content-proposal" style="display: none;">
+              <div class="proposal-empty" id="preview-proposal-empty">
+                <i class="fas fa-lightbulb"></i>
+                <p>プレビューでは次回ご提案は表示されません</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

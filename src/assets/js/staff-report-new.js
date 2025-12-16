@@ -7416,26 +7416,7 @@
     const endTime = previewData.endTime;
     const savedSections = previewData.sections || sections;
     
-    // 日付フォーマット（report-shared-view.jsと同じ形式）
-    const formatDate = (dateStr) => {
-      if (!dateStr) return '';
-      try {
-        // YYYY-MM-DD形式の文字列をDateオブジェクトに変換
-        const date = new Date(dateStr + 'T00:00:00');
-        if (isNaN(date.getTime())) {
-          return dateStr; // 無効な日付の場合はそのまま返す
-        }
-        return date.toLocaleDateString('ja-JP', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric'
-        });
-      } catch (e) {
-        return dateStr; // エラー時はそのまま返す
-      }
-    };
-    
-    // レポートデータを準備（提出時と同じ形式、保存されたセクションを使用）
+    // レポートデータを準備（report-shared-view.jsのrenderReport関数と同じ形式）
     const workItems = Object.values(savedSections)
       .filter(s => s.type === 'cleaning' && s.item_name)
       .map(s => ({
@@ -7480,198 +7461,105 @@
       sections: reportSections
     };
     
-    // report-shared-view.jsのrenderReport関数と同じロジックでHTMLを生成
-    const dateStr = formatDate(report.cleaning_date);
-    const timeStr = report.cleaning_start_time && report.cleaning_end_time 
-      ? `${report.cleaning_start_time} - ${report.cleaning_end_time}`
-      : '';
-    
-    // デフォルト画像パス
-    const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg';
-    const resolvePath = (path) => {
-      if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
-        return path;
-      }
-      return path.startsWith('/') ? path : '/' + path;
-    };
-    
-    // report-shared-view.jsと同じHTML構造で生成
-    const brandNameDisplay = report.brand_name || report.brand || report.brandName || 'ブランド名不明';
-    let html = `
-      <div class="report-header" id="preview-report-header">
-        <div class="report-header-logo">
-          <img src="/images/header-logo.jpg" alt="ミセサポ" onerror="this.style.display='none';">
-        </div>
-        <div class="report-header-content">
-          <div class="report-brand" id="preview-report-brand">${escapeHtml(brandNameDisplay)}</div>
-          <div class="report-date" id="preview-report-date">清掃日時: ${dateStr} ${timeStr}</div>
-          <div class="report-store" id="preview-report-store">${escapeHtml(report.store_name || '店舗名不明')}</div>
-        </div>
-      </div>
+    // report-shared-view.jsのrenderReportToContainer関数を使用して表示
+    // 一時的なコンテナを作成してレンダリング
+    const tempContainer = document.createElement('div');
+    if (window.renderReport && typeof window.renderReport === 'function') {
+      // renderReportToContainerを使う（第2引数にコンテナを指定）
+      window.renderReport(report, tempContainer);
       
-      <div class="items-list-bar">
-        <div class="items-list">
-          <span class="items-list-label">実施清掃項目</span>
-          <div class="items-list-items" id="preview-cleaning-items">
-            ${workItems.map(item => `<span class="items-list-item">${escapeHtml(item.item_name)}</span>`).join('')}
-          </div>
-        </div>
-      </div>
+      // レンダリングされたHTMLから必要な部分を取得
+      const renderedHeader = tempContainer.querySelector('.report-header');
+      const renderedItemsBar = tempContainer.querySelector('.items-list-bar');
+      const renderedMain = tempContainer.querySelector('.report-main');
       
-      <div class="report-main" id="preview-report-main">
-    `;
-    
-    // 清掃項目の詳細（項目名と詳細のみ、写真は別のsectionsで表示）
-    const workItemsHtml = workItems.map(item => {
-      const details = item.details || {};
-      const tags = [];
-      if (details.type) tags.push(details.type);
-      if (details.count) tags.push(`${details.count}個`);
-      const tagsHtml = tags.map(tag => `<span class="detail-tag">${escapeHtml(tag)}</span>`).join('');
-      
-      return `
-        <section class="cleaning-section">
-          <div class="item-header">
-            <h3 class="item-title">〜 ${escapeHtml(item.item_name || item.item_id)} 〜</h3>
-            <div class="item-details">${tagsHtml}</div>
-          </div>
-        </section>
-      `;
-    }).join('');
-    
-    // セクション（画像、コメント、作業内容）を表示
-    const sectionsHtml = reportSections.map(section => {
-      if (section.section_type === 'image') {
-        // 画像セクション
-        const beforePhotos = section.photos?.before || [];
-        const afterPhotos = section.photos?.after || [];
-        const completedPhotos = section.photos?.completed || [];
-        const imageType = section.image_type || 'work';
-        const beforeLabel = imageType === 'work' ? '作業前（Before）' : '設置前（Before）';
-        const afterLabel = imageType === 'work' ? '作業後（After）' : '設置後（After）';
-        
-        if (imageType === 'completed' && completedPhotos.length > 0) {
-          // 施工後のみ
-          return `
-            <section class="image-section">
-              <div class="section-header">
-                <h4 class="section-title">画像</h4>
-              </div>
-              <div class="image-grid">
-                <div class="image-category completed-category">
-                  <h4 class="image-category-title">施工後（After）</h4>
-                  <div class="image-list">
-                    ${completedPhotos.map((url, index) => `
-                      <div class="image-item" data-image-url="${url}">
-                        <img src="${url}" alt="施工後" loading="lazy" 
-                             onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-              </div>
-            </section>
-          `;
-        } else {
-          // 作業前・作業後
-          const beforePhotosHtml = beforePhotos.length > 0
-            ? `<div class="image-list">
-                 ${beforePhotos.map((url, index) => `
-                   <div class="image-item" data-image-url="${url}">
-                     <img src="${url}" alt="${beforeLabel}" loading="lazy" 
-                          onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
-                   </div>
-                 `).join('')}
-               </div>`
-            : `<div class="image-list">
-                 <div class="image-item">
-                   <img src="${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}" alt="写真なし" class="default-no-photo-image" />
-                 </div>
-               </div>`;
+      // プレビュー用の要素にコピー
+      if (renderedHeader) {
+        const previewHeader = document.getElementById('preview-report-header');
+        if (previewHeader) {
+          const brandEl = renderedHeader.querySelector('.report-brand');
+          const dateEl = renderedHeader.querySelector('.report-date');
+          const storeEl = renderedHeader.querySelector('.report-store');
+          const staffEl = renderedHeader.querySelector('.report-staff');
           
-          const afterPhotosHtml = afterPhotos.length > 0
-            ? `<div class="image-list">
-                 ${afterPhotos.map((url, index) => `
-                   <div class="image-item" data-image-url="${url}">
-                     <img src="${url}" alt="${afterLabel}" loading="lazy" 
-                          onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
-                   </div>
-                 `).join('')}
-               </div>`
-            : `<div class="image-list">
-                 <div class="image-item">
-                   <img src="${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}" alt="写真なし" class="default-no-photo-image" />
-                 </div>
-               </div>`;
+          const previewBrandEl = document.getElementById('preview-report-brand');
+          const previewDateEl = document.getElementById('preview-report-date');
+          const previewStoreEl = document.getElementById('preview-report-store');
+          const previewStaffEl = document.getElementById('preview-report-staff');
           
-          return `
-            <section class="image-section">
-              <div class="section-header">
-                <h4 class="section-title">画像</h4>
-              </div>
-              <div class="image-grid">
-                <div class="image-category before-category">
-                  <h4 class="image-category-title">${beforeLabel}</h4>
-                  ${beforePhotosHtml}
-                </div>
-                <div class="image-category after-category">
-                  <h4 class="image-category-title">${afterLabel}</h4>
-                  ${afterPhotosHtml}
-                </div>
-              </div>
-            </section>
-          `;
+          if (brandEl && previewBrandEl) previewBrandEl.textContent = brandEl.textContent;
+          if (dateEl && previewDateEl) previewDateEl.textContent = dateEl.textContent;
+          if (storeEl && previewStoreEl) previewStoreEl.textContent = storeEl.textContent;
+          if (staffEl && previewStaffEl) previewStaffEl.textContent = staffEl.textContent;
         }
-      } else if (section.section_type === 'comment') {
-        // コメントセクション
-        return `
-          <section class="comment-section">
-            <div class="section-header">
-              <h4 class="section-title">コメント</h4>
-            </div>
-            <div class="subsection">
-              <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
-            </div>
-          </section>
-        `;
-      } else if (section.section_type === 'work_content') {
-        // 作業内容セクション
-        return `
-          <section class="work-content-section">
-            <div class="section-header">
-              <h4 class="section-title">作業内容</h4>
-            </div>
-            <div class="subsection">
-              <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
-            </div>
-          </section>
+      }
+      
+      if (renderedItemsBar) {
+        const itemsEl = renderedItemsBar.querySelector('.items-list-items');
+        const previewItemsEl = document.getElementById('preview-cleaning-items');
+        if (itemsEl && previewItemsEl) {
+          previewItemsEl.innerHTML = itemsEl.innerHTML;
+        }
+      }
+      
+      if (renderedMain) {
+        const previewMainEl = document.getElementById('preview-report-main');
+        if (previewMainEl) {
+          previewMainEl.innerHTML = renderedMain.innerHTML;
+        }
+      }
+    } else {
+      console.warn('[openPreviewModal] renderReport function not found, using fallback');
+      // フォールバック: シンプルな表示
+      const previewMainEl = document.getElementById('preview-report-main');
+      if (previewMainEl) {
+        previewMainEl.innerHTML = `
+          <div style="padding: 20px;">
+            <h2>${escapeHtml(report.store_name || '店舗名不明')}</h2>
+            <p>日付: ${escapeHtml(report.cleaning_date || '-')}</p>
+          </div>
         `;
       }
-      return '';
-    }).filter(Boolean).join('');
+    }
     
-    html += workItemsHtml + sectionsHtml;
-    html += `
-      </div>
-    `;
-    
-    previewContent.innerHTML = html;
+    // プレビュー用のタブ機能を設定
+    setupPreviewTabs();
     
     // 画像クリックイベントを設定（report-shared-view.jsと同じ）
     setupPreviewImageModal();
     
-    // モーダルを表示（既に取得済みのpreviewDialogを使用）
+    // モーダルを表示
     if (previewDialog) {
-      // 既に開いている場合は何もしない（二重チェック）
-      const currentDisplay = previewDialog.style.display || window.getComputedStyle(previewDialog).display;
-      if (currentDisplay === 'flex' || currentDisplay === 'block' || previewDialog.classList.contains('show')) {
-        console.log('[openPreviewModal] Modal is already open at display stage, skipping');
-        return;
-      }
-      // showクラスを追加して表示
       previewDialog.classList.add('show');
       previewDialog.style.display = 'flex';
     }
+  }
+  
+  // プレビュー用のタブ機能を設定
+  function setupPreviewTabs() {
+    const tabBtns = document.querySelectorAll('#preview-report-content .tab-btn');
+    const tabContents = document.querySelectorAll('#preview-report-content .tab-content');
+    
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const targetTab = this.dataset.tab;
+        
+        // すべてのタブボタンとコンテンツからactiveクラスを削除
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => {
+          c.classList.remove('active');
+          c.style.display = 'none';
+        });
+        
+        // クリックされたタブをアクティブにする
+        this.classList.add('active');
+        const targetContent = document.getElementById(`preview-tab-content-${targetTab}`);
+        if (targetContent) {
+          targetContent.classList.add('active');
+          targetContent.style.display = 'block';
+        }
+      });
+    });
   }
 
   // プレビュー用の画像モーダル機能（report-shared-view.jsと同じ）

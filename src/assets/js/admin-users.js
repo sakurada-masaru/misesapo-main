@@ -352,8 +352,9 @@
         }
       }
       
-      // 部署フィルター
-      const matchDepartment = !departmentFilter || u.department === departmentFilter;
+      // 部署フィルター（「現場」を「OS課」に変換して比較）
+      const normalizedDept = normalizeDepartmentName(u.department);
+      const matchDepartment = !departmentFilter || normalizedDept === departmentFilter;
       
       const matchStatus = !statusFilter || u.status === statusFilter;
       return matchSearch && matchRole && matchDepartment && matchStatus;
@@ -365,6 +366,12 @@
     // renderPagination();
   }
   
+  // 部署名を正規化（「現場」を「OS課」に変換）
+  function normalizeDepartmentName(dept) {
+    if (!dept || dept === '-') return dept;
+    return dept === '現場' ? 'OS課' : dept;
+  }
+
   // 部署フィルターのオプションを動的に生成
   function updateDepartmentFilter() {
     const departmentFilter = document.getElementById('department-filter');
@@ -377,8 +384,8 @@
       departmentFilter.appendChild(allOption);
     }
     
-    // ユニークな部署を取得
-    const departments = [...new Set(allUsers.map(u => u.department).filter(d => d && d !== '-'))].sort();
+    // ユニークな部署を取得（「現場」を「OS課」に変換）
+    const departments = [...new Set(allUsers.map(u => normalizeDepartmentName(u.department)).filter(d => d && d !== '-'))].sort();
     
     // 部署オプションを追加
     departments.forEach(dept => {
@@ -403,9 +410,9 @@
     // ユーザーを部署ごとにグループ化
     const usersByDepartment = {};
     for (const user of filteredUsers) {
-      const dept = user.department || '未分類';
+      const dept = normalizeDepartmentName(user.department) || '未分類';
       // 削除対象の部署はスキップ
-      if (dept === '現場清掃' || dept === '経営本部') {
+      if (dept === 'OS課' || dept === '経営本部') {
         continue;
       }
       if (!usersByDepartment[dept]) {
