@@ -264,9 +264,25 @@
               status: r.status,
               store_name: r.store_name
             };
-        const store = (window.DataUtils && window.DataUtils.findStore) 
-          ? window.DataUtils.findStore(allStores, r.store_id) || {}
-          : allStores.find(s => s.id === r.store_id) || {};
+        // レポートのstore_idを確認
+        const reportStoreId = r.store_id || r.storeId || r.store;
+        console.log('[renderTable] Report store_id:', reportStoreId, 'r.store_id:', r.store_id, 'r.storeId:', r.storeId, 'r.store:', r.store);
+        console.log('[renderTable] allStores length:', allStores.length);
+        if (allStores.length > 0) {
+          console.log('[renderTable] First store sample:', allStores[0]);
+        }
+        
+        const store = (window.DataUtils && window.DataUtils.findStore && reportStoreId) 
+          ? window.DataUtils.findStore(allStores, reportStoreId) || {}
+          : (reportStoreId ? allStores.find(s => {
+              const match = String(s.id) === String(reportStoreId);
+              if (!match && allStores.indexOf(s) < 3) {
+                console.log('[renderTable] Comparing store_id:', reportStoreId, 'with store.id:', s.id, 'match:', match);
+              }
+              return match;
+            }) || {} : {});
+        
+        console.log('[renderTable] Found store:', store, 'store.id:', store.id, 'store.name:', store.name);
         
         // ブランド名を取得
         // storeオブジェクトの構造を確認（brand_id, brandId, brandなど様々な可能性）
