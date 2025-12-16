@@ -7490,12 +7490,51 @@
     // レポートデータを準備（report-shared-view.jsのrenderReport関数と同じ形式）
     const workItems = Object.values(savedSections)
       .filter(s => s.type === 'cleaning' && s.item_name)
-      .map(s => ({
-        item_id: s.item_name.toLowerCase().replace(/\s+/g, '-'),
-        item_name: s.item_name,
-        details: {},
-        photos: {}
-      }));
+      .map(s => {
+        // imageContentsから画像を収集
+        const photos = { before: [], after: [] };
+        if (s.imageContents && Array.isArray(s.imageContents)) {
+          s.imageContents.forEach(imageContent => {
+            const imageType = imageContent.imageType || 'before_after';
+            if (imageType === 'completed') {
+              // completedの場合はafterに追加
+              const completedPhotos = (imageContent.photos?.completed || []).map(img => {
+                if (typeof img === 'string') return img;
+                if (typeof img === 'object' && img !== null) {
+                  return img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
+                }
+                return '';
+              }).filter(Boolean);
+              photos.after = photos.after.concat(completedPhotos);
+            } else {
+              // before_afterの場合
+              const beforePhotos = (imageContent.photos?.before || []).map(img => {
+                if (typeof img === 'string') return img;
+                if (typeof img === 'object' && img !== null) {
+                  return img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
+                }
+                return '';
+              }).filter(Boolean);
+              const afterPhotos = (imageContent.photos?.after || []).map(img => {
+                if (typeof img === 'string') return img;
+                if (typeof img === 'object' && img !== null) {
+                  return img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
+                }
+                return '';
+              }).filter(Boolean);
+              photos.before = photos.before.concat(beforePhotos);
+              photos.after = photos.after.concat(afterPhotos);
+            }
+          });
+        }
+        
+        return {
+          item_id: s.item_name.toLowerCase().replace(/\s+/g, '-'),
+          item_name: s.item_name,
+          details: {},
+          photos: photos
+        };
+      });
     
     const reportSections = Object.values(savedSections)
       .filter(s => s.type !== 'cleaning')
