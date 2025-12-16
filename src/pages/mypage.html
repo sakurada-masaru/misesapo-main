@@ -74,6 +74,14 @@
   </button>
 </aside>
 
+<style>
+/* メインコンテンツの内側パディング */
+#mypage-content {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+</style>
+
 <main id="main" class="container mypage main-content">
   <div class="loading" id="loading" style="display: none; text-align: center; padding: 48px; color: #6b7280;">読み込み中...</div>
   <div id="error-message" class="error-message" style="display: none; background: #fee2e2; color: #991b1b; padding: 16px; border-radius: 8px; margin-bottom: 24px; text-align: center;"></div>
@@ -263,12 +271,22 @@
   .section-order-3 .section-title { margin-left:0; margin-right:0; }
 }
 </style>
-            @json('data/cleaning_schedules.json', $cleaning_schedules)
             <script>
-(function(){
+(async function(){
   const mount = document.getElementById('schedule-overview');
   if (!mount) return;
-  const data = @jsonvar $cleaning_schedules;
+  
+  // Load cleaning schedules from JSON file
+  let data = null;
+  try {
+    const response = await fetch('/data/cleaning_schedules.json');
+    if (response.ok) {
+      data = await response.json();
+    }
+  } catch (error) {
+    console.error('Error loading cleaning schedules:', error);
+  }
+  
   const arr = (data && Array.isArray(data.schedules)) ? data.schedules : [];
   if (!arr.length) return;
   function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }

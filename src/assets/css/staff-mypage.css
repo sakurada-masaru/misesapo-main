@@ -19,7 +19,7 @@
   max-width: none !important;
   margin: 0;
   margin-left: var(--sidebar-width, 240px) !important;
-  padding: 24px;
+  padding: 16px;
   background: var(--mypage-bg-misesapo);
   min-height: 100vh;
   box-sizing: border-box;
@@ -66,7 +66,7 @@
 /* Bento Grid コンテナ */
 .bento-grid-container {
   position: relative;
-  padding: 24px;
+  padding: 16px;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -77,9 +77,8 @@
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   grid-auto-rows: minmax(200px, auto);
-  gap: 20px;
-  max-width: 1600px;
-  margin: 0 auto;
+  gap: 8px;
+  width: 100%;
   padding-bottom: 24px;
 }
 
@@ -223,7 +222,7 @@
 
 @media (max-width: 768px) {
   .bento-grid-container {
-    padding: 16px;
+    padding: 12px;
   }
   
   .bento-grid {
@@ -293,7 +292,7 @@
   min-height: 0;
 }
 .mypage-main-grid {
-  display: block !important;
+  display: grid !important;
   width: 100%;
   height: 100%;
   position: relative;
@@ -517,6 +516,8 @@
   background: var(--container-section-bg-misesapo, #ffc0cb);
   display: flex;
   flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
   overflow: hidden;
   flex: 1;
   min-height: 0;
@@ -610,7 +611,7 @@
 }
 .card {
   background: #f9fafb;
-  border-radius: 6px;
+  border-radius: 12px;
   padding: 8px;
   flex: 1;
   overflow: hidden;
@@ -1179,8 +1180,8 @@
   overflow: hidden;
 }
 .digital-clock-display {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 2.5rem !important;
+  font-weight: 600;
   color: #fff;
   text-align: center;
   font-family: 'Courier New', monospace;

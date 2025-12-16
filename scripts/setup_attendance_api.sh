@@ -167,33 +167,15 @@ for RESOURCE_ID in ${ATTENDANCE_RESOURCE_ID} ${ATTENDANCE_ID_RESOURCE_ID}; do
     echo "[${RESOURCE_PATH}] OPTIONSメソッドを作成しました"
   fi
 
-  # OPTIONSメソッドの統合を設定（MOCK統合）
+  # OPTIONSメソッドの統合を設定（Lambda統合に変更）
   aws apigateway put-integration \
     --rest-api-id ${REST_API_ID} \
     --resource-id ${RESOURCE_ID} \
     --http-method OPTIONS \
-    --type MOCK \
-    --request-templates '{"application/json":"{\"statusCode\": 200}"}' \
+    --type AWS_PROXY \
+    --integration-http-method POST \
+    --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
     --region ${REGION} > /dev/null 2>&1 || echo "OPTIONS integration already exists"
-
-  # OPTIONSメソッドのレスポンスを設定
-  aws apigateway put-method-response \
-    --rest-api-id ${REST_API_ID} \
-    --resource-id ${RESOURCE_ID} \
-    --http-method OPTIONS \
-    --status-code 200 \
-    --response-parameters "method.response.header.Access-Control-Allow-Origin=false,method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false" \
-    --region ${REGION} 2>/dev/null || echo "OPTIONS method response already exists"
-
-  # OPTIONSメソッドの統合レスポンスを設定
-  aws apigateway put-integration-response \
-    --rest-api-id ${REST_API_ID} \
-    --resource-id ${RESOURCE_ID} \
-    --http-method OPTIONS \
-    --status-code 200 \
-    --response-parameters '{"method.response.header.Access-Control-Allow-Origin":"'"'"'*'"'"'","method.response.header.Access-Control-Allow-Headers":"'"'"'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"'"'","method.response.header.Access-Control-Allow-Methods":"'"'"'GET,PUT,POST,DELETE,OPTIONS'"'"'"}' \
-    --response-templates '{"application/json":"{\"statusCode\":200}"}' \
-    --region ${REGION} 2>/dev/null || echo "OPTIONS integration response already exists"
 done
 
 # APIをデプロイ

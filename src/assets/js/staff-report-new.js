@@ -170,7 +170,7 @@
     const isAdminPage = window.location.pathname.includes('/admin/reports/new-pc') || 
                        window.location.pathname.includes('/admin/reports/new');
     if (!isAdminPage) {
-      loadRevisionRequests();
+    loadRevisionRequests();
     }
     
     setupMobileKeyboardHandling();
@@ -1906,7 +1906,7 @@
     
     if (isIncomplete) {
       detailsHint.classList.add('visible');
-    } else {
+      } else {
       detailsHint.classList.remove('visible');
     }
   }
@@ -2457,8 +2457,17 @@
     
     // 保存確認ダイアログを表示する関数
     const showPreviewSaveDialog = () => {
+      console.log('[Preview] showPreviewSaveDialog called');
+      console.log('[Preview] previewSaveDialog element:', previewSaveDialog);
       if (previewSaveDialog) {
-        previewSaveDialog.showModal();
+        try {
+          previewSaveDialog.showModal();
+          console.log('[Preview] Dialog shown successfully');
+        } catch (error) {
+          console.error('[Preview] Error showing dialog:', error);
+        }
+      } else {
+        console.warn('[Preview] previewSaveDialog element not found');
       }
     };
     
@@ -2497,29 +2506,50 @@
     }
     
     if (previewBtn) {
+      console.log('[Preview] Preview button found, adding event listener');
       previewBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        console.log('[Preview] Preview button clicked');
         showPreviewSaveDialog();
       });
+    } else {
+      console.warn('[Preview] Preview button (preview-btn) not found');
     }
     if (previewBtnProposal) {
+      console.log('[Preview] Preview button (proposal) found, adding event listener');
       previewBtnProposal.addEventListener('click', (e) => {
         e.preventDefault();
+        console.log('[Preview] Preview button (proposal) clicked');
         showPreviewSaveDialog();
       });
+    } else {
+      console.warn('[Preview] Preview button (preview-btn-proposal) not found');
     }
     
     // 保存してプレビューを表示
     if (previewSaveConfirmBtn) {
+      console.log('[Preview] Preview save confirm button found, adding event listener');
       previewSaveConfirmBtn.addEventListener('click', async () => {
+        console.log('[Preview] Preview save confirm button clicked');
         closePreviewSaveDialog();
         
         // レポートを一時保存してからプレビューを表示
-        await saveReportForPreview();
-        if (window.openPreviewModal) {
-          window.openPreviewModal();
+        try {
+          await saveReportForPreview();
+          console.log('[Preview] Report saved for preview');
+          if (window.openPreviewModal) {
+            console.log('[Preview] Opening preview modal');
+            await window.openPreviewModal();
+          } else {
+            console.error('[Preview] openPreviewModal function not found');
+          }
+        } catch (error) {
+          console.error('[Preview] Error in preview flow:', error);
+          alert('プレビューの表示に失敗しました: ' + error.message);
         }
       });
+    } else {
+      console.warn('[Preview] Preview save confirm button (preview-save-confirm-btn) not found');
     }
     
     // セクション追加ボタンのイベントリスナー（新規作成タブ用）
@@ -6361,7 +6391,7 @@
     // 自動保存
     autoSave();
   };
-  
+
   // 画像削除
   window.removeImage = function(sectionId, category, url, imageId, btn) {
     const arr = sections[sectionId].photos[category];
@@ -6489,16 +6519,16 @@
     // 清掃項目を収集（画像もアップロード）
     const workItems = await Promise.all(
       Object.values(sections)
-        .filter(s => s.type === 'cleaning' && s.item_name)
+      .filter(s => s.type === 'cleaning' && s.item_name)
         .map(async (s) => {
-          // item_nameからitem_idを生成（スラッグ化）
-          const itemId = s.item_name.toLowerCase()
-            .replace(/\s+/g, '-')
-            .replace(/[^\w\-]+/g, '')
-            .replace(/\-\-+/g, '-')
-            .replace(/^-+/, '')
-            .replace(/-+$/, '');
-          
+        // item_nameからitem_idを生成（スラッグ化）
+        const itemId = s.item_name.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w\-]+/g, '')
+          .replace(/\-\-+/g, '-')
+          .replace(/^-+/, '')
+          .replace(/-+$/, '');
+        
           // imageContentsから画像をアップロード
           const photos = { before: [], after: [] };
           if (s.imageContents && Array.isArray(s.imageContents)) {
@@ -6516,15 +6546,15 @@
             }
           }
           
-          return {
-            item_id: itemId,
-            item_name: s.item_name,
-            details: {},
+        return {
+          item_id: itemId,
+          item_name: s.item_name,
+          details: {},
             photos: photos
-          };
+        };
         })
     );
-    
+
     // セクションを収集（画像をアップロード）
     const sectionData = await Promise.all(
       Object.entries(sections)
@@ -6590,8 +6620,8 @@
       // 送信ボタンを取得（新規作成タブまたは次回ご提案タブ）
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
       }
 
       const idToken = await getFirebaseIdToken();
@@ -6665,7 +6695,7 @@
           }, 1500);
         } else {
           // 清掃員側の場合はダッシュボードにリダイレクト
-          window.location.href = '/staff/dashboard';
+        window.location.href = '/staff/dashboard';
         }
       }
 
@@ -6675,8 +6705,8 @@
       showError('送信に失敗しました: ' + getErrorMessage(error));
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> レポートを提出';
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> レポートを提出';
       }
     }
   }
@@ -6736,7 +6766,7 @@
       return 'dev-token';
     } catch (error) {
       console.error('Error getting ID token:', error);
-      return 'dev-token';
+    return 'dev-token';
     }
   }
 
@@ -6802,15 +6832,15 @@
     // 順次処理でアップロード（進捗を正確に追跡するため）
     const uploadedUrls = [];
     for (const img of images) {
-      // 既にURLの場合はそのまま返す
-      if (typeof img === 'string') {
+        // 既にURLの場合はそのまま返す
+        if (typeof img === 'string') {
         uploadedUrls.push(img);
         continue;
-      }
-      
-      // 画像データオブジェクトの場合
+        }
+        
+        // 画像データオブジェクトの場合
       if (typeof img === 'object') {
-        // 既にアップロード済みの場合はURLを返す
+          // 既にアップロード済みの場合はURLを返す
         if (img.uploaded && (img.url || img.warehouseUrl)) {
           uploadedUrls.push(img.url || img.warehouseUrl);
           continue;

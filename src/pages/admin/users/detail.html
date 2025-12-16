@@ -909,6 +909,7 @@
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
     let monthlyAttendance = [];
+    let attendanceRequests = []; // 編集申請の一覧
 
     // URLからユーザーIDを取得
     function getUserIdFromUrl() {
@@ -962,6 +963,77 @@
         hour: '2-digit',
         minute: '2-digit'
       });
+    }
+    
+    // Decimal型や文字列を数値に変換するヘルパー関数
+    function toNumber(value) {
+      if (value == null || value === undefined) return 0;
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') {
+        const num = parseFloat(value);
+        return isNaN(num) ? 0 : num;
+      }
+      // Decimal型やその他のオブジェクトの場合
+      if (typeof value === 'object' && value !== null) {
+        if (typeof value.toNumber === 'function') {
+          return value.toNumber();
+        }
+        if (typeof value.toString === 'function') {
+          const num = parseFloat(value.toString());
+          return isNaN(num) ? 0 : num;
+        }
+      }
+      return 0;
+    }
+    
+    // 総休憩時間を計算
+    function calculateTotalBreakTime(breaks) {
+      if (!breaks || !Array.isArray(breaks)) return 0;
+      return breaks.reduce((total, b) => {
+        if (b.break_duration) {
+          return total + toNumber(b.break_duration);
+        } else if (b.break_start && b.break_end) {
+          const start = new Date(b.break_start);
+          const end = new Date(b.break_end);
+          return total + (end - start) / (1000 * 60 * 60);
+        } else if (b.start && b.end) {
+          // フォールバック: start/end形式
+          const start = new Date(b.start);
+          const end = new Date(b.end);
+          return total + (end - start) / (1000 * 60 * 60);
+        }
+        return total;
+      }, 0);
+    }
+    
+    function calculateWorkHours(record) {
+      if (!record.clock_in || !record.clock_out) return 0;
+      const start = new Date(record.clock_in);
+      const end = new Date(record.clock_out);
+      const totalHours = (end - start) / (1000 * 60 * 60);
+      
+      // 休憩時間を取得（break_timeフィールドを優先、なければbreaks配列から計算）
+      let breakTime = 0;
+      if (record.break_time !== undefined && record.break_time !== null) {
+        // break_timeフィールドが存在する場合はそれを使用（時間単位）
+        breakTime = toNumber(record.break_time);
+      } else if (record.breaks && record.breaks.length > 0) {
+        // breaks配列から計算（時間単位）
+        breakTime = calculateTotalBreakTime(record.breaks);
+      }
+      
+      // 出勤時刻と退勤時刻の差から休憩時間を引く
+      const workHours = Math.max(0, totalHours - breakTime);
+      
+      return Math.round(workHours * 100) / 100; // 小数点第2位まで
+    }
+    
+    function formatHours(hours) {
+      if (!hours || hours === 0) return '0h';
+      const h = Math.floor(hours);
+      const m = Math.round((hours - h) * 60);
+      if (m === 0) return `${h}h`;
+      return `${h}h${m}m`;
     }
 
     // ユーザー情報を読み込み
@@ -1321,21 +1393,77 @@
         const year = currentYear;
         const month = String(currentMonth + 1).padStart(2, '0');
         
-        const response = await fetch(`${API_BASE}/attendance?staff_id=${currentUser.id}&year=${year}&month=${month}&limit=1000`);
+        // キャッシュを無効化して最新データを取得
+        const response = await fetch(`${API_BASE}/attendance?staff_id=${currentUser.id}&year=${year}&month=${month}&limit=1000&_t=${Date.now()}`, {
+          cache: 'no-cache'
+        });
         if (!response.ok) {
           throw new Error('タイムカードの取得に失敗しました');
         }
         
         const data = await response.json();
-        monthlyAttendance = data.attendance || [];
+        // APIレスポンスの形式に対応（配列、items、attendance）
+        let rawAttendance = [];
+        if (Array.isArray(data)) {
+          rawAttendance = data;
+        } else if (data.items && Array.isArray(data.items)) {
+          rawAttendance = data.items;
+        } else if (data.attendance && Array.isArray(data.attendance)) {
+          rawAttendance = data.attendance;
+        }
+        
+        // 同じ日付のレコードが複数ある場合、最新のものを優先（updated_atまたはcreated_atでソート）
+        const attendanceByDate = {};
+        rawAttendance.forEach(record => {
+          if (!record.date) return;
+          const date = record.date;
+          if (!attendanceByDate[date]) {
+            attendanceByDate[date] = record;
+          } else {
+            // 既存のレコードと比較して、より新しいものを選択
+            const existing = attendanceByDate[date];
+            const existingTime = existing.updated_at || existing.created_at || '';
+            const newTime = record.updated_at || record.created_at || '';
+            if (newTime > existingTime) {
+              attendanceByDate[date] = record;
+            }
+          }
+        });
+        
+        // オブジェクトを配列に変換
+        monthlyAttendance = Object.values(attendanceByDate);
+        
+        // 編集申請一覧を読み込み
+        await loadAttendanceRequests();
         
         renderTimecard();
         renderMonthlySummary();
       } catch (error) {
         console.error('Error loading timecard:', error);
         monthlyAttendance = [];
+        attendanceRequests = [];
         renderTimecard();
         renderMonthlySummary();
+      }
+    }
+    
+    // 編集申請一覧を読み込み
+    async function loadAttendanceRequests() {
+      if (!currentUser) return;
+      
+      try {
+        const response = await fetch(`${API_BASE}/attendance/requests?staff_id=${currentUser.id}&limit=1000`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          attendanceRequests = data.requests || [];
+        } else {
+          console.warn('[UserDetail] Failed to load attendance requests:', response.status, response.statusText);
+          attendanceRequests = [];
+        }
+      } catch (error) {
+        console.error('[UserDetail] Error loading attendance requests:', error);
+        attendanceRequests = [];
       }
     }
     
@@ -1352,7 +1480,9 @@
       // 出退勤記録を日付でマップ
       const attendanceMap = {};
       monthlyAttendance.forEach(record => {
-        attendanceMap[record.date] = record;
+        if (record.date) {
+          attendanceMap[record.date] = record;
+        }
       });
       
       // ヘッダー行を生成
@@ -1386,44 +1516,137 @@
         
         for (let day = 1; day <= daysInMonth; day++) {
           const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const record = attendanceMap[dateStr];
+          let record = attendanceMap[dateStr];
           const isToday = dateStr === todayStr;
           const cellClass = isToday ? 'today-column' : '';
           
           let cellValue = '-';
+          
+          // 申請中または承認済みのリクエストを確認（申請内容を優先的に表示）
+          const request = attendanceRequests.find(r => r.date === dateStr && r.staff_id === currentUser?.id && (r.status === 'pending' || r.status === 'approved'));
+          
+          // 申請中または承認済みのリクエストがある場合、申請内容を仮想的なrecordとして使用
+          if (request) {
+            // requested_break_hoursは時間単位で保存されている
+            let breakTime = 1; // デフォルト1時間
+            if (request.requested_break_hours !== undefined && request.requested_break_hours !== null) {
+              const requestedBreakHours = toNumber(request.requested_break_hours);
+              breakTime = requestedBreakHours > 0 ? requestedBreakHours : 1;
+            } else if (record?.break_time !== undefined && record?.break_time !== null) {
+              const recordBreakTime = toNumber(record.break_time);
+              breakTime = recordBreakTime > 0 ? recordBreakTime : 1;
+            }
+            
+            record = {
+              clock_in: request.requested_clock_in || record?.clock_in,
+              clock_out: request.requested_clock_out || record?.clock_out,
+              break_time: breakTime,
+              work_hours: null, // 申請中/承認済みは計算しない
+              overtime_hours: null, // 申請中/承認済みは計算しない
+              status: record?.status,
+              is_late: record?.is_late,
+              is_early_leave: record?.is_early_leave,
+              late_minutes: record?.late_minutes,
+              early_leave_minutes: record?.early_leave_minutes,
+              breaks: record?.breaks
+            };
+          } else if (record && (record.break_time === undefined || record.break_time === null || toNumber(record.break_time) === 0)) {
+            // 申請中のリクエストがなく、既存の記録の休憩時間が0または未設定の場合、デフォルトで1時間を設定
+            record = {
+              ...record,
+              break_time: 1
+            };
+          }
         
-        if (record) {
+          if (record) {
             switch (row.key) {
               case 'clockIn':
                 cellValue = record.clock_in ? formatTime(record.clock_in) : '-';
                 break;
               case 'clockOut':
-                cellValue = record.clock_out ? formatTime(record.clock_out) : '-';
+                if (record.clock_out) {
+                  cellValue = formatTime(record.clock_out);
+                } else {
+                  cellValue = '-';
+                }
                 break;
               case 'breakTime':
-                cellValue = record.break_time ? `${record.break_time}h` : '-';
+                // break_timeフィールドを優先的に使用（0の場合も含む）
+                if (record.break_time !== undefined && record.break_time !== null) {
+                  const breakHours = toNumber(record.break_time);
+                  cellValue = formatHours(breakHours);
+                } else if (record.breaks && record.breaks.length > 0) {
+                  const breakHours = calculateTotalBreakTime(record.breaks);
+                  cellValue = breakHours > 0 ? formatHours(breakHours) : '-';
+                } else {
+                  cellValue = '-';
+                }
                 break;
               case 'workHours':
-                cellValue = record.work_hours ? `${record.work_hours}h` : '-';
+                // 出勤時刻と退勤時刻がある場合、その差から休憩時間を引いて計算
+                if (record.clock_in && record.clock_out) {
+                  const hours = calculateWorkHours(record);
+                  cellValue = formatHours(hours);
+                } else if (record.work_hours) {
+                  // work_hoursフィールドがある場合はそれを使用（フォールバック）
+                  const hours = toNumber(record.work_hours);
+                  cellValue = formatHours(hours);
+                } else {
+                  cellValue = '-';
+                }
                 break;
               case 'overtime':
-                cellValue = record.overtime_hours ? `${record.overtime_hours}h` : '-';
+                // 実労働時間が8時間を超えた分を残業時間として計算
+                if (record.clock_in && record.clock_out) {
+                  const workHours = calculateWorkHours(record);
+                  const overtimeHours = Math.max(0, workHours - 8); // 8時間を超えた分
+                  if (overtimeHours > 0) {
+                    cellValue = formatHours(overtimeHours);
+                  } else {
+                    cellValue = '-';
+                  }
+                } else if (record.overtime_hours) {
+                  // フォールバック: overtime_hoursフィールドがある場合はそれを使用
+                  const hours = toNumber(record.overtime_hours);
+                  cellValue = formatHours(hours);
+                } else {
+                  cellValue = '-';
+                }
                 break;
               case 'status':
-          if (record.status === 'completed') {
-            if (record.is_late && record.is_early_leave) {
-                    cellValue = '<span class="status-badge-timecard status-late">遅刻・早退</span>';
-            } else if (record.is_late) {
-                    cellValue = `<span class="status-badge-timecard status-late">遅刻 ${record.late_minutes}分</span>`;
-            } else if (record.is_early_leave) {
-                    cellValue = `<span class="status-badge-timecard status-early-leave">早退 ${record.early_leave_minutes}分</span>`;
-            } else {
+                // 申請中または承認済みの場合は申請内容に基づいてステータスを表示
+                if (request) {
+                  if (record.clock_in && !record.clock_out) {
+                    cellValue = '<span class="status-badge-timecard status-working">勤務中</span>';
+                  } else if (record.clock_in && record.clock_out) {
                     cellValue = '<span class="status-badge-timecard status-completed">完了</span>';
-            }
-          } else if (record.status === 'working') {
-                  cellValue = '<span class="status-badge-timecard status-working">勤務中</span>';
+                  } else {
+                    cellValue = '<span class="status-badge-timecard status-absent">未出勤</span>';
+                  }
                 } else {
-                  cellValue = '<span class="status-badge-timecard status-absent">未出勤</span>';
+                  // マイページと同じロジック: clock_inとclock_outで判定
+                  if (record.clock_in && !record.clock_out) {
+                    // 出勤中
+                    cellValue = '<span class="status-badge-timecard status-working">勤務中</span>';
+                  } else if (record.clock_in && record.clock_out) {
+                    // 退勤済み（ステータスフィールドがあればそれを使用）
+                    if (record.status === 'completed') {
+                      if (record.is_late && record.is_early_leave) {
+                        cellValue = '<span class="status-badge-timecard status-late">遅刻・早退</span>';
+                      } else if (record.is_late) {
+                        cellValue = `<span class="status-badge-timecard status-late">遅刻 ${record.late_minutes || 0}分</span>`;
+                      } else if (record.is_early_leave) {
+                        cellValue = `<span class="status-badge-timecard status-early-leave">早退 ${record.early_leave_minutes || 0}分</span>`;
+                      } else {
+                        cellValue = '<span class="status-badge-timecard status-completed">完了</span>';
+                      }
+                    } else {
+                      cellValue = '<span class="status-badge-timecard status-completed">完了</span>';
+                    }
+                  } else {
+                    // 未出勤
+                    cellValue = '<span class="status-badge-timecard status-absent">未出勤</span>';
+                  }
                 }
                 break;
             }
@@ -1450,24 +1673,72 @@
       let overtimeHours = 0;
       let lateCount = 0;
       
+      // タイムカードと同じロジックで統計を計算
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      
+      // 出退勤記録を日付でマップ
+      const attendanceMap = {};
       monthlyAttendance.forEach(record => {
-        if (record.status === 'completed') {
+        if (record.date) {
+          attendanceMap[record.date] = record;
+        }
+      });
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        let record = attendanceMap[dateStr];
+        
+        // 申請中または承認済みのリクエストを確認（申請内容を優先的に使用）
+        const request = attendanceRequests.find(r => r.date === dateStr && r.staff_id === currentUser?.id && (r.status === 'pending' || r.status === 'approved'));
+        
+        // 申請中または承認済みのリクエストがある場合、申請内容を仮想的なrecordとして使用
+        if (request) {
+          let breakTime = 1; // デフォルト1時間
+          if (request.requested_break_hours !== undefined && request.requested_break_hours !== null) {
+            const requestedBreakHours = toNumber(request.requested_break_hours);
+            breakTime = requestedBreakHours > 0 ? requestedBreakHours : 1;
+          } else if (record?.break_time !== undefined && record?.break_time !== null) {
+            const recordBreakTime = toNumber(record.break_time);
+            breakTime = recordBreakTime > 0 ? recordBreakTime : 1;
+          }
+          
+          record = {
+            clock_in: request.requested_clock_in || record?.clock_in,
+            clock_out: request.requested_clock_out || record?.clock_out,
+            break_time: breakTime,
+            status: record?.status,
+            is_late: record?.is_late,
+            breaks: record?.breaks
+          };
+        } else if (record && (record.break_time === undefined || record.break_time === null || toNumber(record.break_time) === 0)) {
+          record = {
+            ...record,
+            break_time: 1
+          };
+        }
+        
+        // タイムカードと同じロジックで実労働時間と残業時間を計算
+        if (record && record.clock_in && record.clock_out) {
           workDays++;
-          if (record.work_hours) {
-            totalHours += record.work_hours;
-          }
-          if (record.overtime_hours) {
-            overtimeHours += record.overtime_hours;
-          }
+          
+          // タイムカードと同じロジックで実労働時間を計算
+          const workHours = calculateWorkHours(record);
+          totalHours += workHours;
+          
+          // タイムカードと同じロジックで残業時間を計算（8時間を超えた分）
+          const overtime = Math.max(0, workHours - 8);
+          overtimeHours += overtime;
+          
+          // 遅刻カウント
           if (record.is_late) {
             lateCount++;
           }
         }
-      });
+      }
       
       document.getElementById('summary-work-days').textContent = `${workDays}日`;
-      document.getElementById('summary-total-hours').textContent = `${totalHours.toFixed(1)}h`;
-      document.getElementById('summary-overtime-hours').textContent = `${overtimeHours.toFixed(1)}h`;
+      document.getElementById('summary-total-hours').textContent = `${Number(totalHours).toFixed(1)}h`;
+      document.getElementById('summary-overtime-hours').textContent = `${Number(overtimeHours).toFixed(1)}h`;
       document.getElementById('summary-late-count').textContent = `${lateCount}回`;
     }
     

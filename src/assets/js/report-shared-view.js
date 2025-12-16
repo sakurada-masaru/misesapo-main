@@ -159,8 +159,13 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-// レポートを表示
-function renderReport(report) {
+// レポートを表示（グローバルに公開）
+window.renderReport = function(report, container) {
+    // コンテナ要素が指定された場合は、そのコンテナ内にHTMLを生成
+    if (container) {
+        return renderReportToContainer(report, container);
+    }
+    
     // ヘッダー
     // ブランド名（brand_name、brand、brandNameのいずれかから取得）
     const brandEl = document.getElementById('report-brand');
@@ -176,10 +181,16 @@ function renderReport(report) {
     const timeStr = report.cleaning_start_time && report.cleaning_end_time 
         ? `${report.cleaning_start_time} - ${report.cleaning_end_time}`
         : '';
-    document.getElementById('report-date').textContent = `清掃日時: ${dateStr} ${timeStr}`;
+    const dateEl = document.getElementById('report-date');
+    if (dateEl) {
+        dateEl.textContent = `清掃日時: ${dateStr} ${timeStr}`;
+    }
     
     // 店舗名
-    document.getElementById('report-store').textContent = report.store_name || '店舗名不明';
+    const storeEl = document.getElementById('report-store');
+    if (storeEl) {
+        storeEl.textContent = report.store_name || '店舗名不明';
+    }
     
     // 担当者氏名
     const staffEl = document.getElementById('report-staff');
@@ -189,11 +200,13 @@ function renderReport(report) {
     
     // 清掃項目リスト
     const cleaningItemsEl = document.getElementById('cleaning-items');
-    const items = report.work_items || [];
-    const itemNames = items.map(item => item.item_name || item.item_id).filter(Boolean);
-    cleaningItemsEl.innerHTML = itemNames.map(name => 
-        `<span class="items-list-item">${escapeHtml(name)}</span>`
-    ).join('');
+    if (cleaningItemsEl) {
+        const items = report.work_items || [];
+        const itemNames = items.map(item => item.item_name || item.item_id).filter(Boolean);
+        cleaningItemsEl.innerHTML = itemNames.map(name => 
+            `<span class="items-list-item">${escapeHtml(name)}</span>`
+        ).join('');
+    }
     
     // 清掃項目の詳細（項目名と詳細のみ、写真は別のsectionsで表示）
     const workItemsHtml = items.map(item => {
@@ -301,10 +314,204 @@ function renderReport(report) {
     
     // レポート本体を表示
     const reportMainEl = document.getElementById('report-main');
-    reportMainEl.innerHTML = workItemsHtml + sectionsHtml;
+    if (reportMainEl) {
+        reportMainEl.innerHTML = workItemsHtml + sectionsHtml;
+        
+        // 画像クリックイベントを設定
+        setupImageModal();
+    }
+}
+
+// コンテナ要素内にレポートを表示（プレビュー用）
+function renderReportToContainer(report, container) {
+    const dateStr = formatDate(report.cleaning_date);
+    const timeStr = report.cleaning_start_time && report.cleaning_end_time 
+        ? `${report.cleaning_start_time} - ${report.cleaning_end_time}`
+        : '';
+    const brandName = report.brand_name || report.brand || report.brandName || 
+                     (report.store && report.store.brand_name) || 
+                     'ブランド名不明';
+    const storeName = report.store_name || '店舗名不明';
+    const items = report.work_items || [];
+    const itemNames = items.map(item => item.item_name || item.item_id).filter(Boolean);
+    
+    // 清掃項目の詳細（項目名と詳細のみ、写真は別のsectionsで表示）
+    const workItemsHtml = items.map(item => {
+        const details = item.details || {};
+        const tags = [];
+        if (details.type) tags.push(details.type);
+        if (details.count) tags.push(`${details.count}個`);
+        const tagsHtml = tags.map(tag => `<span class="detail-tag">${escapeHtml(tag)}</span>`).join('');
+        
+        return `
+          <section class="cleaning-section">
+            <div class="item-header">
+              <h3 class="item-title">〜 ${escapeHtml(item.item_name || item.item_id)} 〜</h3>
+              <div class="item-details">${tagsHtml}</div>
+            </div>
+          </section>
+        `;
+    }).join('');
+    
+    // セクション（画像、コメント、作業内容）を表示
+    const sections = report.sections || [];
+    const sectionsHtml = sections.map(section => {
+        if (section.section_type === 'image') {
+            // 画像セクション
+            const beforePhotos = section.photos?.before || [];
+            const afterPhotos = section.photos?.after || [];
+            const completedPhotos = section.photos?.completed || [];
+            const imageType = section.image_type || 'work';
+            const beforeLabel = imageType === 'work' ? '作業前（Before）' : '設置前（Before）';
+            const afterLabel = imageType === 'work' ? '作業後（After）' : '設置後（After）';
+            
+            if (imageType === 'completed' && completedPhotos.length > 0) {
+                // 施工後のみ
+                return `
+                  <section class="image-section">
+                    <div class="section-header">
+                      <h4 class="section-title">画像</h4>
+                    </div>
+                    <div class="image-grid">
+                      <div class="image-category completed-category">
+                        <h4 class="image-category-title">施工後（After）</h4>
+                        <div class="image-list">
+                          ${completedPhotos.map((url, index) => `
+                            <div class="image-item" data-image-url="${url}">
+                              <img src="${url}" alt="施工後" loading="lazy" 
+                                   onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
+                            </div>
+                          `).join('')}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                `;
+            } else {
+                // 作業前・作業後
+                const beforePhotosHtml = beforePhotos.length > 0
+                    ? `<div class="image-list">
+                         ${beforePhotos.map((url, index) => `
+                           <div class="image-item" data-image-url="${url}">
+                             <img src="${url}" alt="${beforeLabel}" loading="lazy" 
+                                  onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
+                           </div>
+                         `).join('')}
+                       </div>`
+                    : `<div class="image-list">
+                         <div class="image-item">
+                           <img src="${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}" alt="写真なし" class="default-no-photo-image" />
+                         </div>
+                       </div>`;
+                
+                const afterPhotosHtml = afterPhotos.length > 0
+                    ? `<div class="image-list">
+                         ${afterPhotos.map((url, index) => `
+                           <div class="image-item" data-image-url="${url}">
+                             <img src="${url}" alt="${afterLabel}" loading="lazy" 
+                                  onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
+                           </div>
+                         `).join('')}
+                       </div>`
+                    : `<div class="image-list">
+                         <div class="image-item">
+                           <img src="${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}" alt="写真なし" class="default-no-photo-image" />
+                         </div>
+                       </div>`;
+                
+                return `
+                  <section class="image-section">
+                    <div class="section-header">
+                      <h4 class="section-title">画像</h4>
+                    </div>
+                    <div class="image-grid">
+                      <div class="image-category before-category">
+                        <h4 class="image-category-title">${beforeLabel}</h4>
+                        ${beforePhotosHtml}
+                      </div>
+                      <div class="image-category after-category">
+                        <h4 class="image-category-title">${afterLabel}</h4>
+                        ${afterPhotosHtml}
+                      </div>
+                    </div>
+                  </section>
+                `;
+            }
+        } else if (section.section_type === 'comment') {
+            // コメントセクション
+            return `
+              <section class="comment-section">
+                <div class="section-header">
+                  <h4 class="section-title">コメント</h4>
+                </div>
+                <div class="subsection">
+                  <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
+                </div>
+              </section>
+            `;
+        } else if (section.section_type === 'work_content') {
+            // 作業内容セクション
+            return `
+              <section class="work-content-section">
+                <div class="section-header">
+                  <h4 class="section-title">作業内容</h4>
+                </div>
+                <div class="subsection">
+                  <p style="white-space: pre-wrap;">${escapeHtml(section.content || '')}</p>
+                </div>
+              </section>
+            `;
+        }
+        return '';
+    }).filter(Boolean).join('');
+    
+    // HTMLを生成
+    const html = `
+      <div class="report-header" id="preview-report-header">
+        <div class="report-header-logo">
+          <img src="/images/header-logo.jpg" alt="ミセサポ" onerror="this.style.display='none';">
+        </div>
+        <div class="report-header-content">
+          <div class="report-brand" id="preview-report-brand">${escapeHtml(brandName)}</div>
+          <div class="report-date" id="preview-report-date">清掃日時: ${dateStr} ${timeStr}</div>
+          <div class="report-store" id="preview-report-store">${escapeHtml(storeName)}</div>
+        </div>
+      </div>
+      
+      <div class="items-list-bar">
+        <div class="items-list">
+          <span class="items-list-label">実施清掃項目</span>
+          <div class="items-list-items" id="preview-cleaning-items">
+            ${itemNames.map(name => `<span class="items-list-item">${escapeHtml(name)}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+      
+      <div class="report-main" id="preview-report-main">
+        ${workItemsHtml}
+        ${sectionsHtml}
+      </div>
+    `;
+    
+    container.innerHTML = html;
     
     // 画像クリックイベントを設定
-    setupImageModal();
+    setupImageModalInContainer(container);
+}
+
+// コンテナ内の画像モーダル機能
+function setupImageModalInContainer(container) {
+    const imageItems = container.querySelectorAll('.image-item');
+    
+    imageItems.forEach(item => {
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', function() {
+            const img = this.querySelector('img');
+            if (img && img.src) {
+                openImageModal(img.src);
+            }
+        });
+    });
 }
 
 // 画像モーダル機能

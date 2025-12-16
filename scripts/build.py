@@ -413,19 +413,34 @@ def _build_report_detail_pages(template: Path, outputs: List[str]) -> None:
 
         out_path = PUBLIC / "reports" / f"{rid}.html"
         html = render_page(template, ctx)
-        ensure_dir(out_path)
         # overwrite cleanly to avoid any potential residual content
         try:
             if out_path.exists():
                 out_path.unlink()
         except Exception:
             pass
-        out_path.write_text(html, encoding="utf-8")
-        outputs.append(str(out_path))
+        write_html_with_directory(out_path, html, outputs, create_dir_structure=False)  # Skip for dynamic pages
 
 
 def ensure_dir(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+
+
+def write_html_with_directory(out_path: Path, html: str, outputs: List[str], create_dir_structure: bool = True) -> None:
+    """Write HTML file and optionally create directory structure for .html-less URLs."""
+    ensure_dir(out_path)
+    out_path.write_text(html, encoding="utf-8")
+    outputs.append(str(out_path))
+    
+    # Create directory structure for .html-less URLs (e.g., /staff/mypage -> /staff/mypage/index.html)
+    # Skip for dynamic pages (files with [id] in path) and files already in index.html
+    if create_dir_structure and "[id]" not in str(out_path) and out_path.name != "index.html":
+        dir_name = out_path.stem  # filename without extension
+        dir_path = out_path.parent / dir_name
+        dir_path.mkdir(parents=True, exist_ok=True)
+        index_path = dir_path / "index.html"
+        index_path.write_text(html, encoding="utf-8")
+        outputs.append(str(index_path))
 
 
 def convert_csv_to_json(csv_path: Path, json_path: Path) -> None:
@@ -654,15 +669,13 @@ def _build_client_detail_pages(template: Path, outputs: List[str]) -> None:
 
         out_path = PUBLIC / "sales" / "clients" / f"{cid}.html"
         html = render_page(template, ctx)
-        ensure_dir(out_path)
         # overwrite cleanly to avoid any potential residual content
         try:
             if out_path.exists():
                 out_path.unlink()
         except Exception:
             pass
-        out_path.write_text(html, encoding="utf-8")
-        outputs.append(str(out_path))
+        write_html_with_directory(out_path, html, outputs, create_dir_structure=False)  # Skip for dynamic pages
 
 
 def _build_client_edit_pages(template: Path, outputs: List[str]) -> None:
@@ -701,15 +714,13 @@ def _build_client_edit_pages(template: Path, outputs: List[str]) -> None:
 
         out_path = PUBLIC / "sales" / "clients" / cid / "edit.html"
         html = render_page(template, ctx)
-        ensure_dir(out_path)
         # overwrite cleanly to avoid any potential residual content
         try:
             if out_path.exists():
                 out_path.unlink()
         except Exception:
             pass
-        out_path.write_text(html, encoding="utf-8")
-        outputs.append(str(out_path))
+        write_html_with_directory(out_path, html, outputs, create_dir_structure=False)  # Skip for dynamic pages
 
 
 def _build_assignment_detail_pages(template: Path, outputs: List[str]) -> None:
@@ -749,15 +760,13 @@ def _build_assignment_detail_pages(template: Path, outputs: List[str]) -> None:
 
         out_path = PUBLIC / "staff" / "assignments" / f"{aid}.html"
         html = render_page(template, ctx)
-        ensure_dir(out_path)
         # overwrite cleanly to avoid any potential residual content
         try:
             if out_path.exists():
                 out_path.unlink()
         except Exception:
             pass
-        out_path.write_text(html, encoding="utf-8")
-        outputs.append(str(out_path))
+        write_html_with_directory(out_path, html, outputs, create_dir_structure=False)  # Skip for dynamic pages
 
 
 def _build_service_pages(template: Path, outputs: List[str]) -> None:
@@ -812,15 +821,13 @@ def _build_service_pages(template: Path, outputs: List[str]) -> None:
 
         out_path = PUBLIC / "service" / f"{sid}.html"
         html = render_page(template, ctx)
-        ensure_dir(out_path)
         # overwrite cleanly to avoid any potential residual content
         try:
             if out_path.exists():
                 out_path.unlink()
         except Exception:
             pass
-        out_path.write_text(html, encoding="utf-8")
-        outputs.append(str(out_path))
+        write_html_with_directory(out_path, html, outputs, create_dir_structure=False)  # Skip for dynamic pages
 
 def _build_service_detail_pages(template: Path, outputs: List[str]) -> None:
     """Generate pages/admin/services/{id}.html from service_items.json and the template [id].html."""
@@ -870,15 +877,13 @@ def _build_service_detail_pages(template: Path, outputs: List[str]) -> None:
 
         out_path = PUBLIC / "admin" / "services" / f"{sid}.html"
         html = render_page(template, ctx)
-        ensure_dir(out_path)
         # overwrite cleanly to avoid any potential residual content
         try:
             if out_path.exists():
                 out_path.unlink()
         except Exception:
             pass
-        out_path.write_text(html, encoding="utf-8")
-        outputs.append(str(out_path))
+        write_html_with_directory(out_path, html, outputs, create_dir_structure=False)  # Skip for dynamic pages
 
 
 def _build_service_edit_pages(template: Path, outputs: List[str]) -> None:
@@ -916,15 +921,13 @@ def _build_service_edit_pages(template: Path, outputs: List[str]) -> None:
 
         out_path = PUBLIC / "admin" / "services" / str(sid) / "edit.html"
         html = render_page(template, ctx)
-        ensure_dir(out_path)
         # overwrite cleanly to avoid any potential residual content
         try:
             if out_path.exists():
                 out_path.unlink()
         except Exception:
             pass
-        out_path.write_text(html, encoding="utf-8")
-        outputs.append(str(out_path))
+        write_html_with_directory(out_path, html, outputs, create_dir_structure=False)  # Skip for dynamic pages
 
 
 def build_all() -> List[str]:
@@ -972,9 +975,9 @@ def build_all() -> List[str]:
             continue
         out_path = PUBLIC / rel
         html = render_page(page)
-        ensure_dir(out_path)
-        out_path.write_text(html, encoding="utf-8")
-        outputs.append(str(out_path))
+        # Skip directory structure for template files (files with [id] in path)
+        create_dir = "[id]" not in str(rel) and rel.name != "index.html"
+        write_html_with_directory(out_path, html, outputs, create_dir_structure=create_dir)
     # copy static assets last
     copy_assets(outputs)
     # copy data files for client-side access

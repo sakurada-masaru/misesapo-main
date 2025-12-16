@@ -4,6 +4,7 @@ import base64
 import os
 import uuid
 import hashlib
+from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from boto3.dynamodb.conditions import Key, Attr
 
@@ -784,6 +785,8 @@ ATTENDANCE_REQUESTS_TABLE = dynamodb.Table('attendance-requests')
 HOLIDAYS_TABLE = dynamodb.Table('holidays')
 INVENTORY_ITEMS_TABLE = dynamodb.Table('inventory-items')
 INVENTORY_TRANSACTIONS_TABLE = dynamodb.Table('inventory-transactions')
+DAILY_REPORTS_TABLE = dynamodb.Table('daily-reports')
+TODOS_TABLE = dynamodb.Table('todos')
 
 # 環境変数から設定を取得
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'misesapo-cleaning-manual-images')
@@ -1038,6 +1041,11 @@ def lambda_handler(event, context):
             # 出退勤エラーログの取得
             if method == 'GET':
                 return get_attendance_errors(event, headers)
+        elif normalized_path.startswith('/attendance/errors/') and normalized_path.endswith('/resolve'):
+            # 出退勤エラーログを解決済みにマーク
+            error_id = normalized_path.split('/')[-2]
+            if method == 'PUT':
+                return resolve_attendance_error(error_id, headers)
         elif normalized_path == '/attendance/requests':
             # 出退勤修正申請の取得・作成
             if method == 'GET':
@@ -1066,6 +1074,8 @@ def lambda_handler(event, context):
                 return get_attendance_detail(attendance_id, headers)
             elif method == 'PUT':
                 return create_or_update_attendance(event, headers)
+            elif method == 'DELETE':
+                return delete_attendance(attendance_id, headers)
         elif normalized_path == '/holidays':
             # 休日・祝日の取得・作成
             if method == 'GET':
@@ -1081,8 +1091,6 @@ def lambda_handler(event, context):
                 return update_holiday(holiday_id, event, headers)
             elif method == 'DELETE':
                 return delete_holiday(holiday_id, headers)
-            elif method == 'DELETE':
-                return delete_attendance(attendance_id, headers)
         elif normalized_path == '/estimates':
             # 見積もりデータの読み書き
             if method == 'GET':
@@ -1114,6 +1122,36 @@ def lambda_handler(event, context):
                     'headers': headers,
                     'body': json.dumps({'error': 'Method not allowed'}, ensure_ascii=False)
                 }
+        elif normalized_path == '/daily-reports':
+            # 日報の取得・作成
+            if method == 'GET':
+                return get_daily_reports(event, headers)
+            elif method == 'POST':
+                return create_or_update_daily_report(event, headers)
+        elif normalized_path.startswith('/daily-reports/'):
+            # 日報の詳細・更新・削除
+            report_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_daily_report_detail(report_id, headers)
+            elif method == 'PUT':
+                return create_or_update_daily_report(event, headers)
+            elif method == 'DELETE':
+                return delete_daily_report(report_id, headers)
+        elif normalized_path == '/todos':
+            # TODOの取得・作成
+            if method == 'GET':
+                return get_todos(event, headers)
+            elif method == 'POST':
+                return create_todo(event, headers)
+        elif normalized_path.startswith('/todos/'):
+            # TODOの詳細・更新・削除
+            todo_id = normalized_path.split('/')[-1]
+            if method == 'GET':
+                return get_todo_detail(todo_id, headers)
+            elif method == 'PUT':
+                return update_todo(todo_id, event, headers)
+            elif method == 'DELETE':
+                return delete_todo(todo_id, headers)
         elif normalized_path.startswith('/google-calendar/events/'):
             # Google Calendarイベント詳細の取得
             event_id = normalized_path.split('/')[-1]
@@ -5762,22 +5800,22 @@ def create_or_update_attendance(event, headers):
             if total_break_hours > 0:
                 update_expression_parts.append("#break_time = :break_time")
                 expression_attribute_names["#break_time"] = "break_time"
-                expression_attribute_values[":break_time"] = round(total_break_hours, 2)
+                expression_attribute_values[":break_time"] = Decimal(str(round(total_break_hours, 2)))
             
             if work_hours > 0:
                 update_expression_parts.append("#work_hours = :work_hours")
                 expression_attribute_names["#work_hours"] = "work_hours"
-                expression_attribute_values[":work_hours"] = round(work_hours, 2)
+                expression_attribute_values[":work_hours"] = Decimal(str(round(work_hours, 2)))
             
             if total_hours > 0:
                 update_expression_parts.append("#total_hours = :total_hours")
                 expression_attribute_names["#total_hours"] = "total_hours"
-                expression_attribute_values[":total_hours"] = round(total_hours, 2)
+                expression_attribute_values[":total_hours"] = Decimal(str(round(total_hours, 2)))
             
             if overtime_hours > 0:
                 update_expression_parts.append("#overtime_hours = :overtime_hours")
                 expression_attribute_names["#overtime_hours"] = "overtime_hours"
-                expression_attribute_values[":overtime_hours"] = round(overtime_hours, 2)
+                expression_attribute_values[":overtime_hours"] = Decimal(str(round(overtime_hours, 2)))
             
             if is_late:
                 update_expression_parts.append("#is_late = :is_late")
@@ -5829,10 +5867,10 @@ def create_or_update_attendance(event, headers):
                 'clock_in': clock_in,
                 'clock_out': clock_out,
                 'breaks': processed_breaks,
-                'break_time': round(total_break_hours, 2) if total_break_hours > 0 else None,
-                'total_hours': round(total_hours, 2) if total_hours > 0 else None,
-                'work_hours': round(work_hours, 2) if work_hours > 0 else None,
-                'overtime_hours': round(overtime_hours, 2) if overtime_hours > 0 else None,
+                'break_time': Decimal(str(round(total_break_hours, 2))) if total_break_hours > 0 else None,
+                'total_hours': Decimal(str(round(total_hours, 2))) if total_hours > 0 else None,
+                'work_hours': Decimal(str(round(work_hours, 2))) if work_hours > 0 else None,
+                'overtime_hours': Decimal(str(round(overtime_hours, 2))) if overtime_hours > 0 else None,
                 'is_late': is_late if is_late else None,
                 'late_minutes': late_minutes if is_late else None,
                 'is_early_leave': is_early_leave if is_early_leave else None,
@@ -5845,7 +5883,100 @@ def create_or_update_attendance(event, headers):
             }
             # Noneの値を削除
             attendance_data = {k: v for k, v in attendance_data.items() if v is not None}
-            ATTENDANCE_TABLE.put_item(Item=attendance_data)
+            
+            # ConditionExpressionを使用して重複レコードの作成を防止
+            # 同じIDのレコードが存在しない場合のみ作成を許可
+            try:
+                ATTENDANCE_TABLE.put_item(
+                    Item=attendance_data,
+                    ConditionExpression='attribute_not_exists(id)'
+                )
+            except ATTENDANCE_TABLE.meta.client.exceptions.ConditionalCheckFailedException:
+                # 既にレコードが存在する場合は更新処理に切り替え
+                print(f"Record {attendance_id} already exists, switching to update")
+                existing_response = ATTENDANCE_TABLE.get_item(Key={'id': attendance_id})
+                existing_item = existing_response.get('Item')
+                if existing_item:
+                    # 既存レコードを更新
+                    update_expression_parts = []
+                    expression_attribute_values = {}
+                    expression_attribute_names = {}
+                    
+                    if clock_in:
+                        update_expression_parts.append("#clock_in = :clock_in")
+                        expression_attribute_names["#clock_in"] = "clock_in"
+                        expression_attribute_values[":clock_in"] = clock_in
+                    
+                    if clock_out:
+                        update_expression_parts.append("#clock_out = :clock_out")
+                        expression_attribute_names["#clock_out"] = "clock_out"
+                        expression_attribute_values[":clock_out"] = clock_out
+                    
+                    if processed_breaks:
+                        update_expression_parts.append("#breaks = :breaks")
+                        expression_attribute_names["#breaks"] = "breaks"
+                        expression_attribute_values[":breaks"] = processed_breaks
+                    
+                    if total_break_hours > 0:
+                        update_expression_parts.append("#break_time = :break_time")
+                        expression_attribute_names["#break_time"] = "break_time"
+                        expression_attribute_values[":break_time"] = Decimal(str(round(total_break_hours, 2)))
+                    
+                    if work_hours > 0:
+                        update_expression_parts.append("#work_hours = :work_hours")
+                        expression_attribute_names["#work_hours"] = "work_hours"
+                        expression_attribute_values[":work_hours"] = Decimal(str(round(work_hours, 2)))
+                    
+                    if total_hours > 0:
+                        update_expression_parts.append("#total_hours = :total_hours")
+                        expression_attribute_names["#total_hours"] = "total_hours"
+                        expression_attribute_values[":total_hours"] = Decimal(str(round(total_hours, 2)))
+                    
+                    if overtime_hours > 0:
+                        update_expression_parts.append("#overtime_hours = :overtime_hours")
+                        expression_attribute_names["#overtime_hours"] = "overtime_hours"
+                        expression_attribute_values[":overtime_hours"] = Decimal(str(round(overtime_hours, 2)))
+                    
+                    if is_late:
+                        update_expression_parts.append("#is_late = :is_late")
+                        update_expression_parts.append("#late_minutes = :late_minutes")
+                        expression_attribute_names["#is_late"] = "is_late"
+                        expression_attribute_names["#late_minutes"] = "late_minutes"
+                        expression_attribute_values[":is_late"] = True
+                        expression_attribute_values[":late_minutes"] = late_minutes
+                    
+                    if is_early_leave:
+                        update_expression_parts.append("#is_early_leave = :is_early_leave")
+                        update_expression_parts.append("#early_leave_minutes = :early_leave_minutes")
+                        expression_attribute_names["#is_early_leave"] = "is_early_leave"
+                        expression_attribute_names["#early_leave_minutes"] = "early_leave_minutes"
+                        expression_attribute_values[":is_early_leave"] = True
+                        expression_attribute_values[":early_leave_minutes"] = early_leave_minutes
+                    
+                    if is_holiday:
+                        update_expression_parts.append("#is_holiday = :is_holiday")
+                        expression_attribute_names["#is_holiday"] = "is_holiday"
+                        expression_attribute_values[":is_holiday"] = True
+                    
+                    if is_holiday_work:
+                        update_expression_parts.append("#is_holiday_work = :is_holiday_work")
+                        expression_attribute_names["#is_holiday_work"] = "is_holiday_work"
+                        expression_attribute_values[":is_holiday_work"] = True
+                    
+                    update_expression_parts.append("#status = :status")
+                    expression_attribute_names["#status"] = "status"
+                    expression_attribute_values[":status"] = status
+                    
+                    update_expression_parts.append("#updated_at = :updated_at")
+                    expression_attribute_names["#updated_at"] = "updated_at"
+                    expression_attribute_values[":updated_at"] = now
+                    
+                    ATTENDANCE_TABLE.update_item(
+                        Key={'id': attendance_id},
+                        UpdateExpression='SET ' + ', '.join(update_expression_parts),
+                        ExpressionAttributeNames=expression_attribute_names,
+                        ExpressionAttributeValues=expression_attribute_values
+                    )
         
         return {
             'statusCode': 200,
@@ -5858,6 +5989,20 @@ def create_or_update_attendance(event, headers):
     except Exception as e:
         print(f"Error creating/updating attendance: {str(e)}")
         error_message = str(e)
+        # エラーメッセージを日本語化
+        if 'Float types are not supported' in error_message:
+            error_message = 'データ型エラー: 浮動小数点型はサポートされていません。Decimal型を使用してください。'
+        elif 'ResourceNotFoundException' in error_message or 'does not exist' in error_message:
+            error_message = 'リソースが見つかりません: テーブルが存在しないか、アクセス権限がありません。'
+        elif 'AccessDeniedException' in error_message or 'UnauthorizedOperation' in error_message:
+            error_message = 'アクセス権限エラー: DynamoDBへのアクセス権限がありません。'
+        elif 'ValidationException' in error_message:
+            error_message = 'バリデーションエラー: データの形式が正しくありません。'
+        elif 'ConditionalCheckFailedException' in error_message:
+            error_message = '条件チェックエラー: データの更新条件を満たしていません。'
+        else:
+            error_message = f'サーバーエラー: {error_message}'
+        
         staff_id = body_json.get('staff_id', 'unknown') if 'body_json' in locals() else 'unknown'
         log_attendance_error(staff_id, 'SERVER_ERROR', error_message, body_json if 'body_json' in locals() else {}, 500)
         return {
@@ -5934,6 +6079,31 @@ def get_attendance_errors(event, headers):
         # 日付でソート（新しい順）
         items.sort(key=lambda x: x.get('created_at', ''), reverse=True)
         
+        # スタッフ名を取得して追加
+        staff_ids = list(set([item.get('staff_id') for item in items if item.get('staff_id')]))
+        staff_map = {}
+        if staff_ids:
+            try:
+                for sid in staff_ids:
+                    try:
+                        worker_response = WORKERS_TABLE.get_item(Key={'id': sid})
+                        if 'Item' in worker_response:
+                            worker = worker_response['Item']
+                            staff_map[sid] = worker.get('name', worker.get('display_name', sid))
+                    except Exception as e:
+                        print(f"Error getting worker {sid}: {str(e)}")
+                        staff_map[sid] = sid
+            except Exception as e:
+                print(f"Error getting staff names: {str(e)}")
+        
+        # 各エラーにスタッフ名を追加
+        for item in items:
+            staff_id = item.get('staff_id')
+            if staff_id and staff_id in staff_map:
+                item['staff_name'] = staff_map[staff_id]
+            else:
+                item['staff_name'] = staff_id or '-'
+        
         return {
             'statusCode': 200,
             'headers': headers,
@@ -5949,6 +6119,51 @@ def get_attendance_errors(event, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': 'エラーログの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def resolve_attendance_error(error_id, headers):
+    """
+    出退勤エラーログを解決済みにマーク
+    """
+    try:
+        # 既存のエラーログを取得
+        response = ATTENDANCE_ERRORS_TABLE.get_item(Key={'id': error_id})
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'エラーログが見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        # 解決済みにマーク
+        ATTENDANCE_ERRORS_TABLE.update_item(
+            Key={'id': error_id},
+            UpdateExpression='SET resolved = :resolved, resolved_at = :resolved_at',
+            ExpressionAttributeValues={
+                ':resolved': True,
+                ':resolved_at': datetime.now(timezone.utc).isoformat() + 'Z'
+            }
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'エラーログを解決済みにマークしました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error resolving attendance error: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'エラーログの解決に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }
@@ -6224,36 +6439,196 @@ def update_attendance_request(request_id, event, headers):
             ExpressionAttributeValues=expression_attribute_values
         )
         
-        # 承認された場合、勤怠記録を更新
+        # 承認された場合、依頼内容を確定してタイムカードに保存
         if status == 'approved':
             attendance_id = existing_request.get('attendance_id')
-            if attendance_id:
+            request_date = existing_request.get('date')  # 申請の日付を取得
+            action = existing_request.get('action')  # 削除依頼かどうか
+            
+            # 削除依頼の場合は、タイムカードを削除
+            if action == 'delete' and attendance_id:
+                try:
+                    ATTENDANCE_TABLE.delete_item(Key={'id': attendance_id})
+                    print(f"[UpdateAttendanceRequest] Deleted attendance record {attendance_id} for delete request")
+                except Exception as e:
+                    print(f"Error deleting attendance record: {str(e)}")
+            elif attendance_id:
+                # 既存の勤怠記録を取得
+                existing_attendance_response = ATTENDANCE_TABLE.get_item(Key={'id': attendance_id})
+                existing_attendance = existing_attendance_response.get('Item', {})
+                
+                # 更新後の時刻を取得（申請の時刻を優先、Noneの場合は既存の値を保持）
+                requested_clock_in = existing_request.get('requested_clock_in')
+                requested_clock_out = existing_request.get('requested_clock_out')
+                # 申請の時刻が指定されている場合はそれを使用、Noneの場合は既存の値を保持
+                clock_in = requested_clock_in if requested_clock_in is not None else existing_attendance.get('clock_in')
+                clock_out = requested_clock_out if requested_clock_out is not None else existing_attendance.get('clock_out')
+                
+                print(f"[UpdateAttendanceRequest] Updating attendance {attendance_id} with clock_in: {clock_in}, clock_out: {clock_out}, date: {request_date}")
+                
+                print(f"[UpdateAttendanceRequest] Updating attendance {attendance_id} with clock_in: {clock_in}, clock_out: {clock_out}, date: {request_date}")
+                
+                # 休憩時間を取得（申請に含まれている場合はそれを使用、なければ既存の値を使用）
+                requested_break_hours = existing_request.get('requested_break_hours')
+                if requested_break_hours is not None:
+                    # 申請で指定された休憩時間を使用
+                    total_break_hours = float(requested_break_hours)
+                else:
+                    # 既存の休憩時間を取得
+                    existing_breaks = existing_attendance.get('breaks', [])
+                    if not existing_breaks or not isinstance(existing_breaks, list):
+                        existing_breaks = []
+                    
+                    # 総休憩時間を計算（create_or_update_attendanceと同じロジック）
+                    total_break_hours = 0
+                    for b in existing_breaks:
+                        if isinstance(b, dict):
+                            # break_durationが存在する場合はそれを使用
+                            if 'break_duration' in b:
+                                total_break_hours += float(b.get('break_duration', 0))
+                            # durationが存在する場合（互換性のため）
+                            elif 'duration' in b:
+                                total_break_hours += float(b.get('duration', 0))
+                            # break_startとbreak_endから計算
+                            elif 'break_start' in b and 'break_end' in b:
+                                try:
+                                    break_start_dt = datetime.fromisoformat(b['break_start'].replace('Z', '+00:00'))
+                                    break_end_dt = datetime.fromisoformat(b['break_end'].replace('Z', '+00:00'))
+                                    break_duration = (break_end_dt - break_start_dt).total_seconds() / 3600
+                                    total_break_hours += break_duration
+                                except (ValueError, AttributeError):
+                                    pass
+                
+                # 従業員の所定労働時間を取得
+                staff_id = existing_request.get('staff_id')
+                scheduled_work_hours = 8.0  # デフォルト8時間
+                try:
+                    worker_response = WORKERS_TABLE.get_item(Key={'id': staff_id})
+                    if 'Item' in worker_response:
+                        worker = worker_response['Item']
+                        scheduled_work_hours = float(worker.get('scheduled_work_hours', 8.0))
+                except Exception as e:
+                    print(f"Error fetching worker info: {str(e)}")
+                
+                # 労働時間を計算
+                total_hours = 0
+                work_hours = 0
+                overtime_hours = 0
+                
+                # 労働時間計算に使用する休憩時間を決定（申請で指定された場合はそれを使用）
+                break_hours_for_calc = float(requested_break_hours) if requested_break_hours is not None else total_break_hours
+                
+                if clock_in and clock_out:
+                    try:
+                        clock_in_dt = datetime.fromisoformat(clock_in.replace('Z', '+00:00'))
+                        clock_out_dt = datetime.fromisoformat(clock_out.replace('Z', '+00:00'))
+                        total_hours = (clock_out_dt - clock_in_dt).total_seconds() / 3600
+                        work_hours = max(0, total_hours - break_hours_for_calc)
+                        # 残業時間（所定労働時間超過分）
+                        overtime_hours = max(0, work_hours - scheduled_work_hours)
+                    except (ValueError, AttributeError) as e:
+                        print(f"Error calculating work hours: {str(e)}")
+                
                 # 勤怠記録を更新
                 update_expression_parts = []
                 expression_attribute_values = {}
                 expression_attribute_names = {}
                 
-                if existing_request.get('requested_clock_in'):
+                # dateフィールドを更新（申請の日付を使用）
+                if request_date:
+                    update_expression_parts.append("#date = :date")
+                    expression_attribute_names["#date"] = "date"
+                    expression_attribute_values[":date"] = request_date
+                
+                # 申請された時刻を更新（requested_clock_in/outが指定されている場合は必ず更新）
+                # Noneの場合は既存の値を保持するため更新しない
+                if requested_clock_in is not None:
                     update_expression_parts.append("#clock_in = :clock_in")
                     expression_attribute_names["#clock_in"] = "clock_in"
-                    expression_attribute_values[":clock_in"] = existing_request['requested_clock_in']
+                    expression_attribute_values[":clock_in"] = requested_clock_in if requested_clock_in else None
+                    print(f"[UpdateAttendanceRequest] Setting clock_in to: {requested_clock_in}")
+                else:
+                    # Noneの場合は既存の値を保持（更新しない）
+                    print(f"[UpdateAttendanceRequest] requested_clock_in is None, keeping existing value")
                 
-                if existing_request.get('requested_clock_out'):
+                if requested_clock_out is not None:
                     update_expression_parts.append("#clock_out = :clock_out")
                     expression_attribute_names["#clock_out"] = "clock_out"
-                    expression_attribute_values[":clock_out"] = existing_request['requested_clock_out']
+                    expression_attribute_values[":clock_out"] = requested_clock_out if requested_clock_out else None
+                    print(f"[UpdateAttendanceRequest] Setting clock_out to: {requested_clock_out}")
+                else:
+                    # Noneの場合は既存の値を保持（更新しない）
+                    print(f"[UpdateAttendanceRequest] requested_clock_out is None, keeping existing value")
+                
+                # 労働時間を更新
+                if work_hours > 0:
+                    update_expression_parts.append("#work_hours = :work_hours")
+                    expression_attribute_names["#work_hours"] = "work_hours"
+                    expression_attribute_values[":work_hours"] = Decimal(str(round(work_hours, 2)))
+                
+                if overtime_hours > 0:
+                    update_expression_parts.append("#overtime_hours = :overtime_hours")
+                    expression_attribute_names["#overtime_hours"] = "overtime_hours"
+                    expression_attribute_values[":overtime_hours"] = Decimal(str(round(overtime_hours, 2)))
+                
+                # 総労働時間を更新
+                if total_hours > 0:
+                    update_expression_parts.append("#total_hours = :total_hours")
+                    expression_attribute_names["#total_hours"] = "total_hours"
+                    expression_attribute_values[":total_hours"] = Decimal(str(round(total_hours, 2)))
+                
+                # 休憩時間を更新（申請で指定された場合はそれを使用、そうでなければ計算した値を使用）
+                # requested_break_hoursが指定されている場合はそれを使用、そうでなければ計算したtotal_break_hoursを使用
+                if requested_break_hours is not None:
+                    # 申請で指定された休憩時間を使用
+                    final_break_hours = float(requested_break_hours)
+                else:
+                    # 計算した休憩時間を使用
+                    final_break_hours = total_break_hours
+                
+                # 休憩時間を更新（0の場合も含む）
+                break_time_value = Decimal(str(round(final_break_hours, 2)))
+                update_expression_parts.append("#break_time = :break_time")
+                expression_attribute_names["#break_time"] = "break_time"
+                expression_attribute_values[":break_time"] = break_time_value
+                
+                # breaks配列も更新（シンプルな形式で保存）
+                if final_break_hours > 0:
+                    new_breaks = [{
+                        'break_duration': round(final_break_hours, 2)
+                    }]
+                else:
+                    new_breaks = []
+                update_expression_parts.append("#breaks = :breaks")
+                expression_attribute_names["#breaks"] = "breaks"
+                expression_attribute_values[":breaks"] = new_breaks
                 
                 update_expression_parts.append("#updated_at = :updated_at")
                 expression_attribute_names["#updated_at"] = "updated_at"
                 expression_attribute_values[":updated_at"] = now
                 
+                # 勤務状態を更新
+                if clock_in and clock_out:
+                    update_expression_parts.append("#status = :status")
+                    expression_attribute_names["#status"] = "status"
+                    expression_attribute_values[":status"] = "completed"
+                elif clock_in:
+                    update_expression_parts.append("#status = :status")
+                    expression_attribute_names["#status"] = "status"
+                    expression_attribute_values[":status"] = "working"
+                
                 if update_expression_parts:
+                    print(f"[UpdateAttendanceRequest] Updating attendance record with {len(update_expression_parts)} fields")
+                    print(f"[UpdateAttendanceRequest] Update expression: SET {', '.join(update_expression_parts)}")
                     ATTENDANCE_TABLE.update_item(
                         Key={'id': attendance_id},
                         UpdateExpression='SET ' + ', '.join(update_expression_parts),
                         ExpressionAttributeNames=expression_attribute_names,
                         ExpressionAttributeValues=expression_attribute_values
                     )
+                    print(f"[UpdateAttendanceRequest] Attendance record updated successfully")
+                else:
+                    print(f"[UpdateAttendanceRequest] No fields to update, skipping")
         
         return {
             'statusCode': 200,
@@ -8547,6 +8922,529 @@ def delete_announcement(announcement_id, event, headers):
             'headers': headers,
             'body': json.dumps({
                 'error': '業務連絡の削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+# ==================== 日報機能 ====================
+
+def get_daily_reports(event, headers):
+    """
+    日報を取得
+    """
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        staff_id = query_params.get('staff_id')
+        date = query_params.get('date')
+        date_from = query_params.get('date_from')
+        date_to = query_params.get('date_to')
+        limit = int(query_params.get('limit', 100))
+        
+        if staff_id and date:
+            # 特定の従業員の特定日の日報を取得
+            report_id = f"{date}_{staff_id}"
+            response = DAILY_REPORTS_TABLE.get_item(Key={'id': report_id})
+            if 'Item' in response:
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+                }
+            else:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': '日報が見つかりません'
+                    }, ensure_ascii=False)
+                }
+        else:
+            # フィルタリング条件を構築
+            filter_expressions = []
+            expression_attribute_names = {}
+            expression_attribute_values = {}
+            
+            if staff_id:
+                filter_expressions.append('#staff_id = :staff_id')
+                expression_attribute_names['#staff_id'] = 'staff_id'
+                expression_attribute_values[':staff_id'] = staff_id
+            
+            if date_from:
+                filter_expressions.append('#date >= :date_from')
+                expression_attribute_names['#date'] = 'date'
+                expression_attribute_values[':date_from'] = date_from
+            
+            if date_to:
+                filter_expressions.append('#date <= :date_to')
+                expression_attribute_names['#date'] = 'date'
+                expression_attribute_values[':date_to'] = date_to
+            
+            # スキャンでフィルタリング
+            if filter_expressions:
+                response = DAILY_REPORTS_TABLE.scan(
+                    FilterExpression=' AND '.join(filter_expressions),
+                    ExpressionAttributeNames=expression_attribute_names,
+                    ExpressionAttributeValues=expression_attribute_values,
+                    Limit=limit
+                )
+            else:
+                response = DAILY_REPORTS_TABLE.scan(Limit=limit)
+            
+            items = response.get('Items', [])
+            # 日付でソート（新しい順）
+            items.sort(key=lambda x: x.get('date', ''), reverse=True)
+            
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'daily_reports': items,
+                    'count': len(items)
+                }, ensure_ascii=False, default=str)
+            }
+    except Exception as e:
+        print(f"Error getting daily reports: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '日報の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_or_update_daily_report(event, headers):
+    """
+    日報を作成または更新
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        staff_id = body_json.get('staff_id')
+        date = body_json.get('date')
+        content = body_json.get('content', '')
+        staff_name = body_json.get('staff_name')
+        
+        # バリデーション
+        if not staff_id or not date:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'staff_idとdateは必須です'
+                }, ensure_ascii=False)
+            }
+        
+        # 日付形式のバリデーション
+        try:
+            datetime.strptime(date, '%Y-%m-%d')
+        except ValueError:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '日付の形式が正しくありません（YYYY-MM-DD形式で指定してください）'
+                }, ensure_ascii=False)
+            }
+        
+        # 日報IDを生成（日付_従業員ID）
+        report_id = f"{date}_{staff_id}"
+        
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        # 既存の記録を取得
+        existing_response = DAILY_REPORTS_TABLE.get_item(Key={'id': report_id})
+        existing_item = existing_response.get('Item')
+        
+        if existing_item:
+            # 更新
+            item = {
+                'id': report_id,
+                'staff_id': staff_id,
+                'staff_name': staff_name or existing_item.get('staff_name', ''),
+                'date': date,
+                'content': content,
+                'created_at': existing_item.get('created_at', now),
+                'updated_at': now
+            }
+        else:
+            # 新規作成
+            item = {
+                'id': report_id,
+                'staff_id': staff_id,
+                'staff_name': staff_name or '',
+                'date': date,
+                'content': content,
+                'created_at': now,
+                'updated_at': now
+            }
+        
+        DAILY_REPORTS_TABLE.put_item(Item=item)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'report_id': report_id,
+                'message': '日報を保存しました',
+                'data': item
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error creating/updating daily report: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '日報の保存に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_daily_report_detail(report_id, headers):
+    """
+    日報の詳細を取得
+    """
+    try:
+        response = DAILY_REPORTS_TABLE.get_item(Key={'id': report_id})
+        if 'Item' in response:
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+            }
+        else:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '日報が見つかりません'
+                }, ensure_ascii=False)
+            }
+    except Exception as e:
+        print(f"Error getting daily report detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '日報の取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_daily_report(report_id, headers):
+    """
+    日報を削除
+    """
+    try:
+        DAILY_REPORTS_TABLE.delete_item(Key={'id': report_id})
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': '日報を削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting daily report: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': '日報の削除に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+# ==================== TODO機能 ====================
+
+def get_todos(event, headers):
+    """
+    TODOを取得
+    """
+    try:
+        query_params = event.get('queryStringParameters') or {}
+        staff_id = query_params.get('staff_id')
+        completed = query_params.get('completed')  # 'true' or 'false'
+        limit = int(query_params.get('limit', 100))
+        
+        # フィルタリング条件を構築
+        filter_expressions = []
+        expression_attribute_names = {}
+        expression_attribute_values = {}
+        
+        if staff_id:
+            filter_expressions.append('#staff_id = :staff_id')
+            expression_attribute_names['#staff_id'] = 'staff_id'
+            expression_attribute_values[':staff_id'] = staff_id
+        
+        if completed is not None:
+            filter_expressions.append('#completed = :completed')
+            expression_attribute_names['#completed'] = 'completed'
+            expression_attribute_values[':completed'] = completed.lower() == 'true'
+        
+        # スキャンでフィルタリング
+        if filter_expressions:
+            response = TODOS_TABLE.scan(
+                FilterExpression=' AND '.join(filter_expressions),
+                ExpressionAttributeNames=expression_attribute_names,
+                ExpressionAttributeValues=expression_attribute_values,
+                Limit=limit
+            )
+        else:
+            response = TODOS_TABLE.scan(Limit=limit)
+        
+        items = response.get('Items', [])
+        # 作成日時でソート（新しい順）
+        items.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'todos': items,
+                'count': len(items)
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error getting todos: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'TODOの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def create_todo(event, headers):
+    """
+    TODOを作成
+    """
+    try:
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        staff_id = body_json.get('staff_id')
+        text = body_json.get('text', '').strip()
+        completed = body_json.get('completed', False)
+        
+        # バリデーション
+        if not staff_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'staff_idは必須です'
+                }, ensure_ascii=False)
+            }
+        
+        if not text:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'textは必須です'
+                }, ensure_ascii=False)
+            }
+        
+        # TODO IDを生成
+        todo_id = f"todo_{uuid.uuid4().hex[:12]}"
+        
+        now = datetime.utcnow().isoformat() + 'Z'
+        
+        item = {
+            'id': todo_id,
+            'staff_id': staff_id,
+            'text': text,
+            'completed': completed,
+            'created_at': now,
+            'updated_at': now
+        }
+        
+        TODOS_TABLE.put_item(Item=item)
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'todo_id': todo_id,
+                'message': 'TODOを作成しました',
+                'data': item
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error creating todo: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'TODOの作成に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def get_todo_detail(todo_id, headers):
+    """
+    TODOの詳細を取得
+    """
+    try:
+        response = TODOS_TABLE.get_item(Key={'id': todo_id})
+        if 'Item' in response:
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(response['Item'], ensure_ascii=False, default=str)
+            }
+        else:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'TODOが見つかりません'
+                }, ensure_ascii=False)
+            }
+    except Exception as e:
+        print(f"Error getting todo detail: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'TODOの取得に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def update_todo(todo_id, event, headers):
+    """
+    TODOを更新
+    """
+    try:
+        # 既存のTODOを取得
+        existing_response = TODOS_TABLE.get_item(Key={'id': todo_id})
+        if 'Item' not in existing_response:
+            return {
+                'statusCode': 404,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': 'TODOが見つかりません'
+                }, ensure_ascii=False)
+            }
+        
+        # リクエストボディを取得
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event.get('body', '')
+        
+        if isinstance(body, str):
+            body_json = json.loads(body)
+        else:
+            body_json = json.loads(body.decode('utf-8'))
+        
+        existing_item = existing_response['Item']
+        
+        # 更新可能なフィールドを更新
+        update_expression_parts = []
+        expression_attribute_values = {}
+        expression_attribute_names = {}
+        
+        if 'text' in body_json:
+            text = body_json['text'].strip()
+            if not text:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': 'textは空にできません'
+                    }, ensure_ascii=False)
+                }
+            update_expression_parts.append("#text = :text")
+            expression_attribute_names["#text"] = "text"
+            expression_attribute_values[":text"] = text
+        
+        if 'completed' in body_json:
+            update_expression_parts.append("#completed = :completed")
+            expression_attribute_names["#completed"] = "completed"
+            expression_attribute_values[":completed"] = body_json['completed']
+        
+        update_expression_parts.append("#updated_at = :updated_at")
+        expression_attribute_names["#updated_at"] = "updated_at"
+        expression_attribute_values[":updated_at"] = datetime.utcnow().isoformat() + 'Z'
+        
+        if update_expression_parts:
+            TODOS_TABLE.update_item(
+                Key={'id': todo_id},
+                UpdateExpression='SET ' + ', '.join(update_expression_parts),
+                ExpressionAttributeNames=expression_attribute_names,
+                ExpressionAttributeValues=expression_attribute_values
+            )
+        
+        # 更新後のデータを取得
+        updated_response = TODOS_TABLE.get_item(Key={'id': todo_id})
+        updated_item = updated_response['Item']
+        
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'TODOを更新しました',
+                'data': updated_item
+            }, ensure_ascii=False, default=str)
+        }
+    except Exception as e:
+        print(f"Error updating todo: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'TODOの更新に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
+
+def delete_todo(todo_id, headers):
+    """
+    TODOを削除
+    """
+    try:
+        TODOS_TABLE.delete_item(Key={'id': todo_id})
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'status': 'success',
+                'message': 'TODOを削除しました'
+            }, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error deleting todo: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'TODOの削除に失敗しました',
                 'message': str(e)
             }, ensure_ascii=False)
         }

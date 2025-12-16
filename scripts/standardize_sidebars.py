@@ -38,11 +38,11 @@ STANDARD_SIDEBAR = '''    <nav class="sidebar-nav">
       </a>
       <a href="/admin/users/" class="nav-item">
         <i class="fas fa-users"></i>
-        <span class="nav-label">ユーザー</span>
+        <span class="nav-label">ユーザー管理</span>
       </a>
       <a href="/admin/attendance/errors.html" class="nav-item">
         <i class="fas fa-exclamation-triangle"></i>
-        <span class="nav-label">出退勤エラー</span>
+        <span class="nav-label">勤怠管理</span>
       </a>
       <a href="/admin/services/" class="nav-item">
         <i class="fas fa-cog"></i>
