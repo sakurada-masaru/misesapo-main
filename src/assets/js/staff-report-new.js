@@ -5018,8 +5018,20 @@
   
   // メディアから選択した画像をセクションに追加
   function addImageToCleaningItemFromMedia(sectionId, imageContentId, category, imageId, imageUrl, imageData) {
+    console.log('[addImageToCleaningItemFromMedia] Called with:', {
+      sectionId,
+      imageContentId,
+      category,
+      imageId,
+      imageUrl,
+      imageData
+    });
+    
     const imageList = document.getElementById(`${imageContentId}-${category}`);
-    if (!imageList) return;
+    if (!imageList) {
+      console.warn('[addImageToCleaningItemFromMedia] Image list not found:', `${imageContentId}-${category}`);
+      return;
+    }
     
     // 画像サムネイルを作成
     const imageThumb = document.createElement('div');
