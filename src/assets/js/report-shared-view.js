@@ -299,6 +299,11 @@ async function loadReportDetail() {
             const data = await response.json();
             const report = data.report || data;
             
+            // デバッグログ: APIから取得したレポートデータを確認
+            console.log('[loadReportDetail] API response:', data);
+            console.log('[loadReportDetail] Report data:', report);
+            console.log('[loadReportDetail] Report sections:', report.sections);
+            
             // レポート情報を表示
             renderReport(report);
             
