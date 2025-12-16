@@ -23,6 +23,9 @@
     // 初期化
     document.addEventListener('DOMContentLoaded', async () => {
       await Promise.all([loadReports(), loadStores(), loadBrands(), loadClients(), loadWorkers(), loadServiceItems()]);
+      // すべてのデータが読み込まれた後にレンダリング
+      updateStats();
+      filterAndRender();
       setupEventListeners();
         
   });
@@ -80,8 +83,7 @@
           resubmitted: r.resubmitted || false  // 再提出フラグを保持
         }));
         
-        updateStats();
-        filterAndRender();
+        // filterAndRender()は初期化時に呼ばれるため、ここでは呼ばない
       } catch (e) {
         console.error('Failed to load reports:', e);
         const errorMessage = e.message || '読み込みに失敗しました';
