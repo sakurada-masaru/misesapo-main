@@ -295,10 +295,198 @@
   color: #6b7280;
 }
 
+/* ビュー切り替えボタン */
+.view-toggle-group {
+  display: flex;
+  gap: 4px;
+  margin-right: 12px;
+}
+
+.view-toggle-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.view-toggle-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.view-toggle-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* カードスタイル */
 .users-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
+}
+
+/* カードビュー非表示 */
+.users-grid.card-view-hidden {
+  display: none;
+}
+
+.organization-layout.list-view .departments-container {
+  display: none;
+}
+
+/* リストスタイル */
+.users-list {
+  display: none;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.users-list.active {
+  display: block;
+}
+
+.users-list table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-list thead {
+  background: #f8fafc;
+}
+
+.users-list th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.users-list td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.users-list tbody tr {
+  transition: background 0.2s ease;
+}
+
+.users-list tbody tr:hover {
+  background: #f8fafc;
+}
+
+.users-list .user-list-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.users-list .user-list-name .user-avatar-large {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.users-list .user-list-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.users-list .user-list-name-text {
+  font-weight: 500;
+  color: #1e293b;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.users-list .user-list-name-text:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.users-list .user-list-id {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.users-list .user-list-email,
+.users-list .user-list-phone {
+  color: #64748b;
+}
+
+.users-list .user-list-jobs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.users-list .user-list-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.users-list .user-list-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.users-list .user-list-actions .btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.users-list .user-list-actions .btn-icon:hover {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.users-list .user-list-actions .btn-icon.delete:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+/* カードビュー非表示 */
+.users-grid.card-view-hidden {
+  display: none;
 }
 
 .user-card {

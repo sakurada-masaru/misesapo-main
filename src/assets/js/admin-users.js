@@ -15,6 +15,7 @@
   let currentPage = 1;
   let deleteTargetId = null;
   let attendanceRecords = {};  // 出退勤データ
+  let currentView = 'card';    // 'card' または 'list'
 
   // DOM要素の参照
   const tbody = document.getElementById('users-tbody');
@@ -447,12 +448,27 @@
 
   function renderDepartments(departments) {
     const container = document.getElementById('departments-container');
+    const orgLayout = document.getElementById('organization-layout');
     if (!container) return;
 
     if (departments.length === 0) {
       container.innerHTML = '<p class="no-departments">部署がありません</p>';
       return;
     }
+
+    // ビューに応じてクラスを追加/削除
+    if (currentView === 'list') {
+      if (orgLayout) orgLayout.classList.add('list-view');
+      renderDepartmentsList(departments);
+    } else {
+      if (orgLayout) orgLayout.classList.remove('list-view');
+      renderDepartmentsCard(departments);
+    }
+  }
+
+  function renderDepartmentsCard(departments) {
+    const container = document.getElementById('departments-container');
+    if (!container) return;
 
     container.innerHTML = departments.map(dept => {
       const userCards = dept.users.map(user => {
@@ -529,6 +545,106 @@
     }).join('');
   }
 
+  function renderDepartmentsList(departments) {
+    const container = document.getElementById('departments-container');
+    if (!container) return;
+
+    // すべての部署のユーザーを1つのテーブルにまとめる
+    const allUsersList = departments.flatMap(dept => 
+      dept.users.map(user => ({ ...user, department: dept.name }))
+    );
+
+    if (allUsersList.length === 0) {
+      container.innerHTML = '<p class="no-departments">ユーザーがありません</p>';
+      return;
+    }
+
+    const tableRows = allUsersList.map(user => {
+      // マイページリンクを生成
+      let mypageUrl = '/staff/mypage.html';
+      if (user.id && user.id !== 'N/A' && !user.id.startsWith('temp_')) {
+        mypageUrl = `/staff/mypage.html?id=${encodeURIComponent(user.id)}`;
+      } else if (user.email && user.email !== '-') {
+        mypageUrl = `/staff/mypage.html?email=${encodeURIComponent(user.email)}`;
+      }
+
+      // 担当業務をバッジとして表示
+      const jobBadges = getUserJobBadges(user);
+      
+      // 管理者のみロールバッジを表示
+      const roleBadge = isAdminRole(user.role) ? '<span class="role-badge role-admin">管理者</span>' : '';
+      
+      // 出退勤ステータスバッジを取得
+      const attendanceBadge = getAttendanceStatusBadge(user.id);
+
+      return `
+        <tr>
+          <td>
+            <div class="user-list-name">
+              <div class="user-avatar-large">${(user.name || '?')[0]}</div>
+              <div class="user-list-info">
+                <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" class="user-list-name-text">${escapeHtml(user.name || '-')}</a>
+                <div class="user-list-id">${escapeHtml(user.id)}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="user-list-email">${escapeHtml(user.email || '-')}</div>
+          </td>
+          <td>
+            <div class="user-list-phone">${escapeHtml(user.phone || '-')}</div>
+          </td>
+          <td>
+            <div class="user-list-jobs">${jobBadges || '-'}</div>
+          </td>
+          <td>
+            <div class="user-list-badges">
+              ${roleBadge}
+              <span class="status-badge status-${user.status || 'active'}">${user.status === 'inactive' ? '無効' : '有効'}</span>
+              ${attendanceBadge}
+            </div>
+          </td>
+          <td>
+            <div class="user-list-actions">
+              <a href="/admin/users/detail?id=${encodeURIComponent(user.id)}" class="btn-icon" title="詳細">
+                <i class="fas fa-eye"></i>
+              </a>
+              <a href="${mypageUrl}" class="btn-icon" title="マイページ" target="_blank">
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+              <button class="btn-icon" title="編集" onclick="editUser('${user.id}')">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn-icon delete" title="削除" onclick="confirmDelete('${user.id}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="users-list active">
+        <table>
+          <thead>
+            <tr>
+              <th>名前</th>
+              <th>メール</th>
+              <th>電話</th>
+              <th>担当業務</th>
+              <th>ステータス</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
   // ユーザーの担当業務をバッジとして取得
   function getUserJobBadges(user) {
     // DB上の担当業務情報を取得
@@ -598,6 +714,27 @@
       departmentFilter.addEventListener('change', filterAndRender);
     }
     document.getElementById('status-filter').addEventListener('change', filterAndRender);
+    
+    // ビュー切り替えボタン
+    const cardBtn = document.getElementById('view-toggle-card');
+    const listBtn = document.getElementById('view-toggle-list');
+    if (cardBtn) {
+      cardBtn.addEventListener('click', () => {
+        currentView = 'card';
+        cardBtn.classList.add('active');
+        if (listBtn) listBtn.classList.remove('active');
+        renderAllSections();
+      });
+    }
+    if (listBtn) {
+      listBtn.addEventListener('click', () => {
+        currentView = 'list';
+        listBtn.classList.add('active');
+        if (cardBtn) cardBtn.classList.remove('active');
+        renderAllSections();
+      });
+    }
+    
     document.getElementById('reset-filters').addEventListener('click', () => {
       document.getElementById('search-input').value = '';
       document.getElementById('role-filter').value = '';
