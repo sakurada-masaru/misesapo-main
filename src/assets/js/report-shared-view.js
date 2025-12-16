@@ -199,9 +199,9 @@ window.renderReport = function(report, container) {
     }
     
     // 清掃項目リスト
+    const items = report.work_items || [];
     const cleaningItemsEl = document.getElementById('cleaning-items');
     if (cleaningItemsEl) {
-        const items = report.work_items || [];
         const itemNames = items.map(item => item.item_name || item.item_id).filter(Boolean);
         cleaningItemsEl.innerHTML = itemNames.map(name => 
             `<span class="items-list-item">${escapeHtml(name)}</span>`
