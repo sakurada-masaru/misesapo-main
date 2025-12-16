@@ -947,7 +947,9 @@ function renderReportToContainer(report, container) {
               <h3 class="item-title">〜 ${escapeHtml(item.item_name || item.item_id)} 〜</h3>
               <div class="item-details">${tagsHtml}</div>
             </div>
+            ${subtitlesHtml}
             ${photosHtml}
+            ${commentsHtml}
           </section>
         `;
     }).join('');
