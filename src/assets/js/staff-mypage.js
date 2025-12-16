@@ -390,11 +390,72 @@ function renderUser(user) {
   // 基本情報を表示
   renderBasicInfo(user);
   
-  // サイドバーのロールバッジを更新
-  const roleBadge = document.getElementById('sidebar-role-badge');
-  if (roleBadge && user.department) {
-    roleBadge.textContent = user.department;
+  // OS課の場合は専用サイドバーに置き換え
+  if (user.department === 'OS課') {
+    loadOSSectionSidebar();
+  } else {
+    // サイドバーのロールバッジを更新
+    const roleBadge = document.getElementById('sidebar-role-badge');
+    if (roleBadge && user.department) {
+      roleBadge.textContent = user.department;
+    }
   }
+}
+
+// OS課専用サイドバーを設定
+function loadOSSectionSidebar() {
+  const sidebarNav = document.querySelector('#admin-sidebar .sidebar-nav');
+  if (!sidebarNav) {
+    console.warn('Sidebar nav not found');
+    return;
+  }
+  
+  // ロールバッジを更新
+  const roleBadge = document.getElementById('sidebar-role-badge');
+  if (roleBadge) {
+    roleBadge.textContent = 'OS課';
+  }
+  
+  // 日報と出勤履歴を非表示にする
+  const dailyReportsLink = sidebarNav.querySelector('a[data-page="daily-reports"]');
+  const attendanceHistoryLink = sidebarNav.querySelector('a[data-page="attendance-history"]');
+  if (dailyReportsLink) {
+    dailyReportsLink.style.display = 'none';
+  }
+  if (attendanceHistoryLink) {
+    attendanceHistoryLink.style.display = 'none';
+  }
+  
+  // 作業一覧リンクが存在しない場合は追加
+  let workListLink = sidebarNav.querySelector('a[data-page="work-list"]');
+  if (!workListLink) {
+    // スケジュールリンクの後に作業一覧を追加
+    const scheduleLink = sidebarNav.querySelector('a[data-page="schedule"]');
+    if (scheduleLink) {
+      workListLink = document.createElement('a');
+      workListLink.href = '/staff/work-list';
+      workListLink.className = 'nav-item';
+      workListLink.setAttribute('data-page', 'work-list');
+      workListLink.innerHTML = '<i class="fas fa-tasks"></i><span class="nav-label">作業一覧</span>';
+      scheduleLink.insertAdjacentElement('afterend', workListLink);
+    }
+  }
+  
+  // レポート作成リンクが存在しない場合は追加
+  let reportNewLink = sidebarNav.querySelector('a[data-page="reports-new"]');
+  if (!reportNewLink) {
+    // 作業一覧の後にレポート作成を追加
+    if (workListLink) {
+      reportNewLink = document.createElement('a');
+      reportNewLink.href = '/staff/reports/new';
+      reportNewLink.className = 'nav-item';
+      reportNewLink.setAttribute('data-page', 'reports-new');
+      reportNewLink.innerHTML = '<i class="fas fa-file-alt"></i><span class="nav-label">レポート作成</span>';
+      workListLink.insertAdjacentElement('afterend', reportNewLink);
+    }
+  }
+  
+  console.log('OS section sidebar configured');
 }
 
 function formatDate(dateString) {
