@@ -797,12 +797,34 @@ function renderReportToContainer(report, container) {
     
     // セクション（画像、コメント、作業内容）を表示
     const sections = report.sections || [];
+    // 画像URLを正規化する関数
+    const normalizePhotoUrls = (photos) => {
+        if (!photos) return [];
+        if (Array.isArray(photos)) {
+            return photos.map(photo => {
+                if (typeof photo === 'string') {
+                    return photo.startsWith('http://') || photo.startsWith('https://') || photo.startsWith('//')
+                        ? photo
+                        : resolvePath(photo);
+                } else if (typeof photo === 'object' && photo !== null) {
+                    const url = photo.url || photo.warehouseUrl || photo.imageUrl || photo.blobUrl || '';
+                    if (!url) return '';
+                    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
+                        ? url
+                        : resolvePath(url);
+                }
+                return '';
+            }).filter(Boolean);
+        }
+        return [];
+    };
+    
     const sectionsHtml = sections.map(section => {
         if (section.section_type === 'image') {
             // 画像セクション
-            const beforePhotos = section.photos?.before || [];
-            const afterPhotos = section.photos?.after || [];
-            const completedPhotos = section.photos?.completed || [];
+            const beforePhotos = normalizePhotoUrls(section.photos?.before);
+            const afterPhotos = normalizePhotoUrls(section.photos?.after);
+            const completedPhotos = normalizePhotoUrls(section.photos?.completed);
             const imageType = section.image_type || 'work';
             const beforeLabel = imageType === 'work' ? '作業前（Before）' : '設置前（Before）';
             const afterLabel = imageType === 'work' ? '作業後（After）' : '設置後（After）';
@@ -818,12 +840,17 @@ function renderReportToContainer(report, container) {
                       <div class="image-category completed-category">
                         <h4 class="image-category-title">施工後（After）</h4>
                         <div class="image-list">
-                          ${completedPhotos.map((url, index) => `
-                            <div class="image-item" data-image-url="${url}">
-                              <img src="${url}" alt="施工後" loading="lazy" 
+                          ${completedPhotos.map((url, index) => {
+                              const resolvedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
+                                  ? url
+                                  : resolvePath(url);
+                              return `
+                            <div class="image-item" data-image-url="${resolvedUrl}">
+                              <img src="${resolvedUrl}" alt="施工後" loading="lazy" 
                                    onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
                             </div>
-                          `).join('')}
+                          `;
+                          }).join('')}
                         </div>
                       </div>
                     </div>
@@ -833,12 +860,17 @@ function renderReportToContainer(report, container) {
                 // 作業前・作業後
                 const beforePhotosHtml = beforePhotos.length > 0
                     ? `<div class="image-list">
-                         ${beforePhotos.map((url, index) => `
-                           <div class="image-item" data-image-url="${url}">
-                             <img src="${url}" alt="${beforeLabel}" loading="lazy" 
+                         ${beforePhotos.map((url, index) => {
+                             const resolvedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
+                                 ? url
+                                 : resolvePath(url);
+                             return `
+                           <div class="image-item" data-image-url="${resolvedUrl}">
+                             <img src="${resolvedUrl}" alt="${beforeLabel}" loading="lazy" 
                                   onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
                            </div>
-                         `).join('')}
+                         `;
+                         }).join('')}
                        </div>`
                     : `<div class="image-list">
                          <div class="image-item">
@@ -848,12 +880,17 @@ function renderReportToContainer(report, container) {
                 
                 const afterPhotosHtml = afterPhotos.length > 0
                     ? `<div class="image-list">
-                         ${afterPhotos.map((url, index) => `
-                           <div class="image-item" data-image-url="${url}">
-                             <img src="${url}" alt="${afterLabel}" loading="lazy" 
+                         ${afterPhotos.map((url, index) => {
+                             const resolvedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
+                                 ? url
+                                 : resolvePath(url);
+                             return `
+                           <div class="image-item" data-image-url="${resolvedUrl}">
+                             <img src="${resolvedUrl}" alt="${afterLabel}" loading="lazy" 
                                   onerror="this.onerror=null; this.src='${resolvePath(DEFAULT_NO_PHOTO_IMAGE)}';" />
                            </div>
-                         `).join('')}
+                         `;
+                         }).join('')}
                        </div>`
                     : `<div class="image-list">
                          <div class="image-item">
