@@ -4791,15 +4791,51 @@
       
       newSaveBtn.addEventListener('click', function() {
         const selectedImages = document.querySelectorAll('#media-selection-grid .media-item.selected');
+        console.log('[MediaSelection] Save button clicked, selected images:', selectedImages.length);
+        
+        // mediaDialog.datasetから情報を取得（クロージャーの変数ではなく、確実に取得）
+        const currentSectionId = mediaDialog.dataset.sectionId;
+        const currentImageContentId = mediaDialog.dataset.imageContentId;
+        const currentCategory = mediaDialog.dataset.category;
+        
+        console.log('[MediaSelection] Section info from dataset:', {
+          sectionId: currentSectionId,
+          imageContentId: currentImageContentId,
+          category: currentCategory
+        });
+        
         if (selectedImages.length > 0) {
-          selectedImages.forEach(item => {
+          selectedImages.forEach((item, index) => {
             const imageId = item.dataset.imageId;
             const imageUrl = item.querySelector('img')?.src;
             const imageData = item.dataset.imageData ? JSON.parse(item.dataset.imageData) : null;
-            if (imageId && imageUrl) {
-              addImageToCleaningItemFromMedia(sectionId, imageContentId, category, imageId, imageUrl, imageData);
+            console.log('[MediaSelection] Processing image', index + 1, ':', {
+              imageId,
+              imageUrl,
+              imageData
+            });
+            
+            if (imageId && imageUrl && currentSectionId && currentImageContentId && currentCategory) {
+              addImageToCleaningItemFromMedia(
+                currentSectionId,
+                currentImageContentId,
+                currentCategory,
+                imageId,
+                imageUrl,
+                imageData
+              );
+            } else {
+              console.warn('[MediaSelection] Missing required data:', {
+                imageId: !!imageId,
+                imageUrl: !!imageUrl,
+                sectionId: !!currentSectionId,
+                imageContentId: !!currentImageContentId,
+                category: !!currentCategory
+              });
             }
           });
+        } else {
+          console.warn('[MediaSelection] No images selected');
         }
         closeMediaSelectionDialog();
       });
