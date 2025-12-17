@@ -232,7 +232,15 @@
 .schedule-card-subline {
   line-height: 1.15;
 }
+.schedule-card-subline:first-child {
+  font-weight: 400;
+  color: #6b7280;
+  font-size: 0.8rem;
+}
 .schedule-card-subline + .schedule-card-subline {
+  color: #111827;
+  font-weight: 700;
+  font-size: 0.9rem;
   margin-top: 2px; /* 2行の隙間を最小限に */
 }
 .schedule-card-meta {
@@ -386,12 +394,15 @@
   gap: 2px;
 }
 .client-brand-cell .client-line {
-  font-weight: 600;
+  font-weight: 400;
+  color: #6b7280;
+  font-size: 0.85rem;
   line-height: 1.2;
 }
 .client-brand-cell .brand-line {
-  color: #6b7280;
-  font-size: 0.85rem;
+  color: #111827;
+  font-weight: 700;
+  font-size: 0.95rem;
   line-height: 1.2;
 }
 .schedule-id {
