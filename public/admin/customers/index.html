@@ -180,6 +180,29 @@
         </div>
       </header>
 
+    <!-- 統計 -->
+    <section class="stats-grid" aria-label="顧客統計">
+      <div class="stat-card">
+        <div class="stat-label">店舗</div>
+        <div class="stat-value" id="stat-stores-total">-</div>
+        <div class="stat-sub" id="stat-stores-active">稼働中: -</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">法人</div>
+        <div class="stat-value" id="stat-clients-total">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ブランド</div>
+        <div class="stat-value" id="stat-brands-total">-</div>
+        <div class="stat-sub" id="stat-stores-no-brand">未ブランド紐付け: -</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">連絡先未登録</div>
+        <div class="stat-value" id="stat-missing-contact">-</div>
+        <div class="stat-sub">電話 or メールが空</div>
+      </div>
+    </section>
+
     <!-- 検索・フィルター -->
     <div class="search-section">
       <div class="search-box">
@@ -236,6 +259,7 @@
             <th>ステータス</th>
             <th>住所</th>
             <th>電話番号</th>
+            <th>操作</th>
           </tr>
         </thead>
         <tbody id="stores-tbody">
@@ -992,6 +1016,45 @@
     .page-btn:hover:not(.active) {
       background: #f3f4f6;
     }
+
+    /* 統計カード */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 12px 0 16px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #111827;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+    .stat-sub {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
     /* ダイアログ（HTML5 dialog要素） */
     .store-dialog {
       border: none;
@@ -1563,11 +1626,36 @@
       
       // フィルター選択肢を生成
       populateFilters();
+      updateStats();
       filterAndRender();
     } catch (error) {
       console.error('Failed to load data:', error);
       tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">読み込みに失敗しました</td></tr>';
     }
+  }
+
+  function updateStats() {
+    const storesTotalEl = document.getElementById('stat-stores-total');
+    const storesActiveEl = document.getElementById('stat-stores-active');
+    const clientsTotalEl = document.getElementById('stat-clients-total');
+    const brandsTotalEl = document.getElementById('stat-brands-total');
+    const storesNoBrandEl = document.getElementById('stat-stores-no-brand');
+    const missingContactEl = document.getElementById('stat-missing-contact');
+
+    const stores = Array.isArray(allStores) ? allStores : [];
+    const clients = Array.isArray(allClients) ? allClients : [];
+    const brands = Array.isArray(allBrands) ? allBrands : [];
+
+    const storesActive = stores.filter(s => s.status === 'active' || s.status === '稼働中').length;
+    const storesNoBrand = stores.filter(s => !s.brand_id).length;
+    const missingContact = stores.filter(s => !(s.phone || '').trim() || !(s.email || '').trim()).length;
+
+    if (storesTotalEl) storesTotalEl.textContent = String(stores.length);
+    if (storesActiveEl) storesActiveEl.textContent = `稼働中: ${storesActive}`;
+    if (clientsTotalEl) clientsTotalEl.textContent = String(clients.length);
+    if (brandsTotalEl) brandsTotalEl.textContent = String(brands.length);
+    if (storesNoBrandEl) storesNoBrandEl.textContent = `未ブランド紐付け: ${storesNoBrand}`;
+    if (missingContactEl) missingContactEl.textContent = String(missingContact);
   }
   
   // フィルター選択肢を生成
@@ -1820,7 +1908,7 @@
     const pageStores = filteredStores.slice(start, start + perPage);
     
     if (pageStores.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">該当する店舗がありません</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">該当する店舗がありません</td></tr>';
       return;
     }
     
@@ -1927,6 +2015,16 @@
           <small>${store.address1 || ''}</small>
         </td>
         <td>${store.phone || '-'}</td>
+        <td>
+          <div class="action-btns">
+            <button type="button" class="action-btn edit" title="編集" onclick="editStore('${store.id}')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="action-btn delete" title="削除" onclick="deleteStore('${store.id}','${escapeHtml(store.name || '')}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </td>
       </tr>
     `}).join('');
   }
@@ -2350,8 +2448,10 @@
     if (!deleteTargetId) return;
     
     try {
+      const authHeaders = (await getAuthHeaders()) || { 'Content-Type': 'application/json' };
       const response = await fetch(`${API_BASE}/stores/${deleteTargetId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authHeaders
       });
       
       if (response.ok || response.status === 204) {
@@ -2361,6 +2461,7 @@
         } else {
           allStores = allStores.filter(s => s.id !== deleteTargetId && String(s.id) !== String(deleteTargetId));
         }
+        updateStats();
         filterAndRender();
         deleteModal.classList.remove('active');
         deleteTargetId = null;
