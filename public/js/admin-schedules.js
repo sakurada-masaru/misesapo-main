@@ -688,7 +688,12 @@ function renderTable() {
               const name = item.name || item.title || '';
               return escapeHtml(name);
             }).filter(name => name);
-            return itemNames.length > 0 ? itemNames.join(', ') : '<span style="color: #9ca3af;">-</span>';
+            if (itemNames.length === 0) return '<span style="color: #9ca3af;">-</span>';
+            return `
+              <div class="cleaning-tags">
+                ${itemNames.map(n => `<span class="cleaning-tag">${n}</span>`).join('')}
+              </div>
+            `;
           })()}
         </td>
         <td>

@@ -56,7 +56,7 @@
   margin: 8px 12px;
 }
 
-.sidebar.collapsed 
+/* NOTE: 旧スタイルの名残で空セレクタが混入していたため削除 */
 
 /* メインコンテンツ */
 .main-content {
@@ -114,7 +114,8 @@
 }
 
 .content-wrapper {
-  /* コンテンツラッパー */
+  width: 100%;
+  min-width: 0;
 }
 
 /* フィルター */
@@ -707,6 +708,25 @@
 }
 .cleaning-item-tag-remove:hover {
   color: #ef4444;
+}
+
+/* 一覧: 清掃内容をタグ表示 */
+.cleaning-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cleaning-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  white-space: nowrap;
 }
 
 .form-status {
