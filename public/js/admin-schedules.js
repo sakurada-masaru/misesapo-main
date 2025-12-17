@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadServices(), 
     loadSchedules()
   ]);
+  // 初回描画は全データ読み込み完了後に実行（brands未ロードでブランド名が欠けるのを防ぐ）
+  filterAndRender();
   setupEventListeners();
   setupStoreSearch();
   setupCleaningItemsSearch();
@@ -67,7 +69,6 @@ async function loadSchedules() {
     // APIレスポンスが配列かオブジェクトかをチェック
     allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
     updateDraftAlert();
-    filterAndRender();
   } catch (error) {
     console.error('Failed to load schedules:', error);
     if (tbody) {
