@@ -233,8 +233,22 @@ function setupStoreSearch() {
     const clientId = store.client_id || (brand ? brand.client_id : null);
     const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId)) || null;
     const clientName = client ? (client.name || client.company_name || '') : '';
-    const address = (store.address || `${store.pref || ''}${store.city || ''}${store.street || ''}` || '').trim();
+    const address = (
+      store.address ||
+      `${store.postcode ? '〒' + store.postcode + ' ' : ''}${store.pref || ''}${store.city || ''}${store.address1 || ''}${store.address2 || ''}`
+    ).trim();
     return { store, storeName, brandName, clientName, address };
+  }
+
+  function setContactFields({ address = '', phone = '', email = '', contactPerson = '' } = {}) {
+    const addressEl = document.getElementById('schedule-address');
+    const phoneEl = document.getElementById('schedule-phone');
+    const emailEl = document.getElementById('schedule-email');
+    const contactEl = document.getElementById('schedule-contact-person');
+    if (addressEl) addressEl.value = address || '';
+    if (phoneEl) phoneEl.value = phone || '';
+    if (emailEl) emailEl.value = email || '';
+    if (contactEl) contactEl.value = contactPerson || '';
   }
   
   function getClientName(clientId) {
@@ -326,6 +340,12 @@ function setupStoreSearch() {
           brandName: summary.brandName || '-',
           address: summary.address || '-'
         });
+        setContactFields({
+          address: summary.address || '',
+          phone: summary.store?.phone || '',
+          email: summary.store?.email || '',
+          contactPerson: summary.store?.contact_person || ''
+        });
       });
     });
   }
@@ -345,6 +365,7 @@ function setupStoreSearch() {
 
   // 初期状態
   setSummary();
+  setContactFields();
 }
 
 // 清掃内容検索機能のセットアップ（店舗検索と同様のUI）
@@ -722,6 +743,28 @@ function setupEventListeners() {
   if (addScheduleBtn) {
     addScheduleBtn.addEventListener('click', () => {
       openAddDialog();
+    });
+  }
+
+  // 顧客データ再読み込み（モーダル内）
+  const reloadCustomersBtn = document.getElementById('reload-customers-data-btn');
+  if (reloadCustomersBtn) {
+    reloadCustomersBtn.addEventListener('click', async () => {
+      try {
+        reloadCustomersBtn.disabled = true;
+        reloadCustomersBtn.textContent = '再読み込み中...';
+        await Promise.all([loadClients(), loadBrands(), loadStores()]);
+        // フィルタの店舗一覧も更新
+        populateStoreSelects();
+        // 画面の表示も更新（一覧/カレンダー）
+        filterAndRender();
+      } catch (e) {
+        console.error('Failed to reload customer data:', e);
+        alert('顧客データの再読み込みに失敗しました');
+      } finally {
+        reloadCustomersBtn.disabled = false;
+        reloadCustomersBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 顧客データ再読み込み';
+      }
     });
   }
 
