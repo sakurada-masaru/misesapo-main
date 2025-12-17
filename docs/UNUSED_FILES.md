@@ -12,7 +12,7 @@
 1. **`src/pages/sales/schedule-backup.html`** - スケジュールページのバックアップ
 2. **`src/pages/sales/schedule-backup2.html`** - スケジュールページのバックアップ2
 
-**理由**: 現在は `sales/schedule.html` が使用されており、バックアップファイルは不要
+**理由**: 現在は営業の主要導線が `sales/schedules/index.html`（一覧）と `sales/schedules/new.html`（作成）に移行しており、バックアップファイルは不要
 
 ---
 
@@ -175,7 +175,7 @@
 
 ### 営業向けページ
 - `sales/dashboard.html` - 営業ダッシュボード
-- `sales/schedule.html` - 営業スケジュール
+- `sales/schedules/index.html` - スケジュール管理（一覧・カレンダー）
 - `sales/schedules/new.html` - スケジュール作成
 - `sales/clients.html` - 顧客一覧
 - `sales/clients/new.html` - 新規顧客登録
@@ -204,7 +204,7 @@
 - `admin/services/[id]/edit.html` - サービス編集
 - `admin/services/review.html` - サービス変更レビュー
 - `admin/users/index.html` - ユーザー管理
-- `admin/users/customers.html` - 顧客一覧（ユーザー管理内）
+ - `admin/users/customers.html` - 顧客一覧（旧・埋め込みJSONの静的ページ。現在は `admin/customers/index.html` が正）
 - `admin/users/staff.html` - 清掃員一覧
 - `admin/users/sales.html` - 営業一覧
 - `admin/partners.html` - パートナー企業一覧
