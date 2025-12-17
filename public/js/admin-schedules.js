@@ -217,6 +217,19 @@ function setupStoreSearch() {
   
   if (!searchInput || !resultsDiv || !hiddenInput) return;
 
+  function updatePlaceholder() {
+    const category = categoryFilter ? categoryFilter.value : '';
+    if (category === 'store') {
+      searchInput.placeholder = '店舗名で検索...';
+    } else if (category === 'brand') {
+      searchInput.placeholder = 'ブランド名で検索...';
+    } else if (category === 'client') {
+      searchInput.placeholder = '法人名で検索...';
+    } else {
+      searchInput.placeholder = '店舗名、ブランド名、法人名で検索...';
+    }
+  }
+
   function setSummary({ storeName = '-', clientName = '-', brandName = '-', address = '-' } = {}) {
     if (summaryStoreEl) summaryStoreEl.textContent = storeName || '-';
     if (summaryClientEl) summaryClientEl.textContent = clientName || '-';
@@ -301,25 +314,25 @@ function setupStoreSearch() {
       const brandName = getBrandName(brandId);
       const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
       const clientName = getClientName(clientId);
-      
-      let displayText = '';
-      let categoryLabel = '';
-      if (category === 'store' || (!category && storeName.toLowerCase().includes(query))) {
-        displayText = storeName;
-        categoryLabel = '<span class="store-search-item-category">店舗</span>';
-      } else if (category === 'brand' || (!category && brandName.toLowerCase().includes(query))) {
-        displayText = brandName;
-        categoryLabel = '<span class="store-search-item-category">ブランド</span>';
-      } else if (category === 'client' || (!category && clientName.toLowerCase().includes(query))) {
-        displayText = clientName;
-        categoryLabel = '<span class="store-search-item-category">法人</span>';
-      } else {
-        displayText = storeName;
-        if (brandName) displayText += ` / ${brandName}`;
-        if (clientName) displayText += ` (${clientName})`;
+
+      // 表示は常に「店舗名」を主にして、補足で法人/ブランドを出す（混同防止）
+      const categoryLabel = category === 'client'
+        ? '<span class="store-search-item-category">法人</span>'
+        : category === 'brand'
+          ? '<span class="store-search-item-category">ブランド</span>'
+          : category === 'store'
+            ? '<span class="store-search-item-category">店舗</span>'
+            : '<span class="store-search-item-category">検索</span>';
+
+      let sub = '';
+      if (brandName || clientName) {
+        const parts = [];
+        if (brandName) parts.push(brandName);
+        if (clientName) parts.push(clientName);
+        sub = ` <small style="color:#6b7280;">(${escapeHtml(parts.join(' / '))})</small>`;
       }
-      
-      return `<div class="store-search-item" data-id="${store.id}" data-name="${escapeHtml(storeName)}">${categoryLabel}${escapeHtml(displayText)}</div>`;
+
+      return `<div class="store-search-item" data-id="${store.id}" data-name="${escapeHtml(storeName)}">${categoryLabel}${escapeHtml(storeName)}${sub}</div>`;
     }).join('');
     
     resultsDiv.style.display = 'block';
@@ -353,7 +366,11 @@ function setupStoreSearch() {
   searchInput.addEventListener('input', updateStoreDropdown);
   searchInput.addEventListener('focus', updateStoreDropdown);
   if (categoryFilter) {
-    categoryFilter.addEventListener('change', updateStoreDropdown);
+    categoryFilter.addEventListener('change', () => {
+      updatePlaceholder();
+      // 入力中の文言とカテゴリがズレると混同しやすいので、カテゴリ変更時は候補を再計算
+      updateStoreDropdown();
+    });
   }
   
   // 外側をクリックしたら閉じる
@@ -364,6 +381,7 @@ function setupStoreSearch() {
   });
 
   // 初期状態
+  updatePlaceholder();
   setSummary();
   setContactFields();
 }
