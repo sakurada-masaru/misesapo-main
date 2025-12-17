@@ -164,8 +164,10 @@
 ## データファイル
 
 ### 顧客情報
-- `src/data/clients.csv` - 顧客情報CSV（元データ）
-- `src/data/clients.json` - 顧客情報JSON（ビルド時に自動生成）
+- 顧客情報は **API（DynamoDB）を正** とする
+  - `GET /clients` - 法人（クライアント）一覧
+  - `GET /brands` - ブランド一覧
+  - `GET /stores` - 店舗一覧
 
 ### その他のデータ
 - `src/data/service_items.json` - サービス一覧

@@ -922,7 +922,7 @@
 - ダッシュボードへのリンク
 
 **データ構造**:
-- `src/data/clients.json` - 顧客データ
+- 顧客データは **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 - `src/data/sales_schedule.json` - スケジュールデータ
 - `src/data/new_inquiries.json` - 新規問い合わせデータ
 - `src/data/estimates.json` - 見積もりデータ
@@ -967,7 +967,7 @@
 - コンシェルジュへの戻りリンク
 
 **データ構造**:
-- `src/data/clients.json` - 顧客データ（動的計算）
+- 顧客データは **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 - `src/data/estimates.json` - 見積もりデータ（動的計算）
 - `src/data/sales_schedule.json` - スケジュールデータ（動的計算）
 - `src/data/new_inquiries.json` - 問い合わせデータ（動的計算）
@@ -1008,7 +1008,7 @@
 - 顧客カード（会社名、店舗名、担当者、ステータス、次回訪問日、アクションボタン）
 
 **データ構造**:
-- `src/data/clients.json` - 顧客データ（動的読み込み、JavaScriptでレンダリング）
+- 顧客データは **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 
 **操作フロー**:
 1. ページ読み込み → 顧客データを読み込み、カードを動的生成
@@ -1048,7 +1048,7 @@
 - 編集ボタン
 
 **データ構造**:
-- `src/data/clients.json` - 顧客データ（動的生成）
+- 顧客データは **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 
 **操作フロー**:
 1. ページ読み込み → 顧客IDに基づいてデータを表示
@@ -1116,7 +1116,7 @@
 - キャンセルボタン
 
 **データ構造**:
-- `src/data/clients.json` - 顧客データ（動的生成、既存データをフォームに自動入力）
+- 顧客データは **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 
 **操作フロー**:
 1. ページ読み込み → 顧客IDに基づいて既存データをフォームに自動入力
@@ -1197,7 +1197,7 @@
 - 見積もり送付ボタン
 
 **データ構造**:
-- `src/data/clients.json` - 顧客データ（動的読み込み）
+- 顧客データは **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 - `src/data/service_items.json` - サービスデータ（動的読み込み）
 
 **操作フロー**:
@@ -1312,7 +1312,7 @@
 
 **データ構造**:
 - `src/data/sales_schedule.json` - スケジュールデータ（動的読み込み）
-- `src/data/clients.json` - 顧客データ（顧客選択用）
+- 顧客データは **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 
 **操作フロー**:
 1. ページ読み込み → スケジュールデータを読み込み、月次ビューを表示
@@ -1429,7 +1429,7 @@
   - 日次スケジュールウィジェット
 
 **データ構造**:
-- `src/data/clients.json` - 顧客データ（動的読み込み、JavaScriptでレンダリング）
+- 顧客データは **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 
 **操作フロー**:
 1. ページ読み込み → 顧客データを読み込み、テーブルを動的生成
@@ -1493,7 +1493,7 @@
 - 顧客テーブル（会社名、店舗名、担当者、ステータス、登録日）
 
 **データ構造**:
-- `src/data/clients.json` - 顧客データ（動的読み込み、JavaScriptでレンダリング）
+- 顧客データは **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 
 **操作フロー**:
 1. ページ読み込み → 顧客データを読み込み、テーブルを動的生成
@@ -1669,8 +1669,8 @@
 
 ### 主要データファイル
 
-1. **顧客データ**: `src/data/clients.json`
-   - CSVから自動生成（`src/data/clients.csv`）
+1. **顧客データ**: **API（DynamoDB）**
+   - `GET /clients` `GET /brands` `GET /stores`
    - 構造: `{ clients: [...], total: number }`
    - 各顧客: `id`, `company_name`, `store_name`, `contact_person`, `email`, `sales_rep`, `status`, `next_date`, `cleaning_frequency`, `url`, `notes`
 

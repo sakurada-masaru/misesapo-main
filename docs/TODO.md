@@ -80,7 +80,7 @@
 ## 実装メモ
 
 ### データ構造
-- 顧客情報は `src/data/clients.csv` → `src/data/clients.json` に自動変換
+- 顧客情報は **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 - 動的ページ生成は `scripts/build.py` の `_build_client_detail_pages` 関数を使用
 
 ### デザイン方針

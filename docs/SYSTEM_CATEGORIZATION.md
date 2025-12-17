@@ -1702,7 +1702,7 @@
 ### 静的JSONファイル
 
 - `src/data/service_items.json` - サービス一覧
-- `src/data/clients.json` - 顧客情報（CSVから変換）
+- 顧客情報は静的JSONではなく **API（DynamoDB）を正** とする（`/clients` `/brands` `/stores`）
 
 ---
 
