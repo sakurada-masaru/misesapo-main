@@ -122,11 +122,6 @@
   color: var(--primary);
 }
 
-.content-wrapper {
-  width: 100%;
-  min-width: 0;
-}
-
 /* フィルター */
 .filter-section {
   background: #fff;
@@ -598,7 +593,7 @@
   border: none;
   border-radius: 16px;
   padding: 0;
-  max-width: 560px;
+  max-width: 680px;
   width: 90vw;
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
 }

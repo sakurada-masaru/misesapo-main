@@ -192,16 +192,16 @@ function populateSalesSelects() {
     salesSelectEl.innerHTML = '<option value="">未設定</option>' + options;
   }
 
-  // 一覧フィルター: 営業で絞り込み（value はIDのまま、表示は名前）
+  // 一覧フィルター: 営業IDで絞り込み（表示ラベルはIDのみ）
   const salesFilterEl = document.getElementById('sales-filter');
   if (salesFilterEl) {
-    const nameOptions = sales
+    const idOptions = sales
       .map(w => {
         const label = w.name ? `${w.name}${w.id ? ` (${w.id})` : ''}` : (w.id || '');
         return `<option value="${w.id}">${escapeHtml(label)}</option>`;
       })
       .join('');
-    salesFilterEl.innerHTML = '<option value="">全営業</option>' + nameOptions;
+    salesFilterEl.innerHTML = '<option value="">全営業</option>' + idOptions;
   }
 }
 
@@ -232,8 +232,59 @@ function setupStoreSearch() {
   const resultsDiv = document.getElementById('schedule-store-results');
   const hiddenInput = document.getElementById('schedule-store');
   const categoryFilter = document.getElementById('store-category-filter');
+  const summaryStoreEl = document.getElementById('schedule-store-summary-store');
+  const summaryClientEl = document.getElementById('schedule-store-summary-client');
+  const summaryBrandEl = document.getElementById('schedule-store-summary-brand');
+  const summaryAddressEl = document.getElementById('schedule-store-summary-address');
   
   if (!searchInput || !resultsDiv || !hiddenInput) return;
+
+  function updatePlaceholder() {
+    const category = categoryFilter ? categoryFilter.value : '';
+    if (category === 'store') {
+      searchInput.placeholder = '店舗名で検索...';
+    } else if (category === 'brand') {
+      searchInput.placeholder = 'ブランド名で検索...';
+    } else if (category === 'client') {
+      searchInput.placeholder = '法人名で検索...';
+    } else {
+      searchInput.placeholder = '店舗名、ブランド名、法人名で検索...';
+    }
+  }
+
+  function setSummary({ storeName = '-', clientName = '-', brandName = '-', address = '-' } = {}) {
+    if (summaryStoreEl) summaryStoreEl.textContent = storeName || '-';
+    if (summaryClientEl) summaryClientEl.textContent = clientName || '-';
+    if (summaryBrandEl) summaryBrandEl.textContent = brandName || '-';
+    if (summaryAddressEl) summaryAddressEl.textContent = address || '-';
+  }
+
+  function getSelectedStoreSummary(storeId) {
+    const store = DataUtils.findStore(allStores, storeId) || allStores.find(s => s.id === storeId) || {};
+    const storeName = store.name || '';
+    const brandId = store.brand_id;
+    const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId)) || null;
+    const brandName = brand ? (brand.name || '') : '';
+    const clientId = store.client_id || (brand ? brand.client_id : null);
+    const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId)) || null;
+    const clientName = client ? (client.name || client.company_name || '') : '';
+    const address = (
+      store.address ||
+      `${store.postcode ? '〒' + store.postcode + ' ' : ''}${store.pref || ''}${store.city || ''}${store.address1 || ''}${store.address2 || ''}`
+    ).trim();
+    return { store, storeName, brandName, clientName, address };
+  }
+
+  function setContactFields({ address = '', phone = '', email = '', contactPerson = '' } = {}) {
+    const addressEl = document.getElementById('schedule-address');
+    const phoneEl = document.getElementById('schedule-phone');
+    const emailEl = document.getElementById('schedule-email');
+    const contactEl = document.getElementById('schedule-contact-person');
+    if (addressEl) addressEl.value = address || '';
+    if (phoneEl) phoneEl.value = phone || '';
+    if (emailEl) emailEl.value = email || '';
+    if (contactEl) contactEl.value = contactPerson || '';
+  }
   
   function getClientName(clientId) {
     if (!clientId) return '';
@@ -285,25 +336,25 @@ function setupStoreSearch() {
       const brandName = getBrandName(brandId);
       const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
       const clientName = getClientName(clientId);
-      
-      let displayText = '';
-      let categoryLabel = '';
-      if (category === 'store' || (!category && storeName.toLowerCase().includes(query))) {
-        displayText = storeName;
-        categoryLabel = '<span class="store-search-item-category">店舗</span>';
-      } else if (category === 'brand' || (!category && brandName.toLowerCase().includes(query))) {
-        displayText = brandName;
-        categoryLabel = '<span class="store-search-item-category">ブランド</span>';
-      } else if (category === 'client' || (!category && clientName.toLowerCase().includes(query))) {
-        displayText = clientName;
-        categoryLabel = '<span class="store-search-item-category">法人</span>';
-      } else {
-        displayText = storeName;
-        if (brandName) displayText += ` / ${brandName}`;
-        if (clientName) displayText += ` (${clientName})`;
+
+      // 表示は常に「店舗名」を主にして、補足で法人/ブランドを出す（混同防止）
+      const categoryLabel = category === 'client'
+        ? '<span class="store-search-item-category">法人</span>'
+        : category === 'brand'
+          ? '<span class="store-search-item-category">ブランド</span>'
+          : category === 'store'
+            ? '<span class="store-search-item-category">店舗</span>'
+            : '<span class="store-search-item-category">検索</span>';
+
+      let sub = '';
+      if (brandName || clientName) {
+        const parts = [];
+        if (brandName) parts.push(brandName);
+        if (clientName) parts.push(clientName);
+        sub = ` <small style="color:#6b7280;">(${escapeHtml(parts.join(' / '))})</small>`;
       }
-      
-      return `<div class="store-search-item" data-id="${store.id}" data-name="${escapeHtml(storeName)}">${categoryLabel}${escapeHtml(displayText)}</div>`;
+
+      return `<div class="store-search-item" data-id="${store.id}" data-name="${escapeHtml(storeName)}">${categoryLabel}${escapeHtml(storeName)}${sub}</div>`;
     }).join('');
     
     resultsDiv.style.display = 'block';
@@ -317,6 +368,19 @@ function setupStoreSearch() {
         hiddenInput.value = id;
         searchInput.value = name;
         resultsDiv.style.display = 'none';
+        const summary = getSelectedStoreSummary(id);
+        setSummary({
+          storeName: summary.storeName || name || '-',
+          clientName: summary.clientName || '-',
+          brandName: summary.brandName || '-',
+          address: summary.address || '-'
+        });
+        setContactFields({
+          address: summary.address || '',
+          phone: summary.store?.phone || '',
+          email: summary.store?.email || '',
+          contactPerson: summary.store?.contact_person || ''
+        });
       });
     });
   }
@@ -324,7 +388,11 @@ function setupStoreSearch() {
   searchInput.addEventListener('input', updateStoreDropdown);
   searchInput.addEventListener('focus', updateStoreDropdown);
   if (categoryFilter) {
-    categoryFilter.addEventListener('change', updateStoreDropdown);
+    categoryFilter.addEventListener('change', () => {
+      updatePlaceholder();
+      // 入力中の文言とカテゴリがズレると混同しやすいので、カテゴリ変更時は候補を再計算
+      updateStoreDropdown();
+    });
   }
   
   // 外側をクリックしたら閉じる
@@ -333,6 +401,11 @@ function setupStoreSearch() {
       resultsDiv.style.display = 'none';
     }
   });
+
+  // 初期状態
+  updatePlaceholder();
+  setSummary();
+  setContactFields();
 }
 
 // 清掃内容検索機能のセットアップ（店舗検索と同様のUI）
@@ -441,24 +514,41 @@ function setupCleaningItemsSearch() {
 // フィルタリング
 function filterAndRender() {
   const storeFilter = document.getElementById('store-filter');
+  const salesFilter = document.getElementById('sales-filter');
   const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
   
   if (!storeFilter || !workerFilter || !statusFilter) return;
   
   const storeId = storeFilter.value;
+  const salesId = salesFilter ? salesFilter.value : '';
   const workerId = workerFilter.value;
   const status = statusFilter.value;
 
   filteredSchedules = allSchedules.filter(s => {
     // store_id または client_id に対応
     const scheduleStoreId = s.store_id || s.client_id;
-    const matchStore = !storeId || scheduleStoreId === storeId;
+    const matchStore = !storeId || (
+      window.DataUtils?.IdUtils?.isSame
+        ? window.DataUtils.IdUtils.isSame(scheduleStoreId, storeId)
+        : (String(scheduleStoreId) === String(storeId))
+    );
+    // sales_id
+    const scheduleSalesId = s.sales_id || (window.DataUtils?.normalizeSchedule ? DataUtils.normalizeSchedule(s)?.sales_id : null) || '';
+    const matchSales = !salesId || (
+      window.DataUtils?.IdUtils?.isSame
+        ? window.DataUtils.IdUtils.isSame(scheduleSalesId, salesId)
+        : (String(scheduleSalesId) === String(salesId))
+    );
     // worker_id または assigned_to に対応
     const scheduleWorkerId = s.worker_id || s.assigned_to;
-    const matchWorker = !workerId || scheduleWorkerId === workerId;
+    const matchWorker = !workerId || (
+      window.DataUtils?.IdUtils?.isSame
+        ? window.DataUtils.IdUtils.isSame(scheduleWorkerId, workerId)
+        : (String(scheduleWorkerId) === String(workerId))
+    );
     const matchStatus = !status || s.status === status;
-    return matchStore && matchWorker && matchStatus;
+    return matchStore && matchSales && matchWorker && matchStatus;
   });
 
   // 予定日順（時系列順）にソート
@@ -489,11 +579,15 @@ function filterAndRender() {
 function renderTable() {
   if (!tbody) return;
   
+  const cardsEl = document.getElementById('schedule-cards');
   const start = (currentPage - 1) * perPage;
   const pageSchedules = filteredSchedules.slice(start, start + perPage);
 
   if (pageSchedules.length === 0) {
     tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">該当するスケジュールがありません</td></tr>';
+    if (cardsEl) {
+      cardsEl.innerHTML = '<div class="schedule-card"><div class="schedule-card-title">該当するスケジュールがありません</div></div>';
+    }
     return;
   }
 
@@ -508,6 +602,96 @@ function renderTable() {
     if (!brandId) return '';
     const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId));
     return brand ? brand.name : '';
+  }
+
+  function inferBrandFromText(text) {
+    const t = (text || '').trim();
+    if (!t) return null;
+    // 店舗名テキストに含まれるブランド名を最長一致で推定（旧データのフォールバック）
+    let best = null;
+    for (const b of allBrands) {
+      const name = (b?.name || '').trim();
+      if (!name) continue;
+      if (t.includes(name)) {
+        if (!best || name.length > (best.name || '').length) best = b;
+      }
+    }
+    return best;
+  }
+
+  // カード描画（狭い画面用）
+  if (cardsEl) {
+    cardsEl.innerHTML = pageSchedules.map(schedule => {
+      const normalized = DataUtils.normalizeSchedule(schedule);
+      const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
+      const store = DataUtils.findStore(allStores, storeId) || {};
+      const workerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to;
+      const worker = allWorkers.find(w => w.id === workerId);
+      const salesId = schedule.sales_id || normalized.sales_id;
+      const sales = salesId ? allWorkers.find(w => w.id === salesId) : null;
+      const isDraft = schedule.status === 'draft';
+      const displayStoreName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
+
+      const storeFound = !!store?.id;
+      const brandId = storeFound ? store.brand_id : null;
+      let brandName = storeFound ? getBrandName(brandId) : (schedule.brand_name || '');
+      let clientId = storeFound ? (store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null)) : null;
+      let clientName = storeFound ? getClientName(clientId) : (schedule.client_name || '');
+      if (!storeFound && !brandName) {
+        const inferredBrand = inferBrandFromText(displayStoreName || schedule.store_name || '');
+        if (inferredBrand) {
+          brandName = inferredBrand.name || '';
+          clientId = inferredBrand.client_id || clientId;
+          if (!clientName && clientId) clientName = getClientName(clientId) || clientName;
+        }
+      }
+
+      const cleaningItems = schedule.cleaning_items || normalized.cleaning_items || [];
+      const itemNames = Array.isArray(cleaningItems)
+        ? cleaningItems.map(item => escapeHtml(item.name || item.title || '')).filter(Boolean)
+        : [];
+      const cleaningHtml = itemNames.length
+        ? `<div class="cleaning-tags">${itemNames.map(n => `<span class="cleaning-tag">${n}</span>`).join('')}</div>`
+        : '<span style="color:#9ca3af;">-</span>';
+
+      return `
+        <div class="schedule-card ${isDraft ? 'draft-row' : ''}" data-id="${escapeHtml(schedule.id || '')}">
+          <div class="schedule-card-head">
+            <div>
+              <div class="schedule-card-title">${escapeHtml(displayStoreName || '-')}</div>
+              <div class="schedule-card-sub">
+                <div class="schedule-card-subline">${escapeHtml(clientName || '-')}</div>
+                <div class="schedule-card-subline">${escapeHtml(brandName || '-')}</div>
+              </div>
+              <div class="schedule-card-id">${escapeHtml(schedule.id || '-')}</div>
+            </div>
+            <div>
+              <span class="status-badge status-${normalized.status}">${getStatusLabel(normalized.status)}</span>
+            </div>
+          </div>
+          <div class="schedule-card-meta">
+            <div class="k">日時</div><div>${escapeHtml(formatDate(normalized.date || schedule.date || schedule.scheduled_date) || '-')}${normalized.time ? ` ${escapeHtml(normalized.time)}` : ''}</div>
+            <div class="k">営業</div><div>${sales ? `<span class="worker-avatar" title="${escapeHtml(sales.id || '')}${sales.name ? ' / ' + escapeHtml(sales.name) : ''}">${(sales.name || sales.id || '?')[0]}</span>` : '<span class="unassigned">未設定</span>'}</div>
+            <div class="k">清掃員</div><div>${worker ? escapeHtml(worker.name || '') : '<span class="unassigned">未割当</span>'}</div>
+            <div class="k">清掃内容</div><div>${cleaningHtml}</div>
+          </div>
+          <div class="schedule-card-actions">
+            ${isDraft ? `
+              <button class="action-btn assign" title="アサイン・確定（新規案件）" onclick="editSchedule('${schedule.id}')" style="background:#ffc107;color:#333">
+                <i class="fas fa-user-check"></i>
+              </button>
+            ` : `
+              <button class="action-btn edit" title="編集" onclick="editSchedule('${schedule.id}')">
+                <i class="fas fa-edit"></i>
+              </button>
+            `}
+            <button class="action-btn delete" title="削除" onclick="confirmDelete('${schedule.id}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   tbody.innerHTML = pageSchedules.map(schedule => {
@@ -527,10 +711,25 @@ function renderTable() {
     const displayStoreName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
     
     // 法人名・ブランド名を取得
-    const brandId = store.brand_id;
-    const brandName = getBrandName(brandId);
-    const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
-    const clientName = getClientName(clientId);
+    // - storeId から店舗が引ける場合: stores/brands/clients から導出
+    // - 引けない場合（旧データ等）: schedule側に保存されている名称でフォールバック
+    const storeFound = !!store?.id;
+    const brandId = storeFound ? store.brand_id : null;
+    let brandName = storeFound ? getBrandName(brandId) : (schedule.brand_name || '');
+    let clientId = storeFound ? (store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null)) : null;
+    let clientName = storeFound ? getClientName(clientId) : (schedule.client_name || '');
+
+    // 旧データ救済: 店舗が引けず brand_name も無い場合、店舗名テキストからブランド推定
+    if (!storeFound && !brandName) {
+      const inferredBrand = inferBrandFromText(displayStoreName || schedule.store_name || '');
+      if (inferredBrand) {
+        brandName = inferredBrand.name || '';
+        clientId = inferredBrand.client_id || clientId;
+        if (!clientName && clientId) {
+          clientName = getClientName(clientId) || clientName;
+        }
+      }
+    }
     
     return `
       <tr data-id="${schedule.id}" class="${isDraft ? 'draft-row' : ''}">
@@ -542,10 +741,10 @@ function renderTable() {
           <div style="font-size:0.85rem;color:#6b7280">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration ? ` (${normalized.duration}分)` : ''}</div>
         </td>
         <td>
-          <span class="client-name">${escapeHtml(clientName || '-')}</span>
-        </td>
-        <td>
-          <span class="brand-name">${escapeHtml(brandName || '-')}</span>
+          <div class="client-brand-cell">
+            <div class="client-line">${escapeHtml(clientName || '-')}</div>
+            <div class="brand-line">${escapeHtml(brandName || '-')}</div>
+          </div>
         </td>
         <td>
           <div class="store-info">
@@ -555,9 +754,8 @@ function renderTable() {
         </td>
         <td>
           ${sales ? `
-            <div class="worker-info">
-              <span class="worker-avatar">${(sales.name || '?')[0]}</span>
-              <span>${escapeHtml(sales.name || '')}</span>
+            <div class="worker-info" title="${escapeHtml(sales.id || '')}${sales.name ? ' / ' + escapeHtml(sales.name) : ''}">
+              <span class="worker-avatar">${(sales.name || sales.id || '?')[0]}</span>
             </div>
           ` : '<span class="unassigned">未設定</span>'}
         </td>
@@ -582,7 +780,12 @@ function renderTable() {
               const name = item.name || item.title || '';
               return escapeHtml(name);
             }).filter(name => name);
-            return itemNames.length > 0 ? itemNames.join(', ') : '<span style="color: #9ca3af;">-</span>';
+            if (itemNames.length === 0) return '<span style="color: #9ca3af;">-</span>';
+            return `
+              <div class="cleaning-tags">
+                ${itemNames.map(n => `<span class="cleaning-tag">${n}</span>`).join('')}
+              </div>
+            `;
           })()}
         </td>
         <td>
@@ -641,12 +844,16 @@ window.goToPage = function(page) {
 function setupEventListeners() {
   // フィルター
   const storeFilter = document.getElementById('store-filter');
+  const salesFilter = document.getElementById('sales-filter');
   const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
   const resetFilters = document.getElementById('reset-filters');
   
   if (storeFilter) {
     storeFilter.addEventListener('change', filterAndRender);
+  }
+  if (salesFilter) {
+    salesFilter.addEventListener('change', filterAndRender);
   }
   if (workerFilter) {
     workerFilter.addEventListener('change', filterAndRender);
@@ -657,6 +864,7 @@ function setupEventListeners() {
   if (resetFilters) {
     resetFilters.addEventListener('click', () => {
       if (storeFilter) storeFilter.value = '';
+      if (salesFilter) salesFilter.value = '';
       if (workerFilter) workerFilter.value = '';
       if (statusFilter) statusFilter.value = '';
       filterAndRender();
@@ -713,6 +921,28 @@ function setupEventListeners() {
     });
   }
 
+  // 顧客データ再読み込み（モーダル内）
+  const reloadCustomersBtn = document.getElementById('reload-customers-data-btn');
+  if (reloadCustomersBtn) {
+    reloadCustomersBtn.addEventListener('click', async () => {
+      try {
+        reloadCustomersBtn.disabled = true;
+        reloadCustomersBtn.textContent = '再読み込み中...';
+        await Promise.all([loadClients(), loadBrands(), loadStores()]);
+        // フィルタの店舗一覧も更新
+        populateStoreSelects();
+        // 画面の表示も更新（一覧/カレンダー）
+        filterAndRender();
+      } catch (e) {
+        console.error('Failed to reload customer data:', e);
+        alert('顧客データの再読み込みに失敗しました');
+      } finally {
+        reloadCustomersBtn.disabled = false;
+        reloadCustomersBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 顧客データ再読み込み';
+      }
+    });
+  }
+
   // フォーム送信
   if (scheduleForm) {
     scheduleForm.addEventListener('submit', async (e) => {
@@ -727,6 +957,17 @@ function setupEventListeners() {
         alert('店舗を選択してください');
         return;
       }
+
+      // 店舗/法人/ブランド/住所を補完（保存データを安定させる）
+      const store = DataUtils.findStore(allStores, storeId) || allStores.find(s => s.id === storeId) || {};
+      const brandId = store.brand_id;
+      const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId)) || null;
+      const clientId = store.client_id || (brand ? brand.client_id : null);
+      const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId)) || null;
+      const derivedStoreName = store.name || '';
+      const derivedBrandName = brand ? (brand.name || '') : '';
+      const derivedClientName = client ? (client.name || client.company_name || '') : '';
+      const derivedAddress = (store.address || `${store.pref || ''}${store.city || ''}${store.street || ''}` || '').trim();
       
       // 清掃内容を取得
       const cleaningItems = selectedCleaningItems.map(item => ({
@@ -741,6 +982,10 @@ function setupEventListeners() {
         duration_minutes: parseInt(document.getElementById('schedule-duration').value) || 60,
         sales_id: document.getElementById('schedule-sales').value || null,
         worker_id: document.getElementById('schedule-worker').value || null,
+        store_name: derivedStoreName,
+        brand_name: derivedBrandName,
+        client_name: derivedClientName,
+        address: derivedAddress,
         cleaning_items: cleaningItems,
         work_content: cleaningItems.length > 0 ? cleaningItems.map(item => item.name).join(', ') : '',
         status: document.getElementById('schedule-status').value,
@@ -862,6 +1107,15 @@ function openAddDialog(dateStr) {
   if (scheduleId) scheduleId.value = '';
   if (scheduleStore) scheduleStore.value = '';
   if (scheduleStoreSearch) scheduleStoreSearch.value = '';
+  // 店舗サマリーをリセット
+  const summaryStoreEl = document.getElementById('schedule-store-summary-store');
+  const summaryClientEl = document.getElementById('schedule-store-summary-client');
+  const summaryBrandEl = document.getElementById('schedule-store-summary-brand');
+  const summaryAddressEl = document.getElementById('schedule-store-summary-address');
+  if (summaryStoreEl) summaryStoreEl.textContent = '-';
+  if (summaryClientEl) summaryClientEl.textContent = '-';
+  if (summaryBrandEl) summaryBrandEl.textContent = '-';
+  if (summaryAddressEl) summaryAddressEl.textContent = '-';
   if (scheduleDate) scheduleDate.value = dateStr || new Date().toISOString().split('T')[0];
   
   // 清掃内容をリセット
@@ -924,6 +1178,30 @@ window.editSchedule = function(id) {
       scheduleStoreEl.value = storeId || '';
       scheduleStoreSearchEl.value = store.name || '';
     }
+  }
+  
+  // 店舗サマリーを更新
+  try {
+    const summaryStoreEl = document.getElementById('schedule-store-summary-store');
+    const summaryClientEl = document.getElementById('schedule-store-summary-client');
+    const summaryBrandEl = document.getElementById('schedule-store-summary-brand');
+    const summaryAddressEl = document.getElementById('schedule-store-summary-address');
+    const store = DataUtils.findStore(allStores, storeId) || allStores.find(s => s.id === storeId) || {};
+    const brandId = store.brand_id;
+    const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId)) || null;
+    const clientId = store.client_id || (brand ? brand.client_id : null);
+    const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId)) || null;
+    const storeName = store.name || '-';
+    const brandName = brand ? (brand.name || '-') : '-';
+    const clientName = client ? (client.name || client.company_name || '-') : '-';
+    const address = (store.address || `${store.pref || ''}${store.city || ''}${store.street || ''}` || '').trim() || '-';
+    if (summaryStoreEl) summaryStoreEl.textContent = storeName;
+    if (summaryClientEl) summaryClientEl.textContent = clientName;
+    if (summaryBrandEl) summaryBrandEl.textContent = brandName;
+    if (summaryAddressEl) summaryAddressEl.textContent = address;
+  } catch (e) {
+    // サマリー表示は補助なので失敗しても続行
+    console.warn('Failed to update store summary:', e);
   }
   
   if (scheduleDateEl) scheduleDateEl.value = date;
