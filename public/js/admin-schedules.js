@@ -1271,6 +1271,36 @@ function formatDate(dateStr) {
   return `${m}/${d}(${weekdays[date.getDay()]})`;
 }
 
+function truncateText(text, maxChars) {
+  const s = String(text || '');
+  if (!maxChars || maxChars <= 0) return s;
+  if (s.length <= maxChars) return s;
+  return s.slice(0, Math.max(0, maxChars - 1)) + '…';
+}
+
+// 参照データ（allBrands/allClients）を使う共通ヘルパー
+// ※ renderTable / setupStoreSearch 内のローカル関数とは別。カレンダー等からも参照できる位置に置く。
+function getBrandName(brandId) {
+  if (!brandId) return '';
+  const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId));
+  return brand ? (brand.name || '') : '';
+}
+
+function inferBrandFromText(text) {
+  const t = (text || '').trim();
+  if (!t) return null;
+  // 店舗名テキストに含まれるブランド名を最長一致で推定（旧データのフォールバック）
+  let best = null;
+  for (const b of allBrands) {
+    const name = (b?.name || '').trim();
+    if (!name) continue;
+    if (t.includes(name)) {
+      if (!best || name.length > (best.name || '').length) best = b;
+    }
+  }
+  return best;
+}
+
 function getStatusLabel(status) {
   const labels = {
     'draft': '未確定',
@@ -1345,9 +1375,19 @@ function renderCalendar() {
         const normalized = DataUtils.normalizeSchedule(schedule);
         event.className = `day-event status-${normalized.status}`;
         const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
-        const displayName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
-        event.textContent = displayName;
-        event.title = `${normalized.time || ''} ${displayName}`;
+        const store = DataUtils.findStore(allStores, storeId) || {};
+        const storeFound = !!store?.id;
+        const displayStoreName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
+        const brandId = storeFound ? store.brand_id : null;
+        let brandName = storeFound ? getBrandName(brandId) : (schedule.brand_name || '');
+        if (!storeFound && !brandName) {
+          const inferredBrand = inferBrandFromText(displayStoreName || schedule.store_name || '');
+          if (inferredBrand) brandName = inferredBrand.name || '';
+        }
+        const labelFull = brandName || displayStoreName || '-';
+        const labelShort = truncateText(labelFull, 12);
+        event.textContent = labelShort;
+        event.title = `${normalized.time || ''} ${labelFull}`;
         event.onclick = () => openEditDialog(schedule);
         eventsContainer.appendChild(event);
       });
