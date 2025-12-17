@@ -169,8 +169,17 @@ function populateStoreSelects() {
 }
 
 function populateSalesSelects() {
-  // 営業担当者（role が sales のユーザー）を抽出
-  let sales = allWorkers.filter(w => (w.role || '').toLowerCase() === 'sales');
+  // 営業担当者（営業部署/role/roles などから判定）を抽出
+  const isSalesPerson = (w) => {
+    if (!w) return false;
+    const role = (w.role || '').toLowerCase();
+    const roles = Array.isArray(w.roles) ? w.roles.map(r => String(r).toLowerCase()) : [];
+    const dept = String(w.department || w.dept || w.division || w.team || '').toLowerCase();
+    // いずれか一致で営業扱い
+    return role === 'sales' || roles.includes('sales') || dept.includes('営業') || dept.includes('sales');
+  };
+
+  let sales = allWorkers.filter(isSalesPerson);
   
   // 万が一 role 情報が無い / sales が一人もいない場合は、全件を使う
   if (sales.length === 0) {
