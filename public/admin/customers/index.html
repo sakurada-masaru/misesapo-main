@@ -1819,9 +1819,29 @@
         case 'created-asc':
           return (a.created_at || '').localeCompare(b.created_at || '');
         case 'id-asc':
-          return parseInt(a.id) - parseInt(b.id);
+          {
+            const toSortableIdNumber = (id) => {
+              const raw = (window.DataUtils?.IdUtils?.extractNumber)
+                ? window.DataUtils.IdUtils.extractNumber(id)
+                : (String(id || '').match(/\d+$/)?.[0] || String(id || ''));
+              const n = parseInt(raw, 10);
+              return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+            };
+            const diff = toSortableIdNumber(a.id) - toSortableIdNumber(b.id);
+            return diff !== 0 ? diff : String(a.id || '').localeCompare(String(b.id || ''), 'ja');
+          }
         case 'id-desc':
-          return parseInt(b.id) - parseInt(a.id);
+          {
+            const toSortableIdNumber = (id) => {
+              const raw = (window.DataUtils?.IdUtils?.extractNumber)
+                ? window.DataUtils.IdUtils.extractNumber(id)
+                : (String(id || '').match(/\d+$/)?.[0] || String(id || ''));
+              const n = parseInt(raw, 10);
+              return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+            };
+            const diff = toSortableIdNumber(b.id) - toSortableIdNumber(a.id);
+            return diff !== 0 ? diff : String(b.id || '').localeCompare(String(a.id || ''), 'ja');
+          }
         default:
           return 0;
       }
