@@ -728,10 +728,10 @@ function renderTable() {
           <div style="font-size:0.85rem;color:#6b7280">${normalized.time || schedule.time_slot || schedule.scheduled_time || '-'}${normalized.duration ? ` (${normalized.duration}分)` : ''}</div>
         </td>
         <td>
-          <span class="client-name">${escapeHtml(clientName || '-')}</span>
-        </td>
-        <td>
-          <span class="brand-name">${escapeHtml(brandName || '-')}</span>
+          <div class="client-brand-cell">
+            <div class="client-line">${escapeHtml(clientName || '-')}</div>
+            <div class="brand-line">${escapeHtml(brandName || '-')}</div>
+          </div>
         </td>
         <td>
           <div class="store-info">

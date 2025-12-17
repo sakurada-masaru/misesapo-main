@@ -378,6 +378,22 @@
   color: #111827;
   font-size: 0.9rem;
 }
+
+/* 一覧: 法人/ブランド名を2行で表示 */
+.client-brand-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.client-brand-cell .client-line {
+  font-weight: 600;
+  line-height: 1.2;
+}
+.client-brand-cell .brand-line {
+  color: #6b7280;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
 .schedule-id {
   font-family: 'Courier New', monospace;
   font-size: 0.85rem;
