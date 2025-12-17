@@ -568,13 +568,13 @@ function renderTable() {
     const displayStoreName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
     
     // 法人名・ブランド名を取得
-    // - schedule側に保存されている名称をまず優先（APIが返す/旧データ救済）
-    // - store_id から店舗が引ける場合は stores/brands/clients から導出
-    // - 引けない場合は店舗名テキストからブランド推定
+    // NOTE: DataUtils.normalizeSchedule() は client_name/brand_name を保持しないため、
+    // まず normalized._raw（元データ）→ schedule から拾う
     const storeFound = !!store?.id;
     const brandId = storeFound ? store.brand_id : null;
-    let brandName = escapeHtml(normalized.brand_name || schedule.brand_name || '') || (storeFound ? getBrandName(brandId) : '');
-    let clientName = escapeHtml(normalized.client_name || schedule.client_name || '') || '';
+    const raw = normalized?._raw || schedule || {};
+    let brandName = escapeHtml(raw.brand_name || schedule.brand_name || '') || (storeFound ? getBrandName(brandId) : '');
+    let clientName = escapeHtml(raw.client_name || schedule.client_name || '') || '';
     let clientId = storeFound ? (store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null)) : null;
     if (!clientName && clientId) clientName = escapeHtml(getClientName(clientId) || '');
 
