@@ -646,7 +646,10 @@ function renderTable() {
           <div class="schedule-card-head">
             <div>
               <div class="schedule-card-title">${escapeHtml(displayStoreName || '-')}</div>
-              <div class="schedule-card-sub">${escapeHtml(clientName || '-')}${brandName ? ` / ${escapeHtml(brandName)}` : ''}</div>
+              <div class="schedule-card-sub">
+                <div class="schedule-card-subline">${escapeHtml(clientName || '-')}</div>
+                <div class="schedule-card-subline">${escapeHtml(brandName || '-')}</div>
+              </div>
               <div class="schedule-card-id">${escapeHtml(schedule.id || '-')}</div>
             </div>
             <div>

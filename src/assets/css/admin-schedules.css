@@ -218,7 +218,7 @@
   justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .schedule-card-id {
   font-size: 0.75rem;
@@ -227,10 +227,18 @@
 .schedule-card-title {
   font-weight: 700;
   color: #111827;
+  line-height: 1.25;
 }
 .schedule-card-sub {
   font-size: 0.85rem;
   color: #6b7280;
+  line-height: 1.15;
+}
+.schedule-card-subline {
+  line-height: 1.15;
+}
+.schedule-card-subline + .schedule-card-subline {
+  margin-top: 2px; /* 2行の隙間を最小限に */
 }
 .schedule-card-meta {
   display: grid;
