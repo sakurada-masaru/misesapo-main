@@ -188,7 +188,7 @@
   max-width: 100%;
   box-sizing: border-box;
 }
-/* 以降、カード表示のスタイル（清掃内容は全幅） */
+
 .schedule-card {
   background: #fff;
   border-radius: 12px;
@@ -423,38 +423,6 @@
   font-size: 0.65rem;
   color: #6b7280;
   flex-shrink: 0;
-}
-
-/* 清掃内容タグ（ピンク・白文字） */
-.cleaning-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.cleaning-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border: 1px solid #ec4899;
-  background: #ec4899;
-  color: #ffffff;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  line-height: 1.6;
-  white-space: nowrap;
-}
-
-/* 清掃内容: 全幅で見やすく */
-.schedule-meta-full {
-  width: 100%;
-}
-.schedule-meta-full .k {
-  display: block;
-  margin-bottom: 6px;
-  color: #6b7280;
-}
-.schedule-meta-full-body {
-  width: 100%;
 }
 
 .unassigned {
