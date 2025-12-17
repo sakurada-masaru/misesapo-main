@@ -578,10 +578,13 @@ function renderTable() {
     const displayStoreName = DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
     
     // 法人名・ブランド名を取得
-    const brandId = store.brand_id;
-    const brandName = getBrandName(brandId);
-    const clientId = store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null);
-    const clientName = getClientName(clientId);
+    // - storeId から店舗が引ける場合: stores/brands/clients から導出
+    // - 引けない場合（旧データ等）: schedule側に保存されている名称でフォールバック
+    const storeFound = !!store?.id;
+    const brandId = storeFound ? store.brand_id : null;
+    const brandName = storeFound ? getBrandName(brandId) : (schedule.brand_name || normalized.brand_name || '');
+    const clientId = storeFound ? (store.client_id || (brandId ? allBrands.find(b => b.id === brandId)?.client_id : null)) : null;
+    const clientName = storeFound ? getClientName(clientId) : (schedule.client_name || normalized.client_name || '');
     
     return `
       <tr data-id="${schedule.id}" class="${isDraft ? 'draft-row' : ''}">
@@ -808,6 +811,7 @@ function setupEventListeners() {
       const clientId = store.client_id || (brand ? brand.client_id : null);
       const client = allClients.find(c => c.id === clientId || String(c.id) === String(clientId)) || null;
       const derivedStoreName = store.name || '';
+      const derivedBrandName = brand ? (brand.name || '') : '';
       const derivedClientName = client ? (client.name || client.company_name || '') : '';
       const derivedAddress = (store.address || `${store.pref || ''}${store.city || ''}${store.street || ''}` || '').trim();
       
@@ -825,6 +829,7 @@ function setupEventListeners() {
         sales_id: document.getElementById('schedule-sales').value || null,
         worker_id: document.getElementById('schedule-worker').value || null,
         store_name: derivedStoreName,
+        brand_name: derivedBrandName,
         client_name: derivedClientName,
         address: derivedAddress,
         cleaning_items: cleaningItems,

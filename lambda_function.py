@@ -3855,6 +3855,7 @@ def create_schedule(event, headers):
                     'client_id': store_id,  # store_idをclient_idとして保存（既存のスキーマとの互換性）
                     'store_id': store_id,  # フロントエンド用に追加
                     'client_name': body_json.get('client_name', ''),
+                    'brand_name': body_json.get('brand_name', ''),
                     'store_name': body_json.get('store_name', ''),
                     'address': body_json.get('address', ''),
                     'phone': body_json.get('phone', ''),
@@ -4299,7 +4300,7 @@ def update_schedule(schedule_id, event, headers):
         
         updatable_fields = [
             'date', 'time_slot', 'order_type', 'client_id', 'client_name',
-            'store_name', 'address', 'phone', 'email', 'cleaning_items',
+            'brand_name', 'store_name', 'address', 'phone', 'email', 'cleaning_items',
             'notes', 'status', 'assigned_to'
         ]
         
