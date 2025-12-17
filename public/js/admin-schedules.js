@@ -181,6 +181,15 @@ function populateSalesSelects() {
   if (salesSelectEl) {
     salesSelectEl.innerHTML = '<option value="">未設定</option>' + options;
   }
+
+  // 一覧フィルター: 営業IDで絞り込み（表示ラベルはIDのみ）
+  const salesFilterEl = document.getElementById('sales-filter');
+  if (salesFilterEl) {
+    const idOptions = sales
+      .map(w => `<option value="${w.id}">${escapeHtml(w.id || '')}</option>`)
+      .join('');
+    salesFilterEl.innerHTML = '<option value="">全営業</option>' + idOptions;
+  }
 }
 
 function populateWorkerSelects() {
@@ -492,24 +501,41 @@ function setupCleaningItemsSearch() {
 // フィルタリング
 function filterAndRender() {
   const storeFilter = document.getElementById('store-filter');
+  const salesFilter = document.getElementById('sales-filter');
   const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
   
   if (!storeFilter || !workerFilter || !statusFilter) return;
   
   const storeId = storeFilter.value;
+  const salesId = salesFilter ? salesFilter.value : '';
   const workerId = workerFilter.value;
   const status = statusFilter.value;
 
   filteredSchedules = allSchedules.filter(s => {
     // store_id または client_id に対応
     const scheduleStoreId = s.store_id || s.client_id;
-    const matchStore = !storeId || scheduleStoreId === storeId;
+    const matchStore = !storeId || (
+      window.DataUtils?.IdUtils?.isSame
+        ? window.DataUtils.IdUtils.isSame(scheduleStoreId, storeId)
+        : (String(scheduleStoreId) === String(storeId))
+    );
+    // sales_id
+    const scheduleSalesId = s.sales_id || (window.DataUtils?.normalizeSchedule ? DataUtils.normalizeSchedule(s)?.sales_id : null) || '';
+    const matchSales = !salesId || (
+      window.DataUtils?.IdUtils?.isSame
+        ? window.DataUtils.IdUtils.isSame(scheduleSalesId, salesId)
+        : (String(scheduleSalesId) === String(salesId))
+    );
     // worker_id または assigned_to に対応
     const scheduleWorkerId = s.worker_id || s.assigned_to;
-    const matchWorker = !workerId || scheduleWorkerId === workerId;
+    const matchWorker = !workerId || (
+      window.DataUtils?.IdUtils?.isSame
+        ? window.DataUtils.IdUtils.isSame(scheduleWorkerId, workerId)
+        : (String(scheduleWorkerId) === String(workerId))
+    );
     const matchStatus = !status || s.status === status;
-    return matchStore && matchWorker && matchStatus;
+    return matchStore && matchSales && matchWorker && matchStatus;
   });
 
   // 予定日順（時系列順）にソート
@@ -636,9 +662,8 @@ function renderTable() {
         </td>
         <td>
           ${sales ? `
-            <div class="worker-info">
-              <span class="worker-avatar">${(sales.name || '?')[0]}</span>
-              <span>${escapeHtml(sales.name || '')}</span>
+            <div class="worker-info" title="${escapeHtml(sales.id || '')}${sales.name ? ' / ' + escapeHtml(sales.name) : ''}">
+              <span class="worker-avatar">${(sales.name || sales.id || '?')[0]}</span>
             </div>
           ` : '<span class="unassigned">未設定</span>'}
         </td>
@@ -722,12 +747,16 @@ window.goToPage = function(page) {
 function setupEventListeners() {
   // フィルター
   const storeFilter = document.getElementById('store-filter');
+  const salesFilter = document.getElementById('sales-filter');
   const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
   const resetFilters = document.getElementById('reset-filters');
   
   if (storeFilter) {
     storeFilter.addEventListener('change', filterAndRender);
+  }
+  if (salesFilter) {
+    salesFilter.addEventListener('change', filterAndRender);
   }
   if (workerFilter) {
     workerFilter.addEventListener('change', filterAndRender);
@@ -738,6 +767,7 @@ function setupEventListeners() {
   if (resetFilters) {
     resetFilters.addEventListener('click', () => {
       if (storeFilter) storeFilter.value = '';
+      if (salesFilter) salesFilter.value = '';
       if (workerFilter) workerFilter.value = '';
       if (statusFilter) statusFilter.value = '';
       filterAndRender();
