@@ -583,8 +583,10 @@ function renderTable() {
       }
     }
     
-    // 清掃内容を結合
-    const cleaningContent = itemNames.length > 0 ? itemNames.join(', ') : '-';
+    // 清掃内容（管理側と同じタグ表示）
+    const cleaningHtml = itemNames.length
+      ? `<div class="cleaning-tags">${itemNames.map(n => `<span class="cleaning-tag">${n}</span>`).join('')}</div>`
+      : '<span style="color:#9ca3af;">-</span>';
     
     return `
       <div class="schedule-card ${isDraft ? 'draft-card' : ''}" data-id="${schedule.id}">
@@ -623,7 +625,7 @@ function renderTable() {
           <div class="schedule-card-container">
             <div class="schedule-card-field">
               <span class="field-label">清掃内容：</span>
-              <span class="field-value" title="${escapeHtml(cleaningContent)}">${truncateText(cleaningContent, 20)}</span>
+              <span class="field-value">${cleaningHtml}</span>
             </div>
           </div>
           <div class="schedule-card-container">
