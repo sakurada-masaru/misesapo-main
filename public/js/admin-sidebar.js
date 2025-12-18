@@ -213,10 +213,22 @@
       sidebarOverlay.addEventListener('click', function() {
         sidebar.classList.remove('open');
         sidebarOverlay.classList.remove('active');
+        
+        // リップルオーバーレイを上にスライドアウト
+        if (rippleOverlay && rippleOverlay.classList.contains('animating')) {
+          rippleOverlay.classList.remove('animating');
+          rippleOverlay.classList.add('collapsing');
+        }
+        
         const icon = mobileMenuButton?.querySelector('i');
         if (icon) {
           icon.className = 'fas fa-bars';
         }
+        
+        // アニメーション完了後にリセット
+        setTimeout(() => {
+          resetRippleOverlay();
+        }, 300);
       });
     }
 
