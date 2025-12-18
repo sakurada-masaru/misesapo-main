@@ -2894,14 +2894,101 @@
         }
       }
 
+      // 今週の予定を読み込み
+      async function loadWeekSchedules() {
+        const scheduleCountEl = document.getElementById('week-schedule-count');
+        const storeCountEl = document.getElementById('week-store-count');
+        
+        if (!scheduleCountEl || !storeCountEl) return;
+
+        try {
+          const currentUserId = getCurrentUserId();
+          
+          // 店舗データを読み込み（まだ読み込まれていない場合）
+          if (allStores.length === 0) {
+            try {
+              const storesResponse = await fetch(`${API_BASE}/stores`);
+              const storesData = await storesResponse.json();
+              allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+            } catch (error) {
+              console.warn('Failed to load stores:', error);
+              allStores = [];
+            }
+          }
+
+          // スケジュールを読み込み
+          const schedulesResponse = await fetch(`${API_BASE}/schedules`);
+          const schedulesData = await schedulesResponse.json();
+          const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+
+          // 今週の開始日（月曜日）と終了日（日曜日）を計算
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const dayOfWeek = today.getDay(); // 0=日曜日, 1=月曜日, ..., 6=土曜日
+          const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 月曜日までのオフセット
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() + mondayOffset);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6); // 日曜日
+
+          const weekStartStr = weekStart.toISOString().split('T')[0]; // YYYY-MM-DD形式
+          const weekEndStr = weekEnd.toISOString().split('T')[0]; // YYYY-MM-DD形式
+
+          // 今週のスケジュールをフィルタリング
+          const weekSchedules = allSchedules.filter(schedule => {
+            // ステータスが draft のものは除外
+            if (schedule.status === 'draft') return false;
+            
+            // 日付が今週の範囲内のもの
+            const scheduleDate = schedule.date || schedule.scheduled_date || schedule.start_date;
+            if (!scheduleDate) return false;
+            
+            const scheduleDateStr = scheduleDate.split('T')[0]; // YYYY-MM-DD形式に変換
+            if (scheduleDateStr < weekStartStr || scheduleDateStr > weekEndStr) return false;
+            
+            // ログインユーザーがいる場合、自分の担当分のみ
+            if (currentUserId) {
+              const workerId = schedule.worker_id || schedule.worker;
+              if (workerId && workerId !== currentUserId) return false;
+            }
+            
+            return true;
+          });
+
+          // 件数をカウント
+          const scheduleCount = weekSchedules.length;
+
+          // 店舗数をカウント（重複を除外）
+          const uniqueStoreIds = new Set();
+          weekSchedules.forEach(schedule => {
+            const storeId = schedule.store_id || schedule.store;
+            if (storeId) {
+              uniqueStoreIds.add(storeId);
+            }
+          });
+          const storeCount = uniqueStoreIds.size;
+
+          // 表示を更新
+          scheduleCountEl.textContent = scheduleCount;
+          storeCountEl.textContent = storeCount;
+
+        } catch (error) {
+          console.error('Failed to load week schedules:', error);
+          scheduleCountEl.textContent = '-';
+          storeCountEl.textContent = '-';
+        }
+      }
+
       // ページ読み込み時に予定を読み込み
       window.addEventListener('DOMContentLoaded', () => {
         loadTodaySchedules();
+        loadWeekSchedules();
       });
 
       // 定期的に更新（5分ごと）
       setInterval(() => {
         loadTodaySchedules();
+        loadWeekSchedules();
       }, 5 * 60 * 1000);
     })();
   </script>
