@@ -3465,8 +3465,21 @@
       
       stockFileInput.addEventListener('change', (e) => {
         const files = Array.from(e.target.files);
+        const skippedFiles = [];
+        
         files.forEach(file => {
           if (file.type.startsWith('image/')) {
+            // 重複チェック（ファイル名とファイルサイズで判定）
+            const isDuplicate = modalImageStock.some(existing => 
+              existing.fileName === file.name && 
+              existing.file.size === file.size
+            );
+            
+            if (isDuplicate) {
+              skippedFiles.push(file.name);
+              return; // 重複している場合はスキップ
+            }
+            
             const id = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const blobUrl = URL.createObjectURL(file);
             modalImageStock.push({ id, file, blobUrl, fileName: file.name });
@@ -3488,6 +3501,14 @@
             if (clearStockBtn) clearStockBtn.style.display = 'block';
           }
         });
+        
+        // 重複ファイルがあった場合は通知
+        if (skippedFiles.length > 0) {
+          const message = skippedFiles.length === 1 
+            ? `「${skippedFiles[0]}」は既にメディアに追加されています。`
+            : `${skippedFiles.length}件の画像は既にメディアに追加されているため、スキップしました。`;
+          alert(message);
+        }
         
         e.target.value = '';
       });

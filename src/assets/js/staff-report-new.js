@@ -3046,6 +3046,8 @@
   async function addImagesToStock(files) {
     const totalFiles = files.length;
     let processedCount = 0;
+    let skippedCount = 0;
+    const skippedFiles = [];
     
     // 進捗表示（10枚以上の場合）
     const stockGrid = document.getElementById('image-stock-grid');
@@ -3059,6 +3061,14 @@
       `;
     }
     
+    // 重複チェック関数
+    function isDuplicate(file) {
+      return imageStock.some(existing => 
+        existing.fileName === file.name && 
+        existing.originalFileSize === file.size
+      );
+    }
+    
     // バッチ処理（5枚ずつ処理）
     const BATCH_SIZE = 5;
     for (let i = 0; i < files.length; i += BATCH_SIZE) {
@@ -3067,6 +3077,14 @@
       // バッチを並列処理
       const batchPromises = batch.map(async (file) => {
         try {
+          // 重複チェック
+          if (isDuplicate(file)) {
+            skippedCount++;
+            skippedFiles.push(file.name);
+            processedCount++;
+            return null; // 重複している場合はスキップ
+          }
+          
           // 画像を最適化・圧縮
           const optimizedBlob = await optimizeImage(file);
           
@@ -3185,6 +3203,14 @@
     // 完了メッセージ
     if (totalFiles > 10) {
       console.log(`[ImageStock] Processed ${processedCount} images`);
+    }
+    
+    // 重複ファイルがあった場合は通知
+    if (skippedCount > 0) {
+      const message = skippedCount === 1 
+        ? `「${skippedFiles[0]}」は既にメディアに追加されています。`
+        : `${skippedCount}件の画像は既にメディアに追加されているため、スキップしました。`;
+      alert(message);
     }
   }
 
