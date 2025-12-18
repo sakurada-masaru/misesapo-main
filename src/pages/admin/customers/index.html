@@ -2109,9 +2109,21 @@
 
   // 削除確認
   window.deleteStore = function(id, name) {
+    if (!id) {
+      console.error('Delete store: id is required');
+      return;
+    }
     deleteTargetId = id;
-    document.getElementById('delete-message').textContent = `「${name}」を削除しますか？この操作は取り消せません。`;
-    deleteModal.classList.add('active');
+    const deleteMessageEl = document.getElementById('delete-message');
+    if (deleteMessageEl) {
+      deleteMessageEl.textContent = `「${name}」を削除しますか？この操作は取り消せません。`;
+    }
+    if (deleteModal) {
+      deleteModal.classList.add('active');
+    } else {
+      console.error('Delete modal not found');
+      alert('削除モーダルが見つかりません');
+    }
   };
 
   // 詳細表示
