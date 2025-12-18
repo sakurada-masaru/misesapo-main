@@ -852,6 +852,7 @@
       
       let successCount = 0;
       let errorCount = 0;
+      let corsErrorCount = 0;
       const errors = [];
       
       for (const imageId of selected) {
@@ -872,16 +873,23 @@
             const errorText = await response.text().catch(() => '');
             console.error(`Delete failed for ${imageId}:`, response.status, errorText);
             errorCount++;
-            errors.push(`${imageId} (${response.status})`);
+            errors.push(`${imageId} (HTTP ${response.status})`);
           }
         } catch (error) {
           console.error('Delete error:', error);
           errorCount++;
-          errors.push(`${imageId} (${error.message})`);
           
-          // CORSエラーの場合は特別なメッセージを表示
-          if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
-            console.warn('CORS error detected. This may be a backend configuration issue.');
+          // CORSエラーの検出
+          const isCorsError = error.message.includes('CORS') || 
+                             error.message.includes('Failed to fetch') ||
+                             error.name === 'TypeError';
+          
+          if (isCorsError) {
+            corsErrorCount++;
+            errors.push(`${imageId} (CORSエラー)`);
+            console.warn(`CORS error detected for ${imageId}. This is a backend configuration issue.`);
+          } else {
+            errors.push(`${imageId} (${error.message})`);
           }
         }
       }
@@ -889,14 +897,22 @@
       selectedReportImages.clear();
       loadReportImages();
       
+      // CORSエラーがすべてのリクエストで発生している場合
+      if (corsErrorCount === selected.length && successCount === 0) {
+        alert(`画像の削除に失敗しました。\n\n原因: CORS（Cross-Origin Resource Sharing）エラー\n\nこのエラーは、バックエンド側のAPI Gateway設定が原因です。\n以下の設定が必要です：\n\n1. API Gatewayで /staff/report-images/{image_id} リソースのDELETEメソッドに対して\n2. OPTIONSメソッドを追加し、CORSヘッダーを設定\n3. DELETEメソッドのレスポンスにもCORSヘッダーを追加\n4. API Gatewayをデプロイ\n\n詳細は、AWS API Gatewayコンソールで確認してください。`);
+        return;
+      }
+      
       if (successCount > 0) {
         if (errorCount > 0) {
-          alert(`${successCount}件の画像を削除しました。${errorCount}件の削除に失敗しました。\n\n失敗した画像ID:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n...他${errors.length - 5}件` : ''}\n\nCORSエラーの場合は、バックエンドのAPI Gateway設定を確認してください。`);
+          const corsMessage = corsErrorCount > 0 ? `\n\n注意: ${corsErrorCount}件のCORSエラーが発生しました。バックエンドのAPI Gateway設定を確認してください。` : '';
+          alert(`${successCount}件の画像を削除しました。${errorCount}件の削除に失敗しました。${corsMessage}`);
         } else {
           alert(`${successCount}件の画像を削除しました`);
         }
       } else {
-        alert(`削除に失敗しました。\n\nエラー詳細:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n...他${errors.length - 5}件` : ''}\n\nCORSエラーの場合は、バックエンドのAPI Gateway設定を確認してください。`);
+        const corsMessage = corsErrorCount > 0 ? `\n\n原因: CORSエラーが発生しています。バックエンドのAPI Gateway設定を確認してください。` : '';
+        alert(`削除に失敗しました。${corsMessage}`);
       }
     }
     
