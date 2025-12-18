@@ -3063,6 +3063,8 @@
     
     // 処理中のファイルを追跡するセット（ファイル名+サイズの組み合わせ）
     const processingFiles = new Set();
+    // 画像ストックへの追加を同期化するためのロック
+    let isAddingToStock = false;
     
     // 重複チェック関数（既存のimageStockと処理中のファイルの両方をチェック）
     function isDuplicate(file) {
@@ -3089,16 +3091,15 @@
       
       // バッチを並列処理
       const batchPromises = batch.map(async (file) => {
+        const fileKey = `${file.name}_${file.size}`;
         try {
-          // 重複チェック
+          // 重複チェック（処理開始時）
           if (isDuplicate(file)) {
             skippedCount++;
             skippedFiles.push(file.name);
             processedCount++;
             return null; // 重複している場合はスキップ
           }
-          
-          const fileKey = `${file.name}_${file.size}`;
           
           // 画像を最適化・圧縮
           const optimizedBlob = await optimizeImage(file);
