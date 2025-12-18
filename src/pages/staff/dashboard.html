@@ -2661,6 +2661,250 @@
         });
       }
     })();
+
+    // 本日の予定を読み込む
+    (function() {
+      const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+      let allStores = [];
+
+      // 現在のユーザーIDを取得
+      function getCurrentUserId() {
+        try {
+          const cognitoUser = localStorage.getItem('cognito_user');
+          if (cognitoUser) {
+            const parsed = JSON.parse(cognitoUser);
+            return parsed.username || parsed.email?.split('@')[0] || null;
+          }
+          
+          const authData = localStorage.getItem('misesapo_auth');
+          if (authData) {
+            const parsed = JSON.parse(authData);
+            return parsed.user?.id || parsed.user?.email?.split('@')[0] || null;
+          }
+          
+          return null;
+        } catch (e) {
+          console.error('Error getting user ID:', e);
+          return null;
+        }
+      }
+
+      // 店舗名を取得
+      function getStoreName(storeId) {
+        if (!storeId) return '未設定';
+        if (typeof DataUtils !== 'undefined' && DataUtils.getStoreName) {
+          return DataUtils.getStoreName(allStores, storeId);
+        }
+        const store = allStores.find(s => s.id === storeId || s.store_id === storeId);
+        return store ? store.name : storeId;
+      }
+
+      // 時間をHH:MM形式に変換
+      function formatTime(timeStr) {
+        if (!timeStr) return '';
+        if (typeof timeStr === 'string' && timeStr.includes(':')) {
+          const parts = timeStr.split(':');
+          return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+        }
+        return timeStr;
+      }
+
+      // スケジュールの状態を判定（完了/進行中/予定）
+      function getScheduleStatus(schedule) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        if (!schedule.date) return 'upcoming';
+        
+        const scheduleDate = new Date(schedule.date);
+        const scheduleDateOnly = new Date(scheduleDate.getFullYear(), scheduleDate.getMonth(), scheduleDate.getDate());
+        
+        // 日付が今日でない場合は予定
+        if (scheduleDateOnly.getTime() !== today.getTime()) {
+          return 'upcoming';
+        }
+        
+        // ステータスが完了の場合は完了
+        if (schedule.status === 'completed' || schedule.status === 'done') {
+          return 'completed';
+        }
+        
+        // 開始時刻と終了時刻を取得
+        const startTime = schedule.start_time || schedule.time || '';
+        const endTime = schedule.end_time || '';
+        
+        if (!startTime) return 'upcoming';
+        
+        // 時刻を解析
+        const [startHour, startMinute] = startTime.split(':').map(Number);
+        const startDateTime = new Date(today);
+        startDateTime.setHours(startHour || 0, startMinute || 0, 0, 0);
+        
+        if (endTime) {
+          const [endHour, endMinute] = endTime.split(':').map(Number);
+          const endDateTime = new Date(today);
+          endDateTime.setHours(endHour || 0, endMinute || 0, 0, 0);
+          
+          // 現在時刻が終了時刻を過ぎている場合は完了
+          if (now >= endDateTime) {
+            return 'completed';
+          }
+        }
+        
+        // 現在時刻が開始時刻を過ぎている場合は進行中
+        if (now >= startDateTime) {
+          return 'current';
+        }
+        
+        // それ以外は予定
+        return 'upcoming';
+      }
+
+      // 清掃内容を取得
+      function getCleaningItems(schedule) {
+        if (schedule.cleaning_items && Array.isArray(schedule.cleaning_items)) {
+          return schedule.cleaning_items.join('、');
+        }
+        if (schedule.cleaning_items && typeof schedule.cleaning_items === 'string') {
+          return schedule.cleaning_items;
+        }
+        if (schedule.items && Array.isArray(schedule.items)) {
+          return schedule.items.map(item => item.name || item).join('、');
+        }
+        return '通常清掃';
+      }
+
+      // 本日の予定を読み込み
+      async function loadTodaySchedules() {
+        const timelineContainer = document.getElementById('schedule-timeline');
+        if (!timelineContainer) return;
+
+        try {
+          const currentUserId = getCurrentUserId();
+          
+          // 店舗データを読み込み
+          try {
+            const storesResponse = await fetch(`${API_BASE}/stores`);
+            const storesData = await storesResponse.json();
+            allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+          } catch (error) {
+            console.warn('Failed to load stores:', error);
+            allStores = [];
+          }
+
+          // スケジュールを読み込み
+          const schedulesResponse = await fetch(`${API_BASE}/schedules`);
+          const schedulesData = await schedulesResponse.json();
+          const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+
+          // 本日の日付を取得
+          const today = new Date();
+          const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD形式
+
+          // 本日のスケジュールをフィルタリング
+          const todaySchedules = allSchedules.filter(schedule => {
+            // ステータスが draft のものは除外
+            if (schedule.status === 'draft') return false;
+            
+            // 日付が今日のもの
+            const scheduleDate = schedule.date || schedule.scheduled_date || schedule.start_date;
+            if (!scheduleDate) return false;
+            
+            const scheduleDateStr = scheduleDate.split('T')[0]; // YYYY-MM-DD形式に変換
+            if (scheduleDateStr !== todayStr) return false;
+            
+            // ログインユーザーがいる場合、自分の担当分のみ
+            if (currentUserId) {
+              const workerId = schedule.worker_id || schedule.worker;
+              if (workerId && workerId !== currentUserId) return false;
+            }
+            
+            return true;
+          });
+
+          // 開始時刻でソート
+          todaySchedules.sort((a, b) => {
+            const timeA = a.start_time || a.time || '';
+            const timeB = b.start_time || b.time || '';
+            if (!timeA && !timeB) return 0;
+            if (!timeA) return 1;
+            if (!timeB) return -1;
+            return timeA.localeCompare(timeB);
+          });
+
+          // タイムラインを描画
+          if (todaySchedules.length === 0) {
+            timelineContainer.innerHTML = `
+              <div class="empty-state" style="text-align: center; padding: 20px; color: #6b7280; background: #f9fafb; border-radius: 8px;">
+                <i class="fas fa-calendar-day" style="font-size: 2rem; margin-bottom: 8px; opacity: 0.5;"></i>
+                <p style="margin: 0; font-size: 0.875rem;">本日の予定はありません</p>
+              </div>
+            `;
+            return;
+          }
+
+          timelineContainer.innerHTML = todaySchedules.map(schedule => {
+            const status = getScheduleStatus(schedule);
+            const storeName = getStoreName(schedule.store_id || schedule.store);
+            const cleaningItems = getCleaningItems(schedule);
+            const timeStr = formatTime(schedule.start_time || schedule.time || '');
+            
+            let statusBadge = '';
+            let markerClass = '';
+            let markerIcon = '';
+            
+            if (status === 'completed') {
+              markerClass = 'completed';
+              markerIcon = '<i class="fas fa-check"></i>';
+              statusBadge = '<span class="status-check">✓ 完了</span>';
+            } else if (status === 'current') {
+              markerClass = 'current';
+              markerIcon = '<i class="fas fa-circle"></i>';
+              statusBadge = '<span class="status-current">進行中</span>';
+            } else {
+              markerClass = 'upcoming';
+              markerIcon = '<i class="fas fa-circle"></i>';
+              statusBadge = '<span class="status-upcoming">予定</span>';
+            }
+            
+            return `
+              <div class="timeline-item ${status}">
+                <div class="timeline-marker ${markerClass}">
+                  ${markerIcon}
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-time">${timeStr || '時間未設定'}</div>
+                  <div class="timeline-details">
+                    <div class="location">${storeName}</div>
+                    <div class="task">${cleaningItems}</div>
+                    ${statusBadge}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+        } catch (error) {
+          console.error('Failed to load today schedules:', error);
+          timelineContainer.innerHTML = `
+            <div class="error-state" style="text-align: center; padding: 20px; color: #ef4444; background: #fef2f2; border-radius: 8px;">
+              <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 8px;"></i>
+              <p style="margin: 0; font-size: 0.875rem;">予定の読み込みに失敗しました</p>
+            </div>
+          `;
+        }
+      }
+
+      // ページ読み込み時に予定を読み込み
+      window.addEventListener('DOMContentLoaded', () => {
+        loadTodaySchedules();
+      });
+
+      // 定期的に更新（5分ごと）
+      setInterval(() => {
+        loadTodaySchedules();
+      }, 5 * 60 * 1000);
+    })();
   </script>
 </main>
 
