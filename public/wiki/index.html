@@ -49,8 +49,11 @@
       // 顧客ページでnav-right要素を完全に削除
       (function() {
         function removeNavRight() {
+          // document.bodyが存在しない場合はスキップ
+          if (!document.body) return;
+          
           // 顧客ページかどうかを確認
-          const isCustomersPage = document.body.classList.contains('admin-stores-v2') ||
+          const isCustomersPage = document.body.classList && document.body.classList.contains('admin-stores-v2') ||
                                   document.querySelector('main.admin-stores-v2') ||
                                   window.location.pathname.includes('/admin/customers');
           
@@ -65,6 +68,7 @@
           // 親要素ごと削除する場合も考慮
           const headerElements = document.querySelectorAll('header.site-header, #default-header-wrapper');
           headerElements.forEach(header => {
+            if (!header) return; // nullチェック
             const navRight = header.querySelector('nav.nav-right, nav[aria-label="User"]');
             if (navRight) {
               navRight.remove();
@@ -117,6 +121,15 @@
 
 
 
+
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/js/admin-sidebar.js"></script>
 
 <!-- AWS API -->
 <script src="/js/aws-wiki-api.js">
@@ -231,98 +244,99 @@
   window.wikiData = {"entries": [{"id": "overview", "title": "システム概要", "category": "基本情報", "tags": ["基本", "概要", "システム"], "description": "ミセサポとは何か、主な機能について説明します", "icon": "fas fa-info-circle", "content": "overview", "createdAt": "2024-01-01", "updatedAt": "2024-01-01", "featured": true}, {"id": "roles", "title": "ロール（役割）について", "category": "基本情報", "tags": ["基本", "ロール", "権限"], "description": "システムで使われるロール（役割）と権限について説明します", "icon": "fas fa-users-cog", "content": "roles", "createdAt": "2024-01-01", "updatedAt": "2024-01-01", "featured": true}, {"id": "glossary-auth", "title": "認証・セキュリティ用語", "category": "専門用語", "tags": ["用語", "認証", "セキュリティ", "ログイン"], "description": "ログインや権限管理に関する用語を説明します", "icon": "fas fa-shield-alt", "content": "glossary-auth", "createdAt": "2024-01-01", "updatedAt": "2024-01-01", "featured": true}, {"id": "glossary-cloud", "title": "クラウド・インフラ用語", "category": "専門用語", "tags": ["用語", "クラウド", "AWS", "インフラ"], "description": "クラウドサービスやインフラに関する用語を説明します", "icon": "fas fa-cloud", "content": "glossary-cloud", "createdAt": "2024-01-01", "updatedAt": "2024-01-01", "featured": true}, {"id": "glossary-data", "title": "データ管理用語", "category": "専門用語", "tags": ["用語", "データ", "データベース", "保存"], "description": "データの保存や管理に関する用語を説明します", "icon": "fas fa-database", "content": "glossary-data", "createdAt": "2024-01-01", "updatedAt": "2024-01-01", "featured": true}, {"id": "glossary-dev", "title": "開発・運用用語", "category": "専門用語", "tags": ["用語", "開発", "運用", "技術"], "description": "システム開発や運用に関する用語を説明します", "icon": "fas fa-code", "content": "glossary-dev", "createdAt": "2024-01-01", "updatedAt": "2024-01-01", "featured": false}, {"id": "glossary-system", "title": "システム機能用語", "category": "専門用語", "tags": ["用語", "機能", "システム", "操作"], "description": "システムの機能や操作に関する用語を説明します", "icon": "fas fa-cog", "content": "glossary-system", "createdAt": "2024-01-01", "updatedAt": "2024-01-01", "featured": false}, {"id": "features", "title": "主要機能の説明", "category": "機能説明", "tags": ["機能", "使い方"], "description": "システムの主要な機能について説明します", "icon": "fas fa-cogs", "content": "features", "createdAt": "2024-01-01", "updatedAt": "2024-01-01", "featured": false}, {"id": "data", "title": "データ構造の説明", "category": "機能説明", "tags": ["データ", "構造", "技術"], "description": "システムで管理しているデータの種類と構造について説明します", "icon": "fas fa-database", "content": "data", "createdAt": "2024-01-01", "updatedAt": "2024-01-01", "featured": false}], "categories": [{"id": "基本情報", "name": "基本情報", "icon": "fas fa-info-circle", "color": "#3b82f6"}, {"id": "専門用語", "name": "専門用語", "icon": "fas fa-book", "color": "#10b981"}, {"id": "機能説明", "name": "機能説明", "icon": "fas fa-cogs", "color": "#f59e0b"}]};
 </script>
 
-<main id="main" class="wiki-page">
-  <!-- サイドバー -->
-  <aside class="sidebar" id="admin-sidebar">
-    <div class="sidebar-header">
-      <a href="/admin/dashboard" class="logo-link">
-        <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
-        <span class="logo-text">ミセサポ</span>
-      </a>
-    </div>
-    
-    <!-- ロール表示 -->
-    <div class="sidebar-role">
-      <span class="role-badge" id="sidebar-role-badge">管理者</span>
-    </div>
-    
-        <nav class="sidebar-nav">
-      <a href="/admin/dashboard" class="nav-item">
-        <i class="fas fa-history"></i>
-        <span class="nav-label">アクティビティ</span>
-      </a>
-      <a href="/admin/schedules/" class="nav-item">
-        <i class="fas fa-calendar-alt"></i>
-        <span class="nav-label">スケジュール</span>
-      </a>
-      <a href="/admin/customers/" class="nav-item">
-        <i class="fas fa-store"></i>
-        <span class="nav-label">顧客管理</span>
-      </a>
-      <a href="/admin/reports/" class="nav-item">
-        <i class="fas fa-file-alt"></i>
-        <span class="nav-label">レポート</span>
-      </a>
-      <a href="/admin/estimates/" class="nav-item">
-        <i class="fas fa-file-invoice-dollar"></i>
-        <span class="nav-label">見積もり</span>
-      </a>
-      <a href="/admin/orders" class="nav-item">
-        <i class="fas fa-shopping-cart"></i>
-        <span class="nav-label">発注管理</span>
-      </a>
-      <a href="/admin/partners" class="nav-item">
-        <i class="fas fa-handshake"></i>
-        <span class="nav-label">パートナー企業</span>
-      </a>
-      <a href="/admin/users/" class="nav-item">
-        <i class="fas fa-users"></i>
-        <span class="nav-label">ユーザー管理</span>
-      </a>
-      <a href="/admin/attendance/errors" class="nav-item">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span class="nav-label">勤怠管理</span>
-      </a>
-      <a href="/admin/services/" class="nav-item">
-        <i class="fas fa-cog"></i>
-        <span class="nav-label">サービス管理</span>
-      </a>
-      <a href="/admin/analytics/" class="nav-item">
-        <i class="fas fa-chart-bar"></i>
-        <span class="nav-label">分析</span>
-      </a>
-      <a href="/admin/images/" class="nav-item">
-        <i class="fas fa-images"></i>
-        <span class="nav-label">メディア</span>
-      </a>
-      <div class="nav-divider"></div>
-      <a href="#" class="nav-item" id="sidebar-mypage-link" style="display: none;">
-        <i class="fas fa-user-circle"></i>
-        <span class="nav-label">マイページ</span>
-      </a>
-      <a href="/wiki" class="nav-item active">
-        <i class="fas fa-book-open"></i>
-        <span class="nav-label">WIKI</span>
-      </a>
-      <a href="/admin/settings/" class="nav-item">
-        <i class="fas fa-sliders-h"></i>
-        <span class="nav-label">設定</span>
-      </a>
-      <a href="/admin/sitemap" class="nav-item">
-        <i class="fas fa-sitemap"></i>
-        <span class="nav-label">サイトマップ</span>
-      </a>
-      <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
-        <i class="fas fa-sign-out-alt"></i>
-        <span class="nav-label">ログアウト</span>
-      </button>
-    </nav>
+<!-- モバイルメニューボタン -->
+<div class="mobile-menu-area">
+<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+  <i class="fas fa-bars"></i>
+</button>
+</div>
 
-    <!-- トグルボタン -->
-    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
-      <i class="fas fa-chevron-left"></i>
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/staff/mypage" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">清掃員</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/admin/dashboard" class="nav-item nav-item-admin" data-page="dashboard" data-role-required="admin,operation,general_affairs" style="display: none;">
+      <i class="fas fa-tachometer-alt"></i>
+      <span class="nav-label">管理ダッシュボード</span>
+    </a>
+    <div class="nav-divider" data-role-required="admin,operation,general_affairs" style="display: none;"></div>
+    <a href="/staff/mypage" class="nav-item" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/staff/attendance-history" class="nav-item" data-page="attendance-history">
+      <i class="fas fa-history"></i>
+      <span class="nav-label">出勤履歴</span>
+    </a>
+    <a href="/staff/daily-reports" class="nav-item" data-page="daily-reports">
+      <i class="fas fa-edit"></i>
+      <span class="nav-label">日報</span>
+    </a>
+    <a href="/staff/schedule" class="nav-item" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/staff/work-history" class="nav-item" data-page="work-history">
+      <i class="fas fa-clipboard-list"></i>
+      <span class="nav-label">作業履歴</span>
+    </a>
+    <a href="/staff/reports/new" class="nav-item" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">レポート</span>
+    </a>
+    <a href="/wiki" class="nav-item active" data-page="wiki">
+      <i class="fas fa-book-open"></i>
+      <span class="nav-label">WIKI</span>
+    </a>
+    <a href="/cleaning-manual" class="nav-item" data-page="cleaning-manual">
+      <i class="fas fa-book"></i>
+      <span class="nav-label">清掃マニュアル</span>
+    </a>
+    <a href="/staff/announcements" class="nav-item" data-page="announcements">
+      <i class="fas fa-bullhorn"></i>
+      <span class="nav-label">業務連絡</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/staff/mypage/settings" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <a href="/signin" class="nav-item" data-page="signin">
+      <i class="fas fa-sign-in-alt"></i>
+      <span class="nav-label">ログイン</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
     </button>
-  </aside>
+    
+    <!-- マイページ編集用ボタン -->
+    <div class="nav-divider"></div>
+    <div class="sidebar-mypage-actions">
+    </div>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<main id="main" class="wiki-page">
 
   <!-- メインコンテンツ -->
   <div class="main-content">
