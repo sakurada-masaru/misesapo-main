@@ -50,13 +50,15 @@
     // 既存のオプションをクリア
     brandSelect.innerHTML = '<option value="">①ブランド名 *</option>';
     
-    // ブランドオプションを追加
-    brands.forEach(brand => {
-      const option = document.createElement('option');
-      option.value = brand.id;
-      option.textContent = brand.name;
-      brandSelect.appendChild(option);
-    });
+    // ブランドオプションを追加（brandsが配列であることを確認）
+    if (Array.isArray(brands) && brands.length > 0) {
+      brands.forEach(brand => {
+        const option = document.createElement('option');
+        option.value = brand.id;
+        option.textContent = brand.name;
+        brandSelect.appendChild(option);
+      });
+    }
     
     // 入力フィールドまたはドロップダウンボタンをクリックしたとき：モーダルを開く
     function openBrandModal() {
@@ -338,10 +340,13 @@
   async function loadBrands() {
     try {
       const res = await fetch(`${API_BASE}/brands`);
-      brands = await res.json();
+      const brandsData = await res.json();
+      brands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
       window.brands = brands; // グローバルスコープにも設定
     } catch (e) {
       console.error('Failed to load brands:', e);
+      brands = [];
+      window.brands = brands;
     }
   }
 
@@ -462,8 +467,8 @@
             sectionCounter = Math.max(...existingSectionIds);
           } else {
             sectionCounter = 0;
-          }
-          
+        }
+        
           // 切り替え先のタブのDOMからセクションデータを再構築（DOMが既に存在する場合）
           const reportContentId = targetTab === 'proposal' ? 'report-content-proposal' : 
                                   targetTab === 'edit' ? 'report-content-edit' : 'report-content';
@@ -506,7 +511,7 @@
             // セクションが空の場合はデフォルトで清掃項目セクションを追加
             if (Object.keys(sections).length === 0 && existingSectionCards.length === 0) {
               if (window.addCleaningItemSection) {
-                window.addCleaningItemSection();
+            window.addCleaningItemSection();
               }
             }
           }
@@ -553,23 +558,23 @@
         // 念のため、再度存在確認（他の処理で追加された可能性がある）
         const existingArea = document.getElementById(sectionAddIconsAreaId);
         if (!existingArea) {
-          const toggleBtnId = tabType === 'proposal' ? 'section-add-toggle-btn-proposal' : 'section-add-toggle-btn';
-          const hintId = tabType === 'proposal' ? 'section-add-hint-proposal' : 'section-add-hint';
-          
-          // HTMLを再作成
-          const sectionAddIconsAreaHTML = `
-            <div class="section-add-icons-area" id="${sectionAddIconsAreaId}">
-              <div class="section-add-hint" id="${hintId}">
-                <span>↓New section↓</span>
-              </div>
-              <button type="button" class="section-add-toggle-btn" id="${toggleBtnId}">
-                <i class="fas fa-plus"></i>
-              </button>
+        const toggleBtnId = tabType === 'proposal' ? 'section-add-toggle-btn-proposal' : 'section-add-toggle-btn';
+        const hintId = tabType === 'proposal' ? 'section-add-hint-proposal' : 'section-add-hint';
+        
+        // HTMLを再作成
+        const sectionAddIconsAreaHTML = `
+          <div class="section-add-icons-area" id="${sectionAddIconsAreaId}">
+            <div class="section-add-hint" id="${hintId}">
+              <span>↓New section↓</span>
             </div>
-          `;
-          reportContent.insertAdjacentHTML('beforeend', sectionAddIconsAreaHTML);
-          // イベントリスナーを再設定
-          setupSectionAddButtons(toggleBtnId, tabType);
+            <button type="button" class="section-add-toggle-btn" id="${toggleBtnId}">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+        `;
+        reportContent.insertAdjacentHTML('beforeend', sectionAddIconsAreaHTML);
+        // イベントリスナーを再設定
+        setupSectionAddButtons(toggleBtnId, tabType);
         }
       }
     }
@@ -5112,10 +5117,10 @@
         }
         const imageDataObj = {
           imageId: imageId,
-          url: imageUrl,
+        url: imageUrl,
           warehouseUrl: imageUrl,
           imageUrl: imageUrl,
-          source: 'media',
+        source: 'media',
           media_info: imageData,
           uploaded: true
         };
@@ -5560,18 +5565,18 @@
         imageList.appendChild(imageThumb);
       }
       
-    // データに保存
-    if (sections[sectionId] && sections[sectionId].imageContents) {
-      const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
-      if (imageContent) {
-        if (!imageContent.photos[category]) {
-          imageContent.photos[category] = [];
-        }
+      // データに保存
+      if (sections[sectionId] && sections[sectionId].imageContents) {
+        const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
+        if (imageContent) {
+          if (!imageContent.photos[category]) {
+            imageContent.photos[category] = [];
+          }
         const imageData = {
-          imageId: imageId,
-          blobUrl: blobUrl,
-          fileName: file.name,
-          uploaded: false
+            imageId: imageId,
+            blobUrl: blobUrl,
+            fileName: file.name,
+            uploaded: false
         };
         imageContent.photos[category].push(imageData);
         console.log('[ImageUpload] Image added to section (file upload):', {
@@ -5590,7 +5595,7 @@
         hasSection: !!sections[sectionId],
         hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
       });
-    }
+      }
     }
     
     autoSave();
@@ -7665,7 +7670,7 @@
             console.log('[Preview] imageContent[' + idx + ']:', ic);
             console.log('[Preview] imageContent[' + idx + '] photos:', ic.photos);
           });
-        } else {
+    } else {
           console.warn('[Preview] No imageContents in cleaning section:', sectionId);
         }
       }
@@ -7695,7 +7700,7 @@
                 if (typeof img === 'string') {
                   console.log('[Preview] Completed photo (string):', img);
                   return img;
-                }
+    }
                 if (typeof img === 'object' && img !== null) {
                   const url = img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
                   console.log('[Preview] Completed photo (object):', img, '-> url:', url);
@@ -7762,7 +7767,7 @@
         return {
           item_id: itemName.toLowerCase().replace(/\s+/g, '-'),
           item_name: itemName,
-          details: {},
+        details: {},
           photos: photos,
           comments: comments,
           subtitles: subtitles
@@ -7865,7 +7870,7 @@
           previewMainEl.innerHTML = renderedMain.innerHTML;
           console.log('[Preview] previewMainEl.innerHTML length after copy:', previewMainEl.innerHTML.length);
           console.log('[Preview] previewMainEl images count:', previewMainEl.querySelectorAll('img').length);
-          
+    
           // コメントとサブタイトルが実際にDOMに存在するか確認
           const subtitleElements = previewMainEl.querySelectorAll('.cleaning-item-subtitle-display');
           const commentElements = previewMainEl.querySelectorAll('.cleaning-item-comment-display');
@@ -7915,7 +7920,7 @@
           <div style="padding: 20px;">
             <h2>${escapeHtml(report.store_name || '店舗名不明')}</h2>
             <p>日付: ${escapeHtml(report.cleaning_date || '-')}</p>
-          </div>
+            </div>
         `;
       }
     }
