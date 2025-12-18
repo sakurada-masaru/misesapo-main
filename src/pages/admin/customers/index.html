@@ -2369,35 +2369,47 @@
   });
 
   // 削除実行
-  document.getElementById('confirm-delete').addEventListener('click', async () => {
-    if (!deleteTargetId) return;
-    
-    try {
-      const authHeaders = (await getAuthHeaders()) || { 'Content-Type': 'application/json' };
-      const response = await fetch(`${API_BASE}/stores/${deleteTargetId}`, {
-        method: 'DELETE',
-        headers: authHeaders
-      });
-      
-      if (response.ok || response.status === 204) {
-        // IdUtils.isSameを使用してID形式の違いに対応
-        if (window.DataUtils?.IdUtils?.isSame) {
-          allStores = allStores.filter(s => !window.DataUtils.IdUtils.isSame(s.id, deleteTargetId));
-        } else {
-          allStores = allStores.filter(s => s.id !== deleteTargetId && String(s.id) !== String(deleteTargetId));
-        }
-        updateStats();
-        filterAndRender();
-        deleteModal.classList.remove('active');
-        deleteTargetId = null;
-      } else {
-        alert('削除に失敗しました');
+  const confirmDeleteBtn = document.getElementById('confirm-delete');
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', async () => {
+      if (!deleteTargetId) {
+        console.warn('Delete target ID is not set');
+        return;
       }
-    } catch (error) {
-      console.error('Delete failed:', error);
-      alert('削除に失敗しました');
-    }
-  });
+      
+      try {
+        const authHeaders = (await getAuthHeaders()) || { 'Content-Type': 'application/json' };
+        const response = await fetch(`${API_BASE}/stores/${deleteTargetId}`, {
+          method: 'DELETE',
+          headers: authHeaders
+        });
+        
+        if (response.ok || response.status === 204) {
+          // IdUtils.isSameを使用してID形式の違いに対応
+          if (window.DataUtils?.IdUtils?.isSame) {
+            allStores = allStores.filter(s => !window.DataUtils.IdUtils.isSame(s.id, deleteTargetId));
+          } else {
+            allStores = allStores.filter(s => s.id !== deleteTargetId && String(s.id) !== String(deleteTargetId));
+          }
+          updateStats();
+          filterAndRender();
+          if (deleteModal) {
+            deleteModal.classList.remove('active');
+          }
+          deleteTargetId = null;
+        } else {
+          const errorText = await response.text().catch(() => '');
+          console.error('Delete failed:', response.status, errorText);
+          alert(`削除に失敗しました (${response.status})`);
+        }
+      } catch (error) {
+        console.error('Delete failed:', error);
+        alert('削除に失敗しました: ' + error.message);
+      }
+    });
+  } else {
+    console.error('Confirm delete button not found');
+  }
 
   // フォーム送信
   storeForm.addEventListener('submit', async (e) => {
@@ -2573,10 +2585,22 @@
   });
 
   // モーダル閉じる（削除確認用）
-  document.getElementById('cancel-delete').addEventListener('click', () => deleteModal.classList.remove('active'));
-  deleteModal.addEventListener('click', (e) => {
-    if (e.target === deleteModal) deleteModal.classList.remove('active');
-  });
+  // モーダル閉じる（削除確認用）
+  const cancelDeleteBtn = document.getElementById('cancel-delete');
+  if (cancelDeleteBtn && deleteModal) {
+    cancelDeleteBtn.addEventListener('click', () => {
+      deleteModal.classList.remove('active');
+      deleteTargetId = null;
+    });
+  }
+  if (deleteModal) {
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) {
+        deleteModal.classList.remove('active');
+        deleteTargetId = null;
+      }
+    });
+  }
 
   // 検索・フィルター
   searchInput.addEventListener('input', debounce(filterAndRender, 300));
