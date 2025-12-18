@@ -573,6 +573,12 @@
   gap: 6px;
   flex: 1;
 }
+
+/* ダークモード時のセクションタイトルを白に */
+[data-mypage-theme="dark"] .container-title,
+[data-theme="dark"] .container-title {
+  color: #ffffff;
+}
 .container-size-controls {
   display: flex;
   gap: 4px;
