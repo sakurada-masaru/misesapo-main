@@ -221,11 +221,41 @@
         return;
       }
       
-      // TODO: API呼び出しで削除を実装
-      // 現在は選択をクリアするだけ
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const imagePath of selected) {
+        try {
+          // サービス画像の削除APIを呼び出す
+          // パスからファイル名を抽出
+          const fileName = imagePath.split('/').pop();
+          const response = await fetch(`${API_GATEWAY_ENDPOINT}/images/${encodeURIComponent(fileName)}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok || response.status === 404) {
+            // 404の場合は既に削除されているとみなす
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          console.error('Delete error:', error);
+          errorCount++;
+        }
+      }
+      
       selectedServiceImages.clear();
       loadServiceImages();
-      alert(`${selected.length}件の画像を削除しました`);
+      
+      if (successCount > 0) {
+        alert(`${successCount}件の画像を削除しました${errorCount > 0 ? `（${errorCount}件失敗）` : ''}`);
+      } else {
+        alert('削除に失敗しました');
+      }
     }
     
     document.getElementById('btn-select-all-service')?.addEventListener('click', selectAllServiceImages);
