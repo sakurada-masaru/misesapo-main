@@ -5127,6 +5127,7 @@ def create_cognito_user(event, headers):
         name = body_json.get('name', '')
         role = body_json.get('role', 'cleaning')
         department = body_json.get('department', '')
+        # jobフィールドはCognitoのカスタム属性として定義されていないため、ここでは使用しない
         
         if not email or not password:
             return {
@@ -5137,18 +5138,37 @@ def create_cognito_user(event, headers):
                 }, ensure_ascii=False)
             }
         
+        # メールアドレスのバリデーション
+        if '@' not in email:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '無効なメールアドレスです'
+                }, ensure_ascii=False)
+            }
+        
         # Cognitoにユーザーを作成
         try:
+            # UserAttributesを構築（空の値は除外）
+            user_attributes = [
+                {'Name': 'email', 'Value': email},
+                {'Name': 'email_verified', 'Value': 'true'}
+            ]
+            
+            if name:
+                user_attributes.append({'Name': 'custom:name', 'Value': str(name)})
+            if role:
+                user_attributes.append({'Name': 'custom:role', 'Value': str(role)})
+            if department:
+                user_attributes.append({'Name': 'custom:department', 'Value': str(department)})
+            
+            print(f"Creating Cognito user: email={email}, name={name}, role={role}, department={department}")
+            
             response = cognito_client.admin_create_user(
                 UserPoolId=COGNITO_USER_POOL_ID,
                 Username=email,
-                UserAttributes=[
-                    {'Name': 'email', 'Value': email},
-                    {'Name': 'email_verified', 'Value': 'true'},
-                    {'Name': 'custom:name', 'Value': name},
-                    {'Name': 'custom:role', 'Value': role},
-                    {'Name': 'custom:department', 'Value': department}
-                ],
+                UserAttributes=user_attributes,
                 TemporaryPassword=password,
                 MessageAction='SUPPRESS'  # メール送信を抑制（管理者が通知）
             )
@@ -5161,11 +5181,14 @@ def create_cognito_user(event, headers):
                     Password=password,
                     Permanent=True
                 )
+                print(f"Password set to permanent for user: {email}")
             except Exception as e:
                 print(f"Warning: Could not set permanent password: {str(e)}")
                 # 一時パスワードのままでも動作する
             
-            user_sub = response['User']['Username']
+            user_sub = response['User'].get('Username', email)
+            
+            print(f"Successfully created Cognito user: {email}, sub: {user_sub}")
             
             return {
                 'statusCode': 200,
@@ -5177,7 +5200,8 @@ def create_cognito_user(event, headers):
                     'email': email
                 }, ensure_ascii=False)
             }
-        except cognito_client.exceptions.UsernameExistsException:
+        except cognito_client.exceptions.UsernameExistsException as e:
+            print(f"UsernameExistsException: {str(e)}")
             return {
                 'statusCode': 400,
                 'headers': headers,
@@ -5186,6 +5210,7 @@ def create_cognito_user(event, headers):
                 }, ensure_ascii=False)
             }
         except cognito_client.exceptions.InvalidPasswordException as e:
+            print(f"InvalidPasswordException: {str(e)}")
             return {
                 'statusCode': 400,
                 'headers': headers,
@@ -5193,24 +5218,62 @@ def create_cognito_user(event, headers):
                     'error': 'パスワードが弱すぎます。8文字以上で、大文字・小文字・数字・特殊文字を含めてください'
                 }, ensure_ascii=False)
             }
+        except cognito_client.exceptions.InvalidParameterException as e:
+            print(f"InvalidParameterException: {str(e)}")
+            error_msg = str(e)
+            if 'custom:' in error_msg:
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'error': 'カスタム属性の設定に失敗しました。システム管理者に連絡してください。',
+                        'details': error_msg
+                    }, ensure_ascii=False)
+                }
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': '無効なパラメータです',
+                    'details': error_msg
+                }, ensure_ascii=False)
+            }
         except Exception as e:
+            import traceback
+            error_trace = traceback.format_exc()
             print(f"Error creating Cognito user: {str(e)}")
+            print(f"Traceback: {error_trace}")
             return {
                 'statusCode': 500,
                 'headers': headers,
                 'body': json.dumps({
                     'error': 'Cognitoユーザーの作成に失敗しました',
-                    'message': str(e)
+                    'message': str(e),
+                    'type': type(e).__name__
                 }, ensure_ascii=False)
             }
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {str(e)}")
+        return {
+            'statusCode': 400,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'リクエストボディの解析に失敗しました',
+                'message': str(e)
+            }, ensure_ascii=False)
+        }
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         print(f"Error in create_cognito_user: {str(e)}")
+        print(f"Traceback: {error_trace}")
         return {
             'statusCode': 500,
             'headers': headers,
             'body': json.dumps({
                 'error': 'リクエストの処理に失敗しました',
-                'message': str(e)
+                'message': str(e),
+                'type': type(e).__name__
             }, ensure_ascii=False)
         }
 
