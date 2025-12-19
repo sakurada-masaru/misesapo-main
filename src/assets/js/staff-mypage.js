@@ -1820,6 +1820,7 @@ function setupDailyReportListeners() {
   const saveBtn = document.getElementById('daily-report-save-btn');
   const clearBtn = document.getElementById('daily-report-clear-btn');
   const textarea = document.getElementById('daily-report-content');
+  const templateBtn = document.getElementById('daily-report-template-btn');
   
   if (saveBtn) {
     saveBtn.addEventListener('click', saveDailyReport);
@@ -1827,6 +1828,10 @@ function setupDailyReportListeners() {
   
   if (clearBtn) {
     clearBtn.addEventListener('click', clearDailyReport);
+  }
+
+  if (templateBtn) {
+    templateBtn.addEventListener('click', insertDailyReportTemplate);
   }
   
   if (textarea) {
@@ -1837,6 +1842,29 @@ function setupDailyReportListeners() {
       }
     });
   }
+}
+
+function insertDailyReportTemplate() {
+  const textarea = document.getElementById('daily-report-content');
+  if (!textarea) return;
+
+  const template = [
+    '1：本日の作業内容',
+    '2：明日の作業予定',
+    '3：コメント'
+  ].join('\n');
+
+  if (!textarea.value.trim()) {
+    textarea.value = template;
+    textarea.dispatchEvent(new Event('input'));
+    textarea.focus();
+    return;
+  }
+
+  const needsNewline = !textarea.value.endsWith('\n');
+  textarea.value = `${textarea.value}${needsNewline ? '\n' : ''}\n${template}`;
+  textarea.dispatchEvent(new Event('input'));
+  textarea.focus();
 }
 
 // 日報を保存
@@ -3118,13 +3146,13 @@ function applyDefaultLayout() {
   // 各コンテナのデフォルト位置を設定（ピクセル単位、全て3×3マス）
   const defaultLayout = {
     'attendance': { x: 0, y: 0 },              // 出退勤記録: 3×3マス
-    'announcements': { x: 240, y: 0 },         // 業務連絡: 3×3マス
-    'basic-info': { x: 480, y: 0 },            // 基本情報: 3×3マス
+    'announcements': { x: 0, y: 240 },         // 業務連絡: 3×3マス
+    'daily-reports': { x: 240, y: 0 },         // 日報: 3×3マス
+    'basic-info': { x: 240, y: 240 },          // 基本情報: 3×3マス
+    'todo': { x: 480, y: 0 },                  // TODOリスト: 3×3マス
+    'calendar': { x: 480, y: 240 },            // カレンダー: 3×3マス
     'weekly-schedule': { x: 720, y: 0 },       // 今週のスケジュール: 3×3マス
-    'digital-clock': { x: 960, y: 0 },         // デジタル時計: 3×3マス
-    'todo': { x: 0, y: 240 },                  // TODOリスト: 3×3マス
-    'calendar': { x: 240, y: 240 },            // カレンダー: 3×3マス
-    'daily-reports': { x: 480, y: 240 }        // 日報: 3×3マス
+    'digital-clock': { x: 960, y: 0 }          // デジタル時計: 3×3マス
   };
   
   const containers = Array.from(grid.querySelectorAll('.draggable-container'));
