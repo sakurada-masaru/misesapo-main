@@ -1232,9 +1232,7 @@
         title.textContent = `${filterDate} の予定`;
         schedules = schedules.filter(s => s.scheduled_date === filterDate);
       } else {
-        title.textContent = '今後の予定';
-        const today = new Date().toISOString().split('T')[0];
-        schedules = schedules.filter(s => s.scheduled_date >= today);
+        title.textContent = '全ての予定';
       }
       
       // 日時順ソート
@@ -1243,9 +1241,6 @@
         const dateB = `${b.scheduled_date} ${b.scheduled_time || '00:00'}`;
         return dateA.localeCompare(dateB);
       });
-      
-      // 最大10件表示
-      schedules = schedules.slice(0, 10);
       
       if (schedules.length === 0) {
         container.innerHTML = `
