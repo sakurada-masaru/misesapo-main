@@ -248,6 +248,15 @@
     <div class="side-panel-content">
       <!-- レポートヘッダーセクション（新規作成・次回ご提案で共用） -->
       <div class="report-header-section" id="shared-report-header" style="display: none;">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="date-time-label" for="report-schedule-select">スケジュール</label>
+            <select id="report-schedule-select" class="form-select">
+              <option value="">未作成のスケジュールを選択</option>
+            </select>
+            <input type="hidden" id="report-schedule-id" name="schedule_id">
+          </div>
+        </div>
         <div class="form-row two-col">
           <div class="form-group store-search-group">
             <div class="store-search-wrapper">
