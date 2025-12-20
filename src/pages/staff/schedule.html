@@ -20,6 +20,14 @@
         <i class="fas fa-calendar-alt"></i>
         マイスケジュール
       </h1>
+      <div class="view-toggle">
+        <span class="view-label">リスト</span>
+        <label class="switch" aria-label="表示切り替え">
+          <input type="checkbox" id="view-toggle" aria-checked="false">
+          <span class="slider"></span>
+        </label>
+        <span class="view-label">カレンダー</span>
+      </div>
       <div class="role-badge-display" id="role-badge-display"></div>
     </div>
 
@@ -43,7 +51,7 @@
       </button>
     </div>
 
-    <div class="schedule-calendar">
+    <div class="schedule-calendar" id="calendar-view">
       <div class="calendar-weekdays">
         <div class="weekday sun">日</div>
         <div class="weekday">月</div>
@@ -224,6 +232,64 @@
       border-radius: 20px;
       font-size: 0.875rem;
       font-weight: 600;
+    }
+    .view-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      padding: 6px 12px;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+    }
+    .view-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4b5563;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #e5e7eb;
+      transition: 0.2s;
+      border-radius: 999px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.2s;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+    }
+    .switch input:checked + .slider {
+      background-color: var(--primary);
+    }
+    .switch input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+    .is-hidden {
+      display: none;
     }
     .role-badge-display.developer {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1065,6 +1131,7 @@
       await Promise.all([loadStores(), loadSchedules()]);
       renderCalendar();
       renderScheduleList();
+      setupViewToggle();
     });
 
     // データ読み込み
@@ -1447,3 +1514,20 @@
     });
   </script>
 </main>
+    function setupViewToggle() {
+      const toggle = document.getElementById('view-toggle');
+      const calendarView = document.getElementById('calendar-view');
+      const listView = document.getElementById('cleaning-schedule-section');
+
+      if (!toggle || !calendarView || !listView) return;
+
+      const applyView = () => {
+        const isCalendar = toggle.checked;
+        toggle.setAttribute('aria-checked', isCalendar ? 'true' : 'false');
+        calendarView.classList.toggle('is-hidden', !isCalendar);
+        listView.classList.toggle('is-hidden', isCalendar);
+      };
+
+      toggle.addEventListener('change', applyView);
+      applyView();
+    }
