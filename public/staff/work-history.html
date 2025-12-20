@@ -114,7 +114,52 @@
         margin: 0;
         padding: 0;
       }
-    </style>
+
+      .action-btn.edit{
+        display: none;
+    }
+    .action-btn.proposal{
+      display: none;
+    }
+    .action-btn.comment{
+      display: none;
+    }
+    .action-btn.share{
+      display: none;
+    }
+    .action-btn.delete{
+      display: none;
+    }
+    #history{
+      border: 2px solid #ccc;
+      border-radius: 10px;
+    }
+    .history-row{
+border-bottom: 1px solid #ccc;
+}
+.history-cell.history-cell-store{
+width: 120px;
+}
+
+/* 画面幅768px以下の場合のスタイル */
+@media (max-width: 768px) {
+  .history-header-cell.history-header-date,
+  .history-header-cell.history-header-time,
+  .history-header-cell.history-header-store,
+  .history-cell.history-cell-date,
+  .history-cell.history-cell-time,
+  .history-cell.history-cell-store {
+    width: 80px !important;
+    padding: 0.5rem !important;
+  }
+}
+@media (max-width: 1023.98px) {
+    main, .container {
+       max-width: 100% ; 
+    }
+}
+
+</style>
   </head>
   <body class="theme-pink theme-pink page-staff-work-history">
     <div id="default-header-wrapper">
@@ -195,6 +240,7 @@
 
 <link rel="stylesheet" href="/css/admin-sidebar.css">
 <link rel="stylesheet" href="/css/staff-work-history.css">
+<link rel="stylesheet" href="/css/admin-reports.css">
 <script src="/js/data_utils.js"></script>
 <!-- AWS SDKの読み込み -->
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
@@ -265,19 +311,10 @@
       <i class="fas fa-cog"></i>
       <span class="nav-label">設定</span>
     </a>
-    <a href="/signin" class="nav-item" data-page="signin">
-      <i class="fas fa-sign-in-alt"></i>
-      <span class="nav-label">ログイン</span>
-    </a>
     <button class="nav-item nav-item-button" onclick="staffLogout()">
       <i class="fas fa-sign-out-alt"></i>
       <span class="nav-label">ログアウト</span>
     </button>
-    
-    <!-- マイページ編集用ボタン -->
-    <div class="nav-divider"></div>
-    <div class="sidebar-mypage-actions">
-    </div>
   </nav>
 
   <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
@@ -334,25 +371,23 @@
 
   <!-- フィルター -->
   <div class="filters-section">
-    <div class="filter-group">
-      <label for="date-filter" class="filter-label">日付</label>
-      <input type="date" id="date-filter" class="filter-input">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="search-input" placeholder="店舗名・担当者で検索...">
     </div>
-    <div class="filter-group">
-      <label for="month-filter" class="filter-label">月</label>
-      <input type="month" id="month-filter" class="filter-input">
-    </div>
-    <div class="filter-group">
-      <label for="store-filter" class="filter-label">店舗</label>
-      <select id="store-filter" class="filter-select">
-        <option value="">すべて</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <button type="button" class="btn btn-outline" id="reset-filters">
-        <i class="fas fa-redo"></i> リセット
-      </button>
-    </div>
+    <select id="filter-status" class="filter-select">
+      <option value="">すべてのステータス</option>
+      <option value="pending">承認待ち</option>
+      <option value="approved">承認済み</option>
+      <option value="rejected">却下</option>
+    </select>
+    <select id="filter-store" class="filter-select">
+      <option value="">すべての店舗</option>
+    </select>
+    <input type="date" id="filter-date-from" class="filter-input" title="開始日">
+    <span class="date-separator">〜</span>
+    <input type="date" id="filter-date-to" class="filter-input" title="終了日">
+    <button type="button" class="btn btn-outline" id="btn-reset-filters">リセット</button>
   </div>
 
   <!-- 作業履歴一覧 -->
@@ -367,6 +402,11 @@
           <i class="fas fa-calendar"></i> カレンダー
         </button>
       </div>
+    </div>
+
+    <!-- 履歴 -->
+    <div id="history">
+      <!-- レポート一覧 -->
     </div>
 
     <!-- リストビュー -->
@@ -404,6 +444,53 @@
       </div>
     </div>
   </dialog>
+
+  <!-- URL発行モーダル -->
+  <dialog id="share-dialog" class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>レポート共有URL発行</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('share-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="share-info">
+          <p>このURLを顧客に送信すると、レポートを閲覧できます。</p>
+          <div class="url-display-container">
+            <input type="text" id="share-url-input" class="url-input" readonly>
+            <button type="button" class="btn btn-primary" id="btn-copy-url">
+              <i class="fas fa-copy"></i> コピー
+            </button>
+          </div>
+          <div class="copy-success-message" id="copy-success" style="display: none;">
+            <i class="fas fa-check-circle"></i> URLをコピーしました
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('share-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- コメントモーダル -->
+  <dialog id="feedback-dialog" class="modal-dialog">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>顧客コメント</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('feedback-dialog').close()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="feedback-content">
+        <p class="loading">読み込み中...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('feedback-dialog').close()">閉じる</button>
+      </div>
+    </div>
+  </dialog>
 </main>
 
 <script>
@@ -419,6 +506,439 @@
     localStorage.removeItem('cognito_refresh_token');
     window.location.href = '/staff/signin.html';
   }
+
+  // レポートデータ取得・表示機能（admin-reports.jsから移植）
+  (function() {
+    const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+    const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+    let allReports = [];
+    let allStores = [];
+    let allWorkers = [];
+
+    // 認証トークン取得
+    async function getFirebaseIdToken() {
+      try {
+        const cognitoIdToken = localStorage.getItem('cognito_id_token');
+        if (cognitoIdToken) {
+          return cognitoIdToken;
+        }
+        
+        const cognitoUser = localStorage.getItem('cognito_user');
+        if (cognitoUser) {
+          try {
+            const parsed = JSON.parse(cognitoUser);
+            if (parsed.tokens && parsed.tokens.idToken) {
+              return parsed.tokens.idToken;
+            }
+            if (parsed.idToken) {
+              return parsed.idToken;
+            }
+          } catch (e) {
+            console.warn('Error parsing cognito user:', e);
+          }
+        }
+        
+        if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
+          try {
+            const cognitoUser = await window.CognitoAuth.getCurrentUser();
+            if (cognitoUser && cognitoUser.tokens && cognitoUser.tokens.idToken) {
+              return cognitoUser.tokens.idToken;
+            }
+          } catch (e) {
+            console.warn('Error getting token from CognitoAuth:', e);
+          }
+        }
+        
+        const authData = localStorage.getItem('misesapo_auth');
+        if (authData) {
+          try {
+            const parsed = JSON.parse(authData);
+            if (parsed.token) {
+              return parsed.token;
+            }
+          } catch (e) {
+            console.warn('Error parsing auth data:', e);
+          }
+        }
+        
+        console.warn('No authentication token found, using mock-token');
+        return 'mock-token';
+      } catch (error) {
+        console.error('Error getting ID token:', error);
+        return 'mock-token';
+      }
+    }
+
+    // HTMLエスケープ関数
+    function escapeHtml(text) {
+      if (text == null) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 日付フォーマット関数
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    // レポートデータを読み込む
+    async function loadReports() {
+      try {
+        const idToken = await getFirebaseIdToken();
+        
+        const res = await fetch(`${REPORT_API}/staff/reports`, {
+          headers: { 
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!res.ok) {
+          if (res.status === 401) {
+            console.error('認証エラー: ログインが必要です');
+            const tbody = document.getElementById('reports-tbody');
+            if (tbody) {
+              tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">認証エラー: ログインしてください</td></tr>';
+            }
+            return;
+          }
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        allReports = data.items || [];
+        
+        // データ形式を統一
+        allReports = allReports.map(r => ({
+          ...r,
+          id: r.report_id || r.id,
+          store_id: r.store_id,
+          worker_id: r.staff_id,
+          work_date: r.cleaning_date,
+          start_time: r.cleaning_start_time,
+          end_time: r.cleaning_end_time,
+          status: r.status === 'published' ? 'approved' : r.status
+        }));
+        
+        renderTable();
+      } catch (e) {
+        console.error('Failed to load reports:', e);
+        const errorMessage = e.message || '読み込みに失敗しました';
+        const tbody = document.getElementById('reports-tbody');
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="6" class="loading-cell">${escapeHtml(errorMessage)}</td></tr>`;
+        }
+      }
+    }
+
+    // 店舗データを読み込む
+    async function loadStores() {
+      try {
+        const res = await fetch(`${API_BASE}/stores`);
+        const storesData = await res.json();
+        allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+      } catch (e) {
+        console.error('Failed to load stores:', e);
+        allStores = [];
+      }
+    }
+
+    // 作業員データを読み込む
+    async function loadWorkers() {
+      try {
+        const res = await fetch(`${API_BASE}/workers`);
+        const workersData = await res.json();
+        allWorkers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
+      } catch (e) {
+        console.error('Failed to load workers:', e);
+        allWorkers = [];
+      }
+    }
+
+    // テーブルをレンダリング
+    function renderTable() {
+      const tbody = document.getElementById('reports-tbody');
+      if (!tbody) return;
+
+      // 日付でソート（新しい順）
+      const sortedReports = [...allReports].sort((a, b) => {
+        const dateA = a.work_date || a.created_at || '';
+        const dateB = b.work_date || b.created_at || '';
+        return dateB.localeCompare(dateA);
+      });
+
+      if (sortedReports.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">レポートがありません</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = sortedReports.map(r => {
+        // DataUtilsで正規化（フォールバック付き）
+        const normalized = (window.DataUtils && window.DataUtils.normalizeReport) 
+          ? window.DataUtils.normalizeReport(r)
+          : {
+              id: r.report_id || r.id,
+              worker_id: r.staff_id || r.worker_id,
+              date: r.cleaning_date || r.work_date || r.created_at?.split('T')[0],
+              start_time: r.cleaning_start_time || r.start_time,
+              end_time: r.cleaning_end_time || r.end_time,
+              status: r.status,
+              store_name: r.store_name
+            };
+        const store = (window.DataUtils && window.DataUtils.findStore) 
+          ? window.DataUtils.findStore(allStores, r.store_id) || {}
+          : allStores.find(s => s.id === r.store_id) || {};
+        const worker = allWorkers.find(w => w.id === normalized.worker_id) || {};
+        const status = normalized.status === 'approved' ? 'approved' : (normalized.status === 'rejected' ? 'rejected' : 'pending');
+        const statusLabel = (window.DataUtils && window.DataUtils.getStatusLabel)
+          ? window.DataUtils.getStatusLabel(status)
+          : (status === 'approved' ? '承認済み' : status === 'rejected' ? '却下' : '承認待ち');
+        const displayStoreName = (window.DataUtils && window.DataUtils.getStoreName)
+          ? window.DataUtils.getStoreName(allStores, r.store_id, normalized.store_name)
+          : (store.name || normalized.store_name || r.store_name || '-');
+        
+        // 再提出通知バッジ
+        const resubmittedBadge = (r.resubmitted || normalized.resubmitted) 
+          ? '<span class="resubmitted-badge" title="清掃員から再提出されました"><i class="fas fa-bell"></i> 再提出</span>' 
+          : '';
+        
+        // 次回提案バッジ
+        const isProposal = r.proposal_type === 'proposal' || r.type === 'proposal' || normalized.proposal_type === 'proposal';
+        const proposalBadge = isProposal 
+          ? '<span class="proposal-badge" title="次回提案"><i class="fas fa-lightbulb"></i> 次回提案</span>' 
+          : '';
+
+        return `
+          <tr ${(r.resubmitted || normalized.resubmitted) ? 'class="resubmitted-row"' : ''} ${isProposal ? 'class="proposal-row"' : ''}>
+            <td>${(window.DataUtils && window.DataUtils.formatDate) ? window.DataUtils.formatDate(normalized.date) : formatDate(normalized.date)}</td>
+            <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(displayStoreName) : escapeHtml(displayStoreName)}</td>
+            <td>${(window.DataUtils && window.DataUtils.escapeHtml) ? window.DataUtils.escapeHtml(worker.name || normalized.worker_name || '-') : escapeHtml(worker.name || normalized.worker_name || '-')}</td>
+            <td>${normalized.start_time || '-'} 〜 ${normalized.end_time || '-'}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="status-badge status-${status}">${statusLabel}</span>
+                ${resubmittedBadge}
+                ${proposalBadge}
+              </div>
+            </td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn preview" title="プレビュー" onclick="previewReport('${r.id}')"><i class="fas fa-eye"></i></button>
+                <button class="action-btn edit" title="${isProposal ? '次回提案を編集' : '編集'}" onclick="editReport('${r.id}')"><i class="fas fa-edit"></i></button>
+                ${!isProposal ? `<button class="action-btn proposal" title="次回提案を作成" onclick="createProposal('${r.id}')"><i class="fas fa-lightbulb"></i></button>` : ''}
+                <button class="action-btn comment" title="コメント" onclick="viewFeedback('${r.id}')"><i class="fas fa-comment"></i></button>
+                <button class="action-btn share" title="URL発行" onclick="shareReport('${r.id}')"><i class="fas fa-share-alt"></i></button>
+                <button class="action-btn delete" title="削除" onclick="deleteReport('${r.id}')"><i class="fas fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // プレビュー機能
+    window.previewReport = async function(id) {
+      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+      if (!report) {
+        alert('レポートが見つかりませんでした');
+        return;
+      }
+
+      // 直接Viewページに遷移
+      const reportId = report.report_id || report.id;
+      const baseUrl = window.location.origin;
+      const viewUrl = `${baseUrl}/reports/shared/${reportId}/view`;
+      window.open(viewUrl, '_blank');
+    };
+
+    // 編集機能
+    window.editReport = async function(id, forceIsProposal = false) {
+      try {
+        // 新規ウィンドウで編集画面を開く
+        const editUrl = `/admin/reports/new-pc.html?edit=${id}${forceIsProposal ? '&proposal=true' : ''}`;
+        const editWindow = window.open(editUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+        
+        if (!editWindow) {
+          alert('ポップアップがブロックされています。ブラウザの設定でポップアップを許可してください。');
+          return;
+        }
+        
+        // ウィンドウが閉じられたときにレポート一覧を更新
+        const checkClosed = setInterval(() => {
+          if (editWindow.closed) {
+            clearInterval(checkClosed);
+            loadReports();
+          }
+        }, 500);
+      } catch (error) {
+        console.error('Error opening edit window:', error);
+        alert('編集画面の表示に失敗しました');
+      }
+    };
+
+    // 次回提案作成機能
+    window.createProposal = async function(id) {
+      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+      if (!report) {
+        alert('レポートが見つかりませんでした');
+        return;
+      }
+
+      // 次回提案として編集画面を開く
+      await window.editReport(id, true);
+    };
+
+    // コメント表示機能
+    window.viewFeedback = async function(id) {
+      const dialog = document.getElementById('feedback-dialog');
+      const content = document.getElementById('feedback-content');
+      
+      if (!dialog || !content) {
+        alert('コメントモーダルが見つかりませんでした');
+        return;
+      }
+      
+      content.innerHTML = '<p class="loading">読み込み中...</p>';
+      dialog.showModal();
+      
+      try {
+        const idToken = await getFirebaseIdToken();
+        const response = await fetch(`${REPORT_API}/staff/reports/${id}/feedback`, {
+          headers: { 'Authorization': `Bearer ${idToken}` }
+        });
+        
+        if (!response.ok) throw new Error('取得に失敗しました');
+        
+        const data = await response.json();
+        const feedback = data.feedback || {};
+        
+        if (!feedback.rating && !feedback.comment) {
+          content.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #666;">
+              <i class="fas fa-comment-slash" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i>
+              <p>まだコメントがありません</p>
+            </div>
+          `;
+        } else {
+          const stars = '★'.repeat(feedback.rating || 0) + '☆'.repeat(5 - (feedback.rating || 0));
+          const date = feedback.submitted_at ? new Date(feedback.submitted_at).toLocaleString('ja-JP') : '-';
+          content.innerHTML = `
+            <div class="feedback-detail">
+              <div style="margin-bottom: 15px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 5px;">評価</label>
+                <span style="font-size: 1.5rem; color: #FF679C;">${stars}</span>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 5px;">コメント</label>
+                <p style="background: #f5f5f5; padding: 12px; border-radius: 8px; white-space: pre-wrap;">${escapeHtml(feedback.comment || 'コメントなし')}</p>
+              </div>
+              <div style="font-size: 0.85rem; color: #666;">
+                <i class="fas fa-clock"></i> 送信日時: ${date}
+              </div>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error fetching feedback:', error);
+        content.innerHTML = `<p style="color: #dc3545; text-align: center;">コメントの取得に失敗しました</p>`;
+      }
+    };
+
+    // URL発行機能
+    window.shareReport = function(id) {
+      const report = allReports.find(r => String(r.id) === String(id) || String(r.report_id) === String(id));
+      if (!report) {
+        alert('レポートが見つかりませんでした');
+        return;
+      }
+
+      // 共有URLを生成（直接レポート表示ページ）
+      const reportId = report.report_id || report.id;
+      const baseUrl = window.location.origin;
+      const shareUrl = `${baseUrl}/reports/shared/${reportId}/view`;
+
+      // URLを表示
+      const urlInput = document.getElementById('share-url-input');
+      if (urlInput) {
+        urlInput.value = shareUrl;
+      }
+      
+      // コピー成功メッセージを非表示
+      const copySuccess = document.getElementById('copy-success');
+      if (copySuccess) {
+        copySuccess.style.display = 'none';
+      }
+      
+      // モーダルを表示
+      const shareDialog = document.getElementById('share-dialog');
+      if (shareDialog) {
+        shareDialog.showModal();
+      }
+    };
+
+    // URLコピー機能
+    document.addEventListener('DOMContentLoaded', function() {
+      const copyBtn = document.getElementById('btn-copy-url');
+      const urlInput = document.getElementById('share-url-input');
+      const copySuccess = document.getElementById('copy-success');
+      
+      if (copyBtn && urlInput) {
+        copyBtn.addEventListener('click', async function() {
+          try {
+            await navigator.clipboard.writeText(urlInput.value);
+            if (copySuccess) {
+              copySuccess.style.display = 'flex';
+              setTimeout(() => {
+                copySuccess.style.display = 'none';
+              }, 3000);
+            }
+          } catch (err) {
+            // フォールバック: テキストエリアを使用
+            urlInput.select();
+            document.execCommand('copy');
+            if (copySuccess) {
+              copySuccess.style.display = 'flex';
+              setTimeout(() => {
+                copySuccess.style.display = 'none';
+              }, 3000);
+            }
+          }
+        });
+      }
+    });
+
+    // 削除機能
+    window.deleteReport = async function(id) {
+      if (!confirm('このレポートを削除しますか？')) return;
+      
+      try {
+        const idToken = await getFirebaseIdToken();
+        await fetch(`${REPORT_API}/staff/reports/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${idToken}` }
+        });
+        
+        allReports = allReports.filter(r => String(r.id) !== String(id));
+        renderTable();
+      } catch (e) {
+        console.error('Error deleting report:', e);
+        alert('削除に失敗しました');
+      }
+    };
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', async () => {
+      await Promise.all([loadReports(), loadStores(), loadWorkers()]);
+    });
+  })();
 </script>
 
 
