@@ -5102,6 +5102,120 @@
   };
   
   // メディア選択ダイアログを開く
+  let mediaSelectionFolders = [];
+  let mediaSelectionScheduleId = '';
+  let mediaSelectionServiceId = '';
+
+  function getSelectedScheduleIdFromForm() {
+    const hidden = document.getElementById('report-schedule-id');
+    const select = document.getElementById('report-schedule-select');
+    return hidden?.value || select?.value || '';
+  }
+
+  function getScheduleLabelForMedia(schedule) {
+    if (!schedule) return '';
+    const scheduleId = schedule.id || schedule.schedule_id || schedule.scheduleId || '';
+    const storeId = schedule.store_id || schedule.storeId || schedule.client_id || '';
+    const store = stores.find(s => (s.store_id || s.id) === storeId) || null;
+    const brandId = (store && (store.brand_id || store.brandId)) || schedule.brand_id || schedule.brandId || '';
+    const brandName = getBrandName(brandId) || schedule.brand_name || '';
+    return brandName ? `案件ID: ${scheduleId} / ${brandName}` : `案件ID: ${scheduleId}`;
+  }
+
+  function getScheduleDateValue(schedule) {
+    if (!schedule) return '';
+    const normalized = (window.DataUtils && DataUtils.normalizeSchedule)
+      ? DataUtils.normalizeSchedule(schedule)
+      : schedule;
+    return normalized.date || schedule.scheduled_date || schedule.date || '';
+  }
+
+  function updateMediaScheduleOptions() {
+    const scheduleSelect = document.getElementById('media-selection-schedule');
+    if (!scheduleSelect) return;
+    const currentValue = scheduleSelect.value;
+    scheduleSelect.innerHTML = '<option value="">選択してください</option>';
+    availableSchedules.forEach(schedule => {
+      const scheduleId = schedule.id || schedule.schedule_id || schedule.scheduleId;
+      if (!scheduleId) return;
+      const option = document.createElement('option');
+      option.value = String(scheduleId);
+      option.textContent = getScheduleLabelForMedia(schedule);
+      scheduleSelect.appendChild(option);
+    });
+    if (currentValue && scheduleById[String(currentValue)]) {
+      scheduleSelect.value = String(currentValue);
+    }
+  }
+
+  function getServiceIdLabel(item) {
+    const id = item.id || item.service_id || item.serviceId || '';
+    const title = item.title || item.name || '';
+    return id ? `${id} ${title || ''}`.trim() : title;
+  }
+
+  function updateMediaServiceOptions() {
+    const datalist = document.getElementById('media-selection-service-options');
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    const schedule = scheduleById[String(mediaSelectionScheduleId)] || null;
+    let allowedIds = null;
+    if (schedule) {
+      const candidates = schedule.service_ids || schedule.serviceIds || schedule.services || schedule.cleaning_items || schedule.service_items || [];
+      const ids = (Array.isArray(candidates) ? candidates : [candidates])
+        .map(item => (typeof item === 'object' ? (item.id || item.service_id || item.serviceId) : item))
+        .filter(Boolean)
+        .map(id => String(id));
+      if (ids.length) {
+        allowedIds = new Set(ids);
+      }
+    }
+    serviceItems.forEach(item => {
+      const id = item.id || item.service_id || item.serviceId;
+      if (!id) return;
+      if (allowedIds && !allowedIds.has(String(id))) return;
+      const option = document.createElement('option');
+      option.value = String(id);
+      option.label = getServiceIdLabel(item);
+      datalist.appendChild(option);
+    });
+  }
+
+  function buildMediaFolderName() {
+    const dateInput = document.getElementById('media-selection-date');
+    const date = dateInput?.value || '';
+    if (!date || !mediaSelectionScheduleId || !mediaSelectionServiceId) return '';
+    return `${date}/${mediaSelectionScheduleId}/${mediaSelectionServiceId}`;
+  }
+
+  function updateMediaFolderPreview() {
+    const preview = document.getElementById('media-selection-folder-preview');
+    if (!preview) return;
+    const folder = buildMediaFolderName();
+    preview.textContent = folder || 'フォルダ未設定';
+  }
+
+  function parseMediaFolderName(folderName) {
+    const parts = (folderName || '').split('/');
+    return { date: parts[0] || '', scheduleId: parts[1] || '', serviceId: parts[2] || '' };
+  }
+
+  function applyMediaFolderSelection(folderName) {
+    const meta = parseMediaFolderName(folderName);
+    const dateInput = document.getElementById('media-selection-date');
+    if (meta.date && dateInput) {
+      dateInput.value = meta.date;
+    }
+    mediaSelectionScheduleId = meta.scheduleId || '';
+    mediaSelectionServiceId = meta.serviceId || '';
+    const scheduleSelect = document.getElementById('media-selection-schedule');
+    const serviceInput = document.getElementById('media-selection-service');
+    if (scheduleSelect) scheduleSelect.value = mediaSelectionScheduleId;
+    if (serviceInput) serviceInput.value = mediaSelectionServiceId;
+    updateMediaServiceOptions();
+    updateMediaFolderPreview();
+  }
+
   function openMediaSelectionDialog(sectionId, imageContentId, category) {
     const mediaDialog = document.getElementById('media-selection-dialog');
     if (!mediaDialog) return;
@@ -5117,12 +5231,29 @@
     mediaDialog.dataset.imageContentId = imageContentId;
     mediaDialog.dataset.category = category;
     
-    // 日付を今日に設定
+    const scheduleId = getSelectedScheduleIdFromForm();
+    if (!scheduleId) {
+      alert('先にスケジュールIDを選択してください。');
+      return;
+    }
+    mediaSelectionScheduleId = scheduleId;
+    mediaSelectionServiceId = '';
+    const schedule = scheduleById[String(scheduleId)] || null;
+
+    // 日付をスケジュールに合わせる
     const dateInput = document.getElementById('media-selection-date');
     if (dateInput) {
-      const today = new Date().toISOString().split('T')[0];
-      dateInput.value = today;
+      const scheduleDate = getScheduleDateValue(schedule);
+      dateInput.value = scheduleDate || new Date().toISOString().split('T')[0];
     }
+
+    updateMediaScheduleOptions();
+    const scheduleSelect = document.getElementById('media-selection-schedule');
+    if (scheduleSelect) scheduleSelect.value = String(scheduleId);
+    const serviceInput = document.getElementById('media-selection-service');
+    if (serviceInput) serviceInput.value = '';
+    updateMediaServiceOptions();
+    updateMediaFolderPreview();
     
     // フォルダ一覧を読み込み
     loadMediaFolders();
@@ -5193,6 +5324,8 @@
     
     // フィルター変更時のイベントリスナー
     const dateInputEl = document.getElementById('media-selection-date');
+    const scheduleSelectEl = document.getElementById('media-selection-schedule');
+    const serviceInputEl = document.getElementById('media-selection-service');
     const folderSelectEl = document.getElementById('media-selection-folder');
     const categorySelectEl = document.getElementById('media-selection-category');
     
@@ -5201,6 +5334,34 @@
       dateInputEl.parentNode.replaceChild(newDateInput, dateInputEl);
       newDateInput.addEventListener('change', () => {
         loadMediaFolders();
+        updateMediaFolderPreview();
+        loadMediaImages();
+      });
+    }
+
+    if (scheduleSelectEl) {
+      const newScheduleSelect = scheduleSelectEl.cloneNode(true);
+      scheduleSelectEl.parentNode.replaceChild(newScheduleSelect, scheduleSelectEl);
+      newScheduleSelect.addEventListener('change', (e) => {
+        mediaSelectionScheduleId = e.target.value;
+        const schedule = scheduleById[String(mediaSelectionScheduleId)] || null;
+        const scheduleDate = getScheduleDateValue(schedule);
+        const dateInput = document.getElementById('media-selection-date');
+        if (dateInput && scheduleDate) {
+          dateInput.value = scheduleDate;
+        }
+        updateMediaServiceOptions();
+        updateMediaFolderPreview();
+        loadMediaImages();
+      });
+    }
+
+    if (serviceInputEl) {
+      const newServiceInput = serviceInputEl.cloneNode(true);
+      serviceInputEl.parentNode.replaceChild(newServiceInput, serviceInputEl);
+      newServiceInput.addEventListener('input', (e) => {
+        mediaSelectionServiceId = e.target.value.trim();
+        updateMediaFolderPreview();
         loadMediaImages();
       });
     }
@@ -5208,7 +5369,15 @@
     if (folderSelectEl) {
       const newFolderSelect = folderSelectEl.cloneNode(true);
       folderSelectEl.parentNode.replaceChild(newFolderSelect, folderSelectEl);
-      newFolderSelect.addEventListener('change', loadMediaImages);
+      newFolderSelect.addEventListener('change', (e) => {
+        const selected = e.target.value;
+        if (selected) {
+          applyMediaFolderSelection(selected);
+        } else {
+          updateMediaFolderPreview();
+        }
+        loadMediaImages();
+      });
     }
     
     if (categorySelectEl) {
@@ -5244,21 +5413,31 @@
         }
       });
       
-      const folders = Array.from(folderSet).sort();
+      mediaSelectionFolders = Array.from(folderSet).sort();
       const folderSelect = document.getElementById('media-selection-folder');
       if (folderSelect) {
         const currentValue = folderSelect.value;
         folderSelect.innerHTML = '<option value="">全てのフォルダ</option>';
-        folders.forEach(folder => {
+        const filteredFolders = mediaSelectionFolders.filter(folder => {
+          const meta = parseMediaFolderName(folder);
+          const currentDate = document.getElementById('media-selection-date')?.value || '';
+          return !currentDate || meta.date === currentDate;
+        });
+        filteredFolders.forEach(folder => {
           const option = document.createElement('option');
           option.value = folder;
-          option.textContent = folder;
+          const meta = parseMediaFolderName(folder);
+          option.textContent = meta.scheduleId && meta.serviceId
+            ? `${meta.scheduleId} / ${meta.serviceId}`
+            : folder;
           folderSelect.appendChild(option);
         });
-        if (currentValue && folders.includes(currentValue)) {
+        if (currentValue && mediaSelectionFolders.includes(currentValue)) {
           folderSelect.value = currentValue;
         }
       }
+      updateMediaScheduleOptions();
+      updateMediaServiceOptions();
     } catch (error) {
       console.error('Error loading media folders:', error);
     }
@@ -5284,9 +5463,12 @@
         url += `&category=${category}`;
       }
       
-      const folderName = folderSelect?.value;
+      const folderName = folderSelect?.value || '';
+      const builtFolder = buildMediaFolderName();
       if (folderName) {
         url += `&folder_name=${encodeURIComponent(folderName)}`;
+      } else if (builtFolder) {
+        url += `&folder_name=${encodeURIComponent(builtFolder)}`;
       }
       
       const response = await fetch(url, {
@@ -5300,7 +5482,10 @@
       }
       
       const data = await response.json();
-      const images = data.images || [];
+      let images = data.images || [];
+      if (builtFolder && !folderName) {
+        images = images.filter(img => img.folder_name && img.folder_name.startsWith(builtFolder));
+      }
       
       if (images.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#9ca3af;"><i class="fas fa-images" style="font-size:3rem; margin-bottom:16px; opacity:0.5;"></i><p>画像がありません</p></div>';

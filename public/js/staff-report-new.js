@@ -39,6 +39,204 @@
   let isSectionSelectMode = false; // セクション複数選択モード
   let selectedSectionIds = new Set(); // 選択されたセクションID
 
+  let availableSchedules = [];
+  let scheduleById = {};
+
+  function getCurrentUserFromStorage() {
+    try {
+      const storedUser = localStorage.getItem('cognito_user');
+      if (storedUser) {
+        return JSON.parse(storedUser);
+      }
+    } catch (e) {
+      console.warn('[Report] Failed to parse cognito_user:', e);
+    }
+    return null;
+  }
+
+  function getScheduleIdFromReport(report) {
+    return report.schedule_id || report.scheduleId || report.schedule || report.schedule_id;
+  }
+
+  function formatScheduleLabel(schedule) {
+    const normalized = (window.DataUtils && DataUtils.normalizeSchedule)
+      ? DataUtils.normalizeSchedule(schedule)
+      : schedule;
+    const date = normalized.date || schedule.scheduled_date || schedule.date || '';
+    const time = normalized.time || schedule.scheduled_time || schedule.time_slot || '';
+    const storeId = normalized.store_id || schedule.store_id || schedule.client_id || schedule.storeId || '';
+    const storeName = schedule.store_name || schedule.storeName || (window.DataUtils ? DataUtils.getStoreName(stores, storeId) : '');
+    const dateLabel = date ? (window.DataUtils ? DataUtils.formatDate(date) : date) : '';
+    const timeLabel = time ? ` ${time}` : '';
+    const storeLabel = storeName || '店舗未設定';
+    return `${dateLabel}${timeLabel} ${storeLabel}`.trim();
+  }
+
+  function addMinutesToTime(timeString, minutes) {
+    if (!timeString || !minutes) return '';
+    const [h, m] = timeString.split(':').map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return '';
+    const total = h * 60 + m + minutes;
+    const endH = Math.floor(total / 60) % 24;
+    const endM = total % 60;
+    return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+  }
+
+  function applyScheduleToForm(schedule) {
+    if (!schedule) return;
+
+    const normalized = (window.DataUtils && DataUtils.normalizeSchedule)
+      ? DataUtils.normalizeSchedule(schedule)
+      : schedule;
+
+    const scheduleId = scheduleById[normalized.id || schedule.id || schedule.schedule_id || schedule.scheduleId]
+      ? (normalized.id || schedule.id || schedule.schedule_id || schedule.scheduleId)
+      : (schedule.id || schedule.schedule_id || schedule.scheduleId);
+
+    const storeId = normalized.store_id || schedule.store_id || schedule.client_id || schedule.storeId || '';
+    const storeName = schedule.store_name || schedule.storeName || (window.DataUtils ? DataUtils.getStoreName(stores, storeId) : '');
+    const date = normalized.date || schedule.scheduled_date || schedule.date || '';
+    const time = normalized.time || schedule.scheduled_time || schedule.time_slot || '';
+    const duration = schedule.duration_minutes || normalized.duration || schedule.duration || 0;
+    const endTime = addMinutesToTime(time, duration) || (schedule.scheduled_end_time || '');
+
+    const scheduleIdInput = document.getElementById('report-schedule-id');
+    if (scheduleIdInput) {
+      scheduleIdInput.value = scheduleId || '';
+    }
+
+    if (storeId) {
+      document.getElementById('report-store').value = storeId;
+      document.getElementById('report-store-name').value = storeName || '';
+      const storeSearchInput = document.getElementById('report-store-search');
+      if (storeSearchInput) {
+        storeSearchInput.value = storeName || '';
+      }
+    }
+
+    const store = stores.find(s => {
+      const sId = s.store_id || s.id;
+      return storeId && (sId === storeId || String(sId) === String(storeId));
+    });
+    const brandId = (store && (store.brand_id || store.brandId)) || schedule.brand_id || schedule.brandId || '';
+    if (brandId) {
+      const brandName = getBrandName(brandId);
+      document.getElementById('report-brand').value = brandId;
+      document.getElementById('report-brand-name').value = brandName || '';
+      const brandSearchInput = document.getElementById('report-brand-search');
+      if (brandSearchInput) {
+        brandSearchInput.value = brandName || '';
+        brandSearchInput.setAttribute('readonly', 'readonly');
+      }
+    }
+
+    if (date) {
+      document.getElementById('report-date').value = date;
+    }
+    if (time) {
+      document.getElementById('report-start').value = time;
+    }
+    if (endTime) {
+      document.getElementById('report-end').value = endTime;
+    }
+
+    if (typeof checkDetailsInputStatus === 'function') {
+      checkDetailsInputStatus();
+    }
+  }
+
+  function applyScheduleSelection(scheduleId) {
+    const schedule = scheduleById[scheduleId];
+    if (!schedule) return;
+    applyScheduleToForm(schedule);
+  }
+
+  async function loadAvailableSchedules() {
+    const scheduleSelect = document.getElementById('report-schedule-select');
+    if (!scheduleSelect) return;
+
+    scheduleSelect.innerHTML = '<option value="">読み込み中...</option>';
+    scheduleSelect.disabled = true;
+
+    const idToken = await getFirebaseIdToken();
+    const headers = idToken ? { 'Authorization': `Bearer ${idToken}` } : {};
+    const currentUser = getCurrentUserFromStorage();
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedScheduleId = urlParams.get('schedule') || urlParams.get('schedule_id');
+
+    try {
+      const [schedulesRes, reportsRes] = await Promise.all([
+        fetch(`${API_BASE}/schedules`, { headers }).catch(() => null),
+        fetch(`${REPORT_API}/staff/reports?limit=1000`, { headers }).catch(() => null)
+      ]);
+
+      const schedulesData = schedulesRes && schedulesRes.ok ? await schedulesRes.json() : [];
+      const reportsData = reportsRes && reportsRes.ok ? await reportsRes.json() : [];
+
+      const schedulesArray = Array.isArray(schedulesData)
+        ? schedulesData
+        : (schedulesData.items || schedulesData.schedules || []);
+      const reportsArray = Array.isArray(reportsData)
+        ? reportsData
+        : (reportsData.items || reportsData.reports || []);
+
+      scheduleById = {};
+      schedulesArray.forEach(schedule => {
+        const scheduleId = schedule.id || schedule.schedule_id || schedule.scheduleId;
+        if (scheduleId) {
+          scheduleById[String(scheduleId)] = schedule;
+        }
+      });
+
+      const reportedScheduleIds = new Set();
+      reportsArray.forEach(report => {
+        const scheduleId = getScheduleIdFromReport(report);
+        if (scheduleId) {
+          reportedScheduleIds.add(String(scheduleId));
+        }
+      });
+
+      availableSchedules = schedulesArray.filter(schedule => {
+        if (schedule.status === 'draft') return false;
+        const scheduleId = schedule.id || schedule.schedule_id || schedule.scheduleId;
+        if (!scheduleId) return false;
+        if (selectedScheduleId && String(scheduleId) === String(selectedScheduleId)) {
+          return true;
+        }
+        if (reportedScheduleIds.has(String(scheduleId))) return false;
+        if (currentUser && currentUser.id) {
+          return schedule.worker_id === currentUser.id || schedule.assigned_to === currentUser.id;
+        }
+        return true;
+      });
+
+      availableSchedules.sort((a, b) => {
+        const dateA = `${a.scheduled_date || a.date || ''} ${a.scheduled_time || a.time_slot || '00:00'}`;
+        const dateB = `${b.scheduled_date || b.date || ''} ${b.scheduled_time || b.time_slot || '00:00'}`;
+        return dateA.localeCompare(dateB);
+      });
+
+      const options = availableSchedules.map(schedule => {
+        const scheduleId = schedule.id || schedule.schedule_id || schedule.scheduleId;
+        const label = formatScheduleLabel(schedule);
+        return `<option value="${String(scheduleId)}">${label}</option>`;
+      });
+
+      scheduleSelect.innerHTML = '<option value="">未作成のスケジュールを選択</option>' + options.join('');
+    } catch (error) {
+      console.error('[Report] Failed to load schedules:', error);
+      scheduleSelect.innerHTML = '<option value="">スケジュールの取得に失敗しました</option>';
+    } finally {
+      scheduleSelect.disabled = false;
+    }
+
+    const scheduleParam = selectedScheduleId;
+    if (scheduleParam && scheduleById[String(scheduleParam)]) {
+      scheduleSelect.value = String(scheduleParam);
+      applyScheduleSelection(String(scheduleParam));
+    }
+  }
+
   // ブランド名のselect要素を初期化
   function initBrandSelect() {
     const brandSelect = document.getElementById('report-brand-select');
@@ -202,6 +400,7 @@
     // ブランド名と店舗名のselect要素を初期化
     initBrandSelect();
     initStoreSelect();
+    await loadAvailableSchedules();
     
     // URLパラメータからレポートIDを取得して編集モードで開く
     const urlParams = new URLSearchParams(window.location.search);
@@ -631,6 +830,7 @@
     autoSaveTimer = setTimeout(() => {
       try {
         const formData = {
+          scheduleId: document.getElementById('report-schedule-id')?.value || '',
           brandId: document.getElementById('report-brand')?.value || '',
           brandName: document.getElementById('report-brand-search')?.value || '',
           storeId: document.getElementById('report-store')?.value || '',
@@ -670,6 +870,13 @@
       const shouldRestore = await showConfirm('自動保存の復元', '前回の入力内容が保存されています。復元しますか？');
       if (shouldRestore) {
         // フォームデータを復元
+        if (formData.scheduleId) {
+          const scheduleSelect = document.getElementById('report-schedule-select');
+          const scheduleIdInput = document.getElementById('report-schedule-id');
+          if (scheduleSelect) scheduleSelect.value = formData.scheduleId;
+          if (scheduleIdInput) scheduleIdInput.value = formData.scheduleId;
+          applyScheduleSelection(formData.scheduleId);
+        }
         if (formData.brandId) {
           document.getElementById('report-brand')?.setAttribute('value', formData.brandId);
           document.getElementById('report-brand-search')?.setAttribute('value', formData.brandName || '');
@@ -1417,6 +1624,14 @@
       console.log('[loadReportToForm] Stores not loaded yet, loading...');
       await loadStores();
     }
+
+    const scheduleId = report.schedule_id || report.scheduleId || report.schedule;
+    if (scheduleId) {
+      const scheduleSelect = document.getElementById('report-schedule-select');
+      const scheduleIdInput = document.getElementById('report-schedule-id');
+      if (scheduleSelect) scheduleSelect.value = scheduleId;
+      if (scheduleIdInput) scheduleIdInput.value = scheduleId;
+    }
     
     // 基本情報
     const storeId = report.store_id || '';
@@ -2139,6 +2354,17 @@
 
   // イベントリスナー設定
   function setupEventListeners() {
+    const scheduleSelect = document.getElementById('report-schedule-select');
+    const scheduleIdInput = document.getElementById('report-schedule-id');
+    if (scheduleSelect) {
+      scheduleSelect.addEventListener('change', () => {
+        const selectedId = scheduleSelect.value;
+        if (scheduleIdInput) scheduleIdInput.value = selectedId;
+        if (selectedId) {
+          applyScheduleSelection(selectedId);
+        }
+      });
+    }
     // ブランド検索
     const brandSearchInput = document.getElementById('report-brand-search');
     
@@ -4876,6 +5102,120 @@
   };
   
   // メディア選択ダイアログを開く
+  let mediaSelectionFolders = [];
+  let mediaSelectionScheduleId = '';
+  let mediaSelectionServiceId = '';
+
+  function getSelectedScheduleIdFromForm() {
+    const hidden = document.getElementById('report-schedule-id');
+    const select = document.getElementById('report-schedule-select');
+    return hidden?.value || select?.value || '';
+  }
+
+  function getScheduleLabelForMedia(schedule) {
+    if (!schedule) return '';
+    const scheduleId = schedule.id || schedule.schedule_id || schedule.scheduleId || '';
+    const storeId = schedule.store_id || schedule.storeId || schedule.client_id || '';
+    const store = stores.find(s => (s.store_id || s.id) === storeId) || null;
+    const brandId = (store && (store.brand_id || store.brandId)) || schedule.brand_id || schedule.brandId || '';
+    const brandName = getBrandName(brandId) || schedule.brand_name || '';
+    return brandName ? `案件ID: ${scheduleId} / ${brandName}` : `案件ID: ${scheduleId}`;
+  }
+
+  function getScheduleDateValue(schedule) {
+    if (!schedule) return '';
+    const normalized = (window.DataUtils && DataUtils.normalizeSchedule)
+      ? DataUtils.normalizeSchedule(schedule)
+      : schedule;
+    return normalized.date || schedule.scheduled_date || schedule.date || '';
+  }
+
+  function updateMediaScheduleOptions() {
+    const scheduleSelect = document.getElementById('media-selection-schedule');
+    if (!scheduleSelect) return;
+    const currentValue = scheduleSelect.value;
+    scheduleSelect.innerHTML = '<option value="">選択してください</option>';
+    availableSchedules.forEach(schedule => {
+      const scheduleId = schedule.id || schedule.schedule_id || schedule.scheduleId;
+      if (!scheduleId) return;
+      const option = document.createElement('option');
+      option.value = String(scheduleId);
+      option.textContent = getScheduleLabelForMedia(schedule);
+      scheduleSelect.appendChild(option);
+    });
+    if (currentValue && scheduleById[String(currentValue)]) {
+      scheduleSelect.value = String(currentValue);
+    }
+  }
+
+  function getServiceIdLabel(item) {
+    const id = item.id || item.service_id || item.serviceId || '';
+    const title = item.title || item.name || '';
+    return id ? `${id} ${title || ''}`.trim() : title;
+  }
+
+  function updateMediaServiceOptions() {
+    const datalist = document.getElementById('media-selection-service-options');
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    const schedule = scheduleById[String(mediaSelectionScheduleId)] || null;
+    let allowedIds = null;
+    if (schedule) {
+      const candidates = schedule.service_ids || schedule.serviceIds || schedule.services || schedule.cleaning_items || schedule.service_items || [];
+      const ids = (Array.isArray(candidates) ? candidates : [candidates])
+        .map(item => (typeof item === 'object' ? (item.id || item.service_id || item.serviceId) : item))
+        .filter(Boolean)
+        .map(id => String(id));
+      if (ids.length) {
+        allowedIds = new Set(ids);
+      }
+    }
+    serviceItems.forEach(item => {
+      const id = item.id || item.service_id || item.serviceId;
+      if (!id) return;
+      if (allowedIds && !allowedIds.has(String(id))) return;
+      const option = document.createElement('option');
+      option.value = String(id);
+      option.label = getServiceIdLabel(item);
+      datalist.appendChild(option);
+    });
+  }
+
+  function buildMediaFolderName() {
+    const dateInput = document.getElementById('media-selection-date');
+    const date = dateInput?.value || '';
+    if (!date || !mediaSelectionScheduleId || !mediaSelectionServiceId) return '';
+    return `${date}/${mediaSelectionScheduleId}/${mediaSelectionServiceId}`;
+  }
+
+  function updateMediaFolderPreview() {
+    const preview = document.getElementById('media-selection-folder-preview');
+    if (!preview) return;
+    const folder = buildMediaFolderName();
+    preview.textContent = folder || 'フォルダ未設定';
+  }
+
+  function parseMediaFolderName(folderName) {
+    const parts = (folderName || '').split('/');
+    return { date: parts[0] || '', scheduleId: parts[1] || '', serviceId: parts[2] || '' };
+  }
+
+  function applyMediaFolderSelection(folderName) {
+    const meta = parseMediaFolderName(folderName);
+    const dateInput = document.getElementById('media-selection-date');
+    if (meta.date && dateInput) {
+      dateInput.value = meta.date;
+    }
+    mediaSelectionScheduleId = meta.scheduleId || '';
+    mediaSelectionServiceId = meta.serviceId || '';
+    const scheduleSelect = document.getElementById('media-selection-schedule');
+    const serviceInput = document.getElementById('media-selection-service');
+    if (scheduleSelect) scheduleSelect.value = mediaSelectionScheduleId;
+    if (serviceInput) serviceInput.value = mediaSelectionServiceId;
+    updateMediaServiceOptions();
+    updateMediaFolderPreview();
+  }
+
   function openMediaSelectionDialog(sectionId, imageContentId, category) {
     const mediaDialog = document.getElementById('media-selection-dialog');
     if (!mediaDialog) return;
@@ -4891,12 +5231,29 @@
     mediaDialog.dataset.imageContentId = imageContentId;
     mediaDialog.dataset.category = category;
     
-    // 日付を今日に設定
+    const scheduleId = getSelectedScheduleIdFromForm();
+    if (!scheduleId) {
+      alert('先にスケジュールIDを選択してください。');
+      return;
+    }
+    mediaSelectionScheduleId = scheduleId;
+    mediaSelectionServiceId = '';
+    const schedule = scheduleById[String(scheduleId)] || null;
+
+    // 日付をスケジュールに合わせる
     const dateInput = document.getElementById('media-selection-date');
     if (dateInput) {
-      const today = new Date().toISOString().split('T')[0];
-      dateInput.value = today;
+      const scheduleDate = getScheduleDateValue(schedule);
+      dateInput.value = scheduleDate || new Date().toISOString().split('T')[0];
     }
+
+    updateMediaScheduleOptions();
+    const scheduleSelect = document.getElementById('media-selection-schedule');
+    if (scheduleSelect) scheduleSelect.value = String(scheduleId);
+    const serviceInput = document.getElementById('media-selection-service');
+    if (serviceInput) serviceInput.value = '';
+    updateMediaServiceOptions();
+    updateMediaFolderPreview();
     
     // フォルダ一覧を読み込み
     loadMediaFolders();
@@ -4967,6 +5324,8 @@
     
     // フィルター変更時のイベントリスナー
     const dateInputEl = document.getElementById('media-selection-date');
+    const scheduleSelectEl = document.getElementById('media-selection-schedule');
+    const serviceInputEl = document.getElementById('media-selection-service');
     const folderSelectEl = document.getElementById('media-selection-folder');
     const categorySelectEl = document.getElementById('media-selection-category');
     
@@ -4975,6 +5334,34 @@
       dateInputEl.parentNode.replaceChild(newDateInput, dateInputEl);
       newDateInput.addEventListener('change', () => {
         loadMediaFolders();
+        updateMediaFolderPreview();
+        loadMediaImages();
+      });
+    }
+
+    if (scheduleSelectEl) {
+      const newScheduleSelect = scheduleSelectEl.cloneNode(true);
+      scheduleSelectEl.parentNode.replaceChild(newScheduleSelect, scheduleSelectEl);
+      newScheduleSelect.addEventListener('change', (e) => {
+        mediaSelectionScheduleId = e.target.value;
+        const schedule = scheduleById[String(mediaSelectionScheduleId)] || null;
+        const scheduleDate = getScheduleDateValue(schedule);
+        const dateInput = document.getElementById('media-selection-date');
+        if (dateInput && scheduleDate) {
+          dateInput.value = scheduleDate;
+        }
+        updateMediaServiceOptions();
+        updateMediaFolderPreview();
+        loadMediaImages();
+      });
+    }
+
+    if (serviceInputEl) {
+      const newServiceInput = serviceInputEl.cloneNode(true);
+      serviceInputEl.parentNode.replaceChild(newServiceInput, serviceInputEl);
+      newServiceInput.addEventListener('input', (e) => {
+        mediaSelectionServiceId = e.target.value.trim();
+        updateMediaFolderPreview();
         loadMediaImages();
       });
     }
@@ -4982,7 +5369,15 @@
     if (folderSelectEl) {
       const newFolderSelect = folderSelectEl.cloneNode(true);
       folderSelectEl.parentNode.replaceChild(newFolderSelect, folderSelectEl);
-      newFolderSelect.addEventListener('change', loadMediaImages);
+      newFolderSelect.addEventListener('change', (e) => {
+        const selected = e.target.value;
+        if (selected) {
+          applyMediaFolderSelection(selected);
+        } else {
+          updateMediaFolderPreview();
+        }
+        loadMediaImages();
+      });
     }
     
     if (categorySelectEl) {
@@ -5018,21 +5413,31 @@
         }
       });
       
-      const folders = Array.from(folderSet).sort();
+      mediaSelectionFolders = Array.from(folderSet).sort();
       const folderSelect = document.getElementById('media-selection-folder');
       if (folderSelect) {
         const currentValue = folderSelect.value;
         folderSelect.innerHTML = '<option value="">全てのフォルダ</option>';
-        folders.forEach(folder => {
+        const filteredFolders = mediaSelectionFolders.filter(folder => {
+          const meta = parseMediaFolderName(folder);
+          const currentDate = document.getElementById('media-selection-date')?.value || '';
+          return !currentDate || meta.date === currentDate;
+        });
+        filteredFolders.forEach(folder => {
           const option = document.createElement('option');
           option.value = folder;
-          option.textContent = folder;
+          const meta = parseMediaFolderName(folder);
+          option.textContent = meta.scheduleId && meta.serviceId
+            ? `${meta.scheduleId} / ${meta.serviceId}`
+            : folder;
           folderSelect.appendChild(option);
         });
-        if (currentValue && folders.includes(currentValue)) {
+        if (currentValue && mediaSelectionFolders.includes(currentValue)) {
           folderSelect.value = currentValue;
         }
       }
+      updateMediaScheduleOptions();
+      updateMediaServiceOptions();
     } catch (error) {
       console.error('Error loading media folders:', error);
     }
@@ -5058,9 +5463,12 @@
         url += `&category=${category}`;
       }
       
-      const folderName = folderSelect?.value;
+      const folderName = folderSelect?.value || '';
+      const builtFolder = buildMediaFolderName();
       if (folderName) {
         url += `&folder_name=${encodeURIComponent(folderName)}`;
+      } else if (builtFolder) {
+        url += `&folder_name=${encodeURIComponent(builtFolder)}`;
       }
       
       const response = await fetch(url, {
@@ -5074,7 +5482,10 @@
       }
       
       const data = await response.json();
-      const images = data.images || [];
+      let images = data.images || [];
+      if (builtFolder && !folderName) {
+        images = images.filter(img => img.folder_name && img.folder_name.startsWith(builtFolder));
+      }
       
       if (images.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#9ca3af;"><i class="fas fa-images" style="font-size:3rem; margin-bottom:16px; opacity:0.5;"></i><p>画像がありません</p></div>';
@@ -6963,6 +7374,7 @@
     }
 
     const reportData = {
+      schedule_id: document.getElementById('report-schedule-id')?.value || '',
       store_id: storeId,
       store_name: storeName,
       brand_id: brandId,
@@ -8241,4 +8653,3 @@
     });
   }
 })();
-
