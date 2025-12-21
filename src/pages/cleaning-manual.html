@@ -517,6 +517,14 @@
             font-size: 19px;
             color: var(--primary);
         }
+        .dock-item.is-active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .dock-item.is-active i {
+            color: #fff;
+        }
         .dock-item:active,
         .dock-item:hover {
             background: #fff1f6;
@@ -1693,7 +1701,7 @@
             <i class="fas fa-file-alt"></i>
             <span>レポート</span>
         </a>
-        <a href="/cleaning-manual" class="dock-item">
+        <a href="/cleaning-manual" class="dock-item is-active">
             <i class="fas fa-book"></i>
             <span>マニュアル</span>
         </a>
