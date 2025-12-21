@@ -23,18 +23,30 @@
     </label>
   </div>
 
-  <!-- フォルダ選択・作成 -->
+  <!-- フォルダ選択 -->
   <div class="folder-section">
+    <div class="folder-select-wrapper">
+      <label for="media-date-filter" class="folder-label">日付:</label>
+      <input type="date" id="media-date-filter" class="date-filter-input">
+    </div>
+    <div class="folder-select-wrapper">
+      <label for="media-schedule-select" class="folder-label">スケジュールID:</label>
+      <select id="media-schedule-select" class="folder-select">
+        <option value="">選択してください</option>
+      </select>
+    </div>
+    <div class="folder-select-wrapper">
+      <label for="media-service-input" class="folder-label">サービスID:</label>
+      <input type="text" id="media-service-input" class="folder-input" placeholder="例: service-001" list="service-id-options">
+      <datalist id="service-id-options"></datalist>
+    </div>
     <div class="folder-select-wrapper">
       <label for="folder-select" class="folder-label">フォルダ:</label>
       <select id="folder-select" class="folder-select">
         <option value="">全てのフォルダ</option>
       </select>
-      <button type="button" class="btn-create-folder" id="btn-create-folder">
-        <i class="fas fa-folder-plus"></i>
-        <span>新規フォルダ</span>
-      </button>
     </div>
+    <div class="folder-preview" id="folder-preview">フォルダ未設定</div>
   </div>
 
   <!-- フィルター -->
@@ -42,7 +54,6 @@
     <button class="tab-btn active" data-filter="all">全て</button>
     <button class="tab-btn" data-filter="before">作業前</button>
     <button class="tab-btn" data-filter="after">作業後</button>
-    <input type="date" id="media-date-filter" class="date-filter-input">
   </div>
 
   <!-- 画像グリッド -->
@@ -52,29 +63,6 @@
       <p>読み込み中...</p>
       </div>
     </div>
-
-  <!-- 新規フォルダ作成モーダル -->
-  <div id="create-folder-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>新規フォルダを作成</h3>
-        <button type="button" class="modal-close" onclick="closeCreateFolderModal()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="new-folder-name">フォルダ名</label>
-          <input type="text" id="new-folder-name" class="form-input" placeholder="例: 案件A、店舗名など" maxlength="50">
-          <p class="form-hint">フォルダ名を入力してください（最大50文字）</p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="closeCreateFolderModal()">キャンセル</button>
-        <button type="button" class="btn btn-primary" id="confirm-create-folder-btn">作成</button>
-      </div>
-    </div>
-        </div>
 
   <!-- 画像プレビューモーダル -->
   <div id="image-preview-modal" class="modal-overlay" style="display:none;">
@@ -257,14 +245,14 @@
       border-color: var(--primary);
     }
 
-    .date-filter-input {
-      padding: 8px 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: #ffffff;
-      font-size: 0.875rem;
-      margin-left: auto;
-    }
+  .date-filter-input {
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 0.875rem;
+    margin-left: 0;
+  }
 
     .folder-section {
       margin-bottom: 20px;
@@ -274,12 +262,13 @@
       border: 1px solid #e5e7eb;
     }
 
-    .folder-select-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
+  .folder-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
 
     .folder-label {
       font-size: 0.875rem;
@@ -288,49 +277,34 @@
       white-space: nowrap;
     }
 
-    .folder-select {
-      flex: 1;
-      min-width: 150px;
-      padding: 8px 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: #ffffff;
-      font-size: 0.875rem;
-      color: #374151;
-      cursor: pointer;
-    }
+  .folder-select,
+  .folder-input {
+    flex: 1;
+    min-width: 150px;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 0.875rem;
+    color: #374151;
+    cursor: pointer;
+  }
 
-    .folder-select:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
-    }
+  .folder-select:focus,
+  .folder-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+  }
 
-    .btn-create-folder {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      background: #10b981;
-      color: #ffffff;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-
-    .btn-create-folder:hover {
-      background: #059669;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-    }
-
-    .btn-create-folder i {
-      font-size: 0.875rem;
-    }
+  .folder-preview {
+    font-size: 0.85rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+  }
 
     .form-group {
       margin-bottom: 16px;
@@ -601,11 +575,16 @@
   <script>
     (function() {
       const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+      const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
       let currentImages = [];
       let currentFilter = 'all';
       let currentDate = '';
       let currentFolder = '';
+      let currentScheduleId = '';
+      let currentServiceId = '';
       let availableFolders = [];
+      let availableSchedules = [];
+      let availableServices = [];
       let selectedImageId = null;
 
       // IDトークン取得（Cognito/localStorageから取得）
@@ -663,6 +642,12 @@
           console.error('Error getting ID token:', error);
           return 'dev-token';
         }
+      }
+
+      async function getAuthHeaders() {
+        const token = await getFirebaseIdToken();
+        if (!token) return {};
+        return { 'Authorization': `Bearer ${token}` };
       }
 
       // 画像のハッシュ値を計算（SHA-256）
@@ -766,7 +751,10 @@
           
           const base64 = await blobToBase64(optimizedBlob);
           const cleaningDate = currentDate || new Date().toISOString().split('T')[0];
-          const folderName = currentFolder || null;
+          const folderName = buildFolderName();
+          if (!folderName) {
+            throw new Error('日付・スケジュールID・サービスIDを指定してください');
+          }
           
           // 選択中のカテゴリを取得（'all'の場合は'after'をデフォルトに）
           let category = currentFilter;
@@ -807,6 +795,116 @@
         }
       }
 
+      function parseFolderName(folderName) {
+        const parts = (folderName || '').split('/');
+        return {
+          date: parts[0] || '',
+          scheduleId: parts[1] || '',
+          serviceId: parts[2] || ''
+        };
+      }
+
+      function buildFolderName() {
+        if (!currentDate || !currentScheduleId || !currentServiceId) {
+          return '';
+        }
+        return `${currentDate}/${currentScheduleId}/${currentServiceId}`;
+      }
+
+      function updateFolderPreview() {
+        const preview = document.getElementById('folder-preview');
+        if (!preview) return;
+        const folderName = buildFolderName();
+        preview.textContent = folderName || 'フォルダ未設定';
+      }
+
+      function applyFolderSelection(folderName) {
+        const meta = parseFolderName(folderName);
+        if (meta.date) {
+          currentDate = meta.date;
+          const dateInput = document.getElementById('media-date-filter');
+          if (dateInput) dateInput.value = meta.date;
+        }
+        currentScheduleId = meta.scheduleId || '';
+        currentServiceId = meta.serviceId || '';
+        const scheduleSelect = document.getElementById('media-schedule-select');
+        const serviceInput = document.getElementById('media-service-input');
+        if (scheduleSelect) scheduleSelect.value = currentScheduleId;
+        if (serviceInput) serviceInput.value = currentServiceId;
+        updateServiceOptions();
+        currentFolder = folderName || '';
+        updateFolderPreview();
+      }
+
+      async function loadSchedules() {
+        const scheduleSelect = document.getElementById('media-schedule-select');
+        if (!scheduleSelect) return;
+        try {
+          const response = await fetch(`${API_BASE}/schedules`, {
+            headers: await getAuthHeaders()
+          });
+          if (!response.ok) throw new Error('スケジュールの取得に失敗しました');
+          const data = await response.json();
+          const schedules = data.schedules || data.items || data || [];
+          availableSchedules = schedules.filter(schedule => {
+            if (!currentDate || !schedule.scheduled_date) return false;
+            return schedule.scheduled_date === currentDate;
+          });
+          updateScheduleOptions();
+        } catch (error) {
+          console.error('Load schedules error:', error);
+        }
+      }
+
+      function updateScheduleOptions() {
+        const scheduleSelect = document.getElementById('media-schedule-select');
+        if (!scheduleSelect) return;
+        const currentValue = scheduleSelect.value;
+        scheduleSelect.innerHTML = '<option value="">選択してください</option>';
+        const scheduleIds = new Set();
+        availableSchedules.forEach(schedule => {
+          const id = schedule.schedule_id || schedule.scheduleId || schedule.id || '';
+          if (!id || scheduleIds.has(id)) return;
+          scheduleIds.add(id);
+          const option = document.createElement('option');
+          option.value = id;
+          option.textContent = `案件ID: ${id}`;
+          scheduleSelect.appendChild(option);
+        });
+        availableFolders.forEach(folder => {
+          const meta = parseFolderName(folder);
+          if (!meta.scheduleId || scheduleIds.has(meta.scheduleId)) return;
+          if (currentDate && meta.date !== currentDate) return;
+          scheduleIds.add(meta.scheduleId);
+          const option = document.createElement('option');
+          option.value = meta.scheduleId;
+          option.textContent = `案件ID: ${meta.scheduleId}`;
+          scheduleSelect.appendChild(option);
+        });
+        if (currentValue && scheduleIds.has(currentValue)) {
+          scheduleSelect.value = currentValue;
+        }
+      }
+
+      function updateServiceOptions() {
+        const datalist = document.getElementById('service-id-options');
+        if (!datalist) return;
+        datalist.innerHTML = '';
+        const services = new Set();
+        availableFolders.forEach(folder => {
+          const meta = parseFolderName(folder);
+          if (currentDate && meta.date !== currentDate) return;
+          if (currentScheduleId && meta.scheduleId !== currentScheduleId) return;
+          if (meta.serviceId) services.add(meta.serviceId);
+        });
+        availableServices = Array.from(services).sort();
+        availableServices.forEach(serviceId => {
+          const option = document.createElement('option');
+          option.value = serviceId;
+          datalist.appendChild(option);
+        });
+      }
+
       // フォルダ一覧を取得
       async function loadFolders() {
         try {
@@ -836,6 +934,8 @@
           
           availableFolders = Array.from(folderSet).sort();
           updateFolderSelect();
+          updateScheduleOptions();
+          updateServiceOptions();
         } catch (error) {
           console.error('Load folders error:', error);
         }
@@ -850,10 +950,17 @@
         select.innerHTML = '<option value="">全てのフォルダ</option>';
         
         // フォルダオプションを追加
-        availableFolders.forEach(folder => {
+        const filteredFolders = availableFolders.filter(folder => {
+          const meta = parseFolderName(folder);
+          return !currentDate || meta.date === currentDate;
+        });
+        filteredFolders.forEach(folder => {
+          const meta = parseFolderName(folder);
           const option = document.createElement('option');
           option.value = folder;
-          option.textContent = folder;
+          option.textContent = meta.scheduleId && meta.serviceId
+            ? `${meta.scheduleId} / ${meta.serviceId}`
+            : folder;
           select.appendChild(option);
         });
         
@@ -898,16 +1005,29 @@
         }
       }
 
+      function getFilteredImages() {
+        if (!currentScheduleId && !currentServiceId) {
+          return currentImages;
+        }
+        const prefixParts = [currentDate, currentScheduleId, currentServiceId].filter(Boolean);
+        const prefix = prefixParts.join('/');
+        return currentImages.filter(img => {
+          if (!img.folder_name) return false;
+          return img.folder_name.startsWith(prefix);
+        });
+      }
+
       // 画像を表示
       function renderImages() {
         const grid = document.getElementById('media-grid');
+        const visibleImages = getFilteredImages();
 
-        if (currentImages.length === 0) {
+        if (visibleImages.length === 0) {
           grid.innerHTML = '<div class="empty-state"><i class="fas fa-images"></i><p>画像がありません</p></div>';
           return;
         }
 
-        grid.innerHTML = currentImages.map(img => {
+        grid.innerHTML = visibleImages.map(img => {
           const categoryLabel = img.category === 'before' ? '作業前' : '作業後';
           const date = new Date(img.cleaning_date).toLocaleDateString('ja-JP');
           return `
@@ -985,61 +1105,6 @@
         }
       }
 
-      // 新規フォルダ作成モーダルを開く
-      window.openCreateFolderModal = function() {
-        const modal = document.getElementById('create-folder-modal');
-        const input = document.getElementById('new-folder-name');
-        input.value = '';
-        modal.style.display = 'flex';
-        input.focus();
-      };
-
-      // 新規フォルダ作成モーダルを閉じる
-      window.closeCreateFolderModal = function() {
-        const modal = document.getElementById('create-folder-modal');
-        modal.style.display = 'none';
-      };
-
-      // モーダルの背景クリックで閉じる
-      document.getElementById('create-folder-modal').addEventListener('click', (e) => {
-        if (e.target.id === 'create-folder-modal') {
-          closeCreateFolderModal();
-        }
-      });
-
-      // 新規フォルダを作成
-      async function createFolder() {
-        const folderName = document.getElementById('new-folder-name').value.trim();
-        
-        if (!folderName) {
-          alert('フォルダ名を入力してください');
-          return;
-        }
-
-        if (folderName.length > 50) {
-          alert('フォルダ名は50文字以内で入力してください');
-          return;
-        }
-
-        // 既存のフォルダ名と重複チェック
-        if (availableFolders.includes(folderName)) {
-          alert('このフォルダ名は既に存在します');
-          return;
-        }
-
-        // フォルダを追加（実際のAPIは後で実装）
-        availableFolders.push(folderName);
-        availableFolders.sort();
-        updateFolderSelect();
-        
-        // 作成したフォルダを選択
-        document.getElementById('folder-select').value = folderName;
-        currentFolder = folderName;
-        
-        closeCreateFolderModal();
-        loadImages();
-      }
-
       // イベントリスナー
       document.getElementById('media-file-input').addEventListener('change', async (e) => {
         const files = Array.from(e.target.files);
@@ -1079,12 +1144,18 @@
         if (errorCount > 0 || duplicateCount > 0) {
           let message = `${successCount}件の画像をアップロードしました`;
           if (duplicateCount > 0) {
-            message += `\n${duplicateCount}件の画像は既にアップロード済みのためスキップしました`;
+            message += `
+${duplicateCount}件の画像は既にアップロード済みのためスキップしました`;
           }
           if (errorMessages.length > 0) {
-            message += `\n\nエラー:\n${errorMessages.slice(0, 3).join('\n')}`;
+            message += `
+
+エラー:
+${errorMessages.slice(0, 3).join('
+')}`;
             if (errorMessages.length > 3) {
-              message += `\n...他${errorMessages.length - 3}件`;
+              message += `
+...他${errorMessages.length - 3}件`;
             }
           }
           alert(message);
@@ -1104,25 +1175,42 @@
 
       document.getElementById('media-date-filter').addEventListener('change', (e) => {
         currentDate = e.target.value;
-        currentFolder = ''; // 日付変更時はフォルダ選択をリセット
+        currentScheduleId = '';
+        currentServiceId = '';
+        currentFolder = '';
         document.getElementById('folder-select').value = '';
+        document.getElementById('media-schedule-select').value = '';
+        document.getElementById('media-service-input').value = '';
+        updateFolderPreview();
+        loadSchedules();
         loadFolders();
         loadImages();
       });
 
-      document.getElementById('folder-select').addEventListener('change', (e) => {
-        currentFolder = e.target.value;
+      document.getElementById('media-schedule-select').addEventListener('change', (e) => {
+        currentScheduleId = e.target.value;
+        updateServiceOptions();
+        currentFolder = buildFolderName();
+        updateFolderPreview();
         loadImages();
       });
 
-      document.getElementById('btn-create-folder').addEventListener('click', openCreateFolderModal);
-      document.getElementById('confirm-create-folder-btn').addEventListener('click', createFolder);
+      document.getElementById('media-service-input').addEventListener('input', (e) => {
+        currentServiceId = e.target.value.trim();
+        currentFolder = buildFolderName();
+        updateFolderPreview();
+        loadImages();
+      });
 
-      // フォルダ作成モーダルでEnterキーを押したら作成
-      document.getElementById('new-folder-name').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          createFolder();
+      document.getElementById('folder-select').addEventListener('change', (e) => {
+        const selected = e.target.value;
+        if (selected) {
+          applyFolderSelection(selected);
+        } else {
+          currentFolder = buildFolderName();
+          updateFolderPreview();
         }
+        loadImages();
       });
 
       document.getElementById('delete-image-btn').addEventListener('click', () => {
@@ -1134,6 +1222,8 @@
       // 初期化
       document.getElementById('media-date-filter').value = new Date().toISOString().split('T')[0];
       currentDate = new Date().toISOString().split('T')[0];
+      updateFolderPreview();
+      loadSchedules();
       loadFolders();
       loadImages();
     })();
