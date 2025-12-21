@@ -19,10 +19,6 @@
       <button class="menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
         <i class="fas fa-bars"></i>
       </button>
-      <h1 class="page-title">
-        <i class="fas fa-calendar-alt"></i>
-        マイスケジュール
-      </h1>
       <div class="view-toggle">
         <span class="view-label">リスト</span>
         <label class="switch" aria-label="表示切り替え">
@@ -210,7 +206,7 @@
       <i class="fas fa-home"></i>
       <span>ホーム</span>
     </a>
-    <a href="/staff/schedule" class="dock-item">
+    <a href="/staff/schedule" class="dock-item is-active">
       <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
     </a>
@@ -243,17 +239,8 @@
       flex-wrap: wrap;
       gap: 12px;
     }
-    .page-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #111827;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .page-title i {
-      color: var(--primary);
+    .page-header {
+      gap: 16px;
     }
     .role-badge-display {
       padding: 6px 16px;
@@ -382,6 +369,14 @@
     .dock-item i {
       font-size: 1.2rem;
       color: var(--primary);
+    }
+    .dock-item.is-active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .dock-item.is-active i {
+      color: #fff;
     }
     .dock-item:active,
     .dock-item:hover {

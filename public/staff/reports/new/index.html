@@ -204,10 +204,6 @@
     <button class="menu-btn" type="button" onclick="window.location.href='/staff/mypage'" aria-label="マイページを開く">
       <i class="fas fa-bars"></i>
     </button>
-    <a href="/staff/dashboard" class="back-btn">
-      <i class="fas fa-chevron-left"></i>
-    </a>
-    <h1 class="page-title">レポート作成</h1>
     <div class="details-hint-wrapper">
       <span class="details-hint" id="details-hint">日時と時間を設定して下さい→</span>
       <button type="button" class="details-btn" id="details-btn" aria-label="詳細を開く">
@@ -863,7 +859,7 @@
       <i class="fas fa-calendar"></i>
       <span>スケジュール</span>
     </a>
-    <a href="/staff/reports/new" class="dock-item">
+    <a href="/staff/reports/new" class="dock-item is-active">
       <i class="fas fa-file-alt"></i>
       <span>レポート</span>
     </a>
@@ -925,6 +921,14 @@
   .dock-item i {
     font-size: 1.2rem;
     color: var(--primary);
+  }
+  .dock-item.is-active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .dock-item.is-active i {
+    color: #fff;
   }
   .dock-item:active,
   .dock-item:hover {
