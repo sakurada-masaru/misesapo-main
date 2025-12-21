@@ -80,6 +80,7 @@
     <div class="list-tabs" id="list-tabs">
       <button class="list-tab active" data-filter="today">本日の予定</button>
       <button class="list-tab" data-filter="week">今週の予定</button>
+      <button class="list-tab" data-filter="past">過去の予定</button>
     </div>
 
     <!-- 開発タスクセクション（開発者用） -->
@@ -109,15 +110,6 @@
     <div class="schedule-list" id="cleaning-schedule-section">
       <h3 class="list-title" id="list-title">今後の予定</h3>
       <div class="schedule-items" id="schedule-items">
-        <div class="loading-message">
-          <i class="fas fa-spinner fa-spin"></i> 読み込み中...
-        </div>
-      </div>
-    </div>
-
-    <div class="schedule-list past-schedule-section" id="past-schedule-section">
-      <h3 class="list-title"><i class="fas fa-rotate-left"></i> 過去の予定（レポート未作成）</h3>
-      <div class="schedule-items" id="past-schedule-items">
         <div class="loading-message">
           <i class="fas fa-spinner fa-spin"></i> 読み込み中...
         </div>
@@ -1099,9 +1091,6 @@
     .calendar-schedule-section {
       margin-top: 20px;
     }
-    .past-schedule-section {
-      margin-top: 24px;
-    }
     .list-title {
       font-size: 1.125rem;
       font-weight: 600;
@@ -1370,7 +1359,6 @@
       renderCalendar();
       renderCalendarSchedules(new Date().toISOString().split('T')[0]);
       renderScheduleList();
-      renderPastSchedules();
       const toggle = document.getElementById('view-toggle');
       applyScheduleView(toggle ? toggle.checked : false);
       setupListTabs();
@@ -1597,6 +1585,15 @@
       if (filterDate) {
         title.textContent = `${filterDate} の予定`;
         schedules = schedules.filter(s => s.scheduled_date === filterDate);
+      } else if (listFilterMode === 'past') {
+        title.textContent = '過去の予定';
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        schedules = schedules.filter(s => {
+          if (!s.scheduled_date) return false;
+          const date = new Date(`${s.scheduled_date}T00:00:00`);
+          return date < today;
+        });
       } else if (listFilterMode === 'week') {
         title.textContent = '今週の予定';
         const today = new Date();
@@ -1633,6 +1630,8 @@
         return;
       }
       
+      const isPastMode = listFilterMode === 'past' && !filterDate;
+
       container.innerHTML = schedules.map(schedule => {
         const date = new Date(schedule.scheduled_date);
         const day = date.getDate();
@@ -1654,6 +1653,13 @@
         const brandLine = (clientName || brandName)
           ? `<div class="item-brand">${escapeHtml(clientName || '-')} ${brandName ? `/ ${escapeHtml(brandName)}` : ''}</div>`
           : '';
+        const reportAction = hasReport
+          ? `<a href="${reportLink}" class="action-btn btn-report">
+              <i class="fas fa-file-alt"></i> レポート確認
+            </a>`
+          : `<button class="action-btn btn-report" type="button" onclick="openReportCreateModal('${scheduleId || ''}')">
+              <i class="fas fa-file-alt"></i> レポート作成
+            </button>`;
         
         return `
           <div class="schedule-item status-${statusClass}">
@@ -1678,12 +1684,13 @@
               </div>
             </div>
             <div class="item-actions">
-              ${isScheduled ? `
+              ${isPastMode ? reportAction : ''}
+              ${!isPastMode && isScheduled ? `
                 <button class="action-btn btn-accept" onclick="acceptSchedule('${schedule.id}')">
                   <i class="fas fa-check-circle"></i> 受託
                 </button>
               ` : ''}
-              ${isInProgress ? `
+              ${!isPastMode && isInProgress ? `
                 <button class="action-btn btn-start" onclick="startWork('${schedule.id}')">
                   <i class="fas fa-play-circle"></i> 作業開始
                 </button>
@@ -1691,7 +1698,7 @@
                   <i class="fas fa-file-alt"></i> ${hasReport ? 'レポート確認' : 'レポート作成'}
                 </a>
               ` : ''}
-              ${isCompleted ? `
+              ${!isPastMode && isCompleted ? `
                 <a href="${reportLink}" class="action-btn btn-report">
                   <i class="fas fa-file-alt"></i> ${hasReport ? 'レポート確認' : 'レポート作成'}
                 </a>
@@ -1798,80 +1805,6 @@
       }).join('');
     }
 
-    function renderPastSchedules() {
-      const container = document.getElementById('past-schedule-items');
-      if (!container) return;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const pastSchedules = allSchedules.filter(schedule => {
-        if (!schedule.scheduled_date || schedule.report_created) return false;
-        const date = new Date(`${schedule.scheduled_date}T00:00:00`);
-        return date < today;
-      });
-
-      pastSchedules.sort((a, b) => {
-        const dateA = `${a.scheduled_date} ${a.scheduled_time || '00:00'}`;
-        const dateB = `${b.scheduled_date} ${b.scheduled_time || '00:00'}`;
-        return dateB.localeCompare(dateA);
-      });
-
-      if (pastSchedules.length === 0) {
-        container.innerHTML = `
-          <div class="empty-message">
-            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 12px; color: #d1d5db;"></i>
-            <p>レポート未作成の過去予定はありません</p>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = pastSchedules.map(schedule => {
-        const date = new Date(schedule.scheduled_date);
-        const day = date.getDate();
-        const dow = weekdays[date.getDay()];
-        const statusClass = schedule.status || 'scheduled';
-        const statusLabel = getStatusLabel(schedule.status);
-        const scheduleId = getScheduleId(schedule);
-        const canCreateReport = Boolean(scheduleId);
-        const reportLabel = canCreateReport ? 'レポート作成' : '案件ID未設定';
-        const reportDisabled = canCreateReport ? '' : 'disabled';
-        const { brandName, clientName } = getBrandAndClient(schedule);
-        const brandLine = (clientName || brandName)
-          ? `<div class="item-brand">${escapeHtml(clientName || '-')} ${brandName ? `/ ${escapeHtml(brandName)}` : ''}</div>`
-          : '';
-
-        return `
-          <div class="schedule-item status-${statusClass}">
-            <div class="schedule-item-header">
-              <div class="item-date">
-                <span class="date-day">${day}</span>
-                <span class="date-dow">${dow}</span>
-              </div>
-              <div class="item-content">
-                <div class="item-time">
-                  <i class="fas fa-clock"></i> ${schedule.scheduled_time || '-'} (${schedule.duration_minutes || 60}分)
-                </div>
-                <div class="item-id">案件ID: ${escapeHtml(String(scheduleId || '未設定'))}</div>
-                ${brandLine}
-                <div class="item-location">${escapeHtml(getStoreName(schedule.store_id))}</div>
-                <div class="item-address">${escapeHtml(getStoreAddress(schedule.store_id))}</div>
-                ${schedule.notes ? `<div class="item-task"><i class="fas fa-sticky-note"></i> ${escapeHtml(schedule.notes)}</div>` : ''}
-              </div>
-              <div class="item-status">
-                <span class="status-badge status-${statusClass}">${statusLabel}</span>
-                <span class="status-badge status-scheduled" style="margin-top: 6px;">レポート未作成</span>
-              </div>
-            </div>
-            <div class="item-actions">
-              <button class="action-btn btn-report" type="button" onclick="openReportCreateModal('${scheduleId || ''}')" ${reportDisabled}>
-                <i class="fas fa-file-alt"></i> ${reportLabel}
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
     function showDaySchedules(date) {
       listFilterDate = date;
       renderScheduleList(date);
@@ -1884,7 +1817,7 @@
       tabs.forEach(tab => {
         tab.addEventListener('click', () => {
           const mode = tab.getAttribute('data-filter');
-          listFilterMode = mode === 'week' ? 'week' : 'today';
+          listFilterMode = mode === 'week' ? 'week' : mode === 'past' ? 'past' : 'today';
           listFilterDate = null;
           setActiveListTab(mode);
           renderScheduleList();
@@ -2130,7 +2063,6 @@
       const toggle = document.getElementById('view-toggle');
       const calendarView = document.getElementById('calendar-view');
       const listView = document.getElementById('cleaning-schedule-section');
-      const pastSection = document.getElementById('past-schedule-section');
       const calendarSection = document.getElementById('calendar-schedule-section');
 
       if (!calendarView || !listView) return;
@@ -2142,9 +2074,6 @@
 
       calendarView.classList.toggle('is-hidden', !isCalendar);
       listView.classList.toggle('is-hidden', isCalendar);
-      if (pastSection) {
-        pastSection.classList.toggle('is-hidden', isCalendar);
-      }
       if (calendarSection) {
         calendarSection.classList.toggle('is-hidden', !isCalendar);
       }
