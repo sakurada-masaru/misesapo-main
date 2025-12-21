@@ -438,7 +438,6 @@ function renderUser(user) {
     }
   }
 
-  toggleOsQuickDock(user);
 }
 
 // OS課専用サイドバーを設定
@@ -497,86 +496,6 @@ function loadOSSectionSidebar() {
   console.log('OS section sidebar configured');
 }
 
-function toggleOsQuickDock(user) {
-  const dock = document.getElementById('os-quick-dock');
-  const main = document.querySelector('.staff-mypage');
-  if (!dock || !main) return;
-  const isOs = user && user.department === 'OS課';
-  dock.classList.toggle('is-hidden', !isOs);
-  main.classList.toggle('has-quick-dock', isOs);
-}
-
-function setupSwipeHint() {
-  const sidebar = document.getElementById('admin-sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
-  const hint = document.getElementById('swipe-hint');
-  const mobileButton = document.getElementById('mobile-menu-button');
-  if (!sidebar || !hint) return;
-
-  const updateHint = () => {
-    const isOpen = sidebar.classList.contains('open');
-    hint.classList.toggle('is-hidden', isOpen);
-  };
-
-  updateHint();
-
-  if (mobileButton) {
-    mobileButton.addEventListener('click', () => {
-      setTimeout(updateHint, 0);
-    });
-  }
-
-  if (overlay) {
-    overlay.addEventListener('click', () => {
-      setTimeout(updateHint, 0);
-    });
-  }
-
-  let startX = null;
-  let startY = null;
-  let tracking = false;
-  const edgeSize = 28;
-  const minSwipe = 48;
-  const maxVertical = 80;
-
-  const openSidebar = () => {
-    if (sidebar.classList.contains('open')) return;
-    sidebar.classList.add('open');
-    if (overlay) {
-      overlay.classList.add('active');
-    }
-    const icon = mobileButton?.querySelector('i');
-    if (icon) {
-      icon.className = 'fas fa-times';
-    }
-    updateHint();
-  };
-
-  document.addEventListener('touchstart', (event) => {
-    if (sidebar.classList.contains('open')) return;
-    const touch = event.touches[0];
-    if (!touch || touch.clientX < window.innerWidth - edgeSize) return;
-    tracking = true;
-    startX = touch.clientX;
-    startY = touch.clientY;
-  }, { passive: true });
-
-  document.addEventListener('touchmove', (event) => {
-    if (!tracking) return;
-    const touch = event.touches[0];
-    if (!touch) return;
-    const deltaX = touch.clientX - startX;
-    const deltaY = Math.abs(touch.clientY - startY);
-    if (deltaX < -minSwipe && deltaY < maxVertical) {
-      tracking = false;
-      openSidebar();
-    }
-  }, { passive: true });
-
-  document.addEventListener('touchend', () => {
-    tracking = false;
-  }, { passive: true });
-}
 
 function formatDate(dateString) {
   if (!dateString) return '-';
@@ -4101,7 +4020,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTodoListeners();
   setupDigitalClock();
   applyMypageTheme();
-  setupSwipeHint();
   
   // 設定ページでテーマが変更された場合のイベントリスナー
   window.addEventListener('themeChanged', (e) => {

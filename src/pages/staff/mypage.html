@@ -111,10 +111,6 @@
 <!-- サイドバーオーバーレイ -->
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-<div class="swipe-hint" id="swipe-hint" aria-hidden="true">
-  <span class="swipe-hint-label">SWIPE</span>
-</div>
-
 <!-- サイドバー -->
 <aside class="sidebar" id="admin-sidebar">
   <div class="sidebar-header">
@@ -438,7 +434,11 @@
   </div>
 </main>
 
-<nav class="quick-actions-dock is-hidden" id="os-quick-dock" aria-label="クイックアクション">
+<nav class="quick-actions-dock" aria-label="クイックアクション">
+  <a href="/staff/mypage" class="dock-item is-active">
+    <i class="fas fa-user"></i>
+    <span>マイページ</span>
+  </a>
   <a href="/staff/schedule" class="dock-item">
     <i class="fas fa-calendar"></i>
     <span>スケジュール</span>
