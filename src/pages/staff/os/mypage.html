@@ -27,6 +27,32 @@
 <script src="/js/client_auth.js"></script>
 <script src="/js/admin-sidebar.js"></script>
 <script src="/js/staff-mypage.js"></script>
+<script>
+  (function() {
+    const isOsUser = () => {
+      const candidates = ['cognito_user', 'misesapo_auth'];
+      for (const key of candidates) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const user = parsed.user || parsed;
+          const department = String(user.department || '').toLowerCase();
+          if (department.includes('os')) {
+            return true;
+          }
+        } catch (error) {
+          console.warn('[OS Mypage] Failed to parse user:', error);
+        }
+      }
+      return false;
+    };
+
+    if (!isOsUser()) {
+      window.location.replace('/staff/mypage');
+    }
+  })();
+</script>
   </head>
   <body class="theme-pink theme-pink page-staff-mypage">
     <div id="default-header-wrapper">
