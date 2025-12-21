@@ -228,16 +228,12 @@
 
 <main id="main" class="staff-report-page">
   <!-- 固定ヘッダー -->
-  <header class="page-header-fixed">
-    <div class="header-spacer" aria-hidden="true"></div>
-    <div class="header-actions">
-      <button type="button" class="details-btn is-prominent" id="details-btn" aria-label="詳細パネルを開く">
-        <i class="fas fa-info-circle"></i>
-        <span class="details-btn-text">詳細パネル</span>
-      </button>
-    </div>
-    <div class="header-spacer" aria-hidden="true"></div>
-  </header>
+  <div class="report-top-actions">
+    <button type="button" class="details-btn is-prominent" id="details-btn" aria-label="詳細パネルを開く">
+      <i class="fas fa-info-circle"></i>
+      <span class="details-btn-text">詳細パネル</span>
+    </button>
+  </div>
 
   <!-- タブナビゲーション -->
   <div class="tabs-navigation">
@@ -907,32 +903,12 @@
 
 <style>
 .staff-report-page {
-  padding-top: 80px;
-  padding-bottom: 220px;
+    padding-bottom: 220px;
 }
-.page-header-fixed {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 80px;
-  z-index: 1100;
-  display: grid;
-  grid-template-columns: 44px 1fr 44px;
-  align-items: center;
-  gap: 12px;
-  padding: 0 16px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-}
-.header-spacer {
-  width: 44px;
-  height: 44px;
-}
-.page-header-fixed .header-actions {
+.report-top-actions {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  padding: 16px;
 }
   .quick-actions-dock {
     position: fixed;
