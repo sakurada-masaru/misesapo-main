@@ -1401,7 +1401,7 @@
         const headers = getAuthHeaders();
         const [schedulesRes, reportsRes] = await Promise.all([
           fetch(`${API_BASE}/schedules`, { headers }).catch(() => null),
-          fetch(`${REPORT_API}/staff/reports?limit=1000`, { headers }).catch(() => null)
+          fetch(`${REPORT_API}/staff/os/reports?limit=1000`, { headers }).catch(() => null)
         ]);
 
         const schedulesData = schedulesRes && schedulesRes.ok ? await schedulesRes.json() : [];
