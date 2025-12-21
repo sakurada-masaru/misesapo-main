@@ -237,7 +237,7 @@
   <div class="loading" id="loading">読み込み中...</div>
   <div id="error-message" class="error-message" style="display: none;"></div>
   <div class="content-menu-bar">
-    <button class="content-menu-btn" type="button" aria-label="メニューを開く" onclick="const target = document.getElementById('sidebar-toggle'); if (target) { target.click(); }">
+    <button class="content-menu-btn" type="button" aria-label="メニューを開く" onclick="const sidebar = document.getElementById('admin-sidebar'); const overlay = document.getElementById('sidebar-overlay'); if (sidebar) { sidebar.classList.add('open'); sidebar.classList.remove('collapsed'); } if (overlay) { overlay.classList.add('active'); }">
       <i class="fas fa-bars"></i>
     </button>
   </div>
