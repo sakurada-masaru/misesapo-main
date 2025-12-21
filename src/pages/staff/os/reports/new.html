@@ -36,16 +36,16 @@
 <main id="main" class="staff-report-page">
   <!-- 固定ヘッダー -->
   <header class="page-header-fixed">
-    <div class="header-spacer" aria-hidden="true"></div>
+    <button class="menu-btn" type="button" onclick="const target = document.getElementById('sidebar-toggle') || document.getElementById('mobile-menu-button'); if (target) { target.click(); }" aria-label="メニューを開く">
+      <i class="fas fa-bars"></i>
+    </button>
     <div class="header-actions">
       <button type="button" class="details-btn" id="details-btn" aria-label="詳細を開く">
         <i class="fas fa-info-circle"></i>
         <span class="details-btn-text">詳細</span>
       </button>
     </div>
-    <button class="menu-btn" type="button" onclick="const target = document.getElementById('sidebar-toggle') || document.getElementById('mobile-menu-button'); if (target) { target.click(); }" aria-label="メニューを開く">
-      <i class="fas fa-bars"></i>
-    </button>
+    <div class="header-spacer" aria-hidden="true"></div>
   </header>
 
   <!-- タブナビゲーション -->
