@@ -334,7 +334,6 @@
   font-size: 0.82rem;
   color: #6b7280;
 }
-}
 
 .details-btn-text {
   font-size: 0.85rem;
@@ -548,12 +547,12 @@
   }
   
   .details-btn-text {
-    display: none;
+    display: inline;
   }
   
   .details-btn {
-    padding: 6px;
-    min-width: 36px;
+    padding: 10px 14px;
+    min-width: 0;
   }
   
   .details-hint {
