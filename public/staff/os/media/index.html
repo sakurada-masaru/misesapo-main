@@ -130,32 +130,13 @@
     z-index: 1200;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
   }
-  .os-header-menu {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: #fff;
-    color: #111827;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-  }
-  .os-header-menu:active {
-    transform: scale(0.98);
-  }
   #main {
     padding-top: 80px;
   }
 </style>
 </head>
   <body class="theme-pink page-staff-media">
-<header class="os-fixed-header">
-  <button class="os-header-menu" type="button" aria-label="メニューを開く" onclick="const target = document.getElementById('sidebar-toggle') || document.getElementById('mobile-menu-button'); if (target) { target.click(); }">
-    <i class="fas fa-bars"></i>
-  </button>
-</header>
+<header class="os-fixed-header"></header>
 
     <div id="default-header-wrapper">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
@@ -365,21 +346,6 @@
       padding: 16px;
       background: #f9fafb;
       padding-bottom: 160px;
-    }
-    .menu-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: 1px solid #e5e7eb;
-      background: #ffffff;
-      color: #111827;
-      font-size: 1.25rem;
-      cursor: pointer;
-      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
-    }
-    .menu-btn:hover {
-      background: #fff1f6;
-      border-color: #fecddf;
     }
     .quick-actions-dock {
       position: fixed;

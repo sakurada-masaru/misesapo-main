@@ -130,21 +130,6 @@
     z-index: 1200;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
   }
-  .os-header-menu {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: #fff;
-    color: #111827;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-  }
-  .os-header-menu:active {
-    transform: scale(0.98);
-  }
   #main {
     padding-top: 80px;
   }
@@ -152,9 +137,14 @@
 </head>
   <body class="theme-pink page-staff-schedule">
 <header class="os-fixed-header">
-  <button class="os-header-menu" type="button" aria-label="メニューを開く" onclick="const target = document.getElementById('sidebar-toggle') || document.getElementById('mobile-menu-button'); if (target) { target.click(); }">
-    <i class="fas fa-bars"></i>
-  </button>
+  <div class="view-toggle">
+    <span class="view-label">リスト</span>
+    <label class="switch" aria-label="表示切り替え">
+      <input type="checkbox" id="view-toggle" aria-checked="false" onchange="applyScheduleView(this.checked)">
+      <span class="slider"></span>
+    </label>
+    <span class="view-label">カレンダー</span>
+  </div>
 </header>
 
     <div id="default-header-wrapper">
@@ -356,17 +346,6 @@
 
 <main id="main" class="staff-page main-content">
   <div class="page-container">
-    <div class="page-header">
-      <div class="header-spacer" aria-hidden="true"></div>
-      <div class="view-toggle">
-        <span class="view-label">リスト</span>
-        <label class="switch" aria-label="表示切り替え">
-          <input type="checkbox" id="view-toggle" aria-checked="false" onchange="applyScheduleView(this.checked)">
-          <span class="slider"></span>
-        </label>
-        <span class="view-label">カレンダー</span>
-      </div>
-    </div>
     <div class="role-badge-display" id="role-badge-display"></div>
 
     <!-- ロール別タブ（開発者の場合のみ表示） -->
@@ -660,21 +639,6 @@
     .role-badge-display.office {
       background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
       color: #fff;
-    }
-    .menu-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: 1px solid #e5e7eb;
-      background: #ffffff;
-      color: #111827;
-      font-size: 1.25rem;
-      cursor: pointer;
-      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
-    }
-    .menu-btn:hover {
-      background: #fff1f6;
-      border-color: #fecddf;
     }
     .header-spacer {
       width: 44px;

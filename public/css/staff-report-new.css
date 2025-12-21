@@ -316,6 +316,17 @@
   color: #fff;
 }
 
+.details-btn.is-prominent {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(255, 103, 156, 0.35);
+}
+
+.details-btn.is-prominent:hover {
+  background: var(--primary-600);
+  color: #fff;
+}
+
 .details-btn-text {
   font-size: 0.85rem;
 }
@@ -3993,4 +4004,3 @@ html {
 }
 
 /* 送信ボタンセクション */
-

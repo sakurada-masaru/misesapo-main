@@ -229,13 +229,11 @@
 <main id="main" class="staff-report-page">
   <!-- 固定ヘッダー -->
   <header class="page-header-fixed">
-    <button class="menu-btn" type="button" onclick="const target = document.getElementById('sidebar-toggle') || document.getElementById('mobile-menu-button'); if (target) { target.click(); }" aria-label="メニューを開く">
-      <i class="fas fa-bars"></i>
-    </button>
+    <div class="header-spacer" aria-hidden="true"></div>
     <div class="header-actions">
-      <button type="button" class="details-btn" id="details-btn" aria-label="詳細を開く">
+      <button type="button" class="details-btn is-prominent" id="details-btn" aria-label="詳細パネルを開く">
         <i class="fas fa-info-circle"></i>
-        <span class="details-btn-text">詳細</span>
+        <span class="details-btn-text">詳細パネル</span>
       </button>
     </div>
     <div class="header-spacer" aria-hidden="true"></div>
@@ -936,21 +934,6 @@
   display: flex;
   justify-content: center;
 }
-  .menu-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: 1px solid #e5e7eb;
-    background: #ffffff;
-    color: #111827;
-    font-size: 1.25rem;
-    cursor: pointer;
-    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
-  }
-  .menu-btn:hover {
-    background: #fff1f6;
-    border-color: #fecddf;
-  }
   .quick-actions-dock {
     position: fixed;
     left: 0;
