@@ -343,7 +343,7 @@
     <i class="fas fa-calendar"></i>
     <span>スケジュール</span>
   </a>
-  <a href="/sales/dashboard" class="dock-item" onclick="event.preventDefault(); window.location.href='/sales/dashboard'; setTimeout(() => { const caseTab = document.querySelector('.tab[data-tab=\"case\"]'); if (caseTab) caseTab.click(); else if (window.handleTabClick) window.handleTabClick('case'); }, 500); return false;">
+  <a href="/sales/dashboard" class="dock-item" onclick="event.preventDefault(); window.location.href='/sales/dashboard'; setTimeout(() => { if (window.handleTabClick) { window.handleTabClick('case'); } else { const caseTab = document.querySelector('.tab[data-tab=\"case\"]'); if (caseTab) caseTab.click(); } }, 300); return false;">
     <i class="fas fa-briefcase"></i>
     <span>案件</span>
   </a>
