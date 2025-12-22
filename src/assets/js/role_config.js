@@ -99,18 +99,18 @@ const ROLE_CONFIG = {
   // ロールごとのログイン後リダイレクト先
   defaultPages: {
     'customer': '/mypage',
-    'staff': '/staff/mypage',  // 清掃員はマイページ（勤怠機能使用）
-    'office': '/admin/dashboard',  // 事務は管理ダッシュボード
+    'staff': '/staff/mypage',  // 清掃員（OS課以外）は通常マイページ（PC向け）
+    'office': '/staff/office/mypage',  // 事務は事務マイページ（PC向け）
     'designer': '/admin/dashboard',  // デザイナーは管理ダッシュボード
     'general_affairs': '/admin/dashboard',  // 総務は管理ダッシュボード
     'operation': '/admin/dashboard',  // 運営は管理ダッシュボード
     'accounting': '/admin/dashboard',  // 経理は管理ダッシュボード
     'human_resources': '/admin/dashboard',  // 人事は管理ダッシュボード
-    'contractor': '/staff/mypage',  // 外部委託はマイページ（勤怠機能使用）
-    'concierge': '/sales/dashboard',  // コンシェルジュは営業ダッシュボード
-    'sales': '/sales/dashboard',  // 営業は営業ダッシュボード
+    'contractor': '/staff/mypage',  // 外部委託は通常マイページ（PC向け）
+    'concierge': '/sales/mypage',  // コンシェルジュは営業マイページ（SP用、クイックメニューあり）
+    'sales': '/sales/mypage',  // 営業は営業マイページ（SP用、クイックメニューあり）
     'admin': '/admin/dashboard',  // 管理者は管理ダッシュボード
-    'developer': '/admin/dashboard',  // 開発者は管理ダッシュボード
+    'developer': '/staff/developer/mypage',  // 開発者は開発マイページ（PC向け）
     'master': '/admin/sitemap',  // マスターはサイトマップ
     'guest': '/'
   },

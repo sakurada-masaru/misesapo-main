@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <base href="/" />
+    <title>営業マイページ | ミセサポ</title>
+    <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
+<link rel="shortcut icon" href="/images/logo_144x144.png" />
+<link rel="apple-touch-icon" href="/images/logo_144x144.png" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="stylesheet" href="/css/header.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="/css/admin-sidebar.css">
+<link rel="stylesheet" href="/css/staff-mypage.css">
+<link rel="stylesheet" href="/css/staff-mypage-inline.css" />
+<!-- AWS SDKの読み込み -->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script src="/js/cognito_config.js"></script>
+<script src="/js/cognito_auth.js"></script>
+<script src="/js/client_auth.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+<script src="/js/staff-mypage.js"></script>
+<script>
+  (function() {
+    const isSalesUser = () => {
+      const candidates = ['cognito_user', 'misesapo_auth'];
+      for (const key of candidates) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const user = parsed.user || parsed;
+          const role = String(user.role || '').toLowerCase();
+          const department = String(user.department || '').toLowerCase();
+          if (role === 'sales' || role === 'concierge' || department.includes('営業') || department.includes('sales')) {
+            return true;
+          }
+        } catch (error) {
+          console.warn('[Sales Mypage] Failed to parse user:', error);
+        }
+      }
+      return false;
+    };
+
+    if (!isSalesUser()) {
+      window.location.replace('/sales/mypage');
+    }
+  })();
+</script>
+  <style>
+  #main {
+      }
+</style>
+  <style>
+    .content-menu-bar {
+      display: flex;
+      justify-content: flex-start;
+      padding: 16px 16px 0;
+    }
+    .content-menu-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #111827;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+    }
+  </style>
+</head>
+  <body class="theme-pink theme-pink page-staff-mypage">
+
+    <div id="default-header-wrapper">
+    <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
+<header id="header-guest" class="site-header" data-role="guest">
+  <div class="inner wide">
+    <div class="nav-left">
+      <a class="brand brand-logo" href="/" aria-label="ミセサポ ホーム">
+        <img src="/images/logo_144x144.png" alt="ミセサポ" />
+      </a>
+      <nav id="nav-guest" class="nav-left hide-sm" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav-right hide-sm" aria-label="User">
+      <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+      <a class="nav-link" href="/staff/signin.html">ログイン</a>
+      <a class="nav-link primary" href="/signup">新規登録</a>
+      <button class="icon-btn" aria-label="通知">
+        <i class="fas fa-bell"></i>
+      </button>
+      <button class="icon-btn" aria-label="ログアウト" onclick="window.Auth && window.Auth.logout()" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </nav>
+    <button class="hamburger-btn show-sm" aria-label="メニュー" aria-expanded="false" id="hamburger-btn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <!-- スマホ版ナビゲーションメニュー -->
+  <nav class="mobile-nav show-sm" id="mobile-nav" aria-label="モバイルナビゲーション">
+    <div class="mobile-nav-content">
+      <nav class="mobile-nav-primary" id="mobile-nav-primary" aria-label="Primary">
+        <!-- ナビゲーション項目はJavaScriptで動的に生成されます -->
+      </nav>
+      <nav class="mobile-nav-user" aria-label="User">
+        <span class="role-badge" style="padding: 4px 12px; background: #e5e7eb; color: #6b7280; border-radius: 4px; font-size: 0.875rem; font-weight: 500;">ゲスト</span>
+        <a class="mobile-nav-link" href="/staff/signin.html">ログイン</a>
+        <a class="mobile-nav-link primary" href="/signup">新規登録</a>
+      </nav>
+    </div>
+  </nav>
+</header>
+
+    </div>
+    <!-- 通常ヘッダー（ログイン画面用） -->
+    <div id="normal-header-wrapper" style="display: none;">
+    <!-- 通常ヘッダー -->
+<header class="normal-header">
+    <div class="normal-header-inner">
+        <div class="normal-header-logo">
+            <a href="/">
+                <img id="normal-header-logo-img" src="/images-material/logo_144x144.png" alt="ロゴ" onerror="this.style.display='none'">
+            </a>
+                </div>
+        <nav class="normal-header-nav">
+            <a href="/">TOP</a>
+            <a href="/service">対応可能サービス</a>
+            <a href="/lp#voice">お客様の声</a>
+            <a href="/customers-support-desk">カスタマーズサポート</a>
+            <a href="/announcements">お知らせ</a>
+            <a href="/privacy-policy">規約＆ポリシー</a>
+        </nav>
+        <div class="normal-header-actions">
+            <a href="/staff/signin.html" class="normal-header-login">ログイン</a>
+        </div>
+            </div>
+</header>
+
+
+    </div>
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/sales/mypage" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
+    </a>
+  </div>
+
+  <!-- ロール表示 -->
+  <div class="sidebar-role">
+    <span class="role-badge" id="sidebar-role-badge">営業</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="/sales/mypage" class="nav-item active" data-page="mypage">
+      <i class="fas fa-user-circle"></i>
+      <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/sales/clients" class="nav-item" data-page="clients">
+      <i class="fas fa-users"></i>
+      <span class="nav-label">顧客管理</span>
+    </a>
+    <a href="/sales/schedules" class="nav-item" data-page="schedules">
+      <i class="fas fa-calendar"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <a href="/sales/estimates" class="nav-item" data-page="estimates">
+      <i class="fas fa-file-invoice-dollar"></i>
+      <span class="nav-label">見積もり</span>
+    </a>
+    <a href="/sales/orders" class="nav-item" data-page="orders">
+      <i class="fas fa-shopping-cart"></i>
+      <span class="nav-label">発注管理</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/staff/mypage/settings" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <a href="/staff/signin.html" class="nav-item" data-page="signin">
+      <i class="fas fa-sign-in-alt"></i>
+      <span class="nav-label">ログイン</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="staffLogout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
+
+  <!-- トグルボタン -->
+  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="サイドバーを開閉">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<main id="main" class="staff-mypage main-content" style="height:auto !important;">
+  <div class="loading" id="loading">読み込み中...</div>
+  <div id="error-message" class="error-message" style="display: none;"></div>
+  <div class="content-menu-bar">
+    <button class="content-menu-btn" type="button" aria-label="メニューを開く" onclick="const sidebar = document.getElementById('admin-sidebar'); const overlay = document.getElementById('sidebar-overlay'); if (sidebar) { sidebar.classList.add('open'); sidebar.classList.remove('collapsed'); } if (overlay) { overlay.classList.add('active'); }">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+  
+  <div id="mypage-content" style="display: none;">
+    <!-- メインコンテンツ -->
+    <div class="mypage-main-grid-container" style="flex: 1; overflow: hidden; min-height: 0;">
+        <div class="mypage-main-grid" id="mypage-grid">
+        <!-- 左カラム -->
+        <div class="mypage-column mypage-column-left">
+        <!-- 基本情報セクション -->
+        <section id="basic-info">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-user"></i>
+                基本情報
+              </h2>
+            </div>
+            <div class="card basic-info-card accordion-content">
+              <div id="basic-info-content">
+                <div class="basic-info-row">
+                  <div class="basic-info-item">
+                    <span class="basic-info-label">名前</span>
+                    <span class="basic-info-value" id="basic-info-name">-</span>
+                  </div>
+                  <div class="basic-info-item">
+                    <span class="basic-info-label">部署</span>
+                    <span class="basic-info-value" id="basic-info-department">-</span>
+                  </div>
+                </div>
+                <div class="basic-info-item">
+                  <span class="basic-info-label">メール</span>
+                  <span class="basic-info-value" id="basic-info-email">-</span>
+                </div>
+                <div class="basic-info-item">
+                  <span class="basic-info-label">電話</span>
+                  <span class="basic-info-value" id="basic-info-phone">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- 業務連絡通知セクション -->
+        <section id="announcements">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-bullhorn"></i>
+                業務連絡
+              </h2>
+            </div>
+            <div class="card announcements-card accordion-content">
+              <div id="announcements-list">
+                <div class="empty-state">業務連絡はありません</div>
+              </div>
+            </div>
+          </div>
+        </section>
+        </div>
+        <!-- 中央カラム -->
+        <div class="mypage-column mypage-column-center">
+        <!-- 顧客一覧 -->
+        <section id="clients-list">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-users"></i>
+                顧客一覧
+              </h2>
+              <a href="/sales/clients" class="btn btn-text btn-sm" title="顧客管理へ">
+                <i class="fas fa-external-link-alt"></i>
+                <span>詳細</span>
+              </a>
+            </div>
+            <div class="card accordion-content">
+              <div class="empty-state">顧客一覧は準備中です</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 見積もり一覧 -->
+        <section id="estimates-list">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-file-invoice-dollar"></i>
+                見積もり一覧
+              </h2>
+              <a href="/sales/estimates" class="btn btn-text btn-sm" title="見積もり管理へ">
+                <i class="fas fa-external-link-alt"></i>
+                <span>詳細</span>
+              </a>
+            </div>
+            <div class="card accordion-content">
+              <div class="empty-state">見積もり一覧は準備中です</div>
+            </div>
+          </div>
+        </section>
+
+        </div>
+
+
+              </div>
+              </div>
+        </div>
+  </div>
+</main>
+
+<nav class="quick-actions-dock" aria-label="クイックアクション">
+  <a href="/sales/mypage" class="dock-item is-active">
+    <i class="fas fa-user-circle"></i>
+    <span>マイページ</span>
+  </a>
+  <a href="/sales/clients" class="dock-item">
+    <i class="fas fa-user-plus"></i>
+    <span>顧客登録</span>
+  </a>
+  <a href="/sales/schedules" class="dock-item">
+    <i class="fas fa-calendar"></i>
+    <span>スケジュール</span>
+  </a>
+  <a href="/sales/dashboard" class="dock-item" onclick="event.preventDefault(); window.location.href='/sales/dashboard'; setTimeout(() => { const caseTab = document.querySelector('.tab[data-tab=\"case\"]'); if (caseTab) caseTab.click(); else if (window.handleTabClick) window.handleTabClick('case'); }, 500); return false;">
+    <i class="fas fa-briefcase"></i>
+    <span>案件管理</span>
+  </a>
+</nav>
+
+    <footer class="site-footer">
+  <div class="container text-center muted small" style="padding: 16px 0;">
+    <p>&copy; 2025 ミセサポ</p>
+  </div>
+</footer>
+
+
+    <!-- Additional scripts (if needed) -->
+    <script src="/js/staff-mypage-inline.js"></script>
+  </body>
+  </html>
+
