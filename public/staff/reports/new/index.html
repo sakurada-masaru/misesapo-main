@@ -556,38 +556,38 @@
       </div>
       <div class="modal-body" style="padding:20px; overflow-y:auto; flex:1;">
         <!-- フィルター -->
-        <div style="margin-bottom:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-          <div style="flex:1; min-width:150px;">
-            <label style="display:block; margin-bottom:6px; font-size:0.875rem; font-weight:600; color:#374151;">日付</label>
-            <input type="date" id="media-selection-date" class="form-input" style="width:100%; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
-          </div>
-          <div style="flex:1; min-width:180px;">
-            <label style="display:block; margin-bottom:6px; font-size:0.875rem; font-weight:600; color:#374151;">スケジュールID</label>
-            <select id="media-selection-schedule" class="form-select" style="width:100%; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
-              <option value="">選択してください</option>
-            </select>
-          </div>
-          <div style="flex:1; min-width:160px;">
-            <label style="display:block; margin-bottom:6px; font-size:0.875rem; font-weight:600; color:#374151;">サービスID</label>
-            <input type="text" id="media-selection-service" class="form-input" style="width:100%; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;" list="media-selection-service-options" placeholder="例: 12">
-            <datalist id="media-selection-service-options"></datalist>
-          </div>
-          <div style="flex:1; min-width:150px;">
-            <label style="display:block; margin-bottom:6px; font-size:0.875rem; font-weight:600; color:#374151;">フォルダ</label>
-            <select id="media-selection-folder" class="form-select" style="width:100%; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
-              <option value="">全てのフォルダ</option>
-            </select>
-          </div>
-          <div style="flex:1; min-width:120px;">
-            <label style="display:block; margin-bottom:6px; font-size:0.875rem; font-weight:600; color:#374151;">カテゴリ</label>
-            <select id="media-selection-category" class="form-select" style="width:100%; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
-              <option value="">全て</option>
-              <option value="before">作業前</option>
-              <option value="after">作業後</option>
-            </select>
-          </div>
+      <div style="margin-bottom:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+        <div style="flex:1; min-width:150px;">
+          <label style="display:block; margin-bottom:6px; font-size:0.875rem; font-weight:600; color:#374151;">日付</label>
+          <input type="date" id="media-selection-date" class="form-input" style="width:100%; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
         </div>
-        <div id="media-selection-folder-preview" style="font-size:0.85rem; color:#6b7280; background:#f3f4f6; border-radius:8px; padding:10px 12px; border:1px solid #e5e7eb; margin-bottom:16px;">フォルダ未設定</div>
+        <div style="flex:1; min-width:180px;">
+          <label style="display:block; margin-bottom:6px; font-size:0.875rem; font-weight:600; color:#374151;">スケジュールID</label>
+          <select id="media-selection-schedule" class="form-select" style="width:100%; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
+            <option value="">選択してください</option>
+          </select>
+        </div>
+        <div style="flex:1; min-width:160px;">
+          <label style="display:block; margin-bottom:6px; font-size:0.875rem; font-weight:600; color:#374151;">サービスID</label>
+          <input type="text" id="media-selection-service" class="form-input" style="width:100%; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;" list="media-selection-service-options" placeholder="例: 12">
+          <datalist id="media-selection-service-options"></datalist>
+        </div>
+        <div style="flex:1; min-width:150px;">
+          <label style="display:block; margin-bottom:6px; font-size:0.875rem; font-weight:600; color:#374151;">フォルダ</label>
+          <select id="media-selection-folder" class="form-select" style="width:100%; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
+            <option value="">全てのフォルダ</option>
+          </select>
+        </div>
+        <div style="flex:1; min-width:120px;">
+          <label style="display:block; margin-bottom:6px; font-size:0.875rem; font-weight:600; color:#374151;">カテゴリ</label>
+          <select id="media-selection-category" class="form-select" style="width:100%; padding:8px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:0.875rem;">
+            <option value="">全て</option>
+            <option value="before">作業前</option>
+            <option value="after">作業後</option>
+          </select>
+        </div>
+      </div>
+      <div id="media-selection-folder-preview" style="font-size:0.85rem; color:#6b7280; background:#f3f4f6; border-radius:8px; padding:10px 12px; border:1px solid #e5e7eb; margin-bottom:16px;">フォルダ未設定</div>
         <!-- 画像グリッド -->
         <div id="media-selection-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:12px; min-height:200px;">
           <div style="grid-column:1/-1; text-align:center; padding:40px; color:#6b7280;">
@@ -1031,3 +1031,5 @@
     </script>
   </body>
   </html>
+
+

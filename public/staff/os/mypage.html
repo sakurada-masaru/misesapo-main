@@ -57,6 +57,26 @@
   #main {
       }
 </style>
+  <style>
+    .content-menu-bar {
+      display: flex;
+      justify-content: flex-start;
+      padding: 16px 16px 0;
+    }
+    .content-menu-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #111827;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+    }
+  </style>
 </head>
   <body class="theme-pink theme-pink page-staff-mypage">
 
@@ -132,13 +152,6 @@
 
 
     </div>
-<!-- モバイルメニューボタン -->
-<div class="mobile-menu-area">
-<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
-  <i class="fas fa-bars"></i>
-</button>
-</div>
-
 <!-- サイドバーオーバーレイ -->
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
@@ -165,6 +178,10 @@
     <a href="/staff/os/mypage" class="nav-item active" data-page="mypage">
       <i class="fas fa-user-circle"></i>
       <span class="nav-label">マイページ</span>
+    </a>
+    <a href="/staff/os/reports" class="nav-item" data-page="reports">
+      <i class="fas fa-clipboard-list"></i>
+      <span class="nav-label">レポート一覧</span>
     </a>
     <a href="/staff/attendance-history" class="nav-item" data-page="attendance-history">
       <i class="fas fa-history"></i>
@@ -219,6 +236,11 @@
 <main id="main" class="staff-mypage main-content" style="height:auto !important;">
   <div class="loading" id="loading">読み込み中...</div>
   <div id="error-message" class="error-message" style="display: none;"></div>
+  <div class="content-menu-bar">
+    <button class="content-menu-btn" type="button" aria-label="メニューを開く" onclick="const sidebar = document.getElementById('admin-sidebar'); const overlay = document.getElementById('sidebar-overlay'); if (sidebar) { sidebar.classList.add('open'); sidebar.classList.remove('collapsed'); } if (overlay) { overlay.classList.add('active'); }">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
   
   <div id="mypage-content" style="display: none;">
     <!-- メインコンテンツ -->
@@ -226,6 +248,40 @@
         <div class="mypage-main-grid" id="mypage-grid">
         <!-- 左カラム -->
         <div class="mypage-column mypage-column-left">
+        <!-- 基本情報セクション -->
+        <section id="basic-info">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-user"></i>
+                基本情報
+              </h2>
+            </div>
+            <div class="card basic-info-card accordion-content">
+              <div id="basic-info-content">
+                <div class="basic-info-row">
+                  <div class="basic-info-item">
+                    <span class="basic-info-label">名前</span>
+                    <span class="basic-info-value" id="basic-info-name">-</span>
+                  </div>
+                  <div class="basic-info-item">
+                    <span class="basic-info-label">部署</span>
+                    <span class="basic-info-value" id="basic-info-department">-</span>
+                  </div>
+                </div>
+                <div class="basic-info-item">
+                  <span class="basic-info-label">メール</span>
+                  <span class="basic-info-value" id="basic-info-email">-</span>
+                </div>
+                <div class="basic-info-item">
+                  <span class="basic-info-label">電話</span>
+                  <span class="basic-info-value" id="basic-info-phone">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
         <!-- 業務連絡通知セクション -->
         <section id="announcements">
           <div class="container-section">
@@ -282,73 +338,6 @@
             </div>
             <div class="card accordion-content">
               <div class="empty-state">作業履歴は準備中です</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 基本情報セクション -->
-        <section id="basic-info">
-          <div class="container-section">
-            <div class="container-header">
-              <h2 class="container-title drag-handle">
-                <i class="fas fa-grip-vertical"></i>
-                <i class="fas fa-user"></i>
-                基本情報
-              </h2>
-            </div>
-            <div class="card basic-info-card accordion-content">
-              <div id="basic-info-content">
-                <div class="basic-info-row">
-                  <div class="basic-info-item">
-                    <span class="basic-info-label">名前</span>
-                    <span class="basic-info-value" id="basic-info-name">-</span>
-                  </div>
-                  <div class="basic-info-item">
-                    <span class="basic-info-label">部署</span>
-                    <span class="basic-info-value" id="basic-info-department">-</span>
-                  </div>
-                </div>
-                <div class="basic-info-item">
-                  <span class="basic-info-label">メール</span>
-                  <span class="basic-info-value" id="basic-info-email">-</span>
-                </div>
-                <div class="basic-info-item">
-                  <span class="basic-info-label">電話</span>
-                  <span class="basic-info-value" id="basic-info-phone">-</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-        </div>
-        <!-- 右カラム -->
-        <div class="mypage-column mypage-column-right">
-        <!-- TODOリスト -->
-        <section id="todo">
-          <div class="container-section">
-            <div class="container-header">
-              <h2 class="container-title drag-handle">
-                <i class="fas fa-grip-vertical"></i>
-                <i class="fas fa-tasks"></i>
-                TODOリスト
-                <span class="todo-count" id="todo-count">0</span>
-              </h2>
-            </div>
-            <div class="card todo-card accordion-content">
-              <div class="todo-input-wrapper">
-                <input type="text" id="todo-input" class="todo-input" placeholder="新しいタスクを追加..." />
-                <button class="btn btn-primary btn-sm" id="add-todo-btn">
-                  <i class="fas fa-plus"></i>
-                </button>
-              </div>
-              <div id="todo-list" class="todo-list">
-                <!-- TODOアイテムが動的に生成される -->
-              </div>
-              <div class="todo-filters" id="todo-filters">
-                <button class="filter-btn active" data-filter="all">すべて</button>
-                <button class="filter-btn" data-filter="active">未完了</button>
-                <button class="filter-btn" data-filter="completed">完了</button>
-              </div>
             </div>
           </div>
         </section>

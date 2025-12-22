@@ -34,11 +34,18 @@ from typing import Dict, List, Optional, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
-PAGES_DIR = SRC / "pages"
+PAGES_DIR = SRC / "pages"  # 後方互換性のため保持
 PARTIALS_DIR = SRC / "partials"
 LAYOUTS_DIR = SRC / "layouts"
 PUBLIC = ROOT / "public"
 ASSETS_DIR = SRC / "assets"
+
+# 役割分担のディレクトリ構造
+CORPORATE_PAGES_DIR = SRC / "corporate" / "pages"  # 部下が担当：コーポレートサイト
+CUSTOMER_PAGES_DIR = SRC / "customer" / "pages"     # 部下が担当：お客様ページ
+STAFF_PAGES_DIR = SRC / "staff" / "pages"          # ユーザーが担当：清掃員ページ
+SALES_PAGES_DIR = SRC / "sales" / "pages"          # ユーザーが担当：営業マンページ
+ADMIN_PAGES_DIR = SRC / "admin" / "pages"           # ユーザーが担当：管理ページ
 
 
 RE_INCLUDE = re.compile(r"@include\(['\"](.*?)['\"]\)")
@@ -931,9 +938,6 @@ def _build_service_edit_pages(template: Path, outputs: List[str]) -> None:
 
 
 def build_all() -> List[str]:
-    if not PAGES_DIR.exists():
-        raise BuildError(f"Missing input directory: {PAGES_DIR}")
-    
     # Convert CSV to JSON before building pages
     csv_path = SRC / "data" / "clients.csv"
     json_path = SRC / "data" / "clients.json"
@@ -941,43 +945,68 @@ def build_all() -> List[str]:
         convert_csv_to_json(csv_path, json_path)
     
     outputs: List[str] = []
-    for page in PAGES_DIR.rglob("*.html"):
-        rel = page.relative_to(PAGES_DIR)
-        # Special: generate detail pages from reports/[id].html
-        # Note: reports/[id].html is now a dynamic page that fetches data from API
-        # So we just copy the template as-is, not generate static pages
-        # if str(rel).startswith("reports/") and rel.name == "[id].html":
-        #     _build_report_detail_pages(page, outputs)
-        #     continue
-        # Special: generate detail pages from sales/clients/[id].html
-        if str(rel).startswith("sales/clients/") and rel.name == "[id].html":
-            _build_client_detail_pages(page, outputs)
-            continue
-        # Special: generate edit pages from sales/clients/[id]/edit.html
-        if str(rel).startswith("sales/clients/") and "edit.html" in str(rel):
-            _build_client_edit_pages(page, outputs)
-            continue
-        # Special: generate detail pages from staff/assignments/[id].html
-        if str(rel).startswith("staff/assignments/") and rel.name == "[id].html":
-            _build_assignment_detail_pages(page, outputs)
-            continue
-        # Special: generate detail pages from admin/services/[id].html
-        if str(rel).startswith("admin/services/") and rel.name == "[id].html":
-            _build_service_detail_pages(page, outputs)
-            continue
-        # Special: generate edit pages from admin/services/[id]/edit.html
-        if str(rel).startswith("admin/services/") and "edit.html" in str(rel):
-            _build_service_edit_pages(page, outputs)
-            continue
-        # Special: generate user-facing service pages from service/[id].html
-        if str(rel).startswith("service/") and rel.name == "[id].html":
-            _build_service_pages(page, outputs)
-            continue
-        out_path = PUBLIC / rel
-        html = render_page(page)
-        # Skip directory structure for template files (files with [id] in path)
-        create_dir = "[id]" not in str(rel) and rel.name != "index.html"
-        write_html_with_directory(out_path, html, outputs, create_dir_structure=create_dir)
+    
+    # 複数のページディレクトリを処理
+    # 役割分担: corporate, customer はルートレベルに出力
+    # staff, sales, admin は各ディレクトリ配下に出力
+    page_dirs = [
+        (CORPORATE_PAGES_DIR, ""),      # corporate → public/ (ルート)
+        (CUSTOMER_PAGES_DIR, ""),       # customer → public/ (ルート)
+        (STAFF_PAGES_DIR, "staff"),     # staff → public/staff/
+        (SALES_PAGES_DIR, "sales"),     # sales → public/sales/
+        (ADMIN_PAGES_DIR, "admin"),     # admin → public/admin/
+        (PAGES_DIR, ""),                # pages → public/ (後方互換性)
+    ]
+    
+    for pages_dir, output_prefix in page_dirs:
+        if not pages_dir.exists():
+            continue  # ディレクトリが存在しない場合はスキップ
+        
+        for page in pages_dir.rglob("*.html"):
+            rel = page.relative_to(pages_dir)
+            # Special: generate detail pages from reports/[id].html
+            # Note: reports/[id].html is now a dynamic page that fetches data from API
+            # So we just copy the template as-is, not generate static pages
+            # if str(rel).startswith("reports/") and rel.name == "[id].html":
+            #     _build_report_detail_pages(page, outputs)
+            #     continue
+            # Special: generate detail pages from sales/clients/[id].html
+            if str(rel).startswith("sales/clients/") and rel.name == "[id].html":
+                _build_client_detail_pages(page, outputs)
+                continue
+            # Special: generate edit pages from sales/clients/[id]/edit.html
+            if str(rel).startswith("sales/clients/") and "edit.html" in str(rel):
+                _build_client_edit_pages(page, outputs)
+                continue
+            # Special: generate detail pages from staff/assignments/[id].html
+            if str(rel).startswith("staff/assignments/") and rel.name == "[id].html":
+                _build_assignment_detail_pages(page, outputs)
+                continue
+            # Special: generate detail pages from admin/services/[id].html
+            if str(rel).startswith("admin/services/") and rel.name == "[id].html":
+                _build_service_detail_pages(page, outputs)
+                continue
+            # Special: generate edit pages from admin/services/[id]/edit.html
+            if str(rel).startswith("admin/services/") and "edit.html" in str(rel):
+                _build_service_edit_pages(page, outputs)
+                continue
+            # Special: generate user-facing service pages from service/[id].html
+            if str(rel).startswith("service/") and rel.name == "[id].html":
+                _build_service_pages(page, outputs)
+                continue
+            
+            # 出力パスの決定
+            if output_prefix:
+                # staff, sales, admin は各ディレクトリ配下に出力
+                out_path = PUBLIC / output_prefix / rel
+            else:
+                # corporate, customer, pages はルートレベルに出力
+                out_path = PUBLIC / rel
+            
+            html = render_page(page)
+            # Skip directory structure for template files (files with [id] in path)
+            create_dir = "[id]" not in str(rel) and rel.name != "index.html"
+            write_html_with_directory(out_path, html, outputs, create_dir_structure=create_dir)
     # copy static assets last
     copy_assets(outputs)
     # copy data files for client-side access

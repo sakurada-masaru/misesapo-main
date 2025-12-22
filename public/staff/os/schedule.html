@@ -64,7 +64,7 @@
         min-height: 0;
       }
       body[class*="page-admin-"] #default-header-wrapper .inner {
-        justify-content: flex-start;
+        justify-content: flex-end;
         padding: 0;
       }
       body[class*="page-admin-"] #default-header-wrapper .nav-left,
@@ -90,8 +90,8 @@
       body[class*="page-admin-"] #default-header-wrapper .nav-right .nav-link {
         font-weight: 600;
       }
-  body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
-    width: 36px;
+      body[class*="page-admin-"] #default-header-wrapper .nav-right .icon-btn {
+        width: 36px;
         height: 36px;
         border-radius: 999px;
         border: 1px solid #e5e7eb;
@@ -115,18 +115,8 @@
         padding: 0;
       }
     </style>
-  <style>
-  .schedule-top-toggle {
-    display: flex;
-    justify-content: center;
-    padding: 16px 16px 0;
-  }
-  #main {
-      }
-</style>
-</head>
+  </head>
   <body class="theme-pink page-staff-schedule">
-
     <div id="default-header-wrapper">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
 <header id="header-guest" class="site-header" data-role="guest">
@@ -199,34 +189,7 @@
 
 
     </div>
-    <script>
-  (function() {
-    const isOsUser = () => {
-      const candidates = ['cognito_user', 'misesapo_auth'];
-      for (const key of candidates) {
-        const raw = localStorage.getItem(key);
-        if (!raw) continue;
-        try {
-          const parsed = JSON.parse(raw);
-          const user = parsed.user || parsed;
-          const department = String(user.department || '').toLowerCase();
-          if (department.includes('os')) {
-            return true;
-          }
-        } catch (error) {
-          console.warn('[OS Page] Failed to parse user:', error);
-        }
-      }
-      return false;
-    };
-
-    if (!isOsUser()) {
-      window.location.replace('/staff/mypage');
-    }
-  })();
-</script>
-
-<main id="main">
+    <main id="main">
       
 
 
@@ -243,7 +206,7 @@
 <!-- スタッフ用サイドバー -->
 <aside class="sidebar" id="admin-sidebar">
   <div class="sidebar-header">
-    <a href="/staff/os/mypage" class="logo-link">
+    <a href="/staff/mypage" class="logo-link">
       <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
       <span class="logo-text">ミセサポ</span>
     </a>
@@ -259,7 +222,7 @@
       <span class="nav-label">管理ダッシュボード</span>
     </a>
     <div class="nav-divider"></div>
-    <a href="/staff/os/mypage" class="nav-item" data-page="mypage">
+    <a href="/staff/mypage" class="nav-item" data-page="mypage">
       <i class="fas fa-user-circle"></i>
       <span class="nav-label">マイページ</span>
     </a>
@@ -271,11 +234,11 @@
       <i class="fas fa-edit"></i>
       <span class="nav-label">日報</span>
     </a>
-    <a href="/staff/os/schedule" class="nav-item" data-page="schedule">
+    <a href="/staff/schedule" class="nav-item" data-page="schedule">
       <i class="fas fa-calendar-alt"></i>
       <span class="nav-label">スケジュール</span>
     </a>
-    <a href="/staff/os/reports" class="nav-item" data-page="reports">
+    <a href="/staff/reports" class="nav-item" data-page="reports">
       <i class="fas fa-clipboard-list"></i>
       <span class="nav-label">レポート一覧</span>
     </a>
@@ -324,6 +287,44 @@
 
 
 
+<script>
+  (function() {
+    const isOsUser = () => {
+      const candidates = ['cognito_user', 'misesapo_auth'];
+      for (const key of candidates) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const user = parsed.user || parsed;
+          const department = String(user.department || '').toLowerCase();
+          if (department.includes('os')) {
+            return true;
+          }
+        } catch (error) {
+          console.warn('[OS Page] Failed to parse user:', error);
+        }
+      }
+      return false;
+    };
+
+    if (!isOsUser()) {
+      window.location.replace('/staff/mypage');
+    }
+  })();
+</script>
+
+<style>
+  #main {
+      }
+  .schedule-top-toggle {
+    display: flex;
+    justify-content: center;
+    padding: 16px 16px 0;
+  }
+</style>
+
+
 <main id="main" class="staff-page main-content">
   <div class="page-container">
     <div class="schedule-top-toggle">
@@ -336,7 +337,7 @@
         <span class="view-label">カレンダー</span>
       </div>
     </div>
-    <div class="role-badge-display" id="role-badge-display"></div>
+  <div class="role-badge-display" id="role-badge-display"></div>
 
     <!-- ロール別タブ（開発者の場合のみ表示） -->
     <div class="schedule-tabs" id="schedule-tabs" style="display: none;">
@@ -539,23 +540,23 @@
       padding: 24px;
       padding-bottom: 160px;
     }
-    .page-header {
-      margin-bottom: 24px;
-      display: grid;
-      grid-template-columns: 44px 1fr 44px;
-      align-items: center;
-      gap: 12px;
-    }
-    .page-header .view-toggle {
-      margin: 0 auto;
-    }
-    .role-badge-display {
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
+  .page-header {
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: 12px;
+  }
+  .page-header .view-toggle {
+    margin: 0 auto;
+  }
+  .role-badge-display {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
     .view-toggle {
       display: inline-flex;
       align-items: center;
@@ -2269,6 +2270,8 @@
     }
   </script>
 </main>
+
+    </main>
     <footer class="site-footer">
   <div class="container text-center muted small" style="padding: 16px 0;">
     <p>&copy; 2025 ミセサポ</p>
@@ -2309,3 +2312,5 @@
     </script>
   </body>
   </html>
+
+

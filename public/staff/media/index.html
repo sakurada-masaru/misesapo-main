@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <base href="/" />
-    <title>メディア | ミセサポ</title>
+    <title>作業割り当て一覧 | ミセサポ</title>
     
     <link rel="icon" type="image/png" href="/images/logo_144x144.png" />
 <link rel="shortcut icon" href="/images/logo_144x144.png" />
@@ -116,7 +116,7 @@
       }
     </style>
   </head>
-  <body class="theme-pink page-staff-media">
+  <body class="theme-pink page-staff-assignments">
     <div id="default-header-wrapper">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
 <header id="header-guest" class="site-header" data-role="guest">
@@ -244,7 +244,6 @@
     <button class="tab-btn active" data-filter="all">全て</button>
     <button class="tab-btn" data-filter="before">作業前</button>
     <button class="tab-btn" data-filter="after">作業後</button>
-    
   </div>
 
   <!-- 画像グリッド -->
@@ -368,12 +367,12 @@
     height: 44px;
   }
 
-    .page-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #111827;
-      margin: 0 0 20px;
-    }
+  .page-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 20px;
+  }
 
     .media-upload-section {
       margin-bottom: 20px;
@@ -440,14 +439,14 @@
       border-color: var(--primary);
     }
 
-    .date-filter-input {
-      padding: 8px 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: #ffffff;
-      font-size: 0.875rem;
-      margin-left: 0;
-    }
+  .date-filter-input {
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 0.875rem;
+    margin-left: 0;
+  }
 
     .folder-section {
       margin-bottom: 20px;
@@ -457,13 +456,13 @@
       border: 1px solid #e5e7eb;
     }
 
-    .folder-select-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
+  .folder-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
 
     .folder-label {
       font-size: 0.875rem;
@@ -472,34 +471,34 @@
       white-space: nowrap;
     }
 
-    .folder-select,
-    .folder-input {
-      flex: 1;
-      min-width: 150px;
-      padding: 8px 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: #ffffff;
-      font-size: 0.875rem;
-      color: #374151;
-      cursor: pointer;
-    }
+  .folder-select,
+  .folder-input {
+    flex: 1;
+    min-width: 150px;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 0.875rem;
+    color: #374151;
+    cursor: pointer;
+  }
 
-    .folder-select:focus,
-    .folder-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
-    }
+  .folder-select:focus,
+  .folder-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.1);
+  }
 
-    .folder-preview {
-      font-size: 0.85rem;
-      color: #6b7280;
-      background: #f3f4f6;
-      border-radius: 8px;
-      padding: 10px 12px;
-      border: 1px solid #e5e7eb;
-    }
+  .folder-preview {
+    font-size: 0.85rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+  }
 
     .form-group {
       margin-bottom: 16px;
@@ -1339,12 +1338,18 @@
         if (errorCount > 0 || duplicateCount > 0) {
           let message = `${successCount}件の画像をアップロードしました`;
           if (duplicateCount > 0) {
-            message += `\n${duplicateCount}件の画像は既にアップロード済みのためスキップしました`;
+            message += `
+${duplicateCount}件の画像は既にアップロード済みのためスキップしました`;
           }
           if (errorMessages.length > 0) {
-            message += `\n\nエラー:\n${errorMessages.slice(0, 3).join('\n')}`;
+            message += `
+
+エラー:
+${errorMessages.slice(0, 3).join('
+')}`;
             if (errorMessages.length > 3) {
-              message += `\n...他${errorMessages.length - 3}件`;
+              message += `
+...他${errorMessages.length - 3}件`;
             }
           }
           alert(message);
@@ -1460,3 +1465,5 @@
     </script>
   </body>
   </html>
+
+

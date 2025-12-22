@@ -4,6 +4,38 @@ let currentUser = null;
 let attendanceRecords = {};
 let currentCalendarDate = new Date();
 
+async function buildAuthHeaders(includeContentType = false) {
+  const headers = {};
+  if (includeContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
+  const idToken = await getCognitoIdToken();
+  if (idToken) {
+    headers['Authorization'] = `Bearer ${idToken}`;
+  }
+  return headers;
+}
+
+async function requireAuthOrRedirect(contextLabel) {
+  const idToken = await getCognitoIdToken();
+  if (idToken) return idToken;
+
+  showErrorMessage(`${contextLabel}のため再ログインが必要です。ログイン画面へ移動します。`);
+  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+  setTimeout(() => {
+    window.location.href = `/staff/signin.html?redirect=${redirect}`;
+  }, 800);
+  return null;
+}
+
+function handleAuthError(contextLabel) {
+  showErrorMessage(`${contextLabel}のため再ログインが必要です。ログイン画面へ移動します。`);
+  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+  setTimeout(() => {
+    window.location.href = `/staff/signin.html?redirect=${redirect}`;
+  }, 800);
+}
+
 // 従業員用ログアウト関数
 function staffLogout() {
   // Cognitoからログアウト
@@ -138,7 +170,7 @@ async function loadCurrentUser() {
     }
     
     if (!userId && !userEmail) {
-      throw new Error('ログインしてください。');
+      throw new Error('ミセサポへようこそ。従業員アカウントでログインしてください。');
     }
     
     // ユーザー情報を取得（AWS APIを優先、ローカルJSONはフォールバック）
@@ -149,11 +181,13 @@ async function loadCurrentUser() {
       // まずAWS APIから最新データを取得
       let response = null;
       let urlParamId = userId; // URLパラメータのIDを保存
+      const authHeaders = await buildAuthHeaders();
       
       if (userId) {
         // IDで取得を試みる（キャッシュ無効化）
         response = await fetch(`${API_BASE}/workers/${userId}?t=${timestamp}&_=${Date.now()}`, {
-          cache: 'no-store'
+          cache: 'no-store',
+          headers: authHeaders
         });
         if (response.ok) {
           currentUser = await response.json();
@@ -191,7 +225,8 @@ async function loadCurrentUser() {
               // Cognito認証から取得したIDがURLパラメータのIDと異なる場合、そのIDで検索
               console.log('[Mypage] Trying Cognito auth ID:', cognitoUser.id);
               response = await fetch(`${API_BASE}/workers/${cognitoUser.id}?t=${timestamp}&_=${Date.now()}`, {
-                cache: 'no-store'
+                cache: 'no-store',
+                headers: authHeaders
               });
               if (response && response.ok) {
                 currentUser = await response.json();
@@ -212,7 +247,8 @@ async function loadCurrentUser() {
       if (!currentUser || !currentUser.id) {
         if (userEmail) {
           response = await fetch(`${API_BASE}/workers?email=${encodeURIComponent(userEmail)}&t=${timestamp}&_=${Date.now()}`, {
-            cache: 'no-store'
+            cache: 'no-store',
+            headers: authHeaders
           });
           if (response && response.ok) {
             const users = await response.json();
@@ -241,7 +277,8 @@ async function loadCurrentUser() {
           const cognitoUser = await window.CognitoAuth.getCurrentUser();
           if (cognitoUser && cognitoUser.cognito_sub) {
             fallbackResponse = await fetch(`${API_BASE}/workers?cognito_sub=${encodeURIComponent(cognitoUser.cognito_sub)}&t=${timestamp}&_=${Date.now()}`, {
-              cache: 'no-store'
+              cache: 'no-store',
+              headers: authHeaders
             });
           }
         }
@@ -298,7 +335,7 @@ async function loadCurrentUser() {
     }
 
     if (!currentUser || !currentUser.id) {
-      throw new Error('ユーザー情報を取得できませんでした。ログインしてください。');
+      throw new Error('ユーザー情報を取得できませんでした。ミセサポの従業員ログインをお願いします。');
     }
 
     console.log('User loaded:', currentUser);
@@ -350,7 +387,7 @@ async function loadCurrentUser() {
       setTimeout(() => {
         console.log('Setting up button after delay...');
         setupAttendanceToggleButton();
-        
+      
         // ボタンが存在するか再確認
         const btn = document.getElementById('attendance-toggle-btn');
         if (btn) {
@@ -1573,6 +1610,7 @@ async function loadDailyReports() {
   const todayDateEl = document.getElementById('daily-report-today-date');
   if (todayDateEl) {
     todayDateEl.textContent = todayStr;
+    todayDateEl.dataset.date = today.toISOString().split('T')[0];
   }
   
   // 今日の日報を読み込む
@@ -1593,7 +1631,8 @@ async function loadTodayDailyReport() {
   try {
     // まずAPIから読み込む
     try {
-      const idToken = await getCognitoIdToken();
+      const idToken = await requireAuthOrRedirect('日報の読み込み');
+      if (!idToken) return;
       const headers = {};
       if (idToken) {
         headers['Authorization'] = `Bearer ${idToken}`;
@@ -1621,6 +1660,9 @@ async function loadTodayDailyReport() {
           localStorage.setItem(storageKey, JSON.stringify(data));
           return;
         }
+      } else if (response.status === 401) {
+        handleAuthError('日報の読み込み');
+        return;
       }
     } catch (apiError) {
       console.warn('日報のAPI読み込みに失敗、ローカルストレージから読み込みます:', apiError);
@@ -1791,8 +1833,9 @@ function setupDailyReportListeners() {
   const saveBtn = document.getElementById('daily-report-save-btn');
   const clearBtn = document.getElementById('daily-report-clear-btn');
   const textarea = document.getElementById('daily-report-content');
+  const templateBtn = document.getElementById('daily-report-template-btn');
 
-  if (!saveBtn && !clearBtn && !textarea) return;
+  if (!saveBtn && !clearBtn && !textarea && !templateBtn) return;
   
   if (saveBtn) {
     saveBtn.addEventListener('click', saveDailyReport);
@@ -1800,6 +1843,10 @@ function setupDailyReportListeners() {
   
   if (clearBtn) {
     clearBtn.addEventListener('click', clearDailyReport);
+  }
+
+  if (templateBtn) {
+    templateBtn.addEventListener('click', insertDailyReportTemplate);
   }
   
   if (textarea) {
@@ -1810,6 +1857,29 @@ function setupDailyReportListeners() {
       }
     });
   }
+}
+
+function insertDailyReportTemplate() {
+  const textarea = document.getElementById('daily-report-content');
+  if (!textarea) return;
+
+  const template = [
+    '1：本日の作業内容',
+    '2：明日の作業予定',
+    '3：コメント'
+  ].join('\n');
+
+  if (!textarea.value.trim()) {
+    textarea.value = template;
+    textarea.dispatchEvent(new Event('input'));
+    textarea.focus();
+    return;
+  }
+
+  const needsNewline = !textarea.value.endsWith('\n');
+  textarea.value = `${textarea.value}${needsNewline ? '\n' : ''}\n${template}`;
+  textarea.dispatchEvent(new Event('input'));
+  textarea.focus();
 }
 
 // 日報を保存
@@ -1843,7 +1913,8 @@ async function saveDailyReport() {
     
     // APIに保存
     try {
-      const idToken = await getCognitoIdToken();
+      const idToken = await requireAuthOrRedirect('日報の保存');
+      if (!idToken) return;
       const headers = {
         'Content-Type': 'application/json'
       };
@@ -1862,6 +1933,10 @@ async function saveDailyReport() {
         console.log('日報をAPIに保存しました:', result);
         showSuccessMessage('日報を保存しました');
       } else {
+        if (response.status === 401) {
+          handleAuthError('日報の保存');
+          return;
+        }
         const errorData = await response.json().catch(() => ({}));
         console.error('日報のAPI保存に失敗:', errorData);
         // API保存に失敗してもローカル保存は成功しているので、警告のみ
@@ -3088,13 +3163,13 @@ function applyDefaultLayout() {
   // 各コンテナのデフォルト位置を設定（ピクセル単位、全て3×3マス）
   const defaultLayout = {
     'attendance': { x: 0, y: 0 },              // 出退勤記録: 3×3マス
-    'announcements': { x: 240, y: 0 },         // 業務連絡: 3×3マス
-    'basic-info': { x: 480, y: 0 },            // 基本情報: 3×3マス
+    'announcements': { x: 0, y: 240 },         // 業務連絡: 3×3マス
+    'daily-reports': { x: 240, y: 0 },         // 日報: 3×3マス
+    'basic-info': { x: 240, y: 240 },          // 基本情報: 3×3マス
+    'todo': { x: 480, y: 0 },                  // TODOリスト: 3×3マス
+    'calendar': { x: 480, y: 240 },            // カレンダー: 3×3マス
     'weekly-schedule': { x: 720, y: 0 },       // 今週のスケジュール: 3×3マス
-    'digital-clock': { x: 960, y: 0 },         // デジタル時計: 3×3マス
-    'todo': { x: 0, y: 240 },                  // TODOリスト: 3×3マス
-    'calendar': { x: 240, y: 240 },            // カレンダー: 3×3マス
-    'daily-reports': { x: 480, y: 240 }        // 日報: 3×3マス
+    'digital-clock': { x: 960, y: 0 }          // デジタル時計: 3×3マス
   };
   
   const containers = Array.from(grid.querySelectorAll('.draggable-container'));

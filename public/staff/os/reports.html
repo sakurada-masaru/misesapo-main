@@ -64,7 +64,7 @@
         min-height: 0;
       }
       body[class*="page-admin-"] #default-header-wrapper .inner {
-        justify-content: flex-start;
+        justify-content: flex-end;
         padding: 0;
       }
       body[class*="page-admin-"] #default-header-wrapper .nav-left,
@@ -115,13 +115,8 @@
         padding: 0;
       }
     </style>
-  <style>
-  #main {
-      }
-</style>
-</head>
+  </head>
   <body class="theme-pink ">
-
     <div id="default-header-wrapper">
     <a class="skip-link" href="#main">メインコンテンツへスキップ</a>
 <header id="header-guest" class="site-header" data-role="guest">
@@ -194,32 +189,6 @@
 
 
     </div>
-    <script>
-  (function() {
-    const isOsUser = () => {
-      const candidates = ['cognito_user', 'misesapo_auth'];
-      for (const key of candidates) {
-        const raw = localStorage.getItem(key);
-        if (!raw) continue;
-        try {
-          const parsed = JSON.parse(raw);
-          const user = parsed.user || parsed;
-          const department = String(user.department || '').toLowerCase();
-          if (department.includes('os')) {
-            return true;
-          }
-        } catch (error) {
-          console.warn('[OS Page] Failed to parse user:', error);
-        }
-      }
-      return false;
-    };
-
-    if (!isOsUser()) {
-      window.location.replace('/staff/mypage');
-    }
-  })();
-</script>
     <main id="main">
       
 
@@ -325,6 +294,39 @@
     <i class="fas fa-chevron-left"></i>
   </button>
 </aside>
+
+<script>
+  (function() {
+    const isOsUser = () => {
+      const candidates = ['cognito_user', 'misesapo_auth'];
+      for (const key of candidates) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const user = parsed.user || parsed;
+          const department = String(user.department || '').toLowerCase();
+          if (department.includes('os')) {
+            return true;
+          }
+        } catch (error) {
+          console.warn('[OS Page] Failed to parse user:', error);
+        }
+      }
+      return false;
+    };
+
+    if (!isOsUser()) {
+      window.location.replace('/staff/mypage');
+    }
+  })();
+</script>
+
+<style>
+  #main {
+      }
+</style>
+
 
 <main id="main" class="container staff-reports">
   <!-- パンくずリスト -->
@@ -907,8 +909,6 @@
   </script>
 </main>
 
-
-
     </main>
     <footer class="site-footer">
   <div class="container text-center muted small" style="padding: 16px 0;">
@@ -950,3 +950,5 @@
     </script>
   </body>
   </html>
+
+
