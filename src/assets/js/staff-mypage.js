@@ -4243,6 +4243,154 @@ document.addEventListener('DOMContentLoaded', () => {
   // アコーディオン機能のセットアップはloadCurrentUser()の完了後に実行される
 });
 
+// OS課の直近のスケジュール情報を読み込む
+async function loadOSNextSchedule(user) {
+  if (!user || !user.id) {
+    console.warn('[OS Mypage] User ID not available');
+    return;
+  }
+  
+  const scheduleInfoContent = document.getElementById('schedule-info-content');
+  const refreshIndicator = document.getElementById('schedule-refresh-indicator');
+  
+  if (!scheduleInfoContent) return;
+  
+  try {
+    // 更新インジケーターを表示
+    if (refreshIndicator) {
+      refreshIndicator.classList.add('fa-spin');
+    }
+    
+    const idToken = await getCognitoIdToken();
+    const headers = {};
+    if (idToken) {
+      headers['Authorization'] = `Bearer ${idToken}`;
+    }
+    
+    // スケジュールを取得
+    const response = await fetch(`${API_BASE}/schedules`, { headers });
+    if (!response.ok) {
+      throw new Error('Failed to load schedules');
+    }
+    
+    const schedulesData = await response.json();
+    const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+    
+    // 現在のユーザーに割り当てられたスケジュールをフィルタリング
+    const userSchedules = allSchedules.filter(schedule => {
+      const scheduleWorkerId = schedule.worker_id || schedule.assigned_to || schedule.staff_id;
+      return scheduleWorkerId === user.id;
+    });
+    
+    // 現在時刻以降のスケジュールを取得し、開始時刻順にソート
+    const now = new Date();
+    const upcomingSchedules = userSchedules
+      .filter(schedule => {
+        if (!schedule.scheduled_date && !schedule.date) return false;
+        
+        const scheduleDate = schedule.scheduled_date || schedule.date;
+        const scheduleTime = schedule.scheduled_time || schedule.time || schedule.time_slot || '00:00';
+        const scheduleDateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
+        
+        return scheduleDateTime >= now;
+      })
+      .sort((a, b) => {
+        const dateA = a.scheduled_date || a.date;
+        const timeA = a.scheduled_time || a.time || a.time_slot || '00:00';
+        const dateTimeA = new Date(`${dateA}T${timeA}:00`);
+        
+        const dateB = b.scheduled_date || b.date;
+        const timeB = b.scheduled_time || b.time || b.time_slot || '00:00';
+        const dateTimeB = new Date(`${dateB}T${timeB}:00`);
+        
+        return dateTimeA - dateTimeB;
+      });
+    
+    // 直近のスケジュール（最初の1件）
+    const nextSchedule = upcomingSchedules[0];
+    
+    if (nextSchedule) {
+      const scheduleDate = nextSchedule.scheduled_date || nextSchedule.date;
+      const scheduleTime = nextSchedule.scheduled_time || nextSchedule.time || nextSchedule.time_slot || '00:00';
+      const scheduleDateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
+      
+      // 日付と時刻をフォーマット
+      const dateStr = new Date(scheduleDate).toLocaleDateString('ja-JP', {
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short'
+      });
+      const timeStr = scheduleTime.length === 5 ? scheduleTime : scheduleTime.substring(0, 5);
+      
+      // 残り時間を計算
+      const timeDiff = scheduleDateTime - now;
+      const hoursLeft = Math.floor(timeDiff / (1000 * 60 * 60));
+      const minutesLeft = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      
+      let timeLeftText = '';
+      if (hoursLeft > 0) {
+        timeLeftText = `あと${hoursLeft}時間${minutesLeft}分`;
+      } else if (minutesLeft > 0) {
+        timeLeftText = `あと${minutesLeft}分`;
+      } else if (timeDiff > 0) {
+        timeLeftText = 'まもなく';
+      } else {
+        timeLeftText = '開始時刻を過ぎています';
+      }
+      
+      // 店舗名を取得（必要に応じて）
+      const storeName = nextSchedule.store_name || nextSchedule.store?.name || '-';
+      
+      scheduleInfoContent.innerHTML = `
+        <div class="schedule-detail" style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb;">
+          <div class="schedule-time-section" style="margin-bottom: 12px;">
+            <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px;">
+              <div style="flex: 1;">
+                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 4px;">開始時刻</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #111827;">
+                  <i class="fas fa-clock" style="margin-right: 8px; color: #ff679c;"></i>
+                  ${timeStr}
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 4px;">${dateStr}</div>
+                <div style="font-size: 0.875rem; color: #ff679c; font-weight: 600;">${timeLeftText}</div>
+              </div>
+            </div>
+          </div>
+          <div class="schedule-store-section" style="padding-top: 12px; border-top: 1px solid #e5e7eb;">
+            <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 4px;">店舗</div>
+            <div style="font-size: 1rem; font-weight: 600; color: #111827;">
+              <i class="fas fa-store" style="margin-right: 8px; color: #6b7280;"></i>
+              ${escapeHtml(storeName)}
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      scheduleInfoContent.innerHTML = `
+        <div class="schedule-empty" style="text-align: center; padding: 20px; color: #6b7280;">
+          <i class="fas fa-calendar-times" style="font-size: 2rem; margin-bottom: 8px; opacity: 0.5;"></i>
+          <div style="font-size: 0.875rem;">直近の清掃案件はありません</div>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('[OS Mypage] Failed to load next schedule:', error);
+    scheduleInfoContent.innerHTML = `
+      <div class="schedule-error" style="text-align: center; padding: 20px; color: #ef4444;">
+        <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+        <span>スケジュール情報の読み込みに失敗しました</span>
+      </div>
+    `;
+  } finally {
+    // 更新インジケーターを停止
+    if (refreshIndicator) {
+      refreshIndicator.classList.remove('fa-spin');
+    }
+  }
+}
+
 // グローバル関数として公開
 window.toggleTodo = toggleTodo;
 window.addTodo = addTodo;
