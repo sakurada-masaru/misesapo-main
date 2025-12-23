@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 5;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('換気効率が低下、火災の原因に');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('油汚れが酸化して強烈な悪臭の原因に');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ゴキブリ・ネズミなど害虫・害獣の温床に');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/dakuto_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/dakuto_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/dakuto_100.png"}]}, {"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "ダクト", "img-url": "images/dakuto.png", "countable": true, "unit": "m", "count": 0}]}, {"section-title": "種類", "section-type": "radio-text", "required": true, "section-items": ["火災保険を見直す"]}, {"section-title": "日頃のダクト火災は厨房火災の大きな原因です。清掃で予防し、保険で備えることが安心経営につながります。"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/dakuto_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/dakuto_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/dakuto_100.png"}]}];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "ダクト", "img-url": "images/dakuto.png", "countable": true, "unit": "m", "count": 0}]}, {"section-title": "種類", "section-type": "radio-text", "required": true, "section-items": ["火災保険を見直す"]}, {"section-title": "日頃のダクト火災は厨房火災の大きな原因です。清掃で予防し、保険で備えることが安心経営につながります。"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 5,
+              // @ts-ignore - Template variable
               title: 'ダクト洗浄',
+              // @ts-ignore - Template variable
               image: 'images/dakuto.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/ダクト内清掃.png',
+              // @ts-ignore - Template variable
               price: '¥ 17,500〜',
+              // @ts-ignore - Template variable
               category: '厨房設備',
+              // @ts-ignore - Template variable
               description: 'ダクト管内は、油脂やホコリが内壁に付着しやすく、放置すると次のようなリスクにつながります。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '専門清掃では、ダクト管を専用機材で内部洗浄・高圧洗浄・除菌仕上げを行い、見えない部分まで徹底的にクリーニングいたします。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 23;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ホコリや油汚れが付着し火災・ショートリスク');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('機器の入れ替えや掃除のたびに作業効率が低下');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('見た目が乱雑で不衛生・管理不足の印象');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/haisenseiri_haisenseiri.png", "countable": true, "unit": "箇所", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/haisenseiri_haisenseiri.png", "countable": true, "unit": "箇所", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 23,
+              // @ts-ignore - Template variable
               title: '配線整理',
+              // @ts-ignore - Template variable
               image: 'images/haisenseiri.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/配線整理.png',
+              // @ts-ignore - Template variable
               price: '¥ 3,500〜',
+              // @ts-ignore - Template variable
               category: 'その他',
+              // @ts-ignore - Template variable
               description: '調理機器や冷蔵庫、POSレジなどで電源コードや配線が複雑に絡まりやすい環境です。放置すると…',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '専門スタッフが、現場の動線や機器配置に合わせて配線の整理・結束・ラベリングを実施。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

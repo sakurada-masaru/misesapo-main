@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 27;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('冷暖房効率の低下・電気代の増加・寿命が短くなる');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ドレンの詰まりや部品摩耗による水漏れ・異音・故障');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('突発的なトラブルで営業に支障が出る可能性');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "室内機", "img-url": "images/eakontenken_situnaiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "室外機", "img-url": "images/eakontenken_situgaiki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "室内機", "img-url": "images/eakontenken_situnaiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "室外機", "img-url": "images/eakontenken_situgaiki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 27,
+              // @ts-ignore - Template variable
               title: 'エアコン法定点検',
+              // @ts-ignore - Template variable
               image: 'images/eakonhouteitenken.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/エアコン定期点検.png',
+              // @ts-ignore - Template variable
               price: '¥ 8,750',
+              // @ts-ignore - Template variable
               category: 'その他',
+              // @ts-ignore - Template variable
               description: '定期点検を怠ると、次のようなリスクが発生します。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '年に1~2回の定期点検・簡易清掃・動作確認を行うことで、故障を未然に防ぎ、安心して長期間使用できます。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

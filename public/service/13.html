@@ -397,6 +397,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -431,6 +433,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 13;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -445,18 +448,30 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('エアコンの冷房・暖房効率の低下');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('空気の質の悪化による健康への影響');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('フィルターの目詰まりによる電気代の増加');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('カビや細菌の繁殖による悪臭の発生');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "エアコン", "img-url": "images/eakon.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "エアコン", "img-url": "images/eakon.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -468,15 +483,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 13,
+              // @ts-ignore - Template variable
               title: 'エアコンフィルター洗浄',
+              // @ts-ignore - Template variable
               image: 'images/eakonfiruta.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/eakonfiruta.png',
+              // @ts-ignore - Template variable
               price: '¥ 5,250〜',
+              // @ts-ignore - Template variable
               category: '空調設備',
+              // @ts-ignore - Template variable
               description: 'エアコンのフィルターは、空気中のホコリや汚れを捕集する重要な役割を果たします。定期的な清掃を怠ると、エアコンの性能低下や空気の質の悪化につながります。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '専門清掃では、フィルターを専用洗剤で洗浄・除菌し、エアコンの性能と空気の質を回復させます。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

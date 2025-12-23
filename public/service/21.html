@@ -401,6 +401,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -435,6 +437,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 21;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -449,22 +452,38 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ゴミの散乱や悪臭によるゴキブリ・害虫・害獣の発生源となる');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('不適切な分別による行政指導や罰則のリスク');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('店舗スタッフの負担が増加し、本業の時間が削られる');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('店舗スペースを圧迫し作業効率が低下し衛生環境の悪化');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('不法投棄や処理不備で行政指導や罰則リスク');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('お客様から見える場所にあると店舗イメージの低下');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "家電", "img-url": "images/gomi_kaden.png", "countable": true, "unit": "基", "count": 0}, {"text": "ステンレス", "img-url": "images/gomi_sutenresu.png", "countable": true, "unit": "基", "count": 0}, {"text": "可燃", "img-url": "images/gomi_kanen.png", "countable": true, "unit": "個", "count": 0}, {"text": "不燃", "img-url": "images/gomi_funen.png", "countable": true, "unit": "個", "count": 0}, {"text": "ビン", "img-url": "images/gomi_bin.png", "countable": true, "unit": "個", "count": 0}, {"text": "カン", "img-url": "images/gomi_kan.png", "countable": true, "unit": "個", "count": 0}, {"text": "ペットボトル", "img-url": "images/gomi_pettobotoru.png", "countable": true, "unit": "個", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "家電", "img-url": "images/gomi_kaden.png", "countable": true, "unit": "基", "count": 0}, {"text": "ステンレス", "img-url": "images/gomi_sutenresu.png", "countable": true, "unit": "基", "count": 0}, {"text": "可燃", "img-url": "images/gomi_kanen.png", "countable": true, "unit": "個", "count": 0}, {"text": "不燃", "img-url": "images/gomi_funen.png", "countable": true, "unit": "個", "count": 0}, {"text": "ビン", "img-url": "images/gomi_bin.png", "countable": true, "unit": "個", "count": 0}, {"text": "カン", "img-url": "images/gomi_kan.png", "countable": true, "unit": "個", "count": 0}, {"text": "ペットボトル", "img-url": "images/gomi_pettobotoru.png", "countable": true, "unit": "個", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -476,15 +495,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 21,
+              // @ts-ignore - Template variable
               title: 'ゴミ回収',
+              // @ts-ignore - Template variable
               image: 'images/gomi_kaishu.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/可燃ゴミ.png',
+              // @ts-ignore - Template variable
               price: '¥ 5,250〜',
+              // @ts-ignore - Template variable
               category: 'その他',
+              // @ts-ignore - Template variable
               description: '日々の営業で大量のゴミ(可燃・不燃)が発生します。古くなった厨房機器・テーブル・椅子・什器類など、大型の粗大ゴミをそのまま放置すると…',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '定期回収・臨時回収の両方に対応。可燃・不燃ゴミをルールに従って分別し、効率的で衛生的なゴミ管理を実現します。厨房機器から什器まで大型ゴミを迅速に回収・処分。リサイクル・産廃ルールに基づき適切に処理するため、安心・安全・手間のない廃棄管理を実現します。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

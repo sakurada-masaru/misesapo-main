@@ -397,6 +397,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -431,6 +433,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 2;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -445,18 +448,30 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('強い悪臭の発生');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('排水詰まりによる逆流や床の冠水');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ゴキブリ・チョウバエなど害虫の発生源');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('排水溝の詰まり → 水が逆流して床が水浸しに');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/gure-chingu_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/gure-chingu_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/gure-chingu_100.png"}]}, {"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "U字溝", "img-url": "images/ujikou.png", "countable": true, "unit": "m", "count": 0}, {"text": "グレーチング", "img-url": "images/gure-chingu_s.png", "countable": true, "unit": "本", "count": 0}]}, {"section-title": "※グレーチング1本の長さはおよそ1mです"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/gure-chingu_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/gure-chingu_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/gure-chingu_100.png"}]}];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "U字溝", "img-url": "images/ujikou.png", "countable": true, "unit": "m", "count": 0}, {"text": "グレーチング", "img-url": "images/gure-chingu_s.png", "countable": true, "unit": "本", "count": 0}]}, {"section-title": "※グレーチング1本の長さはおよそ1mです"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -468,15 +483,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 2,
+              // @ts-ignore - Template variable
               title: 'U字溝・グレーチング清掃',
+              // @ts-ignore - Template variable
               image: 'images/gure-chingu.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/グレーチング洗浄.png',
+              // @ts-ignore - Template variable
               price: '¥ 7,000〜',
+              // @ts-ignore - Template variable
               category: '厨房設備',
+              // @ts-ignore - Template variable
               description: 'U字溝（排水溝）は、油分や食材カスで汚れやすく、放置すると様々なトラブルを引き起こします。厨房やホールの床に設置されたグレーチング（排水溝の金属カバー）も、油汚れや食材カスが溜まりやすく、放置すると問題を引き起こします。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '定期的な専門清掃による分解・高圧洗浄が効果的です。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 34;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('強烈な悪臭が店内や周辺に充満、排水詰まり・逆流');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ゴキブリやチョウバエなど害虫の発生源に');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('行政からの指導・営業停止リスク');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/osuisou_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/osuisou_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/osuisou_100.png"}]}, {"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "縦横 約1m×深さ 約1m 約500L程度", "countable": true, "unit": "", "count": 0}, {"text": "縦横 約1.5m×深さ 約1.5m 約1,000~1,500L程度", "countable": true, "unit": "", "count": 0}, {"text": "縦横 約2m×深さ 約2m 約2,500~3,000L程度", "countable": true, "unit": "", "count": 0}, {"text": "それ以上のサイズ 3,000L以上", "countable": true, "unit": "", "count": 0}, {"text": "わからない", "countable": true, "unit": "", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/osuisou_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/osuisou_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/osuisou_100.png"}]}];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "縦横 約1m×深さ 約1m 約500L程度", "countable": true, "unit": "", "count": 0}, {"text": "縦横 約1.5m×深さ 約1.5m 約1,000~1,500L程度", "countable": true, "unit": "", "count": 0}, {"text": "縦横 約2m×深さ 約2m 約2,500~3,000L程度", "countable": true, "unit": "", "count": 0}, {"text": "それ以上のサイズ 3,000L以上", "countable": true, "unit": "", "count": 0}, {"text": "わからない", "countable": true, "unit": "", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 34,
+              // @ts-ignore - Template variable
               title: '汚水槽',
+              // @ts-ignore - Template variable
               image: 'images/osuisou.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/汚水槽.png',
+              // @ts-ignore - Template variable
               price: '¥ 50,000',
+              // @ts-ignore - Template variable
               category: 'その他',
+              // @ts-ignore - Template variable
               description: '汚水は汚水槽に一時的に溜まります。放置すると、短期間で以下のような深刻な問題が発生します。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '槽内の汚泥を吸引・除去し、高圧洗浄・除菌仕上げを実施。悪臭・害虫・詰まりを防止し、快適で衛生的な店舗環境を維持できます。定期的な清掃が法令遵守にもつながります。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

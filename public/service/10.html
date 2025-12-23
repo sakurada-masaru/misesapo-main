@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 10;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('機器の性能低下・寿命の短縮');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('油煙・焦げ付きによる火災リスク');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('厨房全体の清潔感低下によるスタッフ・お客様への悪影響');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/chuuboukiki_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/chuuboukiki_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/chuuboukiki_100.png"}]}, {"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "冷蔵庫", "img-url": "images/chuuboukiki_reizouko.png", "countable": true, "unit": "基", "count": 0}, {"text": "冷凍庫", "img-url": "images/chuuboukiki_reizouko.png", "countable": true, "unit": "基", "count": 0}, {"text": "製氷機", "img-url": "images/chuuboukiki_shokusenki.png", "countable": true, "unit": "基", "count": 0}, {"text": "ワインセラー", "img-url": "images/chuuboukiki_wain.png", "countable": true, "unit": "基", "count": 0}, {"text": "食洗機", "img-url": "images/chuuboukiki_shokusenki.png", "countable": true, "unit": "基", "count": 0}, {"text": "ステンレス作業台", "img-url": "images/chuuboukiki_sutenresu.png", "countable": true, "unit": "基", "count": 0}, {"text": "作業用ラック", "img-url": "images/chuuboukiki_rakku.png", "countable": true, "unit": "基", "count": 0}, {"text": "壁", "img-url": "images/chuuboukiki_kabe.png", "countable": true, "unit": "基", "count": 0}, {"text": "スチームコンベクションオーブン", "img-url": "images/chuuboukiki_suchi-mu.png", "countable": true, "unit": "基", "count": 0}, {"text": "デッキオーブン", "img-url": "images/chuuboukiki_dekki.png", "countable": true, "unit": "基", "count": 0}, {"text": "ガスレンジ", "img-url": "images/chuuboukiki_gasurenji.png", "countable": true, "unit": "基", "count": 0}, {"text": "調理台", "img-url": "images/chuuboukiki_chouridai.png", "countable": true, "unit": "基", "count": 0}, {"text": "ウォーマー", "img-url": "images/chuuboukiki_wo-ma.png", "countable": true, "unit": "基", "count": 0}, {"text": "給湯器", "img-url": "images/chuuboukiki_kyuutouki.png", "countable": true, "unit": "基", "count": 0}, {"text": "コンロ", "img-url": "images/chuuboukiki_konro.png", "countable": true, "unit": "基", "count": 0}, {"text": "フライヤー", "img-url": "images/chuuboukiki_furaiya.png", "countable": true, "unit": "基", "count": 0}, {"text": "グリドル", "img-url": "images/chuuboukiki_guridoru.png", "countable": true, "unit": "基", "count": 0}, {"text": "その他", "img-url": "images/chuuboukiki_sonota.png", "countable": true, "unit": "基", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/chuuboukiki_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/chuuboukiki_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/chuuboukiki_100.png"}]}];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "冷蔵庫", "img-url": "images/chuuboukiki_reizouko.png", "countable": true, "unit": "基", "count": 0}, {"text": "冷凍庫", "img-url": "images/chuuboukiki_reizouko.png", "countable": true, "unit": "基", "count": 0}, {"text": "製氷機", "img-url": "images/chuuboukiki_shokusenki.png", "countable": true, "unit": "基", "count": 0}, {"text": "ワインセラー", "img-url": "images/chuuboukiki_wain.png", "countable": true, "unit": "基", "count": 0}, {"text": "食洗機", "img-url": "images/chuuboukiki_shokusenki.png", "countable": true, "unit": "基", "count": 0}, {"text": "ステンレス作業台", "img-url": "images/chuuboukiki_sutenresu.png", "countable": true, "unit": "基", "count": 0}, {"text": "作業用ラック", "img-url": "images/chuuboukiki_rakku.png", "countable": true, "unit": "基", "count": 0}, {"text": "壁", "img-url": "images/chuuboukiki_kabe.png", "countable": true, "unit": "基", "count": 0}, {"text": "スチームコンベクションオーブン", "img-url": "images/chuuboukiki_suchi-mu.png", "countable": true, "unit": "基", "count": 0}, {"text": "デッキオーブン", "img-url": "images/chuuboukiki_dekki.png", "countable": true, "unit": "基", "count": 0}, {"text": "ガスレンジ", "img-url": "images/chuuboukiki_gasurenji.png", "countable": true, "unit": "基", "count": 0}, {"text": "調理台", "img-url": "images/chuuboukiki_chouridai.png", "countable": true, "unit": "基", "count": 0}, {"text": "ウォーマー", "img-url": "images/chuuboukiki_wo-ma.png", "countable": true, "unit": "基", "count": 0}, {"text": "給湯器", "img-url": "images/chuuboukiki_kyuutouki.png", "countable": true, "unit": "基", "count": 0}, {"text": "コンロ", "img-url": "images/chuuboukiki_konro.png", "countable": true, "unit": "基", "count": 0}, {"text": "フライヤー", "img-url": "images/chuuboukiki_furaiya.png", "countable": true, "unit": "基", "count": 0}, {"text": "グリドル", "img-url": "images/chuuboukiki_guridoru.png", "countable": true, "unit": "基", "count": 0}, {"text": "その他", "img-url": "images/chuuboukiki_sonota.png", "countable": true, "unit": "基", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 10,
+              // @ts-ignore - Template variable
               title: '厨房機器洗浄',
+              // @ts-ignore - Template variable
               image: 'images/chuuboukiki.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/厨房機器洗浄.png',
+              // @ts-ignore - Template variable
               price: '¥ 17,500〜',
+              // @ts-ignore - Template variable
               category: '厨房設備',
+              // @ts-ignore - Template variable
               description: 'フライヤー・コンロ・オーブン・冷蔵庫などは、毎日の使用で油汚れ・焦げ付き・ホコリが蓄積しやすく、放置すると以下のリスクが生じます。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: 'プロの専用洗剤・工具による分解洗浄で、表面だけでなく内部の蓄積汚れまで徹底除去します。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

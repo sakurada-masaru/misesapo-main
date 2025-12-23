@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 20;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('床のツヤがなくなり不衛生な印象を与える');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('汚れが床材に染み込み劣化や剥がれの原因に');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('定期メンテナンスを怠ると床の寿命が短くなる');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-type": "grid-items", "section-items": [{"text": "床ワックス", "img-url": "images/yuka_wakkusu.png", "countable": true, "unit": "㎡", "count": 0}]}, {"section-title": "※過去にワックスを塗布されている場合は、事前に剥離作業を行ってから洗浄することで、より効果的な清掃が可能です。", "section-type": "radio-group", "section-items": [{"text": "ワックス剥離"}, {"text": "ワックス塗布"}, {"text": "ポリッシャー洗浄"}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-type": "grid-items", "section-items": [{"text": "床ワックス", "img-url": "images/yuka_wakkusu.png", "countable": true, "unit": "㎡", "count": 0}]}, {"section-title": "※過去にワックスを塗布されている場合は、事前に剥離作業を行ってから洗浄することで、より効果的な清掃が可能です。", "section-type": "radio-group", "section-items": [{"text": "ワックス剥離"}, {"text": "ワックス塗布"}, {"text": "ポリッシャー洗浄"}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 20,
+              // @ts-ignore - Template variable
               title: '床ワックス',
+              // @ts-ignore - Template variable
               image: 'images/yuka_yukawakkusu.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/ワックス.png',
+              // @ts-ignore - Template variable
               price: '¥ 8,750',
+              // @ts-ignore - Template variable
               category: 'フロア',
+              // @ts-ignore - Template variable
               description: '床は、毎日の清掃だけでは落としきれない油汚れや黒ずみが蓄積し、ワックス本来の効果が失われていきます。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '古いワックスや汚れを剥離作業で完全除去し、その後に新しいワックスを均一に塗布し、床本来の美しさと保護効果を取り戻します。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

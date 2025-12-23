@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 22;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('必要な物がすぐに見つからず 業務効率が低下');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('不要な在庫や備品が溜まりコストが増加');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('雑然とした空間がスタッフのモチベーション低下に');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/seiriseiton_seiriseiton.png", "countable": true, "unit": "箇所", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/seiriseiton_seiriseiton.png", "countable": true, "unit": "箇所", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 22,
+              // @ts-ignore - Template variable
               title: '整理整頓',
+              // @ts-ignore - Template variable
               image: 'images/seiriseiton.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/整理整頓.png',
+              // @ts-ignore - Template variable
               price: '¥ 8,750',
+              // @ts-ignore - Template variable
               category: 'フロア',
+              // @ts-ignore - Template variable
               description: '飲食店のバックヤード・厨房・倉庫は、食材や備品が多く、物が散乱しやすい環境です。整理整頓を怠ると…',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '現場の動線を考慮しながら備品や食材の配置最適化・ラベリング・棚卸しサポートを実施。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

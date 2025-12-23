@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 31;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('食中毒リスク、糞尿や毛による悪臭・不衛生感');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('配線をかじられて火災・設備故障の危険');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('クレームや営業停止リスク');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "ネズミの発生状況について、現在の緊急度を教えてください。", "section-type": "radio-text", "required": true, "section-items": ["すぐに駆除が必要", "早めに対応したい", "様子を見ながら検討"]}, {"section-title": "駆除のご希望レベルをお選びください", "section-type": "radio-text", "required": true, "section-items": ["ゼロにしたい", "減衰したい", "予防したい"]}, {"section-title": "種類を教えてください", "section-type": "radio-text", "required": true, "section-items": ["クマネズミ", "ドブネズミ", "ハツカズミ", "わからない"]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [{"section-title": "ネズミの発生状況について、現在の緊急度を教えてください。", "section-type": "radio-text", "required": true, "section-items": ["すぐに駆除が必要", "早めに対応したい", "様子を見ながら検討"]}, {"section-title": "駆除のご希望レベルをお選びください", "section-type": "radio-text", "required": true, "section-items": ["ゼロにしたい", "減衰したい", "予防したい"]}];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "種類を教えてください", "section-type": "radio-text", "required": true, "section-items": ["クマネズミ", "ドブネズミ", "ハツカズミ", "わからない"]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 31,
+              // @ts-ignore - Template variable
               title: 'ネズミ駆除',
+              // @ts-ignore - Template variable
               image: 'images/nezumi.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/ネズミ駆除.png',
+              // @ts-ignore - Template variable
               price: '¥ 17,500〜',
+              // @ts-ignore - Template variable
               category: 'その他',
+              // @ts-ignore - Template variable
               description: 'ネズミが飲食店に侵入することによるリスクがあります。食材、配線、建材をかじるだけでなく、病原菌やウイルスを媒介する大きなリスクがあります。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '生息調査、侵入経路の封鎖、トラップ設置、薬剤処理を組み合わせて徹底的に対応。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

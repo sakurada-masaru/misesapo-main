@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 7;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('換気能力の低下で煙や臭いがこもる、火災の原因');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('モーターに負担がかかり故障・異音の原因に');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ゴキブリ・チョウバエなどの害虫温床に');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/kankisen_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/kankisen_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/kankisen_100.png"}]}, {"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "プロペラ", "img-url": "images/kankisen_puroperafan.png", "countable": true, "unit": "個", "count": 0}, {"text": "天井", "img-url": "images/kankisen_tenjyou.png", "countable": true, "unit": "個", "count": 0}, {"text": "シロッコファン", "img-url": "images/kankisen_sirokkofan.png", "countable": true, "unit": "個", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "週に1回程度", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/kankisen_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/kankisen_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/kankisen_100.png"}]}];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "プロペラ", "img-url": "images/kankisen_puroperafan.png", "countable": true, "unit": "個", "count": 0}, {"text": "天井", "img-url": "images/kankisen_tenjyou.png", "countable": true, "unit": "個", "count": 0}, {"text": "シロッコファン", "img-url": "images/kankisen_sirokkofan.png", "countable": true, "unit": "個", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 7,
+              // @ts-ignore - Template variable
               title: '換気扇洗浄',
+              // @ts-ignore - Template variable
               image: 'images/kankisen.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/換気扇洗浄.png',
+              // @ts-ignore - Template variable
               price: '¥ 7,000〜',
+              // @ts-ignore - Template variable
               category: '厨房設備',
+              // @ts-ignore - Template variable
               description: '厨房やホールの換気扇は、油煙やホコリが羽根やモーター部分に溜まりやすく、放置すると問題を引き起こします。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '専門清掃では、羽根やカバーを分解・高圧洗浄・除菌仕上げで徹底クリーニングいたします。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

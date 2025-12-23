@@ -397,6 +397,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -431,6 +433,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 17;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -445,18 +448,30 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('汚れや指紋による清潔感の低下');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('油汚れやシミによる見た目の悪化');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('細菌の繁殖による衛生面のリスク');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('お客様への印象悪化による集客力の低下');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "テーブル", "img-url": "images/te-burufuki_te-buru.png", "countable": true, "unit": "基", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "テーブル", "img-url": "images/te-burufuki_te-buru.png", "countable": true, "unit": "基", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -468,15 +483,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 17,
+              // @ts-ignore - Template variable
               title: 'テーブル拭き',
+              // @ts-ignore - Template variable
               image: 'images/te-burufuki.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/te-burufuki.png',
+              // @ts-ignore - Template variable
               price: '¥ 8,750〜',
+              // @ts-ignore - Template variable
               category: 'フロア',
+              // @ts-ignore - Template variable
               description: '飲食店のテーブルは、お客様が直接触れる重要な接客スペースです。日々の使用で汚れや指紋が付着しやすく、清潔感を保つためには定期的な清掃が必要です。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '専門清掃では、専用洗剤と工具を使用して、テーブル表面の汚れやシミを徹底的に除去し、清潔感と美観を回復させます。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

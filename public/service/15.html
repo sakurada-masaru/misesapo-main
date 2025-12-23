@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 15;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('曇りやシミで店内が暗く見え視認性が低下し 集客力ダウン');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('油膜や汚れが固着して落ちにくくなる');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('店舗イメージの低下');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "幅 30〜60cm × 高さ 30〜60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "幅 90〜200cm × 高さ 90〜120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "幅 160〜240cm × 高さ 180〜200cm", "countable": true, "unit": "枚", "count": 0}, {"text": "幅 300〜600cm × 高さ 200〜300cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "高所での作業になりますか？", "section-type": "radio-group", "section-items": [{"text": "はい"}, {"text": "いいえ"}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "種類", "section-type": "grid-items", "section-items": [{"text": "幅 30〜60cm × 高さ 30〜60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "幅 90〜200cm × 高さ 90〜120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "幅 160〜240cm × 高さ 180〜200cm", "countable": true, "unit": "枚", "count": 0}, {"text": "幅 300〜600cm × 高さ 200〜300cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "高所での作業になりますか？", "section-type": "radio-group", "section-items": [{"text": "はい"}, {"text": "いいえ"}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 15,
+              // @ts-ignore - Template variable
               title: '窓清掃',
+              // @ts-ignore - Template variable
               image: 'images/mado.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/窓清掃.png',
+              // @ts-ignore - Template variable
               price: '¥ 5,250〜',
+              // @ts-ignore - Template variable
               category: 'フロア',
+              // @ts-ignore - Template variable
               description: '窓やガラス面は油膜・指紋・ホコリ・雨ジミなどが付着しやすく、放置すると次のような問題が起こります。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '専用の洗剤・道具を使用し、油膜や水アカまで徹底除去。透明感のあるガラス面を取り戻し、店舗の印象アップと衛生感の向上を実現します。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

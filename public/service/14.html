@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 14;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('冷暖房効率の低下、悪臭や店内空気の汚染、健康被害');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('水漏れ・異音などの故障リスク増大');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('カビや雑菌の繁殖による悪臭や店内空気の汚染');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "ルームエアコン", "section-type": "grid-items", "section-items": [{"text": "家庭用", "img-url": "images/eakon_gyoumuyou.png", "countable": true, "unit": "台", "count": 0}, {"text": "業務用", "img-url": "images/eakon_gyoumuyou.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "床置き型", "section-type": "grid-items", "section-items": [{"text": "床置き型", "img-url": "images/eakon_yukaokigata.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "天カセ型", "section-type": "grid-items", "section-items": [{"text": "天カセ型", "img-url": "images/eakon_tenkasegata.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "吹き出し口の数を教えてください", "section-type": "radio-text", "required": true, "section-items": ["1方向", "2方向", "4方向"]}, {"section-title": "埋め込型", "section-type": "grid-items", "section-items": [{"text": "埋め込型", "img-url": "images/eakon_umekomi.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "設置場所を教えてください", "section-type": "radio-text", "required": true, "section-items": ["壁", "天井", "床置き"]}, {"section-title": "オプション", "section-type": "grid-items", "section-items": [{"text": "室外機", "img-url": "images/eakon_situgaiki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（必須）エアコンの年式をご記入ください", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "ルームエアコン", "section-type": "grid-items", "section-items": [{"text": "家庭用", "img-url": "images/eakon_gyoumuyou.png", "countable": true, "unit": "台", "count": 0}, {"text": "業務用", "img-url": "images/eakon_gyoumuyou.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "床置き型", "section-type": "grid-items", "section-items": [{"text": "床置き型", "img-url": "images/eakon_yukaokigata.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "天カセ型", "section-type": "grid-items", "section-items": [{"text": "天カセ型", "img-url": "images/eakon_tenkasegata.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "吹き出し口の数を教えてください", "section-type": "radio-text", "required": true, "section-items": ["1方向", "2方向", "4方向"]}, {"section-title": "埋め込型", "section-type": "grid-items", "section-items": [{"text": "埋め込型", "img-url": "images/eakon_umekomi.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "設置場所を教えてください", "section-type": "radio-text", "required": true, "section-items": ["壁", "天井", "床置き"]}, {"section-title": "オプション", "section-type": "grid-items", "section-items": [{"text": "室外機", "img-url": "images/eakon_situgaiki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（必須）エアコンの年式をご記入ください", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 14,
+              // @ts-ignore - Template variable
               title: 'エアコン分解洗浄',
+              // @ts-ignore - Template variable
               image: 'images/eakonbunkai.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/エアコン分解洗浄.png',
+              // @ts-ignore - Template variable
               price: '¥ 11,375〜',
+              // @ts-ignore - Template variable
               category: '空調設備',
+              // @ts-ignore - Template variable
               description: 'エアコン内部に油煙、ホコリ、カビが短期間で蓄積しやすく、放置すると問題が発生します。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '完全分解し、高圧洗浄・除菌仕上げを実施。省エネ効果と衛生環境の改善を実現します。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

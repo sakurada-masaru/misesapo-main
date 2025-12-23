@@ -458,6 +458,14 @@ function renderUser(user) {
     }
   }
   
+  // 営業マイページの場合、今月の総案件数を読み込む
+  if (window.location.pathname.includes('/sales/mypage')) {
+    loadMonthlySchedulesCount();
+  }
+  
+  // TODOリストコンテナの時計を初期化
+  initializeTodoClock();
+  
   // OS課の場合は専用サイドバーに置き換え
   if (user.department === 'OS課') {
     loadOSSectionSidebar();
@@ -2766,13 +2774,13 @@ function renderTodos() {
   filteredTodos.forEach(todo => {
     html += `
       <div class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
-        <div class="todo-checkbox" onclick="toggleTodo('${todo.id}')">
+        <div class="todo-checkbox" onclick="window.toggleTodo('${todo.id}')">
           ${todo.completed ? '<i class="fas fa-check"></i>' : ''}
         </div>
         <input type="text" class="todo-text-input" value="${escapeHtml(todo.text)}" 
-               onblur="updateTodoText('${todo.id}', this.value)"
+               onblur="window.updateTodoText('${todo.id}', this.value)"
                onkeypress="if(event.key==='Enter') this.blur()">
-        <button class="todo-delete" onclick="deleteTodo('${todo.id}')">
+        <button class="todo-delete" onclick="window.deleteTodo('${todo.id}')">
           <i class="fas fa-trash"></i>
         </button>
       </div>
@@ -2817,6 +2825,103 @@ function setupTodoListeners() {
         renderTodos();
       });
     });
+  }
+  
+  // TODOリストの時計表示/非表示ボタン
+  const clockToggleBtn = document.getElementById('todo-clock-toggle-btn');
+  if (clockToggleBtn) {
+    clockToggleBtn.addEventListener('click', () => {
+      const clockSection = document.getElementById('todo-clock-section');
+      const toggleText = document.getElementById('todo-clock-toggle-text');
+      if (clockSection) {
+        const isVisible = clockSection.style.display !== 'none';
+        clockSection.style.display = isVisible ? 'none' : 'block';
+        if (toggleText) {
+          toggleText.textContent = isVisible ? '時計を表示' : '時計を非表示';
+        }
+        // 表示状態をlocalStorageに保存
+        localStorage.setItem('todo_clock_visible', !isVisible ? 'true' : 'false');
+      }
+    });
+    
+    // 保存された表示状態を復元
+    const savedVisibility = localStorage.getItem('todo_clock_visible');
+    if (savedVisibility === 'true') {
+      const clockSection = document.getElementById('todo-clock-section');
+      if (clockSection) {
+        clockSection.style.display = 'block';
+        const toggleText = document.getElementById('todo-clock-toggle-text');
+        if (toggleText) {
+          toggleText.textContent = '時計を非表示';
+        }
+      }
+    }
+  }
+}
+
+// TODOリストコンテナの時計を初期化
+function initializeTodoClock() {
+  const todoClockDisplay = document.getElementById('todo-clock-display');
+  if (!todoClockDisplay) return;
+  
+  function updateTodoClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    todoClockDisplay.textContent = `${hours}:${minutes}:${seconds}`;
+  }
+  
+  // 初回表示
+  updateTodoClock();
+  
+  // 1秒ごとに更新
+  setInterval(updateTodoClock, 1000);
+}
+
+// 今月の総案件数（スケジュール数）を読み込む
+async function loadMonthlySchedulesCount() {
+  try {
+    const idToken = await getCognitoIdToken();
+    const headers = {};
+    if (idToken) {
+      headers['Authorization'] = `Bearer ${idToken}`;
+    }
+    
+    const response = await fetch(`${API_BASE}/schedules`, { headers });
+    if (!response.ok) {
+      throw new Error('Failed to load schedules');
+    }
+    
+    const schedulesData = await response.json();
+    const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+    
+    // 今月のスケジュール数をカウント
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    
+    const monthlySchedules = allSchedules.filter(schedule => {
+      if (!schedule.scheduled_date && !schedule.date) return false;
+      
+      const scheduleDate = schedule.scheduled_date || schedule.date;
+      const date = new Date(scheduleDate);
+      
+      return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
+    });
+    
+    // 表示を更新
+    const countEl = document.getElementById('monthly-schedules-count');
+    if (countEl) {
+      countEl.textContent = monthlySchedules.length;
+      console.log('[Sales Mypage] Monthly schedules count:', monthlySchedules.length);
+    }
+  } catch (error) {
+    console.error('[Sales Mypage] Failed to load monthly schedules count:', error);
+    const countEl = document.getElementById('monthly-schedules-count');
+    if (countEl) {
+      countEl.textContent = '0';
+    }
   }
 }
 
@@ -4056,6 +4161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const hasTodoUI = Boolean(document.getElementById('todo-input')) || Boolean(document.getElementById('todo-list'));
   if (hasTodoUI) {
     setupTodoListeners();
+    initializeTodoClock();
   }
   setupDigitalClock();
   applyMypageTheme();

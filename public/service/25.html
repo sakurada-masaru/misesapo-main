@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 25;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ゴミや食べ残しが原因で害虫の発生源に');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('散らかった休憩室でスタッフのモチベーション低下');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('不衛生な環境が従業員定着率や店舗評価に悪影響');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/staffroom_80.jpeg"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/staffroom_90.jpeg"}, {"text": "徹底的にお願いしたい", "img-url": "images/staffroom_100.jpeg"}]}, {"section-title": "", "section-type": "grid-items", "section-items": [{"text": "スタッフルーム清掃", "img-url": "images/staffroom_staffroom.png"}]}, {"section-title": "辞めたスタッフのゴミも処分しますか？", "section-type": "radio-group", "section-items": [{"text": "はい", "value": "ok", "default": false}, {"text": "いいえ", "value": "no", "default": false}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/staffroom_80.jpeg"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/staffroom_90.jpeg"}, {"text": "徹底的にお願いしたい", "img-url": "images/staffroom_100.jpeg"}]}];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "", "section-type": "grid-items", "section-items": [{"text": "スタッフルーム清掃", "img-url": "images/staffroom_staffroom.png"}]}, {"section-title": "辞めたスタッフのゴミも処分しますか？", "section-type": "radio-group", "section-items": [{"text": "はい", "value": "ok", "default": false}, {"text": "いいえ", "value": "no", "default": false}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 25,
+              // @ts-ignore - Template variable
               title: 'スタッフルーム清掃',
+              // @ts-ignore - Template variable
               image: 'images/staffroom.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/スタッフルーム.png',
+              // @ts-ignore - Template variable
               price: '¥ 7,000〜',
+              // @ts-ignore - Template variable
               category: 'その他',
+              // @ts-ignore - Template variable
               description: '飲食店スタッフが利用する休憩室・更衣室（スタッフルーム）は、油汚れの付着や食べかす・ゴミが溜まりやすく、放置すると次のような問題が起こります。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '専門清掃では、床や壁の洗浄、ロッカーやテーブル周りの拭き上げ、ゴミの回収までを徹底対応。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

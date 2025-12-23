@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 30;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('埃が落下して料理や食材を汚染、悪臭や不衛生な印象に');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('故障・火災リスクの増加');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('店舗イメージを大きく損なう');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "清掃箇所の高さ", "img-url": "images/kousho_takasa.png", "countable": true, "unit": "m", "count": 0}]}, {"section-title": "備考欄（任意）埃を取りたい箇所をご記入ください。", "section-type": "textarea", "placeholder": "例：天井、エアコン上", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "清掃箇所の高さ", "img-url": "images/kousho_takasa.png", "countable": true, "unit": "m", "count": 0}]}, {"section-title": "備考欄（任意）埃を取りたい箇所をご記入ください。", "section-type": "textarea", "placeholder": "例：天井、エアコン上", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 30,
+              // @ts-ignore - Template variable
               title: '高所/厨房機器内埃取り',
+              // @ts-ignore - Template variable
               image: 'images/kousho.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/kousho.png',
+              // @ts-ignore - Template variable
               price: '¥ 875',
+              // @ts-ignore - Template variable
               category: 'その他',
+              // @ts-ignore - Template variable
               description: '高所部分(天井・照明・ダクト周り) や厨房機器内部は、埃や油汚れが蓄積しやすい場所です。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '専門清掃では、専用の器具・高所対応機材を用いて、普段届かない場所の埃や油汚れを徹底除去いたします。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 29;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('倉庫や厨房が乱雑し作業効率が低下');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ゴミや汚れがたまり 害虫・悪臭の原因に');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('雑然とした雰囲気が衛生管理不足の印象を与える');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "5Sとは「清掃、整理、整頓、清潔、躾」の頭文字を取った、職場の環境を整え効率と安全を高めるための改善活動です。"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "5Sとは「清掃、整理、整頓、清潔、躾」の頭文字を取った、職場の環境を整え効率と安全を高めるための改善活動です。"}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 29,
+              // @ts-ignore - Template variable
               title: '5Sコンサルティング',
+              // @ts-ignore - Template variable
               image: 'images/5s.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/5s.png',
+              // @ts-ignore - Template variable
               price: '¥ 10,500〜',
+              // @ts-ignore - Template variable
               category: 'その他',
+              // @ts-ignore - Template variable
               description: '飲食店の現場では、モノが多く、清掃・整理が行き届かないことがよくありますが、そのまま放置すると…',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '現場調査を行い、5Sの導入指導・改善提案・仕組みづくりを実施いたします。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

@@ -371,6 +371,30 @@
         </div>
         <!-- 中央カラム -->
         <div class="mypage-column mypage-column-center">
+        <!-- 今月の総案件数 -->
+        <section id="monthly-schedules">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-calendar-check"></i>
+                今月の総案件数
+              </h2>
+            </div>
+            <div class="card accordion-content">
+              <div class="monthly-schedules-content">
+                <div class="schedules-count-display">
+                  <span class="schedules-count-number" id="monthly-schedules-count">0</span>
+                  <span class="schedules-count-label">件</span>
+                </div>
+                <div class="schedules-count-description">
+                  <i class="fas fa-info-circle"></i>
+                  <span>今月のスケジュール登録数</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
         <!-- 顧客一覧 -->
         <section id="clients-list">
           <div class="container-section">
@@ -407,6 +431,49 @@
             </div>
             <div class="card accordion-content">
               <div class="empty-state">見積もり一覧は準備中です</div>
+            </div>
+          </div>
+        </section>
+
+        </div>
+        <!-- 右カラム -->
+        <div class="mypage-column mypage-column-right">
+        <!-- TODOリスト -->
+        <section id="todo">
+          <div class="container-section">
+            <div class="container-header">
+              <h2 class="container-title drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+                <i class="fas fa-tasks"></i>
+                TODOリスト
+                <span class="todo-count" id="todo-count">0</span>
+              </h2>
+            </div>
+            <!-- 24時間時計（表示/非表示ボタン付き） -->
+            <div class="todo-clock-section" id="todo-clock-section" style="display: none;">
+              <div class="todo-clock-display" id="todo-clock-display">00:00:00</div>
+            </div>
+            <div class="card todo-card accordion-content">
+              <div class="todo-header-actions">
+                <button class="btn btn-text btn-sm" id="todo-clock-toggle-btn" title="時計を表示/非表示">
+                  <i class="fas fa-clock"></i>
+                  <span id="todo-clock-toggle-text">時計を表示</span>
+                </button>
+              </div>
+              <div class="todo-input-wrapper">
+                <input type="text" id="todo-input" class="todo-input" placeholder="新しいタスクを追加..." />
+                <button class="btn btn-primary btn-sm" id="add-todo-btn">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+              <div id="todo-list" class="todo-list">
+                <!-- TODOアイテムが動的に生成される -->
+              </div>
+              <div class="todo-filters" id="todo-filters">
+                <button class="filter-btn active" data-filter="all">すべて</button>
+                <button class="filter-btn" data-filter="active">未完了</button>
+                <button class="filter-btn" data-filter="completed">完了</button>
+              </div>
             </div>
           </div>
         </section>

@@ -330,6 +330,70 @@ font-size: 1rem !important;
   color: #FF679C;
 }
 
+/* 今月の総案件数コンテナ */
+.monthly-schedules-content {
+  padding: 24px;
+  text-align: center;
+}
+
+.schedules-count-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.schedules-count-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--primary, #ff679c);
+  line-height: 1;
+}
+
+.schedules-count-label {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.schedules-count-description {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.schedules-count-description i {
+  font-size: 0.875rem;
+}
+
+/* TODOリストの時計セクション */
+.todo-clock-section {
+  padding: 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.todo-clock-display {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--primary, #ff679c);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+}
+
+.todo-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
 
 .card {
   background: #ffffff;

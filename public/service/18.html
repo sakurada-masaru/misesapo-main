@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 18;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('尿石やカビで強烈な悪臭');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ウォシュレットや配管の詰まりによる水漏れ・故障');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('清潔感の低下で店舗全体の評価が下がる');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "数量"}, {"section-title": "分解洗浄あり", "section-type": "grid-items", "section-items": [{"text": "洋式", "img-url": "images/toire_yousiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "小便器", "img-url": "images/toire_shoubenki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "分解洗浄なし", "section-type": "grid-items", "section-items": [{"text": "洋式", "img-url": "images/toire_yousiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "洋式", "img-url": "images/toire_wasiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "小便器", "img-url": "images/toire_shoubenki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量"}, {"section-title": "分解洗浄あり", "section-type": "grid-items", "section-items": [{"text": "洋式", "img-url": "images/toire_yousiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "小便器", "img-url": "images/toire_shoubenki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "分解洗浄なし", "section-type": "grid-items", "section-items": [{"text": "洋式", "img-url": "images/toire_yousiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "洋式", "img-url": "images/toire_wasiki.png", "countable": true, "unit": "台", "count": 0}, {"text": "小便器", "img-url": "images/toire_shoubenki.png", "countable": true, "unit": "台", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 18,
+              // @ts-ignore - Template variable
               title: 'トイレ洗浄',
+              // @ts-ignore - Template variable
               image: 'images/toire.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/トイレ.png',
+              // @ts-ignore - Template variable
               price: '¥ 12,250〜',
+              // @ts-ignore - Template variable
               category: 'フロア',
+              // @ts-ignore - Template variable
               description: 'お客様が必ず利用する場所であり、店舗の印象を大きく左右します。通常の清掃だけでは取りきれない汚れが蓄積すると…',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '便器やタンク、ウォシュレット部分を分解・薬剤洗浄・高圧洗浄・除菌仕上げ。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

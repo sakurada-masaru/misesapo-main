@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 26;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('マットの黒ずみやシミで不衛生な第一印象');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('吸水・防滑効果が落ちて転倒リスクが増加');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('見た目の劣化で店舗全体のイメージダウン');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "数量"}, {"section-title": "ブラック/ブラウン(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_nairon.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "ブルー/ブラック(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironblue.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "ブラック/スカーレット(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironred.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "ブラック/パール(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironpearl.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "グリーン/ブラック(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_nairongreen.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "グレー(材質：PVC)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironpvcgray.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)40×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)50×80cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "吸水・吸油ハイスペック玄関マットブラック(材質：ナイロン・特殊合成ゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironhi.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)40×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)50×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "交換頻度を教えてください", "section-type": "radio-group", "section-items": [{"text": "２週間に１回", "value": "ok", "default": false}, {"text": "１ヶ月に１回", "value": "no", "default": false}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量"}, {"section-title": "ブラック/ブラウン(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_nairon.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "ブルー/ブラック(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironblue.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "ブラック/スカーレット(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironred.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "ブラック/パール(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironpearl.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)36×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×180cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "グリーン/ブラック(材質：ナイロン・ニトリルゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_nairongreen.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)45×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×120cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)90×150cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "グレー(材質：PVC)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironpvcgray.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)40×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)50×80cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)60×90cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "吸水・吸油ハイスペック玄関マットブラック(材質：ナイロン・特殊合成ゴム)", "section-type": "grid-items", "section-items": [{"text": "", "img-url": "images/yukamatto_naironhi.png"}]}, {"section-type": "grid-items", "section-items": [{"text": "(縦×横)40×60cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)50×75cm", "countable": true, "unit": "枚", "count": 0}, {"text": "(縦×横)75×90cm", "countable": true, "unit": "枚", "count": 0}]}, {"section-title": "交換頻度を教えてください", "section-type": "radio-group", "section-items": [{"text": "２週間に１回", "value": "ok", "default": false}, {"text": "１ヶ月に１回", "value": "no", "default": false}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 26,
+              // @ts-ignore - Template variable
               title: '床マット交換',
+              // @ts-ignore - Template variable
               image: 'images/yukamatto_koukan.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/玄関マット交換.png',
+              // @ts-ignore - Template variable
               price: '¥ 17,500〜',
+              // @ts-ignore - Template variable
               category: 'その他',
+              // @ts-ignore - Template variable
               description: '店舗の入口に設置される玄関マットは、泥・ホコリ・油分を吸着し、店内を清潔に保つ役割を果たします。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '定期的なマット交換・クリーニング済みマットの設置を行い、常に清潔で安全な入口環境を維持いたします。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

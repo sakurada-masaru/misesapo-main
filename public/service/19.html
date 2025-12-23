@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 19;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('ベタつきや滑り、黒ずみや油膜による不衛生な印象や転倒');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('カビや雑菌の繁殖による悪臭や食中毒リスク');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('汚れの蓄積による床材の劣化・寿命短縮');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/yuka_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/yuka_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/yuka_100.png"}]}, {"section-title": "床ポリッシャー洗浄", "section-type": "grid-items", "section-items": [{"text": "キッチン", "img-url": "images/yuka_kicchin.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "フローリング", "img-url": "images/yuka_furo-ring.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "タイル", "img-url": "images/yuka_tairu.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "木材", "img-url": "images/yuka_mokuzai.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "石材", "img-url": "images/yuka_isizai.png", "countable": true, "unit": "㎡", "count": 0}]}, {"section-title": "床ワックス（フローリング）"}, {"section-title": "※過去にワックスを塗布されている場合は、事前に剥離作業を行ってから洗浄することで、より効果的な清掃が可能です。"}, {"section-type": "radio-group", "section-items": [{"text": "ワックス剥離"}, {"text": "ワックス塗布"}]}, {"section-title": "床スイーパー洗浄", "section-type": "grid-items", "section-items": [{"text": "カーペット", "img-url": "images/yuka_ka-petto.png", "countable": true, "unit": "㎡", "count": 0}]}, {"section-title": "その他", "section-type": "grid-items", "section-items": [{"text": "床掃除機", "img-url": "images/yuka_soujiki.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "階段清掃", "img-url": "images/yuka_kaidanseisou.png", "countable": true, "unit": "階分", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [{"section-title": "日頃のお掃除の状況について教えてください", "section-type": "radio-text", "required": true, "section-items": ["毎日清掃している", "毎週清掃している", "月に1回程度", "半年〜1年に1回", "1度もしていない"]}, {"section-title": "清掃の仕上がりイメージを教えてください", "section-type": "radio-image", "required": false, "section-items": [{"text": "表面がきれいになれば十分", "img-url": "images/yuka_80.png"}, {"text": "ある程度きれいにしてほしい", "img-url": "images/yuka_90.png"}, {"text": "徹底的にお願いしたい", "img-url": "images/yuka_100.png"}]}];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "床ポリッシャー洗浄", "section-type": "grid-items", "section-items": [{"text": "キッチン", "img-url": "images/yuka_kicchin.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "フローリング", "img-url": "images/yuka_furo-ring.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "タイル", "img-url": "images/yuka_tairu.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "木材", "img-url": "images/yuka_mokuzai.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "石材", "img-url": "images/yuka_isizai.png", "countable": true, "unit": "㎡", "count": 0}]}, {"section-title": "床ワックス（フローリング）"}, {"section-title": "※過去にワックスを塗布されている場合は、事前に剥離作業を行ってから洗浄することで、より効果的な清掃が可能です。"}, {"section-type": "radio-group", "section-items": [{"text": "ワックス剥離"}, {"text": "ワックス塗布"}]}, {"section-title": "床スイーパー洗浄", "section-type": "grid-items", "section-items": [{"text": "カーペット", "img-url": "images/yuka_ka-petto.png", "countable": true, "unit": "㎡", "count": 0}]}, {"section-title": "その他", "section-type": "grid-items", "section-items": [{"text": "床掃除機", "img-url": "images/yuka_soujiki.png", "countable": true, "unit": "㎡", "count": 0}, {"text": "階段清掃", "img-url": "images/yuka_kaidanseisou.png", "countable": true, "unit": "階分", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 19,
+              // @ts-ignore - Template variable
               title: '床清掃',
+              // @ts-ignore - Template variable
               image: 'images/yuka.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/床洗浄.png',
+              // @ts-ignore - Template variable
               price: '¥ 12,250',
+              // @ts-ignore - Template variable
               category: 'フロア',
+              // @ts-ignore - Template variable
               description: '飲食店の床は、油、食材カス、飲み物の飛び散りなどで常に汚れやすい状況です。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '床材に応じて洗剤洗浄・高圧洗浄・ワックス仕上げを実施。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

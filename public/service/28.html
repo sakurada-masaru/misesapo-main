@@ -395,6 +395,8 @@
 
 
 <script>
+  // @ts-nocheck
+  // eslint-disable
   // Service detail page initialization
   (function() {
     // Image fallback handling
@@ -429,6 +431,7 @@
         fetch('/api/services')
           .then(response => response.json())
           .then(services => {
+            // @ts-ignore - Template variable
             const serviceId = 28;
             const service = services.find(s => s.id === serviceId);
             if (service) {
@@ -443,16 +446,26 @@
             console.error('Failed to load service data:', error);
             // Fallback: use page data from template variables
             const problemsList = [];
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('調理設備や什器の不具合が放置されて事故や故障に');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('衛生管理不足による行政指導・営業停止リスク');
+            // @ts-ignore - Template syntax
             
+            // @ts-ignore - Template variable
             problemsList.push('店舗オーナーやスタッフの意識低下・離反');
+            // @ts-ignore - Template syntax
             
             // 新しいsections配列構造に対応（後方互換性のためforms/detailsもサポート）
+            // @ts-ignore - Template variable
             let sections = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "店舗数", "img-url": "images/eiseikanri_tenposuu.png", "countable": true, "unit": "店舗", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
+            // @ts-ignore - Template variable
             const forms = [];
+            // @ts-ignore - Template variable
             const details = [{"section-title": "数量", "section-type": "grid-items", "section-items": [{"text": "店舗数", "img-url": "images/eiseikanri_tenposuu.png", "countable": true, "unit": "店舗", "count": 0}]}, {"section-title": "備考欄（任意）", "section-type": "textarea", "placeholder": "例：設置場所、使用時間帯、臭気の有無など", "maxLength": 500, "key": "note"}];
             // sectionsが存在しない場合は、forms/detailsを統合してsectionsに変換
             if (!sections || sections.length === 0) {
@@ -464,15 +477,24 @@
                 sections = sections.concat(details);
               }
             }
+            // @ts-ignore - Template variables
             const serviceData = {
+              // @ts-ignore - Template variable
               id: 28,
+              // @ts-ignore - Template variable
               title: '店舗衛生管理',
+              // @ts-ignore - Template variable
               image: 'images/eiseikanri.png',
+              // @ts-ignore - Template variable
               'detail-image': 'images/ミセサポ2025/FC店舗.png',
+              // @ts-ignore - Template variable
               price: '¥ 50,000〜',
+              // @ts-ignore - Template variable
               category: 'その他',
+              // @ts-ignore - Template variable
               description: '本部のブランドイメージや衛生基準を守るために、定期的な巡回・査察が欠かせません。放置すると以下の問題が発生します。',
               problems: problemsList,
+              // @ts-ignore - Template variable
               solution: '本部基準に沿ったチェックリストを用い、店舗ごとの清掃・衛生状況・設備点検を定期的に実施。',
               sections: sections,  // 新しいsections配列構造を優先
               forms: forms,

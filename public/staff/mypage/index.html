@@ -424,7 +424,17 @@
                 <span class="todo-count" id="todo-count">0</span>
               </h2>
             </div>
+            <!-- 24時間時計（表示/非表示ボタン付き） -->
+            <div class="todo-clock-section" id="todo-clock-section" style="display: none;">
+              <div class="todo-clock-display" id="todo-clock-display">00:00:00</div>
+            </div>
             <div class="card todo-card accordion-content">
+              <div class="todo-header-actions">
+                <button class="btn btn-text btn-sm" id="todo-clock-toggle-btn" title="時計を表示/非表示">
+                  <i class="fas fa-clock"></i>
+                  <span id="todo-clock-toggle-text">時計を表示</span>
+                </button>
+              </div>
               <div class="todo-input-wrapper">
                 <input type="text" id="todo-input" class="todo-input" placeholder="新しいタスクを追加..." />
                 <button class="btn btn-primary btn-sm" id="add-todo-btn">
