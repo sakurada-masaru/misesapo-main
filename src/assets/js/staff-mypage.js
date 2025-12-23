@@ -4249,4 +4249,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // アコーディオン機能のセットアップはloadCurrentUser()の完了後に実行される
 });
 
+// グローバル関数として公開
+window.toggleTodo = toggleTodo;
+window.addTodo = addTodo;
+window.deleteTodo = deleteTodo;
+window.updateTodoText = updateTodoText;
+
 // アコーディオン機能は削除されました
