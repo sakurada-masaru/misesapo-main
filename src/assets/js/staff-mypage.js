@@ -1680,10 +1680,17 @@ async function loadTodayDailyReport() {
       
       const response = await fetch(`${API_BASE}/daily-reports?staff_id=${encodeURIComponent(currentUser.id)}&date=${today}`, {
         method: 'GET',
-        headers: headers
+        headers: headers,
+        mode: 'cors' // CORSモードを明示的に指定
+      }).catch(err => {
+        // CORSエラーやネットワークエラーの場合はnullを返してローカルストレージから読み込む
+        if (err.name === 'TypeError' && (err.message.includes('Failed to fetch') || err.message.includes('CORS'))) {
+          return null;
+        }
+        throw err;
       });
       
-      if (response.ok) {
+      if (response && response.ok) {
         const data = await response.json();
         if (data.content !== undefined) {
           // APIから取得したデータを表示
@@ -1700,7 +1707,7 @@ async function loadTodayDailyReport() {
           localStorage.setItem(storageKey, JSON.stringify(data));
           return;
         }
-      } else if (response.status === 401) {
+      } else if (response && response.status === 401) {
         handleAuthError('日報の読み込み');
         return;
       }
@@ -2590,10 +2597,17 @@ async function loadTodos() {
       
       const response = await fetch(`${API_BASE}/todos?staff_id=${encodeURIComponent(userId)}`, {
         method: 'GET',
-        headers: headers
+        headers: headers,
+        mode: 'cors' // CORSモードを明示的に指定
+      }).catch(err => {
+        // CORSエラーやネットワークエラーの場合はnullを返してローカルストレージから読み込む
+        if (err.name === 'TypeError' && (err.message.includes('Failed to fetch') || err.message.includes('CORS'))) {
+          return null;
+        }
+        throw err;
       });
       
-      if (response.ok) {
+      if (response && response.ok) {
         const result = await response.json();
         if (result.todos && Array.isArray(result.todos)) {
           todos = result.todos;
