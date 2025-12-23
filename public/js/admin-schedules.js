@@ -1467,14 +1467,15 @@ window.quickAssignWorker = async function(scheduleId) {
       
       if (selectedValue === 'ALL' || selectedValue === '') {
         // 「全員（オープン）」の場合：worker_idを空文字列に設定（APIが空文字列で未割当を処理する場合）
-        // またはフィールドを削除（APIがnullを処理できない場合）
+        const wasDraft = schedule.status === 'draft';
+        const newStatus = wasDraft 
+          ? 'scheduled' // draft状態からscheduledに自動更新
+          : (schedule.status || 'scheduled'); // 既に確定済みの場合は維持
+        
         updateData = {
-          worker_id: '' // 空文字列を送信
+          worker_id: '', // 空文字列を送信
+          status: newStatus // ステータスを確定に変更
         };
-        // ステータスは変更しない（全員オープンの場合はstatusを維持）
-        if (schedule.status) {
-          updateData.status = schedule.status;
-        }
       } else {
         // 個人を選択した場合
         const wasDraft = schedule.status === 'draft';
