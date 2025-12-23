@@ -1267,6 +1267,16 @@ function renderCalendar() {
       if (daySchedules.length > 3) {
         const more = document.createElement('div');
         more.className = 'day-event-more';
+        // 過去の日付の場合は「+N件」も黒く表示
+        const nowForMore = new Date();
+        nowForMore.setHours(0, 0, 0, 0);
+        const scheduleDateObjForMore = new Date(dateStr);
+        scheduleDateObjForMore.setHours(0, 0, 0, 0);
+        const isPastForMore = scheduleDateObjForMore < nowForMore;
+        if (isPastForMore) {
+          more.style.color = '#6b7280';
+          more.style.opacity = '0.7';
+        }
         more.textContent = `+${daySchedules.length - 3}件`;
         eventsContainer.appendChild(more);
       }
