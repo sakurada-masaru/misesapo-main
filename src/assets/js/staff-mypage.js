@@ -1705,7 +1705,13 @@ async function loadTodayDailyReport() {
         return;
       }
     } catch (apiError) {
-      console.warn('日報のAPI読み込みに失敗、ローカルストレージから読み込みます:', apiError);
+      // CORSエラーやネットワークエラーの場合は静かに処理（ローカルストレージから読み込む）
+      if (apiError.name === 'TypeError' && apiError.message.includes('Failed to fetch')) {
+        // CORSエラーやネットワークエラーの場合は警告を出さない
+        console.debug('日報のAPI読み込みに失敗（CORS/ネットワークエラーの可能性）、ローカルストレージから読み込みます');
+      } else {
+        console.warn('日報のAPI読み込みに失敗、ローカルストレージから読み込みます:', apiError);
+      }
     }
     
     // APIから読み込めない場合はローカルストレージから読み込む
@@ -2598,7 +2604,13 @@ async function loadTodos() {
         }
       }
     } catch (apiError) {
-      console.warn('TODOのAPI読み込みに失敗、ローカルストレージから読み込みます:', apiError);
+      // CORSエラーやネットワークエラーの場合は静かに処理（ローカルストレージから読み込む）
+      if (apiError.name === 'TypeError' && apiError.message.includes('Failed to fetch')) {
+        // CORSエラーやネットワークエラーの場合は警告を出さない
+        console.debug('TODOのAPI読み込みに失敗（CORS/ネットワークエラーの可能性）、ローカルストレージから読み込みます');
+      } else {
+        console.warn('TODOのAPI読み込みに失敗、ローカルストレージから読み込みます:', apiError);
+      }
     }
     
     // APIから読み込めない場合はローカルストレージから読み込む

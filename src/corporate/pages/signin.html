@@ -375,8 +375,8 @@ body {
                 if (redirect) {
                   window.location.href = decodeURIComponent(redirect);
                 } else {
-                  // ロールごとのデフォルトページにリダイレクト
-                  const defaultPage = window.Auth.getDefaultPageForRole(result.user.role);
+                  // ロールごとのデフォルトページにリダイレクト（部署情報も考慮）
+                  const defaultPage = window.Auth.getDefaultPageForRole(result.user);
                   const basePath = document.querySelector('base')?.getAttribute('href') || '/';
                   
                   // ベースパスを考慮したパス解決

@@ -382,8 +382,37 @@ function getMasterNavigation() {
 
 /**
  * ロールごとのデフォルトページ（ログイン後リダイレクト先）を取得
+ * @param {string|object} roleOrUser - ロール名（文字列）またはユーザーオブジェクト（role, departmentを含む）
  */
-function getDefaultPageForRole(role) {
+function getDefaultPageForRole(roleOrUser) {
+  // ユーザーオブジェクトが渡された場合
+  if (typeof roleOrUser === 'object' && roleOrUser !== null) {
+    const user = roleOrUser;
+    const role = (user.role || '').toLowerCase();
+    const department = (user.department || '').toLowerCase();
+    
+    // 営業: 営業用マイページ（SP用、クイックメニューあり）
+    if (role === 'sales' || role === 'concierge' || department.includes('営業') || department.includes('sales')) {
+      return '/sales/mypage';
+    }
+    // OS課: OS課用マイページ（SP用、クイックメニューあり）
+    if (department.includes('os') || department.includes('ｏｓ') || department.includes('os課') || department.includes('ｏｓ課')) {
+      return '/staff/os/mypage';
+    }
+    // 事務: 事務マイページ（PC向け、サイドバーのみ）
+    if (role === 'office' || department.includes('事務') || department.includes('office')) {
+      return '/staff/office/mypage';
+    }
+    // 開発: 開発マイページ（PC向け、サイドバーのみ）
+    if (role === 'developer' || department.includes('開発') || department.includes('developer')) {
+      return '/staff/developer/mypage';
+    }
+    // その他はロールベースで判定
+    return ROLE_CONFIG.defaultPages[role] || ROLE_CONFIG.defaultPages.guest || '/';
+  }
+  
+  // ロール名（文字列）が渡された場合
+  const role = typeof roleOrUser === 'string' ? roleOrUser.toLowerCase() : '';
   return ROLE_CONFIG.defaultPages[role] || ROLE_CONFIG.defaultPages.guest || '/';
 }
 
