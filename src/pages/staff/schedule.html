@@ -1395,17 +1395,45 @@
           }
         });
 
-        allSchedules = scheduleArray.map(s => {
-          const scheduleId = getScheduleId(s);
-          const reportId = scheduleId ? reportByScheduleId[String(scheduleId)] : '';
-          return {
-            ...s,
-            report_created: Boolean(reportId),
-            report_id: reportId || ''
-          };
-        });
+        // 清掃員に割り当てられたスケジュール、または未割当（worker_idが空）のスケジュールを表示
+        // ただし、statusが'draft'の場合は表示しない（管理側で確定されるまで非表示）
+        allSchedules = scheduleArray
+          .filter(s => {
+            // draft状態のスケジュールは表示しない
+            if (s.status === 'draft') return false;
+            
+            // 現在のユーザーIDを取得
+            const currentUserId = currentUser?.id;
+            if (!currentUserId) return false;
+            
+            // worker_idまたはassigned_toを確認
+            const scheduleWorkerId = s.worker_id || s.assigned_to || '';
+            
+            // 未割当（空）または現在のユーザーに割り当てられている場合のみ表示
+            // IDの正規化処理を使用して比較
+            if (!scheduleWorkerId || scheduleWorkerId === '') {
+              return true; // 未割当のスケジュールは表示
+            }
+            
+            // 現在のユーザーに割り当てられているか確認
+            if (window.DataUtils && window.DataUtils.IdUtils && window.DataUtils.IdUtils.isSame) {
+              return window.DataUtils.IdUtils.isSame(scheduleWorkerId, currentUserId);
+            } else {
+              // フォールバック: 文字列比較
+              return String(scheduleWorkerId) === String(currentUserId);
+            }
+          })
+          .map(s => {
+            const scheduleId = getScheduleId(s);
+            const reportId = scheduleId ? reportByScheduleId[String(scheduleId)] : '';
+            return {
+              ...s,
+              report_created: Boolean(reportId),
+              report_id: reportId || ''
+            };
+          });
         
-        console.log('[Schedule] Loaded', allSchedules.length, 'schedules');
+        console.log('[Schedule] Loaded', allSchedules.length, 'schedules (filtered for current user)');
       } catch (error) {
         console.error('Failed to load schedules:', error);
         allSchedules = [];
