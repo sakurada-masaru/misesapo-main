@@ -1382,7 +1382,6 @@ window.quickAssignWorker = async function(scheduleId) {
       <div style="margin-bottom: 16px;">
         <label style="display: block; margin-bottom: 8px; font-weight: 500; color: #374151;">清掃員を選択</label>
         <select id="quick-assign-worker-select" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
-          <option value="">未割当</option>
           ${selectHtml}
         </select>
       </div>
