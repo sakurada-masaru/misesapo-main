@@ -460,6 +460,11 @@ function renderUser(user) {
   // TODOリストコンテナの時計を初期化
   initializeTodoClock();
   
+  // スケジュール一覧を読み込む（清掃員マイページの場合）
+  if (window.location.pathname.includes('/staff/mypage') || window.location.pathname.includes('/staff/os/mypage')) {
+    loadScheduleList(user);
+  }
+  
   // OS課の場合は専用サイドバーに置き換え
   if (user.department === 'OS課') {
     loadOSSectionSidebar();
@@ -4258,6 +4263,129 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // アコーディオン機能のセットアップはloadCurrentUser()の完了後に実行される
 });
+
+// スケジュール一覧を読み込む（清掃員マイページ用）
+async function loadScheduleList(user) {
+  if (!user || !user.id) {
+    console.warn('[Mypage] User ID not available for schedule list');
+    return;
+  }
+  
+  const scheduleListContent = document.getElementById('schedule-list-content');
+  if (!scheduleListContent) return;
+  
+  try {
+    const idToken = await getCognitoIdToken();
+    const headers = {};
+    if (idToken) {
+      headers['Authorization'] = `Bearer ${idToken}`;
+    }
+    
+    // スケジュールを取得
+    const response = await fetch(`${API_BASE}/schedules`, { headers });
+    if (!response.ok) {
+      throw new Error('Failed to load schedules');
+    }
+    
+    const schedulesData = await response.json();
+    const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+    
+    // 現在のユーザーに割り当てられたスケジュールをフィルタリング
+    const userSchedules = allSchedules.filter(schedule => {
+      const scheduleWorkerId = schedule.worker_id || schedule.assigned_to || schedule.staff_id;
+      // IDの正規化処理を使用して比較
+      if (window.DataUtils && window.DataUtils.IdUtils && window.DataUtils.IdUtils.isSame) {
+        return window.DataUtils.IdUtils.isSame(scheduleWorkerId, user.id);
+      } else {
+        return String(scheduleWorkerId) === String(user.id);
+      }
+    });
+    
+    // 確定済み（scheduledまたはin_progress）で、現在以降のスケジュールをフィルタリング
+    const now = new Date();
+    const upcomingSchedules = userSchedules
+      .filter(schedule => {
+        // ステータスが確定済み（scheduledまたはin_progress）
+        const status = schedule.status || '';
+        if (status !== 'scheduled' && status !== 'in_progress') {
+          return false;
+        }
+        
+        // 日付と時刻を取得
+        const scheduleDate = schedule.scheduled_date || schedule.date;
+        const scheduleTime = schedule.scheduled_time || schedule.time || schedule.time_slot || '00:00';
+        
+        if (!scheduleDate) return false;
+        
+        // 日時を生成して現在時刻と比較
+        const scheduleDateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
+        return scheduleDateTime >= now;
+      })
+      .sort((a, b) => {
+        // 日時順にソート（近い順）
+        const dateA = a.scheduled_date || a.date;
+        const timeA = a.scheduled_time || a.time || a.time_slot || '00:00';
+        const dateTimeA = new Date(`${dateA}T${timeA}:00`);
+        
+        const dateB = b.scheduled_date || b.date;
+        const timeB = b.scheduled_time || b.time || b.time_slot || '00:00';
+        const dateTimeB = new Date(`${dateB}T${timeB}:00`);
+        
+        return dateTimeA - dateTimeB;
+      })
+      .slice(0, 3); // 3件のみ表示
+    
+    // 表示を更新
+    if (upcomingSchedules.length === 0) {
+      scheduleListContent.innerHTML = '<div class="empty-state">確定済みのスケジュールはありません</div>';
+      return;
+    }
+    
+    // スケジュール一覧を表示
+    scheduleListContent.innerHTML = upcomingSchedules.map(schedule => {
+      const scheduleDate = schedule.scheduled_date || schedule.date;
+      const scheduleTime = schedule.scheduled_time || schedule.time || schedule.time_slot || '00:00';
+      const dateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
+      
+      // 日付と時刻をフォーマット
+      const dateStr = dateTime.toLocaleDateString('ja-JP', {
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short'
+      });
+      const timeStr = scheduleTime.length === 5 ? scheduleTime : scheduleTime.substring(0, 5);
+      
+      // 店舗名を取得
+      const storeName = schedule.store_name || schedule.client_name || '-';
+      
+      // ステータスラベル
+      const statusLabel = schedule.status === 'in_progress' ? '作業中' : '確定';
+      const statusClass = schedule.status === 'in_progress' ? 'status-in-progress' : 'status-scheduled';
+      
+      return `
+        <div class="schedule-list-item" style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer;" onclick="window.location.href='/staff/schedule'">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-calendar-check" style="color: #ff679c; font-size: 0.875rem;"></i>
+              <span style="font-weight: 600; color: #111827;">${escapeHtml(dateStr)}</span>
+              <span style="color: #6b7280; font-size: 0.875rem;">${timeStr}</span>
+            </div>
+            <span class="status-badge ${statusClass}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500;">${statusLabel}</span>
+          </div>
+          <div style="color: #6b7280; font-size: 0.875rem;">
+            <i class="fas fa-store" style="margin-right: 4px;"></i>
+            ${escapeHtml(storeName)}
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    console.log('[Mypage] Loaded schedule list:', upcomingSchedules.length, 'schedules');
+  } catch (error) {
+    console.error('[Mypage] Failed to load schedule list:', error);
+    scheduleListContent.innerHTML = '<div class="empty-state" style="color: #ef4444;">読み込みに失敗しました</div>';
+  }
+}
 
 // OS課の直近のスケジュール情報を読み込む
 async function loadOSNextSchedule(user) {

@@ -360,6 +360,41 @@ font-size: 1rem !important;
 .schedules-count-description {
   display: flex;
   align-items: center;
+}
+
+/* スケジュール一覧 */
+.schedule-list-card {
+  padding: 0;
+}
+
+.schedule-list-item {
+  transition: background-color 0.2s;
+}
+
+.schedule-list-item:hover {
+  background-color: #f9fafb;
+}
+
+.schedule-list-item:last-child {
+  border-bottom: none;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-badge.status-scheduled {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.status-in-progress {
+  background: #fef3c7;
+  color: #b45309;
   justify-content: center;
   gap: 6px;
   font-size: 0.875rem;
