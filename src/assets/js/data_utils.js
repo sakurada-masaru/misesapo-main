@@ -41,7 +41,8 @@
     REPORT: 'RPT',
     WORKER: 'W',
     CUSTOMER: 'CU',
-    USER: 'USR'
+    USER: 'USR',
+    CHART: 'CHT-'
   };
 
   const STATUS = {

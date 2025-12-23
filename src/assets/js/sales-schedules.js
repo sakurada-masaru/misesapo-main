@@ -60,20 +60,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // データ読み込み
 async function loadSchedules() {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:63',message:'loadSchedules entry',data:{apiBase:API_BASE},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   try {
     const response = await fetch(`${API_BASE}/schedules`);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:66',message:'API response received',data:{ok:response.ok,status:response.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     if (!response.ok) {
       throw new Error('Failed to load schedules');
     }
     const schedulesData = await response.json();
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:71',message:'Schedules data parsed',data:{isArray:Array.isArray(schedulesData),count:Array.isArray(schedulesData)?schedulesData.length:(schedulesData.items||schedulesData.schedules||[]).length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     // APIレスポンスが配列かオブジェクトかをチェック
     allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
     updateNewProjectAlert();
     filterAndRender();
   } catch (error) {
     console.error('Failed to load schedules:', error);
-    if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="10" class="loading-cell">読み込みに失敗しました</td></tr>';
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:78',message:'loadSchedules error',data:{error:error.message,hasTbody:typeof tbody!=='undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    if (scheduleCardList) {
+      scheduleCardList.innerHTML = '<div class="empty-state">読み込みに失敗しました</div>';
     }
   }
 }
@@ -478,11 +490,17 @@ function setupCleaningItemsSearch() {
 
 // フィルタリング
 function filterAndRender() {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:480',message:'filterAndRender entry',data:{allSchedulesCount:allSchedules.length,dataUtilsExists:typeof DataUtils!=='undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   const storeFilter = document.getElementById('store-filter');
   const workerFilter = document.getElementById('worker-filter');
   const statusFilter = document.getElementById('status-filter');
   const dateRangeFilter = document.getElementById('date-range-filter');
   
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:486',message:'Filter elements check',data:{hasStoreFilter:!!storeFilter,hasWorkerFilter:!!workerFilter,hasStatusFilter:!!statusFilter,hasDateRangeFilter:!!dateRangeFilter},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   if (!storeFilter || !workerFilter || !statusFilter) return;
   
   const storeId = storeFilter.value;
@@ -494,6 +512,9 @@ function filterAndRender() {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:497',message:'Before filter',data:{storeId,workerId,status,dateRange,nowDate:now.toISOString().split('T')[0]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
   filteredSchedules = allSchedules.filter(s => {
     // store_id または client_id に対応
     const scheduleStoreId = s.store_id || s.client_id;
@@ -506,6 +527,25 @@ function filterAndRender() {
     // 日付範囲フィルター
     let matchDateRange = true;
     if (dateRange === 'future' || dateRange === 'past') {
+      // #region agent log
+      if (typeof DataUtils === 'undefined') {
+        fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:509',message:'DataUtils undefined error',data:{scheduleId:s.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // DataUtilsが未定義の場合は、直接スケジュールデータから日付を取得
+        const scheduleDate = s.date || s.scheduled_date;
+        if (scheduleDate) {
+          const scheduleDateObj = new Date(scheduleDate);
+          scheduleDateObj.setHours(0, 0, 0, 0);
+          if (dateRange === 'future') {
+            matchDateRange = scheduleDateObj >= now;
+          } else if (dateRange === 'past') {
+            matchDateRange = scheduleDateObj < now;
+          }
+        } else {
+          matchDateRange = dateRange === 'past';
+        }
+        return matchStore && matchWorker && matchStatus && matchDateRange;
+      }
+      // #endregion
       const normalized = DataUtils.normalizeSchedule(s);
       const scheduleDate = normalized.date || s.date || s.scheduled_date;
       if (scheduleDate) {
@@ -527,12 +567,21 @@ function filterAndRender() {
     
     return matchStore && matchWorker && matchStatus && matchDateRange;
   });
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:529',message:'After filter',data:{filteredCount:filteredSchedules.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
 
   // 予定日順（時系列順）にソート
+  // #region agent log
+  if (typeof DataUtils === 'undefined') {
+    fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:532',message:'DataUtils undefined in sort',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  }
+  // #endregion
   filteredSchedules.sort((a, b) => {
     // カレンダー表示と同じ方法で日付を取得
-    const normalizedA = DataUtils.normalizeSchedule(a);
-    const normalizedB = DataUtils.normalizeSchedule(b);
+    const normalizedA = typeof DataUtils !== 'undefined' ? DataUtils.normalizeSchedule(a) : { date: a.date || a.scheduled_date || '', time: a.time_slot || a.scheduled_time || '00:00' };
+    const normalizedB = typeof DataUtils !== 'undefined' ? DataUtils.normalizeSchedule(b) : { date: b.date || b.scheduled_date || '', time: b.time_slot || b.scheduled_time || '00:00' };
     const dateA = normalizedA.date || a.date || a.scheduled_date || '';
     const dateB = normalizedB.date || b.date || b.scheduled_date || '';
     
@@ -1175,10 +1224,18 @@ function getStatusLabel(status) {
 
 // カレンダー描画
 function renderCalendar() {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:1177',message:'renderCalendar entry',data:{dataUtilsExists:typeof DataUtils!=='undefined',allSchedulesCount:allSchedules.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
   const calendarMonth = document.getElementById('calendar-month');
   const calendarDays = document.getElementById('calendar-days');
   
-  if (!calendarMonth || !calendarDays) return;
+  if (!calendarMonth || !calendarDays) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:1181',message:'Calendar elements missing',data:{hasMonth:!!calendarMonth,hasDays:!!calendarDays},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    return;
+  }
   
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -1222,6 +1279,14 @@ function renderCalendar() {
     
     // その日のスケジュール（カレンダー表示と整合性を取る）
     const daySchedules = allSchedules.filter(s => {
+      // #region agent log
+      if (typeof DataUtils === 'undefined') {
+        fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:1224',message:'DataUtils undefined in calendar filter',data:{scheduleId:s.id,dateStr},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // DataUtilsが未定義の場合は、直接スケジュールデータから日付を取得
+        const scheduleDate = s.date || s.scheduled_date;
+        return scheduleDate === dateStr;
+      }
+      // #endregion
       const normalized = DataUtils.normalizeSchedule(s);
       const scheduleDate = normalized.date || s.date || s.scheduled_date;
       return scheduleDate === dateStr;
@@ -1233,7 +1298,17 @@ function renderCalendar() {
       // 最大3件表示
       daySchedules.slice(0, 3).forEach(schedule => {
         const event = document.createElement('div');
-        const normalized = DataUtils.normalizeSchedule(schedule);
+        // #region agent log
+        if (typeof DataUtils === 'undefined') {
+          fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:1300',message:'DataUtils undefined in calendar event',data:{scheduleId:schedule.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        }
+        // #endregion
+        const normalized = typeof DataUtils !== 'undefined' ? DataUtils.normalizeSchedule(schedule) : { 
+          status: schedule.status || 'scheduled',
+          store_id: schedule.store_id || schedule.client_id,
+          store_name: schedule.store_name || schedule.client_name || '',
+          time: schedule.time_slot || schedule.scheduled_time || ''
+        };
         
         // 過去のスケジュールかどうかを判定
         const now = new Date();
@@ -1245,7 +1320,9 @@ function renderCalendar() {
         // 過去の場合は`past`クラスを追加
         event.className = `day-event status-${normalized.status}${isPast ? ' past' : ''}`;
         const storeId = normalized.store_id || schedule.store_id || schedule.client_id;
-        const store = DataUtils.findStore(allStores, storeId) || {};
+        const store = (typeof DataUtils !== 'undefined' && DataUtils.findStore) 
+          ? DataUtils.findStore(allStores, storeId) || {}
+          : allStores.find(s => s.id === storeId || String(s.id) === String(storeId)) || {};
         
         // ブランド名を取得
         function getBrandName(brandId) {
@@ -1256,7 +1333,9 @@ function renderCalendar() {
         
         const brandId = store.brand_id;
         const brandName = getBrandName(brandId);
-        const displayName = brandName || DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name);
+        const displayName = brandName || (typeof DataUtils !== 'undefined' && DataUtils.getStoreName)
+          ? DataUtils.getStoreName(allStores, storeId, normalized.store_name || schedule.store_name || schedule.client_name)
+          : (normalized.store_name || schedule.store_name || schedule.client_name || '');
         event.textContent = displayName;
         event.title = `${normalized.time || ''} ${displayName}`;
         event.onclick = () => openEditDialog(schedule);

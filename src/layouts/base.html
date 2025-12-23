@@ -77,6 +77,12 @@
         border: 1px solid #e5e7eb;
       }
       
+      /* Admin store chart page: completely hide header */
+      body[class*="admin-store-chart"] #default-header-wrapper,
+      body[class*="admin-store-chart"] #normal-header-wrapper {
+        display: none !important;
+      }
+      
       /* Sales pages: hide global header and footer */
       body[class*="sales-"] #default-header-wrapper,
       body[class*="sales-"] #normal-header-wrapper,

@@ -97,6 +97,12 @@
         border: 1px solid #e5e7eb;
       }
       
+      /* Admin store chart page: completely hide header */
+      body[class*="admin-store-chart"] #default-header-wrapper,
+      body[class*="admin-store-chart"] #normal-header-wrapper {
+        display: none !important;
+      }
+      
       /* Sales pages: hide global header and footer */
       body[class*="sales-"] #default-header-wrapper,
       body[class*="sales-"] #normal-header-wrapper,
@@ -240,6 +246,10 @@
       <div class="tab-card active" data-tab="info" onclick="switchTab('info')">
         <span class="tab-label">店舗情報</span>
         <span class="tab-badge" id="info-badge"></span>
+      </div>
+      <div class="tab-card" data-tab="chart" onclick="switchTab('chart')">
+        <span class="tab-label">清掃カルテ</span>
+        <span class="tab-badge" id="chart-badge"></span>
       </div>
       <div class="tab-card" data-tab="estimates" onclick="switchTab('estimates')" data-permission="estimates">
         <span class="tab-label">見積もり履歴</span>
