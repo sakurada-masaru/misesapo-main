@@ -4364,8 +4364,11 @@ async function loadScheduleList(user) {
       });
       const timeStr = scheduleTime.length === 5 ? scheduleTime : scheduleTime.substring(0, 5);
       
-      // 店舗名を取得
+      // ブランド名と店舗名を取得
+      const brandName = schedule.brand_name || '';
       const storeName = schedule.store_name || schedule.client_name || '-';
+      // ブランド名と店名を組み合わせて表示（ブランド名がある場合のみ表示）
+      const displayName = brandName ? `${escapeHtml(brandName)} / ${escapeHtml(storeName)}` : escapeHtml(storeName);
       
       // 現在のユーザーに既に受託されているか確認
       const scheduleWorkerId = schedule.worker_id || schedule.assigned_to || schedule.staff_id || '';
@@ -4397,7 +4400,7 @@ async function loadScheduleList(user) {
           </div>
           <div style="color: #6b7280; font-size: 0.875rem; cursor: pointer;" onclick="window.location.href='/staff/schedule'">
             <i class="fas fa-store" style="margin-right: 4px;"></i>
-            ${escapeHtml(storeName)}
+            ${displayName}
           </div>
         </div>
       `;
