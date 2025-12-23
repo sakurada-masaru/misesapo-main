@@ -1324,14 +1324,22 @@ window.quickAssignWorker = async function(scheduleId) {
     return;
   }
 
-  // 清掃員のみを抽出
-  let cleaners = allWorkers.filter(w => (w.role || '').toLowerCase() === 'staff');
-  if (cleaners.length === 0) {
-    cleaners = allWorkers;
+  // OS課の清掃員のみを抽出
+  let osCleaners = allWorkers.filter(w => {
+    const role = (w.role || '').toLowerCase();
+    const department = (w.department || '').trim();
+    // roleがstaffで、かつdepartmentがOS課の場合のみ
+    return role === 'staff' && department === 'OS課';
+  });
+
+  // OS課の清掃員が見つからない場合のフォールバック
+  if (osCleaners.length === 0) {
+    // roleがstaffの場合は含める（department情報がない場合の救済）
+    osCleaners = allWorkers.filter(w => (w.role || '').toLowerCase() === 'staff');
   }
 
-  if (cleaners.length === 0) {
-    alert('清掃員が見つかりません');
+  if (osCleaners.length === 0) {
+    alert('OS課の清掃員が見つかりません');
     return;
   }
 
@@ -1340,13 +1348,17 @@ window.quickAssignWorker = async function(scheduleId) {
   const currentWorkerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to || '';
 
   // 清掃員選択のドロップダウンを作成
-  const selectHtml = cleaners.map(w => {
+  // 「全員（オープン）」を一番上に追加
+  const allOptionHtml = `<option value="ALL" ${!currentWorkerId || currentWorkerId === '' ? 'selected' : ''}>全員（オープン）</option>`;
+  const cleanersHtml = osCleaners.map(w => {
     const isSelected = currentWorkerId && (
       (DataUtils && DataUtils.IdUtils && DataUtils.IdUtils.isSame && DataUtils.IdUtils.isSame(w.id, currentWorkerId)) ||
       String(w.id) === String(currentWorkerId)
     );
     return `<option value="${w.id}" ${isSelected ? 'selected' : ''}>${escapeHtml(w.name || '')}</option>`;
   }).join('');
+  
+  const selectHtml = allOptionHtml + cleanersHtml;
 
   // モーダルを作成
   const modal = document.createElement('div');
@@ -1433,7 +1445,11 @@ window.quickAssignWorker = async function(scheduleId) {
       // モーダルを閉じる
       document.body.removeChild(modal);
 
-      alert(selectedWorkerId ? '清掃員を割り当てました' : '清掃員の割り当てを解除しました');
+      if (selectedValue === 'ALL' || selectedValue === '') {
+        alert('全員（オープン）に設定しました');
+      } else {
+        alert('清掃員を割り当てました');
+      }
     } catch (error) {
       console.error('Quick assign error:', error);
       alert('更新に失敗しました: ' + error.message);
