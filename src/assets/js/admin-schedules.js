@@ -1316,6 +1316,131 @@ window.editSchedule = function(id) {
   if (scheduleDialog) scheduleDialog.showModal();
 };
 
+// クイックアサイン（清掃員を素早く割り当てる）
+window.quickAssignWorker = async function(scheduleId) {
+  const schedule = allSchedules.find(s => s.id === scheduleId);
+  if (!schedule) {
+    alert('スケジュールが見つかりません');
+    return;
+  }
+
+  // 清掃員のみを抽出
+  let cleaners = allWorkers.filter(w => (w.role || '').toLowerCase() === 'staff');
+  if (cleaners.length === 0) {
+    cleaners = allWorkers;
+  }
+
+  if (cleaners.length === 0) {
+    alert('清掃員が見つかりません');
+    return;
+  }
+
+  // 現在の清掃員IDを取得
+  const normalized = DataUtils.normalizeSchedule(schedule);
+  const currentWorkerId = normalized.worker_id || schedule.worker_id || schedule.assigned_to || '';
+
+  // 清掃員選択のドロップダウンを作成
+  const selectHtml = cleaners.map(w => {
+    const isSelected = currentWorkerId && (
+      (DataUtils && DataUtils.IdUtils && DataUtils.IdUtils.isSame && DataUtils.IdUtils.isSame(w.id, currentWorkerId)) ||
+      String(w.id) === String(currentWorkerId)
+    );
+    return `<option value="${w.id}" ${isSelected ? 'selected' : ''}>${escapeHtml(w.name || '')}</option>`;
+  }).join('');
+
+  // モーダルを作成
+  const modal = document.createElement('div');
+  modal.className = 'quick-assign-modal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+
+  modal.innerHTML = `
+    <div style="background: white; padding: 24px; border-radius: 8px; min-width: 320px; max-width: 90%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+      <h3 style="margin: 0 0 16px 0; font-size: 1.25rem; font-weight: 600;">清掃員を割り当て</h3>
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: #374151;">清掃員を選択</label>
+        <select id="quick-assign-worker-select" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
+          <option value="">未割当</option>
+          ${selectHtml}
+        </select>
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button id="quick-assign-cancel" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; font-size: 0.875rem;">キャンセル</button>
+        <button id="quick-assign-save" style="padding: 8px 16px; border: none; background: #ff679c; color: white; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">保存</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // キャンセルボタン
+  modal.querySelector('#quick-assign-cancel').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+
+  // 背景クリックで閉じる
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+
+  // 保存ボタン
+  modal.querySelector('#quick-assign-save').addEventListener('click', async () => {
+    const selectEl = modal.querySelector('#quick-assign-worker-select');
+    const selectedWorkerId = selectEl.value || null;
+
+    try {
+      // スケジュールを更新
+      const updateData = {
+        worker_id: selectedWorkerId,
+        status: selectedWorkerId ? 'scheduled' : schedule.status // 清掃員を割り当てた場合は自動的にscheduledに
+      };
+
+      const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      });
+
+      if (!response.ok) {
+        throw new Error('更新に失敗しました');
+      }
+
+      // ローカルデータを更新
+      const idx = allSchedules.findIndex(s => s.id === scheduleId);
+      if (idx >= 0) {
+        allSchedules[idx] = { ...allSchedules[idx], ...updateData };
+      }
+
+      // データを再読み込み
+      await loadSchedules();
+      
+      // 画面を更新
+      filterAndRender();
+      updateDraftAlert();
+
+      // モーダルを閉じる
+      document.body.removeChild(modal);
+
+      alert(selectedWorkerId ? '清掃員を割り当てました' : '清掃員の割り当てを解除しました');
+    } catch (error) {
+      console.error('Quick assign error:', error);
+      alert('更新に失敗しました: ' + error.message);
+    }
+  });
+};
+
 // 削除確認
 window.confirmDelete = function(id) {
   deleteTargetId = id;
