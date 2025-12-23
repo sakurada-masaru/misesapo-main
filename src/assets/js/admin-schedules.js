@@ -1027,6 +1027,8 @@ function setupEventListeners() {
         scheduled_time: document.getElementById('schedule-time').value,
         duration_minutes: parseInt(document.getElementById('schedule-duration').value) || 60,
         sales_id: document.getElementById('schedule-sales').value || null,
+        // worker_idが空またはnullの場合 = 全員に割り当て（デフォルト = 全員が見られる）
+        // 特定の清掃員を選択した場合のみ、その清掃員だけに表示される
         worker_id: document.getElementById('schedule-worker').value || null,
         store_name: derivedStoreName,
         brand_name: derivedBrandName,
@@ -1466,14 +1468,14 @@ window.quickAssignWorker = async function(scheduleId) {
       let updateData = {};
       
       if (selectedValue === 'ALL' || selectedValue === '') {
-        // 「全員（オープン）」の場合：worker_idを空文字列に設定（APIが空文字列で未割当を処理する場合）
+        // 「全員（オープン）」の場合：worker_idを空文字列に設定（全員に割り当て = 全員が見られる）
         const wasDraft = schedule.status === 'draft';
         const newStatus = wasDraft 
           ? 'scheduled' // draft状態からscheduledに自動更新
           : (schedule.status || 'scheduled'); // 既に確定済みの場合は維持
         
         updateData = {
-          worker_id: '', // 空文字列を送信
+          worker_id: '', // 空文字列 = 全員に割り当て（デフォルト状態）
           status: newStatus // ステータスを確定に変更
         };
       } else {

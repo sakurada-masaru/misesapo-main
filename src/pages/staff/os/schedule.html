@@ -1322,10 +1322,10 @@
             // worker_idまたはassigned_toを確認
             const scheduleWorkerId = s.worker_id || s.assigned_to || '';
             
-            // 未割当（空）または現在のユーザーに割り当てられている場合のみ表示
-            // IDの正規化処理を使用して比較
-            if (!scheduleWorkerId || scheduleWorkerId === '') {
-              return true; // 未割当のスケジュールは表示
+            // デフォルトは全員に割り当て（worker_idが空 = 全員が見られる）
+            // 特定の清掃員に割り当てられた場合は、その清掃員のみに表示
+            if (!scheduleWorkerId || scheduleWorkerId === '' || scheduleWorkerId === null) {
+              return true; // worker_idが空 = 全員に割り当て = 全員に表示
             }
             
             // 現在のユーザーに割り当てられているか確認
