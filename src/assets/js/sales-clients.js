@@ -230,8 +230,19 @@ function renderClientList() {
   let filtered = allStores.filter(store => {
     // ステータスフィルター
     if (clientCurrentFilter !== 'all') {
-      const status = store.status || '稼働中';
-      if (status !== clientCurrentFilter) return false;
+      const status = store.status || '';
+      // ステータスの正規化（英語と日本語の両方に対応）
+      let normalizedStatus = status;
+      if (status === 'active') {
+        normalizedStatus = '稼働中';
+      } else if (status === 'suspended') {
+        normalizedStatus = '休止';
+      } else if (status === 'terminated') {
+        normalizedStatus = '契約終了';
+      } else if (!status) {
+        normalizedStatus = '稼働中'; // デフォルトは稼働中
+      }
+      if (normalizedStatus !== clientCurrentFilter) return false;
     }
     
     // 検索フィルター
@@ -249,7 +260,16 @@ function renderClientList() {
   const totalCountEl = document.getElementById('client-total-count');
   const activeCountEl = document.getElementById('client-active-count');
   if (totalCountEl) totalCountEl.textContent = allStores.length;
-  if (activeCountEl) activeCountEl.textContent = allStores.filter(s => s.status === '稼働中' || !s.status).length;
+  // 稼働中: status === 'active' または status === '稼働中' または statusが空（デフォルトで稼働中とみなす）
+  if (activeCountEl) {
+    const activeCount = allStores.filter(s => {
+      const status = s.status || '';
+      return status === 'active' || status === '稼働中' || !status;
+    }).length;
+    activeCountEl.textContent = activeCount;
+    console.log('[Sales Clients] Active count:', activeCount, 'out of', allStores.length, 'stores');
+    console.log('[Sales Clients] Store statuses:', allStores.map(s => ({ id: s.id, name: s.name, status: s.status || '(empty)' })));
+  }
   
   if (filtered.length === 0) {
     container.innerHTML = '<div class="loading">該当する顧客がありません</div>';
@@ -257,7 +277,24 @@ function renderClientList() {
   }
   
   container.innerHTML = filtered.map(store => {
-    const status = store.status || '稼働中';
+    // ステータスの正規化（英語と日本語の両方に対応）
+    const rawStatus = store.status || '';
+    let status = rawStatus;
+    let statusLabel = rawStatus;
+    if (rawStatus === 'active') {
+      status = 'active';
+      statusLabel = '稼働中';
+    } else if (rawStatus === 'suspended') {
+      status = 'suspended';
+      statusLabel = '休止';
+    } else if (rawStatus === 'terminated') {
+      status = 'terminated';
+      statusLabel = '契約終了';
+    } else if (!rawStatus) {
+      status = 'active';
+      statusLabel = '稼働中';
+    }
+    
     const clientName = getClientName(store.client_id) || '';
     const brandName = getBrandName(store.brand_id) || '';
     const storeId = store.id || '';
@@ -269,7 +306,7 @@ function renderClientList() {
             <div class="client-store-name">${escapeHtml(store.name || '店舗名なし')}</div>
             <div class="client-company-name">${escapeHtml(clientName)}${brandName ? ' / ' + escapeHtml(brandName) : ''}</div>
           </div>
-          <span class="client-status-badge client-status-${escapeHtml(status)}">${escapeHtml(status)}</span>
+          <span class="client-status-badge client-status-${escapeHtml(status)}">${escapeHtml(statusLabel)}</span>
         </div>
         <div class="client-card-info">
           ${store.pref ? `<div class="client-info-item"><i class="fas fa-map-marker-alt"></i>${escapeHtml(store.pref)}</div>` : ''}
