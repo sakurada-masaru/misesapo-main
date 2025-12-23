@@ -441,8 +441,8 @@ function renderUser(user) {
   
   // 出退勤セクションのヘッダーにユーザー名を表示する処理は削除（基本情報に統合されたため）
   
-  // 営業マイページの場合、今月の総案件数を読み込む
-  if (window.location.pathname.includes('/sales/mypage')) {
+  // 営業マイページまたはOS課マイページの場合、今月の総案件数を読み込む
+  if (window.location.pathname.includes('/sales/mypage') || window.location.pathname.includes('/staff/os/mypage')) {
     loadMonthlySchedulesCount();
   }
   
@@ -2897,10 +2897,12 @@ async function loadMonthlySchedulesCount() {
     const countEl = document.getElementById('monthly-schedules-count');
     if (countEl) {
       countEl.textContent = monthlySchedules.length;
-      console.log('[Sales Mypage] Monthly schedules count:', monthlySchedules.length);
+      const pageType = window.location.pathname.includes('/sales/mypage') ? 'Sales' : 'OS';
+      console.log(`[${pageType} Mypage] Monthly schedules count:`, monthlySchedules.length);
     }
   } catch (error) {
-    console.error('[Sales Mypage] Failed to load monthly schedules count:', error);
+    const pageType = window.location.pathname.includes('/sales/mypage') ? 'Sales' : 'OS';
+    console.error(`[${pageType} Mypage] Failed to load monthly schedules count:`, error);
     const countEl = document.getElementById('monthly-schedules-count');
     if (countEl) {
       countEl.textContent = '0';
