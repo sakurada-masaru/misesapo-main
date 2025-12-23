@@ -4290,9 +4290,18 @@ async function loadScheduleList(user) {
     const schedulesData = await response.json();
     const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
     
-    // 現在のユーザーに割り当てられたスケジュールをフィルタリング
+    // 現在のユーザーに割り当てられたスケジュール、または全員に割り当てられたスケジュールをフィルタリング
+    // デフォルトは全員に割り当て（worker_idが空/null = 全員が見られる）
+    // 特定の清掃員に割り当てられた場合は、その清掃員のみに表示
     const userSchedules = allSchedules.filter(schedule => {
       const scheduleWorkerId = schedule.worker_id || schedule.assigned_to || schedule.staff_id;
+      
+      // worker_idが空/nullの場合 = 全員に割り当て = 全員に表示
+      if (!scheduleWorkerId || scheduleWorkerId === '' || scheduleWorkerId === null) {
+        return true;
+      }
+      
+      // 特定の清掃員に割り当てられた場合、現在のユーザーに割り当てられているか確認
       // IDの正規化処理を使用して比較
       if (window.DataUtils && window.DataUtils.IdUtils && window.DataUtils.IdUtils.isSame) {
         return window.DataUtils.IdUtils.isSame(scheduleWorkerId, user.id);
