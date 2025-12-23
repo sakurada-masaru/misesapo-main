@@ -59,43 +59,85 @@ async function loadData() {
       'Content-Type': 'application/json'
     };
     
+    console.log('[Sales Clients] Loading data from API:', API_BASE);
+    console.log('[Sales Clients] Auth token present:', !!idToken && idToken !== 'mock-token');
+    
     const [storesRes, clientsRes, brandsRes, schedulesRes] = await Promise.all([
-      fetch(`${API_BASE}/stores`, { headers }).catch(() => ({ ok: false })),
-      fetch(`${API_BASE}/clients`, { headers }).catch(() => ({ ok: false })),
-      fetch(`${API_BASE}/brands`, { headers }).catch(() => ({ ok: false })),
-      fetch(`${API_BASE}/schedules`, { headers }).catch(() => ({ ok: false }))
+      fetch(`${API_BASE}/stores`, { headers }).catch((err) => {
+        console.error('[Sales Clients] Failed to fetch stores:', err);
+        return { ok: false, status: 0, statusText: err.message };
+      }),
+      fetch(`${API_BASE}/clients`, { headers }).catch((err) => {
+        console.error('[Sales Clients] Failed to fetch clients:', err);
+        return { ok: false, status: 0, statusText: err.message };
+      }),
+      fetch(`${API_BASE}/brands`, { headers }).catch((err) => {
+        console.error('[Sales Clients] Failed to fetch brands:', err);
+        return { ok: false, status: 0, statusText: err.message };
+      }),
+      fetch(`${API_BASE}/schedules`, { headers }).catch((err) => {
+        console.error('[Sales Clients] Failed to fetch schedules:', err);
+        return { ok: false, status: 0, statusText: err.message };
+      })
     ]);
     
     if (storesRes.ok) {
-      const storesData = await storesRes.json();
-      allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+      try {
+        const storesData = await storesRes.json();
+        allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+        console.log('[Sales Clients] Loaded stores:', allStores.length);
+      } catch (jsonError) {
+        console.error('[Sales Clients] Error parsing stores JSON:', jsonError);
+        allStores = [];
+      }
     } else {
-      console.warn('Failed to load stores:', storesRes.status, storesRes.statusText);
+      console.warn('[Sales Clients] Failed to load stores:', storesRes.status, storesRes.statusText);
+      if (storesRes.status === 0) {
+        console.error('[Sales Clients] Network error - API may be unreachable or CORS issue');
+      }
       allStores = [];
     }
     
     if (clientsRes.ok) {
-      const clientsData = await clientsRes.json();
-      if (Array.isArray(clientsData)) {
-        allClients = clientsData;
-      } else if (clientsData.items && Array.isArray(clientsData.items)) {
-        allClients = clientsData.items;
-      } else if (clientsData.clients && Array.isArray(clientsData.clients)) {
-        allClients = clientsData.clients;
-      } else {
-        console.warn('Unexpected clients data format:', clientsData);
+      try {
+        const clientsData = await clientsRes.json();
+        if (Array.isArray(clientsData)) {
+          allClients = clientsData;
+        } else if (clientsData.items && Array.isArray(clientsData.items)) {
+          allClients = clientsData.items;
+        } else if (clientsData.clients && Array.isArray(clientsData.clients)) {
+          allClients = clientsData.clients;
+        } else {
+          console.warn('[Sales Clients] Unexpected clients data format:', clientsData);
+          allClients = [];
+        }
+        console.log('[Sales Clients] Loaded clients:', allClients.length);
+      } catch (jsonError) {
+        console.error('[Sales Clients] Error parsing clients JSON:', jsonError);
         allClients = [];
       }
     } else {
-      console.warn('Failed to load clients');
+      console.warn('[Sales Clients] Failed to load clients:', clientsRes.status, clientsRes.statusText);
+      if (clientsRes.status === 0) {
+        console.error('[Sales Clients] Network error - API may be unreachable or CORS issue');
+      }
       allClients = [];
     }
     
     if (brandsRes.ok) {
-      const brandsData = await brandsRes.json();
-      allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
+      try {
+        const brandsData = await brandsRes.json();
+        allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
+        console.log('[Sales Clients] Loaded brands:', allBrands.length);
+      } catch (jsonError) {
+        console.error('[Sales Clients] Error parsing brands JSON:', jsonError);
+        allBrands = [];
+      }
     } else {
-      console.warn('Failed to load brands:', brandsRes.status, brandsRes.statusText);
+      console.warn('[Sales Clients] Failed to load brands:', brandsRes.status, brandsRes.statusText);
+      if (brandsRes.status === 0) {
+        console.error('[Sales Clients] Network error - API may be unreachable or CORS issue');
+      }
       allBrands = [];
     }
     
@@ -103,19 +145,23 @@ async function loadData() {
       try {
         const schedulesData = await schedulesRes.json();
         allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
+        console.log('[Sales Clients] Loaded schedules:', allSchedules.length);
       } catch (jsonError) {
-        console.error('Error parsing schedules JSON:', jsonError);
+        console.error('[Sales Clients] Error parsing schedules JSON:', jsonError);
         allSchedules = [];
       }
     } else {
-      console.warn('Failed to load schedules:', schedulesRes.status, schedulesRes.statusText);
+      console.warn('[Sales Clients] Failed to load schedules:', schedulesRes.status, schedulesRes.statusText);
+      if (schedulesRes.status === 0) {
+        console.error('[Sales Clients] Network error - API may be unreachable or CORS issue');
+      }
       allSchedules = [];
     }
     
     // データ読み込み後に顧客一覧を表示
     renderClientList();
   } catch (error) {
-    console.error('Failed to load data:', error);
+    console.error('[Sales Clients] Failed to load data:', error);
   }
 }
 
