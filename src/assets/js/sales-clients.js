@@ -83,8 +83,8 @@ async function loadData() {
     
     if (storesRes.ok) {
       try {
-        const storesData = await storesRes.json();
-        allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
+      const storesData = await storesRes.json();
+      allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
         console.log('[Sales Clients] Loaded stores:', allStores.length);
       } catch (jsonError) {
         console.error('[Sales Clients] Error parsing stores JSON:', jsonError);
@@ -100,14 +100,14 @@ async function loadData() {
     
     if (clientsRes.ok) {
       try {
-        const clientsData = await clientsRes.json();
-        if (Array.isArray(clientsData)) {
-          allClients = clientsData;
-        } else if (clientsData.items && Array.isArray(clientsData.items)) {
-          allClients = clientsData.items;
-        } else if (clientsData.clients && Array.isArray(clientsData.clients)) {
-          allClients = clientsData.clients;
-        } else {
+      const clientsData = await clientsRes.json();
+      if (Array.isArray(clientsData)) {
+        allClients = clientsData;
+      } else if (clientsData.items && Array.isArray(clientsData.items)) {
+        allClients = clientsData.items;
+      } else if (clientsData.clients && Array.isArray(clientsData.clients)) {
+        allClients = clientsData.clients;
+      } else {
           console.warn('[Sales Clients] Unexpected clients data format:', clientsData);
           allClients = [];
         }
@@ -126,8 +126,8 @@ async function loadData() {
     
     if (brandsRes.ok) {
       try {
-        const brandsData = await brandsRes.json();
-        allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
+      const brandsData = await brandsRes.json();
+      allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
         console.log('[Sales Clients] Loaded brands:', allBrands.length);
       } catch (jsonError) {
         console.error('[Sales Clients] Error parsing brands JSON:', jsonError);
@@ -731,7 +731,7 @@ async function handleStoreFormSubmit(e) {
     
     // 新規ブランドの作成
     if (!brandId && newBrandName) {
-      if (!clientId) {
+    if (!clientId) {
         throw new Error('ブランドを作成するには法人を選択または作成してください');
       }
       const newBrand = {
@@ -739,13 +739,13 @@ async function handleStoreFormSubmit(e) {
         client_id: clientId,
         created_at: new Date().toISOString()
       };
-      const brandRes = await fetch(`${API_BASE}/brands`, {
-        method: 'POST',
+        const brandRes = await fetch(`${API_BASE}/brands`, {
+          method: 'POST',
         headers: authHeaders,
         body: JSON.stringify(newBrand)
-      });
-      if (!brandRes.ok) {
-        const errorData = await brandRes.json().catch(() => ({}));
+        });
+        if (!brandRes.ok) {
+          const errorData = await brandRes.json().catch(() => ({}));
         throw new Error(errorData.error || 'ブランドの作成に失敗しました');
       }
       const createdBrandRes = await brandRes.json();
@@ -835,8 +835,8 @@ async function handleStoreFormSubmit(e) {
           formStatus.className = 'form-status success';
         }
       }
-      await loadData();
-      renderClientList();
+    await loadData();
+    renderClientList();
     } else {
       throw new Error('Save failed');
     }

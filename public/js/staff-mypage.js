@@ -348,9 +348,11 @@ async function loadCurrentUser() {
     const hasAttendanceUI = Boolean(document.getElementById('attendance-toggle-btn'));
     const hasDailyReportUI = Boolean(document.getElementById('daily-report-content'));
     const hasCalendarUI = Boolean(document.getElementById('calendar-title')) && Boolean(document.getElementById('calendar-grid'));
+    const isOSPage = window.location.pathname.includes('/staff/os/mypage');
 
     // 出退勤記録を読み込み（非同期）
-    if (hasAttendanceUI || hasCalendarUI) {
+    // OS課のマイページでは通常の出退勤システムが当てはまらないため、スキップ
+    if ((hasAttendanceUI || hasCalendarUI) && !isOSPage) {
       await loadAttendanceRecords();
     }
 
@@ -600,11 +602,25 @@ async function loadAttendanceRecords() {
     if (idToken) {
       headers['Authorization'] = `Bearer ${idToken}`;
     }
-    const response = await fetch(`${API_BASE}/attendance?staff_id=${currentUser.id}&date=${today}`, {
-      headers: headers
-      // 404エラーを抑制するために、エラーハンドリングを改善
-      // ただし、ブラウザのコンソールには自動的に表示される可能性がある
-    }).catch(() => null);
+    // 404エラーを抑制するため、エラーハンドリングを改善
+    let response = null;
+    try {
+      response = await fetch(`${API_BASE}/attendance?staff_id=${currentUser.id}&date=${today}`, {
+        headers: headers
+      });
+    } catch (error) {
+      // ネットワークエラーのみキャッチ（404は正常なケースとして扱う）
+      if (error && error.message && !error.message.includes('404')) {
+        console.warn('Attendance API request failed:', error);
+      }
+      response = null;
+    }
+    
+    // 404エラーの場合は静かに処理（APIが実装されていない場合）
+    if (response && response.status === 404) {
+      // 404は正常なケース（APIが実装されていない）として扱い、ログを出力しない
+      response = null;
+    }
     
     if (response && response.ok) {
       const data = await response.json();
