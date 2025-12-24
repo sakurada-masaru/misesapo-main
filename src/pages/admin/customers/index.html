@@ -1647,17 +1647,18 @@
       allStores = [];
     }
     
+    // 統合検索を使用するため、一覧ビューのフィルター初期化は削除
     // 取引先（企業/個人）
-    clientFilter.innerHTML = '<option value="">全法人</option>' + 
-      allClients.map(c => `<option value="${c.id}">${c.name}${c.type === 'individual' ? '（個人）' : ''}</option>`).join('');
+    // clientFilter.innerHTML = '<option value="">全法人</option>' + 
+    //   allClients.map(c => `<option value="${c.id}">${c.name}${c.type === 'individual' ? '（個人）' : ''}</option>`).join('');
     
     // ブランド（取引先に連動）
-    updateBrandFilter();
+    // updateBrandFilter();
     
     // 都道府県
-    const prefs = [...new Set(allStores.map(s => s.pref).filter(Boolean))].sort();
-    prefFilter.innerHTML = '<option value="">全都道府県</option>' + 
-      prefs.map(p => `<option value="${p}">${p}</option>`).join('');
+    // const prefs = [...new Set(allStores.map(s => s.pref).filter(Boolean))].sort();
+    // prefFilter.innerHTML = '<option value="">全都道府県</option>' + 
+    //   prefs.map(p => `<option value="${p}">${p}</option>`).join('');
   }
   
   // ブランドフィルターを更新（取引先に連動）
