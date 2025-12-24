@@ -218,6 +218,82 @@
     </div>
   </div>
 
+  <!-- Onsite Survey Report (Interview Sheet) -->
+  <div class="info-card report-card">
+    <div class="card-header">
+      <div class="card-title-block">
+        <h2 class="card-title">
+          <i class="fas fa-clipboard-list"></i>
+          現地調査レポート（問診票）
+        </h2>
+        <p class="card-subtitle">営業が入力した内容がカルテに自動反映されます。</p>
+      </div>
+      <span class="status-chip status-draft">未作成</span>
+    </div>
+    <div class="info-grid">
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="fas fa-notes-medical"></i>
+          問診（営業入力）
+        </h3>
+        <div class="info-item">
+          <span class="info-label">清掃の悩み</span>
+          <span class="info-value">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">店内環境</span>
+          <span class="info-value">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">特に気になる場所</span>
+          <span class="info-value">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">注意事項</span>
+          <span class="info-value">-</span>
+        </div>
+      </div>
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="fas fa-lightbulb"></i>
+          次回提案（必須）
+        </h3>
+        <div class="info-item">
+          <span class="info-label">提案内容</span>
+          <span class="info-value">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">想定時期</span>
+          <span class="info-value">-</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">確約状況</span>
+          <span class="info-value">-</span>
+        </div>
+      </div>
+      <div class="info-section">
+        <h3 class="section-title">
+          <i class="fas fa-link"></i>
+          連携情報
+        </h3>
+        <div class="info-item">
+          <span class="info-label">カルテ反映</span>
+          <span class="info-value">未反映</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">レポートリンク</span>
+          <span class="info-value">-</span>
+        </div>
+      </div>
+    </div>
+    <div class="report-actions">
+      <button type="button" class="btn btn-primary btn-sm" disabled>
+        <i class="fas fa-pen"></i> 問診票を入力
+      </button>
+      <span class="report-hint">初回の現地調査後に入力してください。</span>
+    </div>
+  </div>
+
   <!-- Quick Actions -->
   <div class="actions-section">
     <h3 class="section-title">クイックアクション</h3>
@@ -468,7 +544,54 @@
         grid-template-columns: repeat(2, 1fr);
       }
     }
-  </style>
+  
+    .report-card .card-header {
+      align-items: center;
+    }
+    .card-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin: 0;
+      color: #111827;
+    }
+    .card-subtitle {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    .status-chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .status-draft {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    .report-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed #e5e7eb;
+      flex-wrap: wrap;
+    }
+    .report-hint {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+</style>
 
   <script>
     // Show/hide URL and notes sections based on content

@@ -341,6 +341,10 @@ function getBrandName(brandId) {
 
 // 顧客詳細表示
 async function viewClientDetail(id) {
+  if (id) {
+    window.location.href = `/sales/clients/${id}.html`;
+    return;
+  }
   selectedClientId = id;
   const listView = document.getElementById('client-list-view');
   const detailView = document.getElementById('client-detail-view');
@@ -898,4 +902,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderClientList();
   }
 });
-
