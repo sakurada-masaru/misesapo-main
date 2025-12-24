@@ -1,4 +1,4 @@
-@layout('layouts.base')
+@layout('layouts.admin')
 @json('data/meta/admin_store_chart_title.json', $title)
 @json('data/meta/admin_store_chart_body_class.json', $body_class)
 
@@ -36,7 +36,10 @@
   })();
 </script>
 
-<main id="main" class="container admin-store-chart">
+<main id="main">
+  @include('partials.admin-sidebar')
+  <div class="main-content">
+    <div class="container admin-store-chart">
   <div class="page-header">
     <a href="/admin/customers/" class="back-btn">
       <i class="fas fa-chevron-left"></i>
@@ -346,6 +349,8 @@
       <textarea id="chart-notes" rows="6" placeholder="特記事項や注意点を入力してください"></textarea>
     </div>
   </section>
+    </div>
+  </div>
 </main>
 
 <!-- 消耗品追加モーダル -->
@@ -430,4 +435,3 @@
   })();
 </script>
 <script src="/js/admin-store-chart.js"></script>
-

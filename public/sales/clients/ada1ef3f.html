@@ -97,6 +97,12 @@
         border: 1px solid #e5e7eb;
       }
       
+      /* Admin store chart page: completely hide header */
+      body[class*="admin-store-chart"] #default-header-wrapper,
+      body[class*="admin-store-chart"] #normal-header-wrapper {
+        display: none !important;
+      }
+      
       /* Sales pages: hide global header and footer */
       body[class*="sales-"] #default-header-wrapper,
       body[class*="sales-"] #normal-header-wrapper,
@@ -197,7 +203,7 @@
 
 <main id="main" class="container sales-client-detail">
   <div class="page-header">
-    <a href="/sales/dashboard#client" class="back-btn">
+    <a href="/sales/dashboard" class="back-btn">
       <i class="fas fa-chevron-left"></i>
     </a>
     <h1 class="page-title">顧客詳細</h1>
@@ -311,6 +317,10 @@
   <div class="actions-section">
     <h3 class="section-title">クイックアクション</h3>
     <div class="action-buttons">
+      <a href="/sales/stores/ada1ef3f/chart" class="action-btn">
+        <i class="fas fa-clipboard-list"></i>
+        <span>清掃カルテ</span>
+      </a>
       <a href="/sales/estimates/new?client_id=ada1ef3f" class="action-btn">
         <i class="fas fa-file-invoice"></i>
         <span>見積もり作成</span>
@@ -332,7 +342,7 @@
 
   <!-- Navigation -->
   <div class="nav-section">
-    <a href="/sales/dashboard#client" class="btn btn-outline btn-block">
+    <a href="/sales/dashboard" class="btn btn-outline btn-block">
       <i class="fas fa-list"></i> 顧客一覧に戻る
     </a>
   </div>
