@@ -7,7 +7,7 @@
 .sales-clients {
   max-width: 100%;
   margin: 0;
-  padding: 16px;
+  padding: 12px;
   padding-bottom: 80px; /* ボトムタブのスペース */
   background: #f9fafb;
   min-height: 100vh;
@@ -777,7 +777,7 @@
 }
 
 .client-register-form {
-  padding: 16px;
+  padding: 12px;
 }
 
 .form-row {
@@ -924,7 +924,7 @@
 /* レスポンシブ */
 @media (max-width: 768px) {
   .sales-clients {
-    padding: 12px;
+    padding: 10px;
     padding-bottom: 70px;
   }
 
@@ -942,7 +942,7 @@
   }
 
   .client-register-form {
-    padding: 12px;
+    padding: 10px;
   }
 
   .form-row {
@@ -964,4 +964,3 @@
     max-height: calc(100vh - 180px);
   }
 }
-
