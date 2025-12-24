@@ -287,6 +287,7 @@
             z-index: 10000;
             cursor: pointer;
             transition: transform 0.3s ease;
+            display: none;
         }
 
         /* SP版：左下メニューボタン */
@@ -723,6 +724,7 @@
             .cosmetic-header,
             .normal-header {
                 background-position: 0 -65px !important;
+                display: none;
             }
             .normal-header.visible {
                 display: none;
@@ -732,6 +734,10 @@
                 left: -41px;
 
             }   
+            .cosmetic-header-logo,
+            .normal-header-logo {
+                display: none;
+            }
             /* SP版：メニューパネルを表示 */
             .sp-menu-panel {
                 display: block;
@@ -998,7 +1004,7 @@
             position: absolute;
             left: 20%;
             top: calc(40% + 150px);
-            transform: translate(calc(-50% - 50px), -50%);
+            transform: translate(calc(-50% - 50px + 80px), -50%);
             flex-direction: row;
             align-items: center;
             gap: 20px;
