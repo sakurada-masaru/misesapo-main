@@ -45,6 +45,50 @@
                 <span class="info-card-label">店舗数</span>
                 <span class="info-card-value" id="client-store-count">-</span>
               </div>
+              <div class="info-card-item">
+                <span class="info-card-label">店内の広さ（平米）</span>
+                <span class="info-card-value" id="client-area-sqm">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">店内の広さ（畳）</span>
+                <span class="info-card-value" id="client-area-tatami">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">トイレの数</span>
+                <span class="info-card-value" id="client-toilet-count">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">出入り口の数・種類</span>
+                <span class="info-card-value" id="client-entrances">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">ブレーカーの位置</span>
+                <span class="info-card-value" id="client-breaker-location">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">鍵の位置</span>
+                <span class="info-card-value" id="client-key-location">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">スタッフルームの有無</span>
+                <span class="info-card-value" id="client-staff-room">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">壁の材質</span>
+                <span class="info-card-value" id="client-wall-material">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">床の材質</span>
+                <span class="info-card-value" id="client-floor-material">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">電気のアンペア数</span>
+                <span class="info-card-value" id="client-electrical-amps">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">空調（エアコン）の数</span>
+                <span class="info-card-value" id="client-aircon-count">-</span>
+              </div>
             </div>
           </div>
 
@@ -75,7 +119,7 @@
               清掃情報
             </h3>
             <div class="info-item">
-              <span class="info-label">次回清掃日時</span>
+              <span class="info-label">前回清掃日時</span>
               <span class="info-value" id="client-next-date">-</span>
             </div>
             <div class="info-item">
@@ -151,6 +195,10 @@
               <input class="form-field" id="survey-hours" type="text" placeholder="例：11:00〜23:30（定休：月）">
             </div>
             <div class="info-item form-item">
+              <span class="info-label">通常清掃の頻度</span>
+              <input class="form-field" id="survey-cleaning-frequency" type="text" placeholder="例：毎日（閉店後に30分）">
+            </div>
+            <div class="info-item form-item">
               <span class="info-label">空調設備の状態</span>
               <textarea class="form-field" id="survey-aircon" rows="2" placeholder="例：台数3、1台異音、フィルター目詰まり"></textarea>
             </div>
@@ -214,6 +262,22 @@
                 <option value="regular">定期</option>
                 <option value="spot">スポット</option>
                 <option value="undecided">未定</option>
+              </select>
+            </div>
+            <div class="info-item form-item">
+              <span class="info-label">衛生状態自己評価</span>
+              <select class="form-field" id="survey-self-rating">
+                <option value="">選択してください</option>
+                <option value="1">1（不衛生）</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5（普通）</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10（非常に衛生的）</option>
               </select>
             </div>
           </div>

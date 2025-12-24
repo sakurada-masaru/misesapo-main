@@ -222,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
       staffNormal: document.getElementById('survey-staff-normal')?.value || '',
       staffPeak: document.getElementById('survey-staff-peak')?.value || '',
       hours: document.getElementById('survey-hours')?.value || '',
+      cleaningFrequency: document.getElementById('survey-cleaning-frequency')?.value || '',
       aircon: document.getElementById('survey-aircon')?.value || '',
       kitchen: document.getElementById('survey-kitchen')?.value || '',
       equipment,
@@ -229,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notes: document.getElementById('survey-notes')?.value || '',
       lastClean: document.getElementById('survey-last-clean')?.value || '',
       plan: document.getElementById('survey-plan')?.value || '',
+      selfRating: document.getElementById('survey-self-rating')?.value || '',
       proposalContent: document.getElementById('proposal-content')?.value || '',
       proposalTiming: document.getElementById('proposal-timing')?.value || '',
       proposalStatus: document.getElementById('proposal-status')?.value || ''
