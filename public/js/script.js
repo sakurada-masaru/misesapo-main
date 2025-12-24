@@ -432,56 +432,54 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// TOPへ戻るボタンと同じタイミングで表示するための処理
-const order_bottom_boxAnime = (entries) => {
-    entries.forEach((entry) => {
-        // kvImageBoxが画面外に出たら表示
-        if (!entry.isIntersecting) {
-            // footerが表示されていない場合のみ表示
-            if (!footer.getBoundingClientRect().top < window.innerHeight) {
-                order_bottom_box.classList.add('bottom-box-active');
-                order_bottom_box.style.opacity = '1';
-                order_bottom_box.style.visibility = 'visible';
+if (order_bottom_box && footer && kvImageBox) {
+    // TOPへ戻るボタンと同じタイミングで表示するための処理
+    const order_bottom_boxAnime = (entries) => {
+        entries.forEach((entry) => {
+            // kvImageBoxが画面外に出たら表示
+            if (!entry.isIntersecting) {
+                // footerが表示されていない場合のみ表示
+                if (!footer.getBoundingClientRect().top < window.innerHeight) {
+                    order_bottom_box.classList.add('bottom-box-active');
+                    order_bottom_box.style.opacity = '1';
+                    order_bottom_box.style.visibility = 'visible';
+                }
+            } else {
+                // kvImageBoxが画面内にある場合は非表示
+                order_bottom_box.classList.remove('bottom-box-active');
+                order_bottom_box.style.opacity = '0';
+                order_bottom_box.style.visibility = 'hidden';
             }
-        } else {
-            // kvImageBoxが画面内にある場合は非表示
-            order_bottom_box.classList.remove('bottom-box-active');
-            order_bottom_box.style.opacity = '0';
-            order_bottom_box.style.visibility = 'hidden';
-        }
-    });
-};
+        });
+    };
 
-// footerの表示監視
-const footerObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-            // footerが表示されたら非表示
-            order_bottom_box.classList.remove('bottom-box-active');
-            order_bottom_box.style.opacity = '0';
-        } else {
-            // footerが非表示で、kvImageBoxも画面外の場合は表示
-            if (!kvImageBox.getBoundingClientRect().top < window.innerHeight) {
-                order_bottom_box.classList.add('bottom-box-active');
-                order_bottom_box.style.opacity = '1';
+    // footerの表示監視
+    const footerObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                // footerが表示されたら非表示
+                order_bottom_box.classList.remove('bottom-box-active');
+                order_bottom_box.style.opacity = '0';
+            } else {
+                // footerが非表示で、kvImageBoxも画面外の場合は表示
+                if (!kvImageBox.getBoundingClientRect().top < window.innerHeight) {
+                    order_bottom_box.classList.add('bottom-box-active');
+                    order_bottom_box.style.opacity = '1';
+                }
             }
-        }
+        });
+    }, {
+        threshold: 0.1
     });
-}, {
-    threshold: 0.1
-});
 
-const order_bottom_boxOptions = {
-    threshold: 0.1,
-    rootMargin: '-20% 0px'
-};
+    const order_bottom_boxOptions = {
+        threshold: 0.1,
+        rootMargin: '-20% 0px'
+    };
 
-const order_bottom_boxObserver = new IntersectionObserver(order_bottom_boxAnime, order_bottom_boxOptions);
-if (kvImageBox) {
-order_bottom_boxObserver.observe(kvImageBox);
-}
-if (footer) {
-footerObserver.observe(footer);
+    const order_bottom_boxObserver = new IntersectionObserver(order_bottom_boxAnime, order_bottom_boxOptions);
+    order_bottom_boxObserver.observe(kvImageBox);
+    footerObserver.observe(footer);
 }
 
 
