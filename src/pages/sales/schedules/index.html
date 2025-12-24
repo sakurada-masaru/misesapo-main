@@ -6,6 +6,37 @@
 <link rel="stylesheet" href="/css/staff-mypage-inline.css" />
 <script src="/js/data_utils.js"></script>
 <script src="/js/aws-services-api.js"></script>
+<style>
+  .page-title-block {
+    display: flex;
+    margin: 12px 0 10px;
+  }
+  .page-title-block .client-tab {
+    flex: 0 0 auto;
+    padding: 12px 16px;
+    border: none;
+    background: #fff;
+    color: #9ca3af;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-bottom: 2px solid transparent;
+    border-radius: 12px 12px 0 0;
+    transition: all 0.2s;
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
+  }
+  .page-title-block .client-tab i {
+    font-size: 1rem;
+  }
+  .page-title-block .client-tab.active {
+    color: var(--primary, #ff679c);
+    border-bottom-color: var(--primary, #ff679c);
+    font-weight: 600;
+  }
+</style>
 
 <main id="main" class="container sales-schedules">
   <div class="page-header">
