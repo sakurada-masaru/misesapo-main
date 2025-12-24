@@ -110,8 +110,8 @@ function execute404Routing() {
   return Promise.resolve(false);
 }
 
-// 初期化
-document.addEventListener('DOMContentLoaded', async () => {
+// 初期化（即時実行、DOMContentLoadedを待たない）
+(function() {
   // URLから店舗IDを取得
   currentStoreId = getStoreIdFromUrl();
   
@@ -120,26 +120,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.warn('Store ID not found, attempting 404.html routing manually...');
     
     // 404.htmlのルーティングを手動で実行
-    const routingSuccess = await execute404Routing();
-    
-    if (routingSuccess) {
-      // ルーティングが成功した場合、ページが再読み込みされるのでここで終了
-      return;
-    }
-    
-    // ルーティングが失敗した場合、URLから直接取得を再試行
-    currentStoreId = getStoreIdFromUrl();
-    
-    if (!currentStoreId || currentStoreId === '[id]') {
-      console.error('Store ID not found in URL after routing attempt');
-      document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>エラー</h1><p>店舗IDが見つかりませんでした。</p><p style="color:#999;font-size:0.9rem;">URLを確認してください: ' + window.location.pathname + '</p><a href="/admin/customers/" style="color:#FF679C;text-decoration:none;">顧客管理に戻る</a></div>';
-      return;
-    }
+    execute404Routing().then(routingSuccess => {
+      if (routingSuccess) {
+        // ルーティングが成功した場合、ページが再読み込みされるのでここで終了
+        return;
+      }
+      
+      // ルーティングが失敗した場合、URLから直接取得を再試行
+      currentStoreId = getStoreIdFromUrl();
+      
+      if (!currentStoreId || currentStoreId === '[id]') {
+        console.error('Store ID not found in URL after routing attempt');
+        document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1>エラー</h1><p>店舗IDが見つかりませんでした。</p><p style="color:#999;font-size:0.9rem;">URLを確認してください: ' + window.location.pathname + '</p><a href="/admin/customers/" style="color:#FF679C;text-decoration:none;">顧客管理に戻る</a></div>';
+        return;
+      }
+      
+      // DOMContentLoadedを待ってから初期化
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          console.log('Store ID found:', currentStoreId);
+          initializeChart();
+        });
+      } else {
+        console.log('Store ID found:', currentStoreId);
+        initializeChart();
+      }
+    });
+    return;
   }
 
-  console.log('Store ID found:', currentStoreId);
-  initializeChart();
-});
+  // DOMContentLoadedを待ってから初期化
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Store ID found:', currentStoreId);
+      initializeChart();
+    });
+  } else {
+    console.log('Store ID found:', currentStoreId);
+    initializeChart();
+  }
+})();
 
 // カルテの初期化処理
 async function initializeChart() {
