@@ -34,25 +34,27 @@
               <i class="fas fa-building"></i>
               基本情報
             </h3>
-            <div class="info-item">
-              <span class="info-label">会社名</span>
-              <span class="info-value" id="client-company-value">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">ブランド名</span>
-              <span class="info-value" id="client-brand-value">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">店舗名</span>
-              <span class="info-value" id="client-store-value">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">店舗数</span>
-              <span class="info-value" id="client-store-count">-</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">ステータス</span>
-              <span class="info-value" id="client-status-value">-</span>
+            <div class="info-grid-cards">
+              <div class="info-card-item">
+                <span class="info-card-label">会社名</span>
+                <span class="info-card-value" id="client-company-value">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">ブランド名</span>
+                <span class="info-card-value" id="client-brand-value">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">店舗名</span>
+                <span class="info-card-value" id="client-store-value">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">店舗数</span>
+                <span class="info-card-value" id="client-store-count">-</span>
+              </div>
+              <div class="info-card-item">
+                <span class="info-card-label">ステータス</span>
+                <span class="info-card-value" id="client-status-value">-</span>
+              </div>
             </div>
           </div>
 
@@ -362,6 +364,32 @@
       padding: 6px 0;
       border-bottom: 1px dashed rgba(203, 213, 225, 0.8);
     }
+    .info-grid-cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .info-card-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+    .info-card-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .info-card-value {
+      font-size: 0.95rem;
+      color: #0f172a;
+      font-weight: 600;
+      word-break: break-word;
+    }
     .info-label {
       font-size: 0.8rem;
       color: #6b7280;
@@ -486,6 +514,9 @@
         grid-template-columns: 1fr;
       }
       .info-item {
+        grid-template-columns: 1fr;
+      }
+      .info-grid-cards {
         grid-template-columns: 1fr;
       }
     }
