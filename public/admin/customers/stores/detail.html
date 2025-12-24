@@ -1559,6 +1559,14 @@
     document.getElementById('estimates-panel').style.display = tabName === 'estimates' ? 'block' : 'none';
     document.getElementById('history-panel').style.display = tabName === 'history' ? 'block' : 'none';
 
+    if (tabName === 'chart') {
+      const storeId = new URLSearchParams(window.location.search).get('id');
+      if (storeId) {
+        const encodedId = encodeURIComponent(storeId);
+        window.location.href = `/admin/customers/stores/[id]/chart.html?id=${encodedId}`;
+      }
+    }
+
     if (tabName === 'estimates') loadEstimates();
     if (tabName === 'history') loadReports();
   };
@@ -1765,5 +1773,4 @@
     </script>
   </body>
   </html>
-
 

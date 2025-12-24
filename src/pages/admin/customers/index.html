@@ -2020,7 +2020,7 @@
         <td>
           <div class="action-btns">
             <input type="checkbox" class="store-checkbox" data-id="${store.id}" onchange="toggleStoreSelection('${store.id}')" style="margin-right: 8px;">
-            <a href="/admin/customers/stores/${store.id}/chart.html" class="action-btn chart" title="清掃カルテ">
+            <a href="/admin/customers/stores/[id]/chart.html?id=${encodeURIComponent(store.id)}" class="action-btn chart" title="清掃カルテ">
               <i class="fas fa-clipboard-list"></i>
             </a>
             <button type="button" class="action-btn edit" title="編集" onclick="editStore('${store.id}')">
@@ -3169,4 +3169,3 @@
     </script>
 
     </main>
-

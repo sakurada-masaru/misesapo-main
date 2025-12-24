@@ -1375,10 +1375,11 @@
 
     // カルテタブの処理
     if (tabName === 'chart') {
-      // カルテページへリダイレクト
+      // カルテページへリダイレクト（テンプレートパスにクエリを付与して404を回避）
       const storeId = new URLSearchParams(window.location.search).get('id');
       if (storeId) {
-        window.location.href = `/admin/customers/stores/${storeId}/chart.html`;
+        const encodedId = encodeURIComponent(storeId);
+        window.location.href = `/admin/customers/stores/[id]/chart.html?id=${encodedId}`;
       }
     }
 
