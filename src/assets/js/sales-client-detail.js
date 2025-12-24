@@ -214,6 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveButton = document.getElementById('onsite-survey-save');
   if (!saveButton) return;
   saveButton.addEventListener('click', () => {
+    const equipment = Array.from(document.querySelectorAll('#survey-equipment input[type="checkbox"]:checked'))
+      .map((input) => input.value);
     const payload = {
       issue: document.getElementById('survey-issue')?.value || '',
       environment: document.getElementById('survey-environment')?.value || '',
@@ -222,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
       hours: document.getElementById('survey-hours')?.value || '',
       aircon: document.getElementById('survey-aircon')?.value || '',
       kitchen: document.getElementById('survey-kitchen')?.value || '',
+      equipment,
       hotspots: document.getElementById('survey-hotspots')?.value || '',
       notes: document.getElementById('survey-notes')?.value || '',
       lastClean: document.getElementById('survey-last-clean')?.value || '',

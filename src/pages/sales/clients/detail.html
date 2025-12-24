@@ -159,6 +159,43 @@
               <textarea class="form-field" id="survey-kitchen" rows="2" placeholder="例：レンジフード油固着、ダクト詰まり傾向"></textarea>
             </div>
             <div class="info-item form-item">
+              <span class="info-label">設備情報（必須）</span>
+              <div class="checkbox-group" id="survey-equipment">
+                <label class="checkbox-chip">
+                  <input type="checkbox" value="aircon">
+                  <span>空調</span>
+                </label>
+                <label class="checkbox-chip">
+                  <input type="checkbox" value="duct">
+                  <span>ダクト</span>
+                </label>
+                <label class="checkbox-chip">
+                  <input type="checkbox" value="hood">
+                  <span>レンジフード</span>
+                </label>
+                <label class="checkbox-chip">
+                  <input type="checkbox" value="grease_trap">
+                  <span>グリストラップ</span>
+                </label>
+                <label class="checkbox-chip">
+                  <input type="checkbox" value="floor">
+                  <span>床</span>
+                </label>
+                <label class="checkbox-chip">
+                  <input type="checkbox" value="drain">
+                  <span>排水溝</span>
+                </label>
+                <label class="checkbox-chip">
+                  <input type="checkbox" value="toilet">
+                  <span>トイレ</span>
+                </label>
+                <label class="checkbox-chip">
+                  <input type="checkbox" value="window">
+                  <span>窓・ガラス</span>
+                </label>
+              </div>
+            </div>
+            <div class="info-item form-item">
               <span class="info-label">特に気になる場所</span>
               <textarea class="form-field" id="survey-hotspots" rows="2" placeholder="例：ダクト、床排水溝、グリスト"></textarea>
             </div>
@@ -408,6 +445,30 @@
       outline: none;
       border-color: #ff4f9a;
       box-shadow: 0 0 0 3px rgba(255, 79, 154, 0.15);
+    }
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .checkbox-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      background: #ffffff;
+      font-size: 0.75rem;
+      color: #0f172a;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .checkbox-chip input {
+      width: 14px;
+      height: 14px;
+      accent-color: #ff4f9a;
     }
     .info-grid-cards {
       display: grid;
