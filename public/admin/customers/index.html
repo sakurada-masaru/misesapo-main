@@ -1515,13 +1515,14 @@
   // DOM要素
   const tbody = document.getElementById('stores-tbody');
   const storeCount = document.getElementById('store-count');
-  const searchInput = document.getElementById('search-input');
-  const clientFilter = document.getElementById('client-filter');
-  const brandFilter = document.getElementById('brand-filter');
-  const prefFilter = document.getElementById('pref-filter');
-  const statusFilter = document.getElementById('status-filter');
-  const sortFilter = document.getElementById('sort-filter');
-  const activeFiltersEl = document.getElementById('active-filters');
+  // 統合検索を使用するため、一覧ビューの検索・フィルターは削除
+  // const searchInput = document.getElementById('search-input');
+  // const clientFilter = document.getElementById('client-filter');
+  // const brandFilter = document.getElementById('brand-filter');
+  // const prefFilter = document.getElementById('pref-filter');
+  // const statusFilter = document.getElementById('status-filter');
+  const sortFilter = document.getElementById('sort-filter'); // ソート機能は残す
+  // const activeFiltersEl = document.getElementById('active-filters');
   const pagination = document.getElementById('pagination');
   
   const storeModal = document.getElementById('store-dialog');
@@ -1713,12 +1714,18 @@
       allClients = [];
     }
     
-    const searchTerm = searchInput.value.toLowerCase();
-    const clientValue = clientFilter.value;
-    const brandValue = brandFilter.value;
-    const prefValue = prefFilter.value;
-    const statusValue = statusFilter.value;
-    const sortValue = sortFilter.value;
+    // 統合検索の要素を使用
+    const unifiedSearchInput = document.getElementById('unified-search-input');
+    const unifiedClientFilter = document.getElementById('unified-client-filter');
+    const unifiedBrandFilter = document.getElementById('unified-brand-filter');
+    const unifiedStatusFilter = document.getElementById('unified-status-filter');
+    
+    const searchTerm = (unifiedSearchInput?.value || '').toLowerCase();
+    const clientValue = unifiedClientFilter?.value || '';
+    const brandValue = unifiedBrandFilter?.value || '';
+    const prefValue = ''; // 都道府県フィルターは統合検索にないため削除
+    const statusValue = unifiedStatusFilter?.value || '';
+    const sortValue = sortFilter?.value || 'name-asc';
     
     // フィルタリング
     filteredStores = allStores.filter(store => {
@@ -1823,76 +1830,76 @@
     currentPage = 1;
     renderTable();
     renderPagination();
-    renderActiveFilters();
+    // renderActiveFilters(); // 統合検索を使用するため削除
   }
   
-  // アクティブフィルター表示
-  function renderActiveFilters() {
-    const filters = [];
-    if (searchInput.value) filters.push({ key: 'search', label: `検索: ${searchInput.value}` });
-    if (clientFilter.value) {
-      let client = null;
-      if (window.DataUtils?.EntityFinder?.findClient) {
-        client = window.DataUtils.EntityFinder.findClient(allClients, clientFilter.value);
-      } else {
-        client = allClients.find(c => c.id === clientFilter.value || String(c.id) === String(clientFilter.value));
-      }
-      filters.push({ key: 'client', label: `取引先: ${client ? (client.name || client.company_name || '') : clientFilter.value}` });
-    }
-    if (brandFilter.value) {
-      let brand = null;
-      if (window.DataUtils?.EntityFinder?.findBrand) {
-        brand = window.DataUtils.EntityFinder.findBrand(allBrands, brandFilter.value);
-      } else {
-        brand = allBrands.find(b => b.id === brandFilter.value || String(b.id) === String(brandFilter.value));
-      }
-      filters.push({ key: 'brand', label: `ブランド: ${brand ? brand.name : brandFilter.value}` });
-    }
-    if (prefFilter.value) filters.push({ key: 'pref', label: prefFilter.value });
-    if (statusFilter.value) {
-      const statusLabelsMap = {
-        'pending_customer_info': '情報入力待ち', 'pending_approval': '承認待ち',
-        'active': '稼働中', 'suspended': '休止中', 'terminated': '契約終了'
-      };
-      filters.push({ key: 'status', label: statusLabelsMap[statusFilter.value] || statusFilter.value });
-    }
-    
-    if (filters.length === 0) {
-      activeFiltersEl.innerHTML = '';
-      return;
-    }
-    
-    activeFiltersEl.innerHTML = filters.map(f => `
-      <span class="filter-tag">
-        ${escapeHtml(f.label)}
-        <button onclick="clearFilter('${f.key}')" title="解除">×</button>
-      </span>
-    `).join('');
-  }
+  // アクティブフィルター表示（統合検索を使用するため削除）
+  // function renderActiveFilters() {
+  //   const filters = [];
+  //   if (searchInput.value) filters.push({ key: 'search', label: `検索: ${searchInput.value}` });
+  //   if (clientFilter.value) {
+  //     let client = null;
+  //     if (window.DataUtils?.EntityFinder?.findClient) {
+  //       client = window.DataUtils.EntityFinder.findClient(allClients, clientFilter.value);
+  //     } else {
+  //       client = allClients.find(c => c.id === clientFilter.value || String(c.id) === String(clientFilter.value));
+  //     }
+  //     filters.push({ key: 'client', label: `取引先: ${client ? (client.name || client.company_name || '') : clientFilter.value}` });
+  //   }
+  //   if (brandFilter.value) {
+  //     let brand = null;
+  //     if (window.DataUtils?.EntityFinder?.findBrand) {
+  //       brand = window.DataUtils.EntityFinder.findBrand(allBrands, brandFilter.value);
+  //     } else {
+  //       brand = allBrands.find(b => b.id === brandFilter.value || String(b.id) === String(brandFilter.value));
+  //     }
+  //     filters.push({ key: 'brand', label: `ブランド: ${brand ? brand.name : brandFilter.value}` });
+  //   }
+  //   if (prefFilter.value) filters.push({ key: 'pref', label: prefFilter.value });
+  //   if (statusFilter.value) {
+  //     const statusLabelsMap = {
+  //       'pending_customer_info': '情報入力待ち', 'pending_approval': '承認待ち',
+  //       'active': '稼働中', 'suspended': '休止中', 'terminated': '契約終了'
+  //     };
+  //     filters.push({ key: 'status', label: statusLabelsMap[statusFilter.value] || statusFilter.value });
+  //   }
+  //   
+  //   if (filters.length === 0) {
+  //     activeFiltersEl.innerHTML = '';
+  //     return;
+  //   }
+  //   
+  //   activeFiltersEl.innerHTML = filters.map(f => `
+  //     <span class="filter-tag">
+  //       ${escapeHtml(f.label)}
+  //       <button onclick="clearFilter('${f.key}')" title="解除">×</button>
+  //     </span>
+  //   `).join('');
+  // }
   
-  // 個別フィルター解除
-  window.clearFilter = function(key) {
-    switch (key) {
-      case 'search': searchInput.value = ''; break;
-      case 'client': clientFilter.value = ''; updateBrandFilter(); break;
-      case 'brand': brandFilter.value = ''; break;
-      case 'pref': prefFilter.value = ''; break;
-      case 'status': statusFilter.value = ''; break;
-    }
-    filterAndRender();
-  };
+  // 個別フィルター解除（統合検索を使用するため削除）
+  // window.clearFilter = function(key) {
+  //   switch (key) {
+  //     case 'search': searchInput.value = ''; break;
+  //     case 'client': clientFilter.value = ''; updateBrandFilter(); break;
+  //     case 'brand': brandFilter.value = ''; break;
+  //     case 'pref': prefFilter.value = ''; break;
+  //     case 'status': statusFilter.value = ''; break;
+  //   }
+  //   filterAndRender();
+  // };
   
-  // 全フィルターリセット
-  document.getElementById('reset-filters').addEventListener('click', () => {
-    searchInput.value = '';
-    clientFilter.value = '';
-    brandFilter.value = '';
-    prefFilter.value = '';
-    statusFilter.value = '';
-    sortFilter.value = 'name-asc';
-    updateBrandFilter();
-    filterAndRender();
-  });
+  // 全フィルターリセット（統合検索を使用するため削除）
+  // document.getElementById('reset-filters').addEventListener('click', () => {
+  //   searchInput.value = '';
+  //   clientFilter.value = '';
+  //   brandFilter.value = '';
+  //   prefFilter.value = '';
+  //   statusFilter.value = '';
+  //   sortFilter.value = 'name-asc';
+  //   updateBrandFilter();
+  //   filterAndRender();
+  // });
 
   // テーブル描画
   function renderTable() {
@@ -2714,16 +2721,19 @@
     });
   }
 
-  // 検索・フィルター
-  searchInput.addEventListener('input', debounce(filterAndRender, 300));
-  clientFilter.addEventListener('change', () => {
-    updateBrandFilter();
-    filterAndRender();
-  });
-  brandFilter.addEventListener('change', filterAndRender);
-  prefFilter.addEventListener('change', filterAndRender);
-  statusFilter.addEventListener('change', filterAndRender);
-  sortFilter.addEventListener('change', filterAndRender);
+  // 検索・フィルター（統合検索を使用するため削除）
+  // searchInput.addEventListener('input', debounce(filterAndRender, 300));
+  // clientFilter.addEventListener('change', () => {
+  //   updateBrandFilter();
+  //   filterAndRender();
+  // });
+  // brandFilter.addEventListener('change', filterAndRender);
+  // prefFilter.addEventListener('change', filterAndRender);
+  // statusFilter.addEventListener('change', filterAndRender);
+  // ソート機能のみ残す
+  if (sortFilter) {
+    sortFilter.addEventListener('change', filterAndRender);
+  }
 
   // ユーティリティ
   function escapeHtml(str) {
