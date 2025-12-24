@@ -131,21 +131,53 @@
               <i class="fas fa-notes-medical"></i>
               問診（営業入力）
             </h3>
-            <div class="info-item">
+            <div class="info-item form-item">
               <span class="info-label">清掃の悩み</span>
-              <span class="info-value">-</span>
+              <textarea class="form-field" id="survey-issue" rows="2" placeholder="例：厨房の油汚れが落ちない、臭気が気になる"></textarea>
             </div>
-            <div class="info-item">
+            <div class="info-item form-item">
               <span class="info-label">店内環境</span>
-              <span class="info-value">-</span>
+              <textarea class="form-field" id="survey-environment" rows="2" placeholder="例：油煙が強い、湿気が多い、換気が弱い"></textarea>
             </div>
-            <div class="info-item">
+            <div class="info-item form-item">
+              <span class="info-label">稼働人数</span>
+              <div class="form-row">
+                <input class="form-field" id="survey-staff-normal" type="text" placeholder="通常時（例：6名）">
+                <input class="form-field" id="survey-staff-peak" type="text" placeholder="ピーク時（例：12名）">
+              </div>
+            </div>
+            <div class="info-item form-item">
+              <span class="info-label">稼働時間</span>
+              <input class="form-field" id="survey-hours" type="text" placeholder="例：11:00〜23:30（定休：月）">
+            </div>
+            <div class="info-item form-item">
+              <span class="info-label">空調設備の状態</span>
+              <textarea class="form-field" id="survey-aircon" rows="2" placeholder="例：台数3、1台異音、フィルター目詰まり"></textarea>
+            </div>
+            <div class="info-item form-item">
+              <span class="info-label">厨房設備の状態</span>
+              <textarea class="form-field" id="survey-kitchen" rows="2" placeholder="例：レンジフード油固着、ダクト詰まり傾向"></textarea>
+            </div>
+            <div class="info-item form-item">
               <span class="info-label">特に気になる場所</span>
-              <span class="info-value">-</span>
+              <textarea class="form-field" id="survey-hotspots" rows="2" placeholder="例：ダクト、床排水溝、グリスト"></textarea>
             </div>
-            <div class="info-item">
+            <div class="info-item form-item">
               <span class="info-label">注意事項</span>
-              <span class="info-value">-</span>
+              <textarea class="form-field" id="survey-notes" rows="2" placeholder="例：薬剤の臭いNG、閉店後のみ作業可"></textarea>
+            </div>
+            <div class="info-item form-item">
+              <span class="info-label">最終清掃日</span>
+              <input class="form-field" id="survey-last-clean" type="date">
+            </div>
+            <div class="info-item form-item">
+              <span class="info-label">依頼プラン</span>
+              <select class="form-field" id="survey-plan">
+                <option value="">選択してください</option>
+                <option value="regular">定期</option>
+                <option value="spot">スポット</option>
+                <option value="undecided">未定</option>
+              </select>
             </div>
           </div>
           <div class="info-section">
@@ -153,17 +185,22 @@
               <i class="fas fa-lightbulb"></i>
               次回提案（必須）
             </h3>
-            <div class="info-item">
+            <div class="info-item form-item">
               <span class="info-label">提案内容</span>
-              <span class="info-value">-</span>
+              <textarea class="form-field" id="proposal-content" rows="3" placeholder="例：ダクト清掃＋床洗浄を月1で提案"></textarea>
             </div>
-            <div class="info-item">
+            <div class="info-item form-item">
               <span class="info-label">想定時期</span>
-              <span class="info-value">-</span>
+              <input class="form-field" id="proposal-timing" type="text" placeholder="例：来月上旬〜中旬">
             </div>
-            <div class="info-item">
+            <div class="info-item form-item">
               <span class="info-label">確約状況</span>
-              <span class="info-value">-</span>
+              <select class="form-field" id="proposal-status">
+                <option value="">選択してください</option>
+                <option value="committed">確約</option>
+                <option value="pending">前向き検討</option>
+                <option value="hold">保留</option>
+              </select>
             </div>
           </div>
           <div class="info-section">
@@ -182,10 +219,10 @@
           </div>
         </div>
         <div class="report-actions">
-          <button type="button" class="btn btn-primary btn-sm" disabled>
+          <button type="button" class="btn btn-primary btn-sm" id="onsite-survey-save">
             <i class="fas fa-pen"></i> 問診票を入力
           </button>
-          <span class="report-hint">初回の現地調査後に入力してください。</span>
+          <span class="report-hint">入力内容は保存時にカルテへ反映されます。</span>
         </div>
       </div>
     </div>
@@ -347,6 +384,30 @@
       gap: 12px;
       padding: 6px 0;
       border-bottom: 1px dashed rgba(203, 213, 225, 0.8);
+    }
+    .form-item {
+      grid-template-columns: minmax(120px, 0.9fr) minmax(0, 2fr);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .form-field {
+      width: 100%;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      color: #0f172a;
+      background: #ffffff;
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+      resize: vertical;
+    }
+    .form-field:focus {
+      outline: none;
+      border-color: #ff4f9a;
+      box-shadow: 0 0 0 3px rgba(255, 79, 154, 0.15);
     }
     .info-grid-cards {
       display: grid;

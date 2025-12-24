@@ -210,3 +210,27 @@ async function loadClientDetail() {
 }
 
 document.addEventListener('DOMContentLoaded', loadClientDetail);
+document.addEventListener('DOMContentLoaded', () => {
+  const saveButton = document.getElementById('onsite-survey-save');
+  if (!saveButton) return;
+  saveButton.addEventListener('click', () => {
+    const payload = {
+      issue: document.getElementById('survey-issue')?.value || '',
+      environment: document.getElementById('survey-environment')?.value || '',
+      staffNormal: document.getElementById('survey-staff-normal')?.value || '',
+      staffPeak: document.getElementById('survey-staff-peak')?.value || '',
+      hours: document.getElementById('survey-hours')?.value || '',
+      aircon: document.getElementById('survey-aircon')?.value || '',
+      kitchen: document.getElementById('survey-kitchen')?.value || '',
+      hotspots: document.getElementById('survey-hotspots')?.value || '',
+      notes: document.getElementById('survey-notes')?.value || '',
+      lastClean: document.getElementById('survey-last-clean')?.value || '',
+      plan: document.getElementById('survey-plan')?.value || '',
+      proposalContent: document.getElementById('proposal-content')?.value || '',
+      proposalTiming: document.getElementById('proposal-timing')?.value || '',
+      proposalStatus: document.getElementById('proposal-status')?.value || ''
+    };
+    console.log('[Onsite Survey] draft payload', payload);
+    alert('問診票を保存しました（モック）');
+  });
+});
