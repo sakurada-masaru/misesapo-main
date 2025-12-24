@@ -161,35 +161,10 @@
 
     <!-- フラットビュー（既存のテーブル） -->
     <div id="flat-view" role="tabpanel" aria-labelledby="flat-tab">
-    <!-- 検索・フィルター -->
-    <div class="search-section">
-      <div class="search-row">
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-          <input type="text" id="search-input" placeholder="店舗名 / 住所 / 電話で検索...">
-      </div>
-      </div>
-      <div class="filter-row">
-        <select id="client-filter" class="filter-select">
-          <option value="">全法人</option>
-        </select>
-        <select id="brand-filter" class="filter-select">
-          <option value="">全ブランド</option>
-        </select>
-        <select id="pref-filter" class="filter-select" style="display: none;">
-          <option value="">全都道府県</option>
-        </select>
-        <select id="status-filter" class="filter-select">
-          <option value="">全ステータス</option>
-          <option value="active">稼働中</option>
-          <option value="contract_pending">契約作業中</option>
-          <option value="considering">検討中</option>
-          <option value="prospect">アプローチ前</option>
-          <option value="negotiated">商談済</option>
-          <option value="lost">失注</option>
-          <option value="suspended">休止中</option>
-          <option value="terminated">契約終了</option>
-        </select>
+    <!-- ソート機能（一覧ビュー専用） -->
+    <div class="sort-section">
+      <div class="sort-row">
+        <label for="sort-filter" class="sort-label">並び替え:</label>
         <select id="sort-filter" class="filter-select">
           <option value="name-asc">店舗名 昇順</option>
           <option value="name-desc">店舗名 降順</option>
@@ -198,14 +173,8 @@
           <option value="id-asc">ID 昇順</option>
           <option value="id-desc">ID 降順</option>
         </select>
-      <button type="button" class="btn btn-secondary btn-sm" id="reset-filters">
-        <i class="fas fa-undo"></i> リセット
-      </button>
       </div>
     </div>
-    
-    <!-- アクティブフィルター表示 -->
-    <div class="active-filters" id="active-filters"></div>
 
     <!-- 店舗一覧 -->
     <div class="stores-table-wrapper">
