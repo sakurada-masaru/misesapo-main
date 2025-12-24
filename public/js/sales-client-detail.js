@@ -49,6 +49,12 @@ function setText(id, value) {
   el.textContent = value || '-';
 }
 
+function setInputValue(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = value || '';
+}
+
 function setHtml(id, value) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -124,22 +130,31 @@ async function loadClientDetail() {
     const brandName = brand ? (brand.name || '-') : '-';
     const storeName = store.name || '-';
 
-    setText('client-company', companyName);
-    setText('client-company-value', companyName);
+    setText('client-company-badge', companyName);
     setText('client-store', storeName);
-    setText('client-store-value', storeName);
-    setText('client-brand-value', brandName);
+    setText('client-brand-badge', brandName);
 
-    const brandEl = document.getElementById('client-brand');
-    if (brandEl && brandName !== '-') {
-      brandEl.textContent = brandName;
-      brandEl.style.display = 'block';
-    }
-
-    setText('client-store-count', store.store_count || store.store_count_total || '-');
+    setText('client-phone', store.phone || '-');
+    const addressText = [store.pref, store.city, store.address, store.address_detail]
+      .filter(Boolean)
+      .join('');
+    setText('client-address', addressText || '-');
     setText('client-contact-person', store.contact_person || '-');
     setText('client-sales-rep', store.sales_rep || '-');
     setText('client-cleaning-frequency', store.cleaning_frequency || '-');
+
+    setInputValue('survey-store-count', store.store_count || store.store_count_total || '');
+    setInputValue('survey-area-sqm', store.area_sqm || store.area_square_m || '');
+    setInputValue('survey-area-tatami', store.area_tatami || '');
+    setInputValue('survey-toilet-count', store.toilet_count || '');
+    setInputValue('survey-entrances', store.entrances || store.entry_points || '');
+    setInputValue('survey-breaker-location', store.breaker_location || '');
+    setInputValue('survey-key-location', store.key_location || '');
+    setInputValue('survey-staff-room', store.staff_room || '');
+    setInputValue('survey-wall-material', store.wall_material || '');
+    setInputValue('survey-floor-material', store.floor_material || '');
+    setInputValue('survey-electrical-amps', store.electrical_amps || '');
+    setInputValue('survey-aircon-count', store.aircon_count || store.aircon_units || '');
 
     if (store.email) {
       const emailLink = document.getElementById('client-email');
@@ -231,9 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
       lastClean: document.getElementById('survey-last-clean')?.value || '',
       plan: document.getElementById('survey-plan')?.value || '',
       selfRating: document.getElementById('survey-self-rating')?.value || '',
-      proposalContent: document.getElementById('proposal-content')?.value || '',
-      proposalTiming: document.getElementById('proposal-timing')?.value || '',
-      proposalStatus: document.getElementById('proposal-status')?.value || ''
     };
     console.log('[Onsite Survey] draft payload', payload);
     alert('問診票を保存しました（モック）');

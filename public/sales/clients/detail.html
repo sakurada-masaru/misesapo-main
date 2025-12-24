@@ -20,7 +20,11 @@
       <!-- Client Info Card -->
       <div class="info-card">
         <div class="card-header">
-          <div class="client-main-info">
+      <div class="client-main-info">
+        <div class="client-badges">
+          <span class="client-badge" id="client-company-badge">-</span>
+          <span class="client-badge" id="client-brand-badge">-</span>
+        </div>
         <h2 class="client-store-title" id="client-store">-</h2>
       </div>
       <span class="status-badge" id="client-status">-</span>
@@ -32,63 +36,13 @@
               <i class="fas fa-building"></i>
               基本情報
             </h3>
-            <div class="info-grid-cards">
-              <div class="info-card-item">
-                <span class="info-card-label">法人名</span>
-                <span class="info-card-value" id="client-company-value">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">ブランド名</span>
-                <span class="info-card-value" id="client-brand-value">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">店舗数</span>
-                <span class="info-card-value" id="client-store-count">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">店内の広さ（平米）</span>
-                <span class="info-card-value" id="client-area-sqm">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">店内の広さ（畳）</span>
-                <span class="info-card-value" id="client-area-tatami">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">トイレの数</span>
-                <span class="info-card-value" id="client-toilet-count">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">出入り口の数・種類</span>
-                <span class="info-card-value" id="client-entrances">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">ブレーカーの位置</span>
-                <span class="info-card-value" id="client-breaker-location">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">鍵の位置</span>
-                <span class="info-card-value" id="client-key-location">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">スタッフルームの有無</span>
-                <span class="info-card-value" id="client-staff-room">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">壁の材質</span>
-                <span class="info-card-value" id="client-wall-material">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">床の材質</span>
-                <span class="info-card-value" id="client-floor-material">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">電気のアンペア数</span>
-                <span class="info-card-value" id="client-electrical-amps">-</span>
-              </div>
-              <div class="info-card-item">
-                <span class="info-card-label">空調（エアコン）の数</span>
-                <span class="info-card-value" id="client-aircon-count">-</span>
-              </div>
+            <div class="info-item">
+              <span class="info-label">電話番号</span>
+              <span class="info-value" id="client-phone">-</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">住所</span>
+              <span class="info-value" id="client-address">-</span>
             </div>
           </div>
 
@@ -199,6 +153,59 @@
               <input class="form-field" id="survey-cleaning-frequency" type="text" placeholder="例：毎日（閉店後に30分）">
             </div>
             <div class="info-item form-item">
+              <span class="info-label">店舗仕様（現地確認）</span>
+              <div class="compact-fields">
+                <label class="compact-field">
+                  <span>店舗数</span>
+                  <input class="form-field" id="survey-store-count" type="text" placeholder="例：3店舗">
+                </label>
+                <label class="compact-field">
+                  <span>平米数</span>
+                  <input class="form-field" id="survey-area-sqm" type="text" placeholder="例：120">
+                </label>
+                <label class="compact-field">
+                  <span>畳数</span>
+                  <input class="form-field" id="survey-area-tatami" type="text" placeholder="例：72">
+                </label>
+                <label class="compact-field">
+                  <span>トイレ数</span>
+                  <input class="form-field" id="survey-toilet-count" type="text" placeholder="例：2">
+                </label>
+                <label class="compact-field">
+                  <span>出入口</span>
+                  <input class="form-field" id="survey-entrances" type="text" placeholder="例：正面1/裏口1">
+                </label>
+                <label class="compact-field">
+                  <span>ブレーカー</span>
+                  <input class="form-field" id="survey-breaker-location" type="text" placeholder="例：厨房奥">
+                </label>
+                <label class="compact-field">
+                  <span>鍵の位置</span>
+                  <input class="form-field" id="survey-key-location" type="text" placeholder="例：受付右棚">
+                </label>
+                <label class="compact-field">
+                  <span>スタッフルーム</span>
+                  <input class="form-field" id="survey-staff-room" type="text" placeholder="例：有/無">
+                </label>
+                <label class="compact-field">
+                  <span>壁の材質</span>
+                  <input class="form-field" id="survey-wall-material" type="text" placeholder="例：タイル">
+                </label>
+                <label class="compact-field">
+                  <span>床の材質</span>
+                  <input class="form-field" id="survey-floor-material" type="text" placeholder="例：塩ビ">
+                </label>
+                <label class="compact-field">
+                  <span>アンペア数</span>
+                  <input class="form-field" id="survey-electrical-amps" type="text" placeholder="例：60A">
+                </label>
+                <label class="compact-field">
+                  <span>空調の数</span>
+                  <input class="form-field" id="survey-aircon-count" type="text" placeholder="例：3台">
+                </label>
+              </div>
+            </div>
+            <div class="info-item form-item">
               <span class="info-label">空調設備の状態</span>
               <textarea class="form-field" id="survey-aircon" rows="2" placeholder="例：台数3、1台異音、フィルター目詰まり"></textarea>
             </div>
@@ -278,29 +285,6 @@
                 <option value="8">8</option>
                 <option value="9">9</option>
                 <option value="10">10（非常に衛生的）</option>
-              </select>
-            </div>
-          </div>
-          <div class="info-section">
-            <h3 class="section-title">
-              <i class="fas fa-lightbulb"></i>
-              次回提案（必須）
-            </h3>
-            <div class="info-item form-item">
-              <span class="info-label">提案内容</span>
-              <textarea class="form-field" id="proposal-content" rows="3" placeholder="例：ダクト清掃＋床洗浄を月1で提案"></textarea>
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">想定時期</span>
-              <input class="form-field" id="proposal-timing" type="text" placeholder="例：来月上旬〜中旬">
-            </div>
-            <div class="info-item form-item">
-              <span class="info-label">確約状況</span>
-              <select class="form-field" id="proposal-status">
-                <option value="">選択してください</option>
-                <option value="committed">確約</option>
-                <option value="pending">前向き検討</option>
-                <option value="hold">保留</option>
               </select>
             </div>
           </div>
@@ -436,6 +420,22 @@
       color: #111827;
       margin: 0 0 4px 0;
     }
+    .client-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .client-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #ffe3f0;
+      color: #ff4f9a;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
     .status-badge {
       padding: 6px 14px;
       border-radius: 999px;
@@ -534,31 +534,22 @@
       height: 14px;
       accent-color: #ff4f9a;
     }
-    .info-grid-cards {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+    .compact-fields {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
-    .info-card-item {
+    .compact-field {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: #f8fafc;
-      border: 1px solid rgba(226, 232, 240, 0.9);
+      gap: 4px;
+      min-width: 120px;
+      flex: 1 1 140px;
     }
-    .info-card-label {
-      font-size: 0.75rem;
+    .compact-field span {
+      font-size: 0.72rem;
       color: #64748b;
       font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-    .info-card-value {
-      font-size: 0.95rem;
-      color: #0f172a;
-      font-weight: 600;
-      word-break: break-word;
     }
     .info-label {
       font-size: 0.8rem;
@@ -708,13 +699,10 @@
       .info-item {
         grid-template-columns: 1fr;
       }
-      .info-grid-cards {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
     }
     @media (max-width: 420px) {
-      .info-grid-cards {
-        grid-template-columns: 1fr;
+      .compact-field {
+        flex: 1 1 100%;
       }
     }
   </style>
