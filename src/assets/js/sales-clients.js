@@ -678,6 +678,97 @@ async function getAuthHeaders() {
   }
 }
 
+function getSurveyValue(id) {
+  const el = document.getElementById(id);
+  if (!el) return '';
+  if (el.type === 'checkbox') {
+    return el.checked;
+  }
+  return el.value || '';
+}
+
+function getSafeFileName(file, fallbackPrefix) {
+  const rawName = file?.name || `${fallbackPrefix}-photo.jpg`;
+  return rawName.replace(/[^\w.\-]+/g, '_');
+}
+
+function buildUploadPrefix(storeId, type) {
+  if (!storeId) return '';
+  return `stores/${storeId}/assets/${type}`;
+}
+
+function setPreviewImage(previewId, src) {
+  const preview = document.getElementById(previewId);
+  if (!preview) return;
+  preview.innerHTML = '';
+  if (!src) return;
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = 'アップロード画像';
+  preview.appendChild(img);
+}
+
+async function uploadSurveyPhoto({ storeId, fileInputId, hiddenInputId, previewId, type }) {
+  const fileInput = document.getElementById(fileInputId);
+  const hiddenInput = document.getElementById(hiddenInputId);
+  if (!fileInput) return hiddenInput?.value || '';
+
+  if (fileInput.files && fileInput.files.length > 0) {
+    if (!window.AWSS3Upload || !window.AWSS3Upload.isAvailable()) {
+      throw new Error('S3アップロードが利用できません');
+    }
+    const file = fileInput.files[0];
+    const timestamp = new Date().toISOString().replace(/[^\d]/g, '');
+    const safeName = getSafeFileName(file, type);
+    const keyPrefix = buildUploadPrefix(storeId, type);
+    const result = await window.AWSS3Upload.uploadImage(file, type, {
+      keyPrefix,
+      fileName: `${timestamp}-${safeName}`
+    });
+    const url = result?.url || result?.path || '';
+    if (hiddenInput) hiddenInput.value = url;
+    setPreviewImage(previewId, url);
+    return url;
+  }
+
+  return hiddenInput?.value || '';
+}
+
+function buildSurveyPayload() {
+  const payload = {
+    issue: getSurveyValue('survey-issue'),
+    environment: getSurveyValue('survey-environment'),
+    staffNormal: getSurveyValue('survey-staff-normal'),
+    staffPeak: getSurveyValue('survey-staff-peak'),
+    hours: getSurveyValue('survey-hours'),
+    aircon: getSurveyValue('survey-aircon'),
+    kitchen: getSurveyValue('survey-kitchen'),
+    hotspots: getSurveyValue('survey-hotspots'),
+    floorMaterial: getSurveyValue('survey-floor-material'),
+    wallMaterial: getSurveyValue('survey-wall-material'),
+    toiletCount: getSurveyValue('survey-toilet-count'),
+    areaSqm: getSurveyValue('survey-area-sqm'),
+    ceilingHeight: getSurveyValue('survey-ceiling-height'),
+    breakerLocation: getSurveyValue('survey-breaker-location'),
+    keyLocation: getSurveyValue('survey-key-location'),
+    seatCounter: !!getSurveyValue('survey-seat-counter'),
+    seatBox: !!getSurveyValue('survey-seat-box'),
+    seatZashiki: !!getSurveyValue('survey-seat-zashiki'),
+    notes: getSurveyValue('survey-notes'),
+    lastClean: getSurveyValue('survey-last-clean'),
+    plan: getSurveyValue('survey-plan'),
+    breakerPhotoUrl: getSurveyValue('survey-breaker-photo-url'),
+    keyPhotoUrl: getSurveyValue('survey-key-photo-url')
+  };
+
+  const hasValue = Object.values(payload).some((value) => {
+    if (typeof value === 'boolean') return value;
+    return value !== '';
+  });
+  if (!hasValue) return null;
+  return payload;
+}
+
 // フォーム送信処理（管理ページと同じロジック）
 async function handleStoreFormSubmit(e) {
   e.preventDefault();
@@ -792,6 +883,43 @@ async function handleStoreFormSubmit(e) {
     if (response.ok) {
       const storeRes = await response.json().catch(() => ({}));
       const savedStore = storeRes.store || storeRes;
+      const storeIdForSurvey = savedStore.id || data.id;
+      try {
+        await uploadSurveyPhoto({
+          storeId: storeIdForSurvey,
+          fileInputId: 'survey-breaker-photo',
+          hiddenInputId: 'survey-breaker-photo-url',
+          previewId: 'survey-breaker-photo-preview',
+          type: 'breaker'
+        });
+        await uploadSurveyPhoto({
+          storeId: storeIdForSurvey,
+          fileInputId: 'survey-key-photo',
+          hiddenInputId: 'survey-key-photo-url',
+          previewId: 'survey-key-photo-preview',
+          type: 'key'
+        });
+      } catch (uploadError) {
+        console.warn('[Sales Clients] Survey image upload failed:', uploadError);
+      }
+      const surveyPayload = buildSurveyPayload();
+      if (surveyPayload) {
+        const fullSurveyPayload = {
+          ...surveyPayload,
+          store_id: storeIdForSurvey,
+          client_id: clientId || null,
+          brand_id: brandId || null
+        };
+        try {
+          await fetch(`${API_BASE}/kartes`, {
+            method: 'POST',
+            headers: authHeaders,
+            body: JSON.stringify(fullSurveyPayload)
+          });
+        } catch (surveyError) {
+          console.warn('[Sales Clients] Failed to save survey to kartes:', surveyError);
+        }
+      }
       // リスト更新
       if (isNew) {
         allStores.unshift(savedStore);
@@ -885,6 +1013,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   const storeForm = document.getElementById('store-form');
   if (storeForm) {
     storeForm.addEventListener('submit', handleStoreFormSubmit);
+  }
+
+  const breakerPhotoInput = document.getElementById('survey-breaker-photo');
+  if (breakerPhotoInput) {
+    breakerPhotoInput.addEventListener('change', (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (file) {
+        setPreviewImage('survey-breaker-photo-preview', URL.createObjectURL(file));
+      }
+    });
+  }
+  const keyPhotoInput = document.getElementById('survey-key-photo');
+  if (keyPhotoInput) {
+    keyPhotoInput.addEventListener('change', (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (file) {
+        setPreviewImage('survey-key-photo-preview', URL.createObjectURL(file));
+      }
+    });
   }
   
   // 法人選択時にブランド選択肢を更新

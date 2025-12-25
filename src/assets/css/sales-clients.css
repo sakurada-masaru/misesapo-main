@@ -823,6 +823,19 @@
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(255, 103, 156, 0.2);
 }
+.survey-upload-preview {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.survey-upload-preview img {
+  width: 100%;
+  max-width: 160px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  object-fit: cover;
+}
 .checkbox-row {
   display: flex;
   flex-wrap: wrap;

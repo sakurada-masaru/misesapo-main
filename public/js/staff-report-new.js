@@ -3358,10 +3358,12 @@
           const cleaningDate = document.getElementById('report-date')?.value || new Date().toISOString().split('T')[0];
           const base64 = await blobToBase64(optimizedBlob);
           
+          const storeIdForImages = document.getElementById('report-store')?.value || '';
           const requestBody = {
             image: base64,
             category: 'after', // 画像ストックの画像はデフォルトで'after'カテゴリ
-            cleaning_date: cleaningDate
+            cleaning_date: cleaningDate,
+            store_id: storeIdForImages || undefined
           };
           
           const response = await fetch(`${REPORT_API}/staff/report-images`, {
@@ -7612,6 +7614,7 @@
       return [];
     }
     
+    const storeIdForImages = document.getElementById('report-store')?.value || '';
     // 順次処理でアップロード（進捗を正確に追跡するため）
     const uploadedUrls = [];
     for (const img of images) {
@@ -7686,7 +7689,8 @@
             const requestBody = {
               image: base64,
               category: apiCategory,
-              cleaning_date: cleaningDate
+              cleaning_date: cleaningDate,
+              store_id: storeIdForImages || undefined
             };
             
             console.log('[uploadSectionImages] Uploading image:', {
@@ -7757,7 +7761,8 @@
             const requestBody = {
               image: base64,
               category: apiCategory,
-              cleaning_date: cleaningDate
+              cleaning_date: cleaningDate,
+              store_id: storeIdForImages || undefined
             };
             
             const uploadResponse = await fetch(`${REPORT_API}/staff/report-images`, {

@@ -61,7 +61,7 @@
     /**
      * S3に画像をアップロード（開発サーバーまたはAPI Gateway経由）
      */
-    async function uploadToS3(file, fieldName) {
+    async function uploadToS3(file, fieldName, options = {}) {
         const endpoint = getApiEndpoint();
         
         if (!endpoint) {
@@ -98,6 +98,12 @@
                 const base64Data = await fileToBase64(file);
                 
                 // API Gateway経由でアップロード
+                const keyPrefix = typeof options.keyPrefix === 'string' ? options.keyPrefix.trim() : '';
+                const sanitizedPrefix = keyPrefix ? keyPrefix.replace(/^\/+|\/+$/g, '') + '/' : '';
+                const rawFileName = options.fileName || file.name;
+                const sanitizedFileName = String(rawFileName).replace(/^\/+/, '');
+                const requestFileName = `${sanitizedPrefix}${sanitizedFileName}`;
+
                 const response = await fetch(`${endpoint.url}/upload`, {
                     method: 'POST',
                     headers: {
@@ -105,7 +111,7 @@
                     },
                     body: JSON.stringify({
                         image: base64Data,
-                        fileName: file.name,
+                        fileName: requestFileName,
                         contentType: file.type || 'image/jpeg'
                     })
                 });
@@ -150,4 +156,3 @@
         }
     };
 })();
-
