@@ -859,6 +859,13 @@
 .registration-intake .info-item.form-item {
   grid-template-columns: minmax(120px, 0.9fr) minmax(0, 2fr);
 }
+.registration-intake .info-item.stack-label {
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.registration-intake .info-item.stack-label .info-label {
+  margin-top: 2px;
+}
 .registration-intake .info-label {
   font-size: 0.8rem;
   color: #6b7280;
@@ -926,6 +933,17 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+.registration-intake .compact-row {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+.registration-intake .compact-row.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.registration-intake .compact-row.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 .registration-intake .compact-field {
   display: flex;
   flex-direction: column;
@@ -940,6 +958,12 @@
 }
 .registration-intake .survey-upload-preview img {
   max-width: 140px;
+}
+@media (max-width: 768px) {
+  .registration-intake .compact-row.three,
+  .registration-intake .compact-row.two {
+    grid-template-columns: 1fr;
+  }
 }
 .input-with-unit {
   position: relative;

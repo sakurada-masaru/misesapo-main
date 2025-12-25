@@ -207,41 +207,47 @@
         <div class="intake-category-title">
           <i class="fas fa-store"></i> 店舗仕様
         </div>
-        <div class="info-item form-item">
+        <div class="info-item form-item stack-label">
           <span class="info-label">店舗仕様（現地確認）</span>
           <div class="compact-fields">
-            <label class="compact-field">
-              <span>スタッフルーム</span>
-              <select class="form-field" id="survey-staff-room">
-                <option value="">選択してください</option>
-                <option value="有">有</option>
-                <option value="無">無</option>
-              </select>
-            </label>
-            <label class="compact-field">
-              <span>平米数</span>
-              <input class="form-field" id="survey-area-sqm" type="text" placeholder="例：120 ㎡">
-            </label>
-            <label class="compact-field">
-              <span>畳数</span>
-              <input class="form-field" id="survey-area-tatami" type="text" placeholder="例：72 畳">
-            </label>
-            <label class="compact-field">
-              <span>出入口</span>
-              <input class="form-field" id="survey-entrances" type="text" placeholder="例：正面1/裏口1">
-            </label>
-            <label class="compact-field">
-              <span>天井高さ</span>
-              <input class="form-field" id="survey-ceiling-height" type="text" placeholder="例：2.6 m">
-            </label>
-            <label class="compact-field">
-              <span>ブレーカー</span>
-              <input class="form-field" id="survey-breaker-location" type="text" placeholder="例：厨房奥">
-            </label>
-            <label class="compact-field">
-              <span>鍵の位置</span>
-              <input class="form-field" id="survey-key-location" type="text" placeholder="例：受付右棚">
-            </label>
+            <div class="compact-row three">
+              <label class="compact-field">
+                <span>スタッフルーム</span>
+                <select class="form-field" id="survey-staff-room">
+                  <option value="">選択してください</option>
+                  <option value="有">有</option>
+                  <option value="無">無</option>
+                </select>
+              </label>
+              <label class="compact-field">
+                <span>平米数</span>
+                <input class="form-field" id="survey-area-sqm" type="text" placeholder="例：120 ㎡">
+              </label>
+              <label class="compact-field">
+                <span>畳数</span>
+                <input class="form-field" id="survey-area-tatami" type="text" placeholder="例：72 畳">
+              </label>
+            </div>
+            <div class="compact-row two">
+              <label class="compact-field">
+                <span>出入口</span>
+                <input class="form-field" id="survey-entrances" type="text" placeholder="例：正面1/裏口1">
+              </label>
+              <label class="compact-field">
+                <span>天井高さ</span>
+                <input class="form-field" id="survey-ceiling-height" type="text" placeholder="例：2.6 m">
+              </label>
+            </div>
+            <div class="compact-row two">
+              <label class="compact-field">
+                <span>ブレーカー</span>
+                <input class="form-field" id="survey-breaker-location" type="text" placeholder="例：厨房奥">
+              </label>
+              <label class="compact-field">
+                <span>鍵の位置</span>
+                <input class="form-field" id="survey-key-location" type="text" placeholder="例：受付右棚">
+              </label>
+            </div>
           </div>
           <div class="survey-upload-row">
             <div class="survey-upload">
@@ -401,8 +407,9 @@
           </select>
         </div>
       </div>
-                </div>
-      </div>
+    </div>
+  </div>
+</div>
 
 
 
