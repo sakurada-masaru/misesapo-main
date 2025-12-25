@@ -177,28 +177,25 @@
                 <span class="info-label">店舗仕様（現地確認）</span>
                 <div class="compact-fields">
                   <label class="compact-field">
-                    <span>店舗数</span>
-                    <input class="form-field" id="survey-store-count" type="text" placeholder="例：3店舗">
+                    <span>スタッフルーム</span>
+                    <select class="form-field" id="survey-staff-room">
+                      <option value="">選択してください</option>
+                      <option value="有">有</option>
+                      <option value="無">無</option>
+                    </select>
                   </label>
                   <label class="compact-field">
                     <span>平米数</span>
-                    <div class="input-with-unit">
+                    <div class="input-with-unit unit-compact">
                       <input class="form-field" id="survey-area-sqm" type="text" placeholder="例：120">
                       <span class="unit-suffix">㎡</span>
                     </div>
                   </label>
                   <label class="compact-field">
                     <span>畳数</span>
-                    <div class="input-with-unit">
+                    <div class="input-with-unit unit-compact">
                       <input class="form-field" id="survey-area-tatami" type="text" placeholder="例：72">
                       <span class="unit-suffix">畳</span>
-                    </div>
-                  </label>
-                  <label class="compact-field">
-                    <span>トイレ数</span>
-                    <div class="input-with-unit">
-                      <input class="form-field" id="survey-toilet-count" type="text" placeholder="例：2">
-                      <span class="unit-suffix">基</span>
                     </div>
                   </label>
                   <label class="compact-field">
@@ -207,7 +204,7 @@
                   </label>
                   <label class="compact-field">
                     <span>天井高さ</span>
-                    <div class="input-with-unit">
+                    <div class="input-with-unit unit-compact">
                       <input class="form-field" id="survey-ceiling-height" type="text" placeholder="例：2.6">
                       <span class="unit-suffix">m</span>
                     </div>
@@ -253,10 +250,6 @@
                 <span class="info-label">設備・内装</span>
                 <div class="compact-fields">
                   <label class="compact-field">
-                    <span>スタッフルーム</span>
-                    <input class="form-field" id="survey-staff-room" type="text" placeholder="例：有/無">
-                  </label>
-                  <label class="compact-field">
                     <span>壁の材質</span>
                     <input class="form-field" id="survey-wall-material" type="text" placeholder="例：タイル">
                   </label>
@@ -269,6 +262,13 @@
                     <div class="input-with-unit">
                       <input class="form-field" id="survey-electrical-amps" type="text" placeholder="例：60">
                       <span class="unit-suffix">A</span>
+                    </div>
+                  </label>
+                  <label class="compact-field">
+                    <span>トイレ数</span>
+                    <div class="input-with-unit">
+                      <input class="form-field" id="survey-toilet-count" type="text" placeholder="例：2">
+                      <span class="unit-suffix">基</span>
                     </div>
                   </label>
                   <label class="compact-field">

@@ -323,7 +323,6 @@ async function loadKarteData() {
     setInputValue('intake-staff-peak', latest.staffPeak || '');
     setInputValue('intake-hours', latest.hours || '');
     setInputValue('intake-cleaning-frequency', latest.cleaningFrequency || '');
-    setInputValue('intake-store-count', latest.storeCount || '');
     setInputValue('intake-area-sqm', latest.areaSqm || '');
     setInputValue('intake-area-tatami', latest.areaTatami || '');
     setInputValue('intake-toilet-count', latest.toiletCount || '');
@@ -396,7 +395,6 @@ async function saveKarteData() {
       staffPeak: document.getElementById('intake-staff-peak')?.value || '',
       hours: document.getElementById('intake-hours')?.value || '',
       cleaningFrequency: document.getElementById('intake-cleaning-frequency')?.value || '',
-      storeCount: document.getElementById('intake-store-count')?.value || '',
       areaSqm: document.getElementById('intake-area-sqm')?.value || '',
       areaTatami: document.getElementById('intake-area-tatami')?.value || '',
       toiletCount: document.getElementById('intake-toilet-count')?.value || '',

@@ -262,7 +262,6 @@ async function loadClientDetail() {
     setText('client-sales-rep', store.sales_rep || '-');
     setText('client-cleaning-frequency', store.cleaning_frequency || '-');
 
-    setInputValue('survey-store-count', store.store_count || store.store_count_total || '');
     setInputValue('survey-area-sqm', store.area_sqm || store.area_square_m || '');
     setInputValue('survey-area-tatami', store.area_tatami || '');
     setInputValue('survey-toilet-count', store.toilet_count || '');
@@ -351,7 +350,6 @@ async function loadClientDetail() {
         setInputValue('survey-staff-peak', latestKarte.staffPeak || '');
         setInputValue('survey-hours', latestKarte.hours || '');
         setInputValue('survey-cleaning-frequency', latestKarte.cleaningFrequency || '');
-        setInputValue('survey-store-count', latestKarte.storeCount || '');
         setInputValue('survey-area-sqm', latestKarte.areaSqm || '');
         setInputValue('survey-area-tatami', latestKarte.areaTatami || '');
         setInputValue('survey-toilet-count', latestKarte.toiletCount || '');
@@ -460,7 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
       staffPeak: document.getElementById('survey-staff-peak')?.value || '',
       hours: document.getElementById('survey-hours')?.value || '',
       cleaningFrequency: document.getElementById('survey-cleaning-frequency')?.value || '',
-      storeCount: document.getElementById('survey-store-count')?.value || '',
       areaSqm: document.getElementById('survey-area-sqm')?.value || '',
       areaTatami: document.getElementById('survey-area-tatami')?.value || '',
       toiletCount: document.getElementById('survey-toilet-count')?.value || '',
