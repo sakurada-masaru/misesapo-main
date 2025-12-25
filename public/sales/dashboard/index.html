@@ -178,14 +178,26 @@
           </div>
         </div>
         <div class="form-row">
-          <div class="form-field half">
-            <label for="survey-staff-normal">稼働人数（通常）</label>
-            <input type="text" id="survey-staff-normal" placeholder="例：6名">
-          </div>
-          <div class="form-field half">
-            <label for="survey-staff-peak">稼働人数（ピーク）</label>
-            <input type="text" id="survey-staff-peak" placeholder="例：12名">
-          </div>
+        <div class="form-field half">
+          <label for="survey-staff-normal">稼働人数（最小）</label>
+          <select id="survey-staff-normal">
+            <option value="">選択してください</option>
+            <option value="1名">1名</option>
+            <option value="2〜5名">2〜5名</option>
+            <option value="6〜10名">6〜10名</option>
+            <option value="11名以上">11名以上</option>
+          </select>
+        </div>
+        <div class="form-field half">
+          <label for="survey-staff-peak">稼働人数（最大）</label>
+          <select id="survey-staff-peak">
+            <option value="">選択してください</option>
+            <option value="1名">1名</option>
+            <option value="2〜5名">2〜5名</option>
+            <option value="6〜10名">6〜10名</option>
+            <option value="11名以上">11名以上</option>
+          </select>
+        </div>
         </div>
         <div class="form-row">
           <div class="form-field">
@@ -242,20 +254,29 @@
           </div>
         </div>
         <div class="form-row">
-          <div class="form-field half">
-            <label for="survey-toilet-count">トイレの数</label>
+        <div class="form-field half">
+          <label for="survey-toilet-count">トイレの数</label>
+          <div class="input-with-unit">
             <input type="text" id="survey-toilet-count" placeholder="例：2">
-          </div>
-          <div class="form-field half">
-            <label for="survey-area-sqm">平米数</label>
-            <input type="text" id="survey-area-sqm" placeholder="例：120">
+            <span class="unit-suffix">基</span>
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-field half">
-            <label for="survey-ceiling-height">天井高さ</label>
-            <input type="text" id="survey-ceiling-height" placeholder="例：2.6m">
+        <div class="form-field half">
+          <label for="survey-area-sqm">平米数</label>
+          <div class="input-with-unit">
+            <input type="text" id="survey-area-sqm" placeholder="例：120">
+            <span class="unit-suffix">㎡</span>
           </div>
+        </div>
+        </div>
+        <div class="form-row">
+        <div class="form-field half">
+          <label for="survey-ceiling-height">天井高さ</label>
+          <div class="input-with-unit">
+            <input type="text" id="survey-ceiling-height" placeholder="例：2.6">
+            <span class="unit-suffix">m</span>
+          </div>
+        </div>
           <div class="form-field half">
             <label for="survey-breaker-location">ブレーカーの位置</label>
             <input type="text" id="survey-breaker-location" placeholder="例：厨房奥">

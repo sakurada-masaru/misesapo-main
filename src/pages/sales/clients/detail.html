@@ -144,8 +144,20 @@
               <div class="info-item form-item">
                 <span class="info-label">稼働人数</span>
                 <div class="form-row">
-                  <input class="form-field" id="survey-staff-normal" type="text" placeholder="通常時（例：6名）">
-                  <input class="form-field" id="survey-staff-peak" type="text" placeholder="ピーク時（例：12名）">
+                  <select class="form-field" id="survey-staff-normal">
+                    <option value="">最小人数を選択</option>
+                    <option value="1名">1名</option>
+                    <option value="2〜5名">2〜5名</option>
+                    <option value="6〜10名">6〜10名</option>
+                    <option value="11名以上">11名以上</option>
+                  </select>
+                  <select class="form-field" id="survey-staff-peak">
+                    <option value="">最大人数を選択</option>
+                    <option value="1名">1名</option>
+                    <option value="2〜5名">2〜5名</option>
+                    <option value="6〜10名">6〜10名</option>
+                    <option value="11名以上">11名以上</option>
+                  </select>
                 </div>
               </div>
               <div class="info-item form-item">
@@ -170,15 +182,24 @@
                   </label>
                   <label class="compact-field">
                     <span>平米数</span>
-                    <input class="form-field" id="survey-area-sqm" type="text" placeholder="例：120">
+                    <div class="input-with-unit">
+                      <input class="form-field" id="survey-area-sqm" type="text" placeholder="例：120">
+                      <span class="unit-suffix">㎡</span>
+                    </div>
                   </label>
                   <label class="compact-field">
                     <span>畳数</span>
-                    <input class="form-field" id="survey-area-tatami" type="text" placeholder="例：72">
+                    <div class="input-with-unit">
+                      <input class="form-field" id="survey-area-tatami" type="text" placeholder="例：72">
+                      <span class="unit-suffix">畳</span>
+                    </div>
                   </label>
                   <label class="compact-field">
                     <span>トイレ数</span>
-                    <input class="form-field" id="survey-toilet-count" type="text" placeholder="例：2">
+                    <div class="input-with-unit">
+                      <input class="form-field" id="survey-toilet-count" type="text" placeholder="例：2">
+                      <span class="unit-suffix">基</span>
+                    </div>
                   </label>
                   <label class="compact-field">
                     <span>出入口</span>
@@ -186,7 +207,10 @@
                   </label>
                   <label class="compact-field">
                     <span>天井高さ</span>
-                    <input class="form-field" id="survey-ceiling-height" type="text" placeholder="例：2.6m">
+                    <div class="input-with-unit">
+                      <input class="form-field" id="survey-ceiling-height" type="text" placeholder="例：2.6">
+                      <span class="unit-suffix">m</span>
+                    </div>
                   </label>
                   <label class="compact-field">
                     <span>ブレーカー</span>
@@ -242,7 +266,10 @@
                   </label>
                   <label class="compact-field">
                     <span>アンペア数</span>
-                    <input class="form-field" id="survey-electrical-amps" type="text" placeholder="例：60A">
+                    <div class="input-with-unit">
+                      <input class="form-field" id="survey-electrical-amps" type="text" placeholder="例：60">
+                      <span class="unit-suffix">A</span>
+                    </div>
                   </label>
                   <label class="compact-field">
                     <span>空調の数</span>
