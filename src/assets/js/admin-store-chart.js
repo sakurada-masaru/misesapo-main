@@ -358,6 +358,7 @@ async function loadKarteData() {
 
     setPreviewImage('intake-breaker-photo-preview', latest.breakerPhotoUrl || '');
     setPreviewImage('intake-key-photo-preview', latest.keyPhotoUrl || '');
+    renderIntakeTags();
   } catch (error) {
     console.warn('[Karte] Failed to load karte data:', error);
   }
@@ -903,6 +904,8 @@ function setupEventListeners() {
       chartData.plan_frequency = e.target.value;
     });
   });
+
+  setupIntakeTagListeners();
   
   // セキュリティボックス番号変更
   const securityBoxNumberEl = document.getElementById('security-box-number');
@@ -950,6 +953,63 @@ function setupEventListeners() {
   if (saveStaffBtn) {
     saveStaffBtn.addEventListener('click', addStaff);
   }
+}
+
+function setupIntakeTagListeners() {
+  const inputs = document.querySelectorAll(
+    '#intake-equipment input[type="checkbox"], #intake-seat-counter, #intake-seat-box, #intake-seat-zashiki'
+  );
+  inputs.forEach((input) => {
+    input.addEventListener('change', renderIntakeTags);
+  });
+  renderIntakeTags();
+}
+
+function renderIntakeTags() {
+  const container = document.getElementById('intake-summary-tags');
+  if (!container) return;
+
+  const tags = [];
+  const seatMap = [
+    { id: 'intake-seat-counter', label: 'カウンター席' },
+    { id: 'intake-seat-box', label: 'ボックス席' },
+    { id: 'intake-seat-zashiki', label: '座敷' }
+  ];
+
+  seatMap.forEach((seat) => {
+    const checkbox = document.getElementById(seat.id);
+    if (checkbox && checkbox.checked) {
+      tags.push(seat.label);
+    }
+  });
+
+  const equipmentTags = Array.from(
+    document.querySelectorAll('#intake-equipment input[type="checkbox"]:checked')
+  ).map((input) => {
+    const label = input.closest('label');
+    const labelText = label?.querySelector('.checkbox-label')?.textContent?.trim();
+    return labelText || label?.textContent?.trim() || input.value;
+  });
+
+  tags.push(...equipmentTags);
+
+  const uniqueTags = Array.from(new Set(tags.filter(Boolean)));
+  container.innerHTML = '';
+
+  if (uniqueTags.length === 0) {
+    const emptyTag = document.createElement('span');
+    emptyTag.className = 'tag-chip tag-muted';
+    emptyTag.textContent = '未入力';
+    container.appendChild(emptyTag);
+    return;
+  }
+
+  uniqueTags.forEach((tag) => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.textContent = tag;
+    container.appendChild(chip);
+  });
 }
 
 // アコーディオン機能

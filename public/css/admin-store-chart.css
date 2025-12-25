@@ -249,6 +249,33 @@
 .info-field-plan {
   grid-column: 1 / -1;
 }
+.info-content-row-tags {
+  margin-top: auto;
+}
+.info-field-tags {
+  grid-column: 2 / -1;
+}
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #ffe3f0;
+  color: #c81d7a;
+  border: 1px solid rgba(255, 79, 154, 0.3);
+}
+.tag-chip.tag-muted {
+  background: #f3f4f6;
+  color: #6b7280;
+  border-color: #e5e7eb;
+}
 
 .info-label {
   font-size: 0.8125rem;
