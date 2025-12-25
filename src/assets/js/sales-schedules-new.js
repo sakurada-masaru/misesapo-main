@@ -1,5 +1,69 @@
 const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
+function isTokenExpired(token) {
+  if (!token || token === 'mock-token' || token === 'dev-token') return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return true;
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return false;
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp <= now + 30;
+  } catch (error) {
+    console.warn('[Auth] Failed to parse token:', error);
+    return true;
+  }
+}
+
+function getStoredToken() {
+  try {
+    const cognitoIdToken = localStorage.getItem('cognito_id_token');
+    if (cognitoIdToken && !isTokenExpired(cognitoIdToken)) {
+      return cognitoIdToken;
+    }
+    const authData = localStorage.getItem('misesapo_auth');
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      if (parsed.token && !isTokenExpired(parsed.token)) {
+        return parsed.token;
+      }
+    }
+  } catch (error) {
+    console.error('Error getting ID token:', error);
+  }
+  return null;
+}
+
+let authRedirecting = false;
+function redirectToSignin() {
+  if (authRedirecting) return;
+  authRedirecting = true;
+  localStorage.removeItem('cognito_id_token');
+  localStorage.removeItem('cognito_access_token');
+  localStorage.removeItem('cognito_refresh_token');
+  localStorage.removeItem('cognito_user');
+  localStorage.removeItem('misesapo_auth');
+  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+  window.location.href = `/staff/signin.html?redirect=${redirect}`;
+}
+
+function ensureAuthOrRedirect() {
+  const token = getStoredToken();
+  if (!token) {
+    redirectToSignin();
+    return null;
+  }
+  return token;
+}
+
+function handleUnauthorized(response) {
+  if (response.status === 401 || response.status === 403) {
+    redirectToSignin();
+    return true;
+  }
+  return false;
+}
+
 let allStores = [];
 let allWorkers = [];
 let allClients = [];
@@ -12,6 +76,7 @@ let scheduleForm, formStatus;
 
 // 初期化
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!ensureAuthOrRedirect()) return;
   // DOM要素を取得
   scheduleForm = document.getElementById('schedule-form');
   formStatus = document.getElementById('form-status');
@@ -66,6 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadStores() {
   try {
     const response = await fetch(`${API_BASE}/stores`);
+    if (handleUnauthorized(response)) return;
     if (!response.ok) throw new Error('Failed to load stores');
     const data = await response.json();
     allStores = Array.isArray(data) ? data : (data.items || data.stores || []);
@@ -78,6 +144,7 @@ async function loadStores() {
 async function loadWorkers() {
   try {
     const response = await fetch(`${API_BASE}/workers`);
+    if (handleUnauthorized(response)) return;
     if (!response.ok) throw new Error('Failed to load workers');
     const data = await response.json();
     const workers = Array.isArray(data) ? data : (data.items || data.workers || []);
@@ -93,6 +160,7 @@ async function loadWorkers() {
 async function loadClients() {
   try {
     const response = await fetch(`${API_BASE}/clients`);
+    if (handleUnauthorized(response)) return;
     if (!response.ok) throw new Error('Failed to load clients');
     const data = await response.json();
     allClients = Array.isArray(data) ? data : (data.items || data.clients || []);
@@ -105,6 +173,7 @@ async function loadClients() {
 async function loadBrands() {
   try {
     const response = await fetch(`${API_BASE}/brands`);
+    if (handleUnauthorized(response)) return;
     if (!response.ok) throw new Error('Failed to load brands');
     const data = await response.json();
     allBrands = Array.isArray(data) ? data : (data.items || data.brands || []);
@@ -524,4 +593,3 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
-

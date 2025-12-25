@@ -12,24 +12,60 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-async function getFirebaseIdToken() {
+function isTokenExpired(token) {
+  if (!token || token === 'mock-token' || token === 'dev-token') return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return true;
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return false;
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp <= now + 30;
+  } catch (error) {
+    console.warn('[Auth] Failed to parse token:', error);
+    return true;
+  }
+}
+
+function getStoredToken() {
   try {
     const cognitoIdToken = localStorage.getItem('cognito_id_token');
-    if (cognitoIdToken) {
+    if (cognitoIdToken && !isTokenExpired(cognitoIdToken)) {
       return cognitoIdToken;
     }
     const authData = localStorage.getItem('misesapo_auth');
     if (authData) {
       const parsed = JSON.parse(authData);
-      if (parsed.token) {
+      if (parsed.token && !isTokenExpired(parsed.token)) {
         return parsed.token;
       }
     }
-    return 'mock-token';
   } catch (error) {
     console.error('Error getting ID token:', error);
-    return 'mock-token';
   }
+  return null;
+}
+
+let authRedirecting = false;
+function redirectToSignin() {
+  if (authRedirecting) return;
+  authRedirecting = true;
+  localStorage.removeItem('cognito_id_token');
+  localStorage.removeItem('cognito_access_token');
+  localStorage.removeItem('cognito_refresh_token');
+  localStorage.removeItem('cognito_user');
+  localStorage.removeItem('misesapo_auth');
+  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+  window.location.href = `/staff/signin.html?redirect=${redirect}`;
+}
+
+function ensureAuthOrRedirect() {
+  const token = getStoredToken();
+  if (!token) {
+    redirectToSignin();
+    return null;
+  }
+  return token;
 }
 
 function formatDateToJa(dateValue) {
@@ -152,7 +188,8 @@ async function loadClientDetail() {
     return;
   }
 
-  const token = await getFirebaseIdToken();
+  const token = ensureAuthOrRedirect();
+  if (!token) return;
   const headers = {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json'
@@ -167,6 +204,10 @@ async function loadClientDetail() {
     ]);
 
     if (!storesRes.ok || !clientsRes.ok || !brandsRes.ok || !schedulesRes.ok) {
+      if ([storesRes, clientsRes, brandsRes, schedulesRes].some((res) => res.status === 401 || res.status === 403)) {
+        redirectToSignin();
+        return;
+      }
       throw new Error('Failed to load data');
     }
 
@@ -350,6 +391,9 @@ async function loadClientDetail() {
           setPreviewImage('survey-key-photo-preview', latestKarte.keyPhotoUrl);
         }
       }
+    } else if (karteRes.status === 401 || karteRes.status === 403) {
+      redirectToSignin();
+      return;
     }
   } catch (error) {
     console.error('Failed to load client detail:', error);
@@ -444,7 +488,11 @@ document.addEventListener('DOMContentLoaded', () => {
       keyPhotoUrl
     };
     try {
-      const token = await getFirebaseIdToken();
+      const token = ensureAuthOrRedirect();
+      if (!token) {
+        saveButton.disabled = false;
+        return;
+      }
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -455,6 +503,10 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(payload)
       });
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          redirectToSignin();
+          return;
+        }
         const errorText = await response.text();
         throw new Error(errorText || '保存に失敗しました');
       }

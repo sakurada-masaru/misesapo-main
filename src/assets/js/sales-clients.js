@@ -27,33 +27,67 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// IDトークン取得（Cognito/localStorageから取得）
-async function getFirebaseIdToken() {
+function isTokenExpired(token) {
+  if (!token || token === 'mock-token' || token === 'dev-token') return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return true;
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return false;
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp <= now + 30;
+  } catch (error) {
+    console.warn('[Auth] Failed to parse token:', error);
+    return true;
+  }
+}
+
+function getStoredToken() {
   try {
     const cognitoIdToken = localStorage.getItem('cognito_id_token');
-    if (cognitoIdToken) {
+    if (cognitoIdToken && !isTokenExpired(cognitoIdToken)) {
       return cognitoIdToken;
     }
-    
     const authData = localStorage.getItem('misesapo_auth');
     if (authData) {
       const parsed = JSON.parse(authData);
-      if (parsed.token) {
+      if (parsed.token && !isTokenExpired(parsed.token)) {
         return parsed.token;
       }
     }
-    
-    return 'mock-token';
   } catch (error) {
     console.error('Error getting ID token:', error);
-    return 'mock-token';
   }
+  return null;
+}
+
+let authRedirecting = false;
+function redirectToSignin() {
+  if (authRedirecting) return;
+  authRedirecting = true;
+  localStorage.removeItem('cognito_id_token');
+  localStorage.removeItem('cognito_access_token');
+  localStorage.removeItem('cognito_refresh_token');
+  localStorage.removeItem('cognito_user');
+  localStorage.removeItem('misesapo_auth');
+  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+  window.location.href = `/staff/signin.html?redirect=${redirect}`;
+}
+
+function ensureAuthOrRedirect() {
+  const token = getStoredToken();
+  if (!token) {
+    redirectToSignin();
+    return null;
+  }
+  return token;
 }
 
 // データ読み込み
 async function loadData() {
   try {
-    const idToken = await getFirebaseIdToken();
+    const idToken = ensureAuthOrRedirect();
+    if (!idToken) return;
     const headers = {
       'Authorization': `Bearer ${idToken}`,
       'Content-Type': 'application/json'
@@ -81,6 +115,14 @@ async function loadData() {
       })
     ]);
     
+    if (storesRes.status === 401 || storesRes.status === 403 ||
+        clientsRes.status === 401 || clientsRes.status === 403 ||
+        brandsRes.status === 401 || brandsRes.status === 403 ||
+        schedulesRes.status === 401 || schedulesRes.status === 403) {
+      redirectToSignin();
+      return;
+    }
+
     if (storesRes.ok) {
       try {
       const storesData = await storesRes.json();
@@ -652,29 +694,17 @@ function updateBrandSelectForForm() {
 // IDトークン取得（Cognito/localStorageから取得）
 async function getAuthHeaders() {
   try {
-    const cognitoIdToken = localStorage.getItem('cognito_id_token');
-    if (cognitoIdToken) {
+    const token = ensureAuthOrRedirect();
+    if (token) {
       return {
-        'Authorization': `Bearer ${cognitoIdToken}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
     }
-    
-    const authData = localStorage.getItem('misesapo_auth');
-    if (authData) {
-      const parsed = JSON.parse(authData);
-      if (parsed.token) {
-        return {
-          'Authorization': `Bearer ${parsed.token}`,
-          'Content-Type': 'application/json'
-        };
-      }
-    }
-    
-    return { 'Content-Type': 'application/json' };
+    return null;
   } catch (error) {
     console.error('Error getting auth headers:', error);
-    return { 'Content-Type': 'application/json' };
+    return null;
   }
 }
 
@@ -802,6 +832,7 @@ async function handleStoreFormSubmit(e) {
     }
 
     const authHeaders = await getAuthHeaders();
+    if (!authHeaders) return;
     
     // 新規法人の作成
     if (!clientId && newClientName) {
@@ -816,6 +847,10 @@ async function handleStoreFormSubmit(e) {
         body: JSON.stringify(newClient)
       });
       if (!clientRes.ok) {
+        if (clientRes.status === 401 || clientRes.status === 403) {
+          redirectToSignin();
+          return;
+        }
         const errorData = await clientRes.json().catch(() => ({}));
         throw new Error(errorData.error || '法人の作成に失敗しました');
       }
@@ -841,6 +876,10 @@ async function handleStoreFormSubmit(e) {
         body: JSON.stringify(newBrand)
         });
         if (!brandRes.ok) {
+          if (brandRes.status === 401 || brandRes.status === 403) {
+            redirectToSignin();
+            return;
+          }
           const errorData = await brandRes.json().catch(() => ({}));
         throw new Error(errorData.error || 'ブランドの作成に失敗しました');
       }
@@ -971,6 +1010,10 @@ async function handleStoreFormSubmit(e) {
     await loadData();
     renderClientList();
     } else {
+      if (response.status === 401 || response.status === 403) {
+        redirectToSignin();
+        return;
+      }
       throw new Error('Save failed');
     }
   } catch (error) {

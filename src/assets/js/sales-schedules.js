@@ -1,5 +1,69 @@
 const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 
+function isTokenExpired(token) {
+  if (!token || token === 'mock-token' || token === 'dev-token') return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return true;
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return false;
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp <= now + 30;
+  } catch (error) {
+    console.warn('[Auth] Failed to parse token:', error);
+    return true;
+  }
+}
+
+function getStoredToken() {
+  try {
+    const cognitoIdToken = localStorage.getItem('cognito_id_token');
+    if (cognitoIdToken && !isTokenExpired(cognitoIdToken)) {
+      return cognitoIdToken;
+    }
+    const authData = localStorage.getItem('misesapo_auth');
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      if (parsed.token && !isTokenExpired(parsed.token)) {
+        return parsed.token;
+      }
+    }
+  } catch (error) {
+    console.error('Error getting ID token:', error);
+  }
+  return null;
+}
+
+let authRedirecting = false;
+function redirectToSignin() {
+  if (authRedirecting) return;
+  authRedirecting = true;
+  localStorage.removeItem('cognito_id_token');
+  localStorage.removeItem('cognito_access_token');
+  localStorage.removeItem('cognito_refresh_token');
+  localStorage.removeItem('cognito_user');
+  localStorage.removeItem('misesapo_auth');
+  const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+  window.location.href = `/staff/signin.html?redirect=${redirect}`;
+}
+
+function ensureAuthOrRedirect() {
+  const token = getStoredToken();
+  if (!token) {
+    redirectToSignin();
+    return null;
+  }
+  return token;
+}
+
+function handleUnauthorized(response) {
+  if (response.status === 401 || response.status === 403) {
+    redirectToSignin();
+    return true;
+  }
+  return false;
+}
+
 let allSchedules = [];
 let allStores = [];
 let allWorkers = [];
@@ -19,6 +83,7 @@ let scheduleCardList, pagination, scheduleDialog, deleteDialog, scheduleForm, fo
 
 // 初期化
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!ensureAuthOrRedirect()) return;
   // DOM要素を取得
   scheduleCardList = document.getElementById('schedule-card-list');
   pagination = document.getElementById('pagination');
@@ -65,6 +130,7 @@ async function loadSchedules() {
   // #endregion
   try {
     const response = await fetch(`${API_BASE}/schedules`);
+    if (handleUnauthorized(response)) return;
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/1ad2d2da-39d2-46f5-a6d7-ed88dc7e9fd9',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'sales-schedules.js:66',message:'API response received',data:{ok:response.ok,status:response.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
     // #endregion
@@ -118,6 +184,7 @@ window.filterNewProjects = function() {
 async function loadStores() {
   try {
     const response = await fetch(`${API_BASE}/stores`);
+    if (handleUnauthorized(response)) return;
     const storesData = await response.json();
     allStores = Array.isArray(storesData) ? storesData : (storesData.items || storesData.stores || []);
     populateStoreSelects();
@@ -134,6 +201,7 @@ async function loadStores() {
 async function loadWorkers() {
   try {
     const response = await fetch(`${API_BASE}/workers`);
+    if (handleUnauthorized(response)) return;
     const workersData = await response.json();
     allWorkers = Array.isArray(workersData) ? workersData : (workersData.items || workersData.workers || []);
     populateWorkerSelects();
@@ -147,6 +215,7 @@ async function loadWorkers() {
 async function loadClients() {
   try {
     const response = await fetch(`${API_BASE}/clients`);
+    if (handleUnauthorized(response)) return;
     const clientsData = await response.json();
     allClients = Array.isArray(clientsData) ? clientsData : (clientsData.items || clientsData.clients || []);
     if (Array.isArray(allSchedules) && allSchedules.length > 0) {
@@ -161,6 +230,7 @@ async function loadClients() {
 async function loadBrands() {
   try {
     const response = await fetch(`${API_BASE}/brands`);
+    if (handleUnauthorized(response)) return;
     const brandsData = await response.json();
     allBrands = Array.isArray(brandsData) ? brandsData : (brandsData.items || brandsData.brands || []);
     if (Array.isArray(allSchedules) && allSchedules.length > 0) {
@@ -175,6 +245,7 @@ async function loadBrands() {
 async function loadServices() {
   try {
     const response = await fetch(`${API_BASE}/services`);
+    if (handleUnauthorized(response)) return;
     const servicesData = await response.json();
     allServices = Array.isArray(servicesData) ? servicesData : (servicesData.items || servicesData.services || []);
   } catch (error) {
@@ -1386,4 +1457,3 @@ function renderCalendar() {
     calendarDays.appendChild(emptyCell);
   }
 }
-
