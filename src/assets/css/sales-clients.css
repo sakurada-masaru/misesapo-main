@@ -928,6 +928,19 @@
   gap: 12px;
   margin-top: 12px;
 }
+.registration-intake .survey-upload {
+  border: 1px dashed rgba(255, 79, 154, 0.4);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 79, 154, 0.05);
+}
+.registration-intake .survey-upload-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ff4f9a;
+  margin-bottom: 8px;
+}
 .registration-intake .compact-fields {
   display: flex;
   flex-wrap: wrap;
