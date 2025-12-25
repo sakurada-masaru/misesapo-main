@@ -32,6 +32,62 @@ let chartData = {
   notes: ''
 };
 
+function setInputValue(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = value || '';
+}
+
+function setCheckboxValue(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (typeof value === 'boolean') {
+    el.checked = value;
+    return;
+  }
+  if (value === undefined || value === null) return;
+  if (typeof value === 'string') {
+    el.checked = value === 'true' || value === '1' || value.toLowerCase() === 'yes';
+    return;
+  }
+  el.checked = Boolean(value);
+}
+
+function normalizeEquipmentList(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    return value.split(',').map((item) => item.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function setPreviewImage(previewId, src) {
+  const preview = document.getElementById(previewId);
+  if (!preview) return;
+  preview.innerHTML = '';
+  if (!src) return;
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = '添付画像';
+  preview.appendChild(img);
+}
+
+function getAuthToken() {
+  try {
+    const cognitoIdToken = localStorage.getItem('cognito_id_token');
+    if (cognitoIdToken) return cognitoIdToken;
+    const authData = localStorage.getItem('misesapo_auth');
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      if (parsed.token) return parsed.token;
+    }
+  } catch (error) {
+    console.warn('[Karte] Failed to read auth token:', error);
+  }
+  return null;
+}
+
 // URLから店舗IDを取得する関数
 function getStoreIdFromUrl() {
   // 方法0: グローバル変数から取得（テンプレートファイルのインラインスクリプトで設定された場合）
@@ -181,7 +237,8 @@ async function initializeChart() {
     loadWorkers(),
     loadServices(),
     loadAllCharts(), // 全カルテ履歴を読み込む
-    loadChartData()
+    loadChartData(),
+    loadKarteData()
   ]);
 
   // イベントリスナー設定
@@ -192,6 +249,126 @@ async function initializeChart() {
   
   // バージョン表示を更新
   updateVersionDisplay();
+}
+
+async function loadKarteData() {
+  try {
+    const response = await fetch(`${API_BASE}/kartes?store_id=${encodeURIComponent(currentStoreId)}`);
+    if (!response.ok) {
+      console.warn('[Karte] Failed to load karte data:', response.status);
+      return;
+    }
+    const data = await response.json().catch(() => ({}));
+    const items = Array.isArray(data) ? data : (data.items || []);
+    const latest = items[0];
+    if (!latest) return;
+
+    setInputValue('intake-issue', latest.issue || '');
+    setInputValue('intake-environment', latest.environment || '');
+    setInputValue('intake-staff-normal', latest.staffNormal || '');
+    setInputValue('intake-staff-peak', latest.staffPeak || '');
+    setInputValue('intake-hours', latest.hours || '');
+    setInputValue('intake-cleaning-frequency', latest.cleaningFrequency || '');
+    setInputValue('intake-store-count', latest.storeCount || '');
+    setInputValue('intake-area-sqm', latest.areaSqm || '');
+    setInputValue('intake-area-tatami', latest.areaTatami || '');
+    setInputValue('intake-toilet-count', latest.toiletCount || '');
+    setInputValue('intake-entrances', latest.entrances || '');
+    setInputValue('intake-breaker-location', latest.breakerLocation || '');
+    setInputValue('intake-key-location', latest.keyLocation || '');
+    setInputValue('intake-staff-room', latest.staffRoom || '');
+    setInputValue('intake-wall-material', latest.wallMaterial || '');
+    setInputValue('intake-floor-material', latest.floorMaterial || '');
+    setInputValue('intake-electrical-amps', latest.electricalAmps || '');
+    setInputValue('intake-aircon-count', latest.airconCount || '');
+    setInputValue('intake-ceiling-height', latest.ceilingHeight || '');
+    setInputValue('intake-aircon', latest.aircon || '');
+    setInputValue('intake-kitchen', latest.kitchen || '');
+    setInputValue('intake-hotspots', latest.hotspots || '');
+    setInputValue('intake-notes', latest.notes || '');
+    setInputValue('intake-last-clean', latest.lastClean || '');
+    setInputValue('intake-plan', latest.plan || '');
+    setInputValue('intake-self-rating', latest.selfRating || '');
+    setInputValue('intake-breaker-photo-url', latest.breakerPhotoUrl || '');
+    setInputValue('intake-key-photo-url', latest.keyPhotoUrl || '');
+
+    const equipmentValues = normalizeEquipmentList(latest.equipment);
+    equipmentValues.forEach((value) => {
+      const checkbox = document.querySelector(`#intake-equipment input[value="${value}"]`);
+      if (checkbox) checkbox.checked = true;
+    });
+
+    setCheckboxValue('intake-seat-counter', latest.seatCounter);
+    setCheckboxValue('intake-seat-box', latest.seatBox);
+    setCheckboxValue('intake-seat-zashiki', latest.seatZashiki);
+
+    setPreviewImage('intake-breaker-photo-preview', latest.breakerPhotoUrl || '');
+    setPreviewImage('intake-key-photo-preview', latest.keyPhotoUrl || '');
+  } catch (error) {
+    console.warn('[Karte] Failed to load karte data:', error);
+  }
+}
+
+async function saveKarteData() {
+  try {
+    const equipment = Array.from(document.querySelectorAll('#intake-equipment input[type="checkbox"]:checked'))
+      .map((input) => input.value);
+    const payload = {
+      store_id: currentStoreId,
+      client_id: currentStore?.client_id || null,
+      brand_id: currentStore?.brand_id || null,
+      issue: document.getElementById('intake-issue')?.value || '',
+      environment: document.getElementById('intake-environment')?.value || '',
+      staffNormal: document.getElementById('intake-staff-normal')?.value || '',
+      staffPeak: document.getElementById('intake-staff-peak')?.value || '',
+      hours: document.getElementById('intake-hours')?.value || '',
+      cleaningFrequency: document.getElementById('intake-cleaning-frequency')?.value || '',
+      storeCount: document.getElementById('intake-store-count')?.value || '',
+      areaSqm: document.getElementById('intake-area-sqm')?.value || '',
+      areaTatami: document.getElementById('intake-area-tatami')?.value || '',
+      toiletCount: document.getElementById('intake-toilet-count')?.value || '',
+      entrances: document.getElementById('intake-entrances')?.value || '',
+      breakerLocation: document.getElementById('intake-breaker-location')?.value || '',
+      keyLocation: document.getElementById('intake-key-location')?.value || '',
+      staffRoom: document.getElementById('intake-staff-room')?.value || '',
+      wallMaterial: document.getElementById('intake-wall-material')?.value || '',
+      floorMaterial: document.getElementById('intake-floor-material')?.value || '',
+      electricalAmps: document.getElementById('intake-electrical-amps')?.value || '',
+      airconCount: document.getElementById('intake-aircon-count')?.value || '',
+      ceilingHeight: document.getElementById('intake-ceiling-height')?.value || '',
+      aircon: document.getElementById('intake-aircon')?.value || '',
+      kitchen: document.getElementById('intake-kitchen')?.value || '',
+      equipment,
+      seatCounter: document.getElementById('intake-seat-counter')?.checked || false,
+      seatBox: document.getElementById('intake-seat-box')?.checked || false,
+      seatZashiki: document.getElementById('intake-seat-zashiki')?.checked || false,
+      hotspots: document.getElementById('intake-hotspots')?.value || '',
+      notes: document.getElementById('intake-notes')?.value || '',
+      lastClean: document.getElementById('intake-last-clean')?.value || '',
+      plan: document.getElementById('intake-plan')?.value || '',
+      selfRating: document.getElementById('intake-self-rating')?.value || '',
+      breakerPhotoUrl: document.getElementById('intake-breaker-photo-url')?.value || '',
+      keyPhotoUrl: document.getElementById('intake-key-photo-url')?.value || ''
+    };
+
+    const token = getAuthToken();
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    const response = await fetch(`${API_BASE}/kartes`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      console.warn('[Karte] Failed to save intake data:', response.status);
+    }
+  } catch (error) {
+    console.warn('[Karte] Failed to save intake data:', error);
+  }
 }
 
 // バージョン表示を更新
@@ -986,6 +1163,8 @@ async function saveChartData() {
       allCharts.push({ ...chartData });
     }
     renderChartHistorySelector();
+
+    await saveKarteData();
     
     alert('カルテを保存しました');
   } catch (error) {
@@ -1010,4 +1189,3 @@ function formatDate(dateStr) {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}/${month}/${day}`;
 }
-
