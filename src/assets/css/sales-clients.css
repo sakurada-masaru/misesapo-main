@@ -929,6 +929,9 @@
   gap: 12px;
   margin-top: 12px;
 }
+.registration-intake .intake-category:nth-of-type(2) .survey-upload-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 .registration-intake .survey-upload {
   border: 1px dashed rgba(255, 79, 154, 0.4);
   border-radius: 12px;
