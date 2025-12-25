@@ -55,6 +55,30 @@ function setInputValue(id, value) {
   el.value = value || '';
 }
 
+function setCheckboxValue(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (typeof value === 'boolean') {
+    el.checked = value;
+    return;
+  }
+  if (value === undefined || value === null) return;
+  if (typeof value === 'string') {
+    el.checked = value === 'true' || value === '1' || value.toLowerCase() === 'yes';
+    return;
+  }
+  el.checked = Boolean(value);
+}
+
+function normalizeEquipmentList(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    return value.split(',').map((item) => item.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 function setHtml(id, value) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -209,6 +233,7 @@ async function loadClientDetail() {
     setInputValue('survey-floor-material', store.floor_material || '');
     setInputValue('survey-electrical-amps', store.electrical_amps || '');
     setInputValue('survey-aircon-count', store.aircon_count || store.aircon_units || '');
+    setInputValue('survey-ceiling-height', store.ceiling_height || '');
 
     if (store.email) {
       const emailLink = document.getElementById('client-email');
@@ -272,6 +297,60 @@ async function loadClientDetail() {
     setHref('client-kart-link', `/sales/stores/${storeId}/chart`);
     setHref('client-estimate-link', `/sales/estimates/new?client_id=${storeId}`);
     setHref('client-orders-link', `/sales/orders?client_id=${storeId}`);
+
+    const karteRes = await fetch(`${API_BASE}/kartes?store_id=${encodeURIComponent(storeId)}`, { headers });
+    if (karteRes.ok) {
+      const karteData = await karteRes.json().catch(() => ({}));
+      const karteItems = Array.isArray(karteData) ? karteData : (karteData.items || []);
+      const latestKarte = karteItems[0];
+      if (latestKarte) {
+        setInputValue('survey-issue', latestKarte.issue || '');
+        setInputValue('survey-environment', latestKarte.environment || '');
+        setInputValue('survey-staff-normal', latestKarte.staffNormal || '');
+        setInputValue('survey-staff-peak', latestKarte.staffPeak || '');
+        setInputValue('survey-hours', latestKarte.hours || '');
+        setInputValue('survey-cleaning-frequency', latestKarte.cleaningFrequency || '');
+        setInputValue('survey-store-count', latestKarte.storeCount || '');
+        setInputValue('survey-area-sqm', latestKarte.areaSqm || '');
+        setInputValue('survey-area-tatami', latestKarte.areaTatami || '');
+        setInputValue('survey-toilet-count', latestKarte.toiletCount || '');
+        setInputValue('survey-entrances', latestKarte.entrances || '');
+        setInputValue('survey-breaker-location', latestKarte.breakerLocation || '');
+        setInputValue('survey-key-location', latestKarte.keyLocation || '');
+        setInputValue('survey-staff-room', latestKarte.staffRoom || '');
+        setInputValue('survey-wall-material', latestKarte.wallMaterial || '');
+        setInputValue('survey-floor-material', latestKarte.floorMaterial || '');
+        setInputValue('survey-electrical-amps', latestKarte.electricalAmps || '');
+        setInputValue('survey-aircon-count', latestKarte.airconCount || '');
+        setInputValue('survey-ceiling-height', latestKarte.ceilingHeight || '');
+        setInputValue('survey-aircon', latestKarte.aircon || '');
+        setInputValue('survey-kitchen', latestKarte.kitchen || '');
+        setInputValue('survey-hotspots', latestKarte.hotspots || '');
+        setInputValue('survey-notes', latestKarte.notes || '');
+        setInputValue('survey-last-clean', latestKarte.lastClean || '');
+        setInputValue('survey-plan', latestKarte.plan || '');
+        setInputValue('survey-self-rating', latestKarte.selfRating || '');
+
+        const equipmentValues = normalizeEquipmentList(latestKarte.equipment);
+        equipmentValues.forEach((value) => {
+          const checkbox = document.querySelector(`#survey-equipment input[value="${value}"]`);
+          if (checkbox) checkbox.checked = true;
+        });
+
+        setCheckboxValue('survey-seat-counter', latestKarte.seatCounter);
+        setCheckboxValue('survey-seat-box', latestKarte.seatBox);
+        setCheckboxValue('survey-seat-zashiki', latestKarte.seatZashiki);
+
+        if (latestKarte.breakerPhotoUrl) {
+          setInputValue('survey-breaker-photo-url', latestKarte.breakerPhotoUrl);
+          setPreviewImage('survey-breaker-photo-preview', latestKarte.breakerPhotoUrl);
+        }
+        if (latestKarte.keyPhotoUrl) {
+          setInputValue('survey-key-photo-url', latestKarte.keyPhotoUrl);
+          setPreviewImage('survey-key-photo-preview', latestKarte.keyPhotoUrl);
+        }
+      }
+    }
   } catch (error) {
     console.error('Failed to load client detail:', error);
     setText('client-company', '読み込みに失敗しました');
@@ -349,9 +428,13 @@ document.addEventListener('DOMContentLoaded', () => {
       floorMaterial: document.getElementById('survey-floor-material')?.value || '',
       electricalAmps: document.getElementById('survey-electrical-amps')?.value || '',
       airconCount: document.getElementById('survey-aircon-count')?.value || '',
+      ceilingHeight: document.getElementById('survey-ceiling-height')?.value || '',
       aircon: document.getElementById('survey-aircon')?.value || '',
       kitchen: document.getElementById('survey-kitchen')?.value || '',
       equipment,
+      seatCounter: document.getElementById('survey-seat-counter')?.checked || false,
+      seatBox: document.getElementById('survey-seat-box')?.checked || false,
+      seatZashiki: document.getElementById('survey-seat-zashiki')?.checked || false,
       hotspots: document.getElementById('survey-hotspots')?.value || '',
       notes: document.getElementById('survey-notes')?.value || '',
       lastClean: document.getElementById('survey-last-clean')?.value || '',

@@ -203,6 +203,10 @@
                   <span>空調の数</span>
                   <input class="form-field" id="survey-aircon-count" type="text" placeholder="例：3台">
                 </label>
+                <label class="compact-field">
+                  <span>天井高さ</span>
+                  <input class="form-field" id="survey-ceiling-height" type="text" placeholder="例：2.6m">
+                </label>
               </div>
               <div class="survey-upload-row">
                 <div class="survey-upload">
@@ -226,6 +230,23 @@
             <div class="info-item form-item">
               <span class="info-label">厨房設備の状態</span>
               <textarea class="form-field" id="survey-kitchen" rows="2" placeholder="例：レンジフード油固着、ダクト詰まり傾向"></textarea>
+            </div>
+            <div class="info-item form-item">
+              <span class="info-label">客席（設備補足）</span>
+              <div class="checkbox-group">
+                <label class="checkbox-chip">
+                  <input type="checkbox" id="survey-seat-counter" value="counter">
+                  <span>カウンター席</span>
+                </label>
+                <label class="checkbox-chip">
+                  <input type="checkbox" id="survey-seat-box" value="box">
+                  <span>ボックス席</span>
+                </label>
+                <label class="checkbox-chip">
+                  <input type="checkbox" id="survey-seat-zashiki" value="zashiki">
+                  <span>座敷</span>
+                </label>
+              </div>
             </div>
             <div class="info-item form-item">
               <span class="info-label">設備情報（必須）</span>
