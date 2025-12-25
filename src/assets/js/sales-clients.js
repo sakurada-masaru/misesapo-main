@@ -1117,11 +1117,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const surveyContent = document.querySelector('.client-tab-content[data-client-content="survey"]');
+  const registerActions = document.getElementById('register-actions');
   const goToSurveyButton = document.getElementById('go-to-survey');
   if (surveyContent && goToSurveyButton) {
     surveyContent.classList.remove('active');
     goToSurveyButton.addEventListener('click', () => {
       surveyContent.classList.add('active');
+      if (registerActions) {
+        surveyContent.insertAdjacentElement('afterend', registerActions);
+      }
       surveyContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
