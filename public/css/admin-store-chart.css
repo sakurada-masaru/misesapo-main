@@ -692,6 +692,37 @@ textarea:focus {
   gap: 16px;
   margin-bottom: 16px;
 }
+.survey-grid.two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.survey-grid.three-col {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.survey-grid.four-col {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.survey-grid.six-col {
+  grid-template-columns: repeat(6, minmax(140px, 1fr));
+}
+@media (max-width: 1200px) {
+  .survey-grid.six-col {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .survey-grid.four-col,
+  .survey-grid.three-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .survey-grid.two-col,
+  .survey-grid.three-col,
+  .survey-grid.four-col,
+  .survey-grid.six-col {
+    grid-template-columns: 1fr;
+  }
+}
 .intake-category {
   border: 1px dashed rgba(255, 79, 154, 0.35);
   border-radius: 12px;

@@ -201,15 +201,17 @@
           <i class="fas fa-clipboard-check"></i>
           基本ヒアリング
         </div>
-        <div class="survey-grid">
+        <div class="survey-grid two-col">
           <div class="form-group">
             <label for="intake-issue">清掃の悩み</label>
-            <textarea id="intake-issue" rows="2" placeholder="例：厨房の油汚れが落ちない"></textarea>
+            <textarea id="intake-issue" rows="3" placeholder="例：厨房の油汚れが落ちない"></textarea>
           </div>
           <div class="form-group">
             <label for="intake-environment">店内環境</label>
-            <textarea id="intake-environment" rows="2" placeholder="例：油煙が強い、湿気が多い"></textarea>
+            <textarea id="intake-environment" rows="3" placeholder="例：油煙が強い、湿気が多い"></textarea>
           </div>
+        </div>
+        <div class="survey-grid four-col">
           <div class="form-group">
             <label for="intake-staff-normal">稼働人数（最小）</label>
             <select id="intake-staff-normal">
@@ -246,15 +248,7 @@
           <i class="fas fa-store"></i>
           店舗仕様
         </div>
-        <div class="survey-grid">
-          <div class="form-group">
-            <label for="intake-staff-room">スタッフルーム</label>
-            <select id="intake-staff-room">
-              <option value="">選択してください</option>
-              <option value="有">有</option>
-              <option value="無">無</option>
-            </select>
-          </div>
+        <div class="survey-grid six-col">
           <div class="form-group">
             <label for="intake-area-sqm">平米数</label>
             <div class="input-with-unit">
@@ -270,40 +264,11 @@
             </div>
           </div>
           <div class="form-group">
-            <label for="intake-entrances">出入口</label>
-            <input id="intake-entrances" type="text" placeholder="例：正面1/裏口1">
-          </div>
-          <div class="form-group">
             <label for="intake-ceiling-height">天井高さ</label>
             <div class="input-with-unit">
               <input id="intake-ceiling-height" type="text" placeholder="例：2.6">
               <span class="unit-suffix">m</span>
             </div>
-          </div>
-          <div class="form-group">
-            <label for="intake-breaker-location">ブレーカーの位置</label>
-            <input id="intake-breaker-location" type="text" placeholder="例：厨房奥">
-          </div>
-          <div class="form-group">
-            <label for="intake-key-location">鍵の位置</label>
-            <input id="intake-key-location" type="text" placeholder="例：受付右棚">
-          </div>
-        </div>
-      </div>
-
-      <div class="intake-category">
-        <div class="intake-category-title">
-          <i class="fas fa-cogs"></i>
-          設備・客席
-        </div>
-        <div class="survey-grid">
-          <div class="form-group">
-            <label for="intake-wall-material">壁の材質</label>
-            <input id="intake-wall-material" type="text" placeholder="例：タイル">
-          </div>
-          <div class="form-group">
-            <label for="intake-floor-material">床の材質</label>
-            <input id="intake-floor-material" type="text" placeholder="例：塩ビ">
           </div>
           <div class="form-group">
             <label for="intake-electrical-amps">アンペア数</label>
@@ -323,6 +288,69 @@
             <label for="intake-aircon-count">空調の数</label>
             <input id="intake-aircon-count" type="text" placeholder="例：3台">
           </div>
+        </div>
+        <div class="survey-grid two-col">
+          <div class="form-group">
+            <label for="intake-wall-material">壁の材質</label>
+            <input id="intake-wall-material" type="text" placeholder="例：タイル">
+          </div>
+          <div class="form-group">
+            <label for="intake-floor-material">床の材質</label>
+            <input id="intake-floor-material" type="text" placeholder="例：塩ビ">
+          </div>
+        </div>
+        <div class="survey-grid four-col">
+          <div class="form-group">
+            <label for="intake-breaker-location">ブレーカーの位置</label>
+            <input id="intake-breaker-location" type="text" placeholder="例：厨房奥">
+          </div>
+          <div class="form-group">
+            <label for="intake-key-location">鍵の位置</label>
+            <input id="intake-key-location" type="text" placeholder="例：受付右棚">
+          </div>
+          <div class="form-group">
+            <label for="intake-entrances">出入口</label>
+            <input id="intake-entrances" type="text" placeholder="例：正面1/裏口1">
+          </div>
+          <div class="form-group">
+            <label for="intake-staff-room">スタッフルーム</label>
+            <select id="intake-staff-room">
+              <option value="">選択してください</option>
+              <option value="有">有</option>
+              <option value="無">無</option>
+            </select>
+          </div>
+        </div>
+        <div class="survey-photo-row">
+          <div class="form-group">
+            <label>ブレーカー位置の写真</label>
+            <label class="btn-upload-stock btn-upload-intake">
+              <input type="file" id="intake-breaker-photo" accept="image/*" style="display:none;">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>画像を追加</span>
+            </label>
+            <input id="intake-breaker-photo-url" type="text" placeholder="URL">
+            <div class="survey-photo-preview" id="intake-breaker-photo-preview"></div>
+          </div>
+          <div class="form-group">
+            <label>鍵の置き場の写真</label>
+            <label class="btn-upload-stock btn-upload-intake">
+              <input type="file" id="intake-key-photo" accept="image/*" style="display:none;">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>画像を追加</span>
+            </label>
+            <input id="intake-key-photo-url" type="text" placeholder="URL">
+            <div class="survey-photo-preview" id="intake-key-photo-preview"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="intake-category">
+        <div class="intake-category-title">
+          <i class="fas fa-cogs"></i>
+          設備・客席
+        </div>
+        <div class="survey-grid">
         </div>
 
         <div class="survey-subsection">
@@ -436,134 +464,6 @@
         </div>
       </div>
 
-      <div class="intake-category">
-        <div class="intake-category-title">
-          <i class="fas fa-image"></i>
-          写真
-        </div>
-        <div class="survey-photo-row">
-          <div class="form-group">
-            <label>ブレーカー位置の写真</label>
-            <label class="btn-upload-stock btn-upload-intake">
-              <input type="file" id="intake-breaker-photo" accept="image/*" style="display:none;">
-              <i class="fas fa-cloud-upload-alt"></i>
-              <span>画像を追加</span>
-            </label>
-            <input id="intake-breaker-photo-url" type="text" placeholder="URL">
-            <div class="survey-photo-preview" id="intake-breaker-photo-preview"></div>
-          </div>
-          <div class="form-group">
-            <label>鍵の置き場の写真</label>
-            <label class="btn-upload-stock btn-upload-intake">
-              <input type="file" id="intake-key-photo" accept="image/*" style="display:none;">
-              <i class="fas fa-cloud-upload-alt"></i>
-              <span>画像を追加</span>
-            </label>
-            <input id="intake-key-photo-url" type="text" placeholder="URL">
-            <div class="survey-photo-preview" id="intake-key-photo-preview"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 設備セクション -->
-  <section class="chart-section" id="equipment-section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-tools"></i>
-        設備
-      </h2>
-      <button type="button" class="section-toggle" aria-label="セクションを開閉">
-        <i class="fas fa-chevron-down"></i>
-      </button>
-    </div>
-    <div class="section-content">
-      <div class="equipment-categories">
-        <!-- 厨房設備 -->
-        <div class="equipment-category">
-          <h3 class="category-title">厨房設備</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="グリストラップ">
-              <span class="checkbox-label">グリストラップ</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="換気扇">
-              <span class="checkbox-label">換気扇</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="厨房機器">
-              <span class="checkbox-label">厨房機器</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="シンク">
-              <span class="checkbox-label">シンク</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="U字溝">
-              <span class="checkbox-label">U字溝・グレーチング</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- 空調設備 -->
-        <div class="equipment-category">
-          <h3 class="category-title">空調設備</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="エアコン">
-              <span class="checkbox-label">エアコン</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="空調ダクト">
-              <span class="checkbox-label">空調ダクト</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- 床・壁 -->
-        <div class="equipment-category">
-          <h3 class="category-title">床・壁</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="床">
-              <span class="checkbox-label">床</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="壁">
-              <span class="checkbox-label">壁</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="天井">
-              <span class="checkbox-label">天井</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- その他 -->
-        <div class="equipment-category">
-          <h3 class="category-title">その他</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="トイレ">
-              <span class="checkbox-label">トイレ</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="洗面所">
-              <span class="checkbox-label">洗面所</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="窓">
-              <span class="checkbox-label">窓</span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="equipment" value="カーペット">
-              <span class="checkbox-label">カーペット</span>
-            </label>
-          </div>
-        </div>
-      </div>
     </div>
   </section>
 
