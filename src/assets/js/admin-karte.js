@@ -373,7 +373,7 @@ function initKarte() {
   if (editLink) {
     const storeId = new URLSearchParams(window.location.search).get('store_id');
     if (storeId) {
-      editLink.href = `/admin/customers/stores/${encodeURIComponent(storeId)}/chart.html`;
+      editLink.href = `/admin/customers/stores/[id]/chart.html?store_id=${encodeURIComponent(storeId)}`;
     }
   }
 
@@ -381,7 +381,7 @@ function initKarte() {
   if (createBtn) {
     const storeId = new URLSearchParams(window.location.search).get('store_id');
     if (storeId) {
-      createBtn.href = `/admin/customers/stores/${encodeURIComponent(storeId)}/chart.html`;
+      createBtn.href = `/admin/customers/stores/[id]/chart.html?store_id=${encodeURIComponent(storeId)}`;
     }
   }
 

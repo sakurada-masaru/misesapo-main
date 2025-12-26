@@ -33,3 +33,6 @@
 - **2025-12-26**: Removed mock data fallback in admin karte. (by Codex)
     - 変更したファイル: `src/assets/js/admin-karte.js`
     - 詳細: モックタイムラインを削除し、API失敗/空データ時は空状態表示に統一。
+- **2025-12-26**: Fixed karte edit/create link for static routing. (by Codex)
+    - 変更したファイル: `src/assets/js/admin-karte.js`
+    - 詳細: 本番の静的配信でも404にならないよう `[id]/chart.html?store_id=...` に修正。
