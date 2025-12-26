@@ -514,7 +514,6 @@ able_options.forEach((able_option) => {
 
     // 要素が存在しない場合は処理をスキップ
     if (!yearSelect || !monthSelect || !daySelect) {
-        console.warn('[script.js] Date select elements not found, skipping initialization');
         return;
     }
 
@@ -608,22 +607,7 @@ able_options.forEach((able_option) => {
         // 初期の日付を設定し、日のオプションを生成
         setInitialDate(); // これがupdateDaysを呼び出し、最終的にdaySelectも設定する
 
-        // コンソールに選択された日付を出力する例 (デバッグ用)
-        /*function logSelectedDate() {
-            if (yearSelect.value && monthSelect.value && daySelect.value) {
-                console.log(`選択された日付: ${yearSelect.value}年${monthSelect.value}月${daySelect.value}日`);
-            } else {
-                console.log("日付が完全に選択されていません。");
-            }
-        }*/
 })();
-
-        /*yearSelect.addEventListener('change', logSelectedDate);
-        monthSelect.addEventListener('change', logSelectedDate);
-        daySelect.addEventListener('change', logSelectedDate);*/
-        
-        // 初期ロード時にもログ出力 (任意)
-         //logSelectedDate();
 
 
 /*===================================

@@ -432,54 +432,56 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-if (order_bottom_box && footer && kvImageBox) {
-    // TOPへ戻るボタンと同じタイミングで表示するための処理
-    const order_bottom_boxAnime = (entries) => {
-        entries.forEach((entry) => {
-            // kvImageBoxが画面外に出たら表示
-            if (!entry.isIntersecting) {
-                // footerが表示されていない場合のみ表示
-                if (!footer.getBoundingClientRect().top < window.innerHeight) {
-                    order_bottom_box.classList.add('bottom-box-active');
-                    order_bottom_box.style.opacity = '1';
-                    order_bottom_box.style.visibility = 'visible';
-                }
-            } else {
-                // kvImageBoxが画面内にある場合は非表示
-                order_bottom_box.classList.remove('bottom-box-active');
-                order_bottom_box.style.opacity = '0';
-                order_bottom_box.style.visibility = 'hidden';
+// TOPへ戻るボタンと同じタイミングで表示するための処理
+const order_bottom_boxAnime = (entries) => {
+    entries.forEach((entry) => {
+        // kvImageBoxが画面外に出たら表示
+        if (!entry.isIntersecting) {
+            // footerが表示されていない場合のみ表示
+            if (!footer.getBoundingClientRect().top < window.innerHeight) {
+                order_bottom_box.classList.add('bottom-box-active');
+                order_bottom_box.style.opacity = '1';
+                order_bottom_box.style.visibility = 'visible';
             }
-        });
-    };
-
-    // footerの表示監視
-    const footerObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                // footerが表示されたら非表示
-                order_bottom_box.classList.remove('bottom-box-active');
-                order_bottom_box.style.opacity = '0';
-            } else {
-                // footerが非表示で、kvImageBoxも画面外の場合は表示
-                if (!kvImageBox.getBoundingClientRect().top < window.innerHeight) {
-                    order_bottom_box.classList.add('bottom-box-active');
-                    order_bottom_box.style.opacity = '1';
-                }
-            }
-        });
-    }, {
-        threshold: 0.1
+        } else {
+            // kvImageBoxが画面内にある場合は非表示
+            order_bottom_box.classList.remove('bottom-box-active');
+            order_bottom_box.style.opacity = '0';
+            order_bottom_box.style.visibility = 'hidden';
+        }
     });
+};
 
-    const order_bottom_boxOptions = {
-        threshold: 0.1,
-        rootMargin: '-20% 0px'
-    };
+// footerの表示監視
+const footerObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+            // footerが表示されたら非表示
+            order_bottom_box.classList.remove('bottom-box-active');
+            order_bottom_box.style.opacity = '0';
+        } else {
+            // footerが非表示で、kvImageBoxも画面外の場合は表示
+            if (!kvImageBox.getBoundingClientRect().top < window.innerHeight) {
+                order_bottom_box.classList.add('bottom-box-active');
+                order_bottom_box.style.opacity = '1';
+            }
+        }
+    });
+}, {
+    threshold: 0.1
+});
 
-    const order_bottom_boxObserver = new IntersectionObserver(order_bottom_boxAnime, order_bottom_boxOptions);
-    order_bottom_boxObserver.observe(kvImageBox);
-    footerObserver.observe(footer);
+const order_bottom_boxOptions = {
+    threshold: 0.1,
+    rootMargin: '-20% 0px'
+};
+
+const order_bottom_boxObserver = new IntersectionObserver(order_bottom_boxAnime, order_bottom_boxOptions);
+if (kvImageBox) {
+order_bottom_boxObserver.observe(kvImageBox);
+}
+if (footer) {
+footerObserver.observe(footer);
 }
 
 
@@ -512,7 +514,6 @@ able_options.forEach((able_option) => {
 
     // 要素が存在しない場合は処理をスキップ
     if (!yearSelect || !monthSelect || !daySelect) {
-        console.warn('[script.js] Date select elements not found, skipping initialization');
         return;
     }
 
@@ -606,22 +607,7 @@ able_options.forEach((able_option) => {
         // 初期の日付を設定し、日のオプションを生成
         setInitialDate(); // これがupdateDaysを呼び出し、最終的にdaySelectも設定する
 
-        // コンソールに選択された日付を出力する例 (デバッグ用)
-        /*function logSelectedDate() {
-            if (yearSelect.value && monthSelect.value && daySelect.value) {
-                console.log(`選択された日付: ${yearSelect.value}年${monthSelect.value}月${daySelect.value}日`);
-            } else {
-                console.log("日付が完全に選択されていません。");
-            }
-        }*/
 })();
-
-        /*yearSelect.addEventListener('change', logSelectedDate);
-        monthSelect.addEventListener('change', logSelectedDate);
-        daySelect.addEventListener('change', logSelectedDate);*/
-        
-        // 初期ロード時にもログ出力 (任意)
-         //logSelectedDate();
 
 
 /*===================================
