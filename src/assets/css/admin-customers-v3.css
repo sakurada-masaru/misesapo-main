@@ -495,7 +495,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes slideIn {
@@ -503,6 +505,7 @@
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -514,6 +517,7 @@
     transform: translateX(0);
     opacity: 1;
   }
+
   to {
     transform: translateX(100%);
     opacity: 0;
@@ -595,6 +599,7 @@
 
 /* 印刷時の最適化 */
 @media print {
+
   .view-mode-switcher,
   .batch-operations-bar,
   .export-actions,
@@ -627,6 +632,7 @@
 
 /* アニメーション無効化対応（アクセシビリティ） */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -823,7 +829,8 @@
   }
 
   .hierarchy-tree {
-    display: none; /* スマホでは非表示 */
+    display: none;
+    /* スマホでは非表示 */
   }
 
   .view-mode-switcher {
@@ -960,3 +967,63 @@
   color: var(--customer-primary);
 }
 
+
+/* ============================================
+   操作ボタン（拡大幅）
+   ============================================ */
+/* ============================================
+   操作ボタン（拡大幅）
+   ============================================ */
+.action-btns .action-btn {
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  /* paddingをリセットしてサイズを固定 */
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--customer-border);
+  background: #fff;
+  color: var(--customer-gray);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.1rem;
+  /* アイコンサイズ拡大 */
+  box-sizing: border-box;
+}
+
+.action-btn:hover {
+  background: var(--customer-light-gray);
+  border-color: var(--customer-primary);
+  color: var(--customer-primary);
+  transform: translateY(-1px);
+}
+
+.action-btn.chart {
+  color: var(--customer-primary);
+  border-color: var(--customer-primary);
+  background: #eff6ff;
+}
+
+.action-btn.chart:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+.action-btn.edit:hover {
+  color: var(--customer-warning);
+  border-color: var(--customer-warning);
+  background: #fffbeb;
+}
+
+.action-btn.delete:hover {
+  color: var(--customer-danger);
+  border-color: var(--customer-danger);
+  background: #fef2f2;
+}
+
+.action-btns {
+  display: flex;
+  gap: 8px;
+}

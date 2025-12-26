@@ -42,11 +42,14 @@
       </div>
       <div class="header-actions">
         <span class="status-badge" id="store-status">-</span>
+        <a href="#" id="input-karte-link" class="btn btn-secondary">
+          <i class="fas fa-edit"></i> 清掃カルテ入力
+        </a>
         <a href="#" id="premium-karte-link" class="btn btn-secondary" style="color: #2563eb; border-color: #2563eb;">
           <i class="fas fa-heartbeat"></i> プレミアムカルテ
         </a>
         <button class="btn btn-secondary" onclick="editStore()" data-permission="can_edit">
-          <i class="fas fa-edit"></i> 編集
+          <i class="fas fa-cog"></i> 店舗情報編集
         </button>
       </div>
     </div>
@@ -1757,6 +1760,12 @@
     const premiumKarteLink = document.getElementById('premium-karte-link');
     if (premiumKarteLink && typeof storeId !== 'undefined') {
       premiumKarteLink.href = `/admin/customers/karte.html?store_id=${encodeURIComponent(storeId)}`;
+    }
+
+    // Update Input Karte Link
+    const inputKarteLink = document.getElementById('input-karte-link');
+    if (inputKarteLink && typeof storeId !== 'undefined') {
+      inputKarteLink.href = `/admin/customers/stores/${encodeURIComponent(storeId)}/chart.html`;
     }
   })();
 </script>

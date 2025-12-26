@@ -1667,6 +1667,7 @@ async function loadTodayDailyReport() {
   
   const today = new Date().toISOString().split('T')[0];
   const storageKey = `daily_report_${currentUser.id}_${today}`;
+  const listStorageKey = `daily_reports_${currentUser.id}`;
   
   try {
     // まずAPIから読み込む
@@ -1705,6 +1706,18 @@ async function loadTodayDailyReport() {
           }
           // APIから取得したデータをlocalStorageにも保存
           localStorage.setItem(storageKey, JSON.stringify(data));
+          upsertDailyReportList(listStorageKey, {
+            id: `report_${currentUser.id}_${today}`,
+            staff_id: currentUser.id,
+            date: today,
+            work_content: data.content || '',
+            achievements: data.achievements || '',
+            issues: data.issues || '',
+            tomorrow: data.tomorrow || '',
+            notes: data.notes || '',
+            created_at: data.created_at || new Date().toISOString(),
+            updated_at: data.updated_at || new Date().toISOString()
+          });
           return;
         }
       } else if (response && response.status === 401) {
@@ -1734,9 +1747,48 @@ async function loadTodayDailyReport() {
           clearBtn.style.display = 'inline-flex';
         }
       }
+      upsertDailyReportList(listStorageKey, {
+        id: data.id || `report_${currentUser.id}_${today}`,
+        staff_id: currentUser.id,
+        date: today,
+        work_content: data.content || '',
+        achievements: data.achievements || '',
+        issues: data.issues || '',
+        tomorrow: data.tomorrow || '',
+        notes: data.notes || '',
+        created_at: data.created_at || new Date().toISOString(),
+        updated_at: data.updated_at || new Date().toISOString()
+      });
     }
   } catch (error) {
     console.error('Error loading today daily report:', error);
+  }
+}
+
+function upsertDailyReportList(listStorageKey, entry) {
+  let list = [];
+  try {
+    list = JSON.parse(localStorage.getItem(listStorageKey)) || [];
+  } catch (error) {
+    list = [];
+  }
+
+  const existingIndex = list.findIndex((report) => report.date === entry.date);
+  if (existingIndex >= 0) {
+    const existing = list[existingIndex];
+    list[existingIndex] = {
+      ...existing,
+      ...entry,
+      created_at: existing.created_at || entry.created_at
+    };
+  } else {
+    list.push(entry);
+  }
+
+  try {
+    localStorage.setItem(listStorageKey, JSON.stringify(list));
+  } catch (error) {
+    console.error('Error saving daily report list:', error);
   }
 }
 
@@ -1947,6 +1999,7 @@ async function saveDailyReport() {
   const content = textarea.value.trim();
   const date = todayDateEl?.dataset.date || new Date().toISOString().split('T')[0];
   const storageKey = `daily_report_${currentUser.id}_${date}`;
+  const listStorageKey = `daily_reports_${currentUser.id}`;
   
   const data = {
     content: content,
@@ -1963,6 +2016,18 @@ async function saveDailyReport() {
       updated_at: new Date().toISOString()
     };
     localStorage.setItem(storageKey, JSON.stringify(localData));
+    upsertDailyReportList(listStorageKey, {
+      id: `report_${currentUser.id}_${date}`,
+      staff_id: currentUser.id,
+      date: date,
+      work_content: content,
+      achievements: '',
+      issues: '',
+      tomorrow: '',
+      notes: '',
+      created_at: localData.created_at,
+      updated_at: localData.updated_at
+    });
     
     // APIに保存
     try {

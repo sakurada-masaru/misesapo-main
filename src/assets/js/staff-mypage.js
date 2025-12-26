@@ -56,18 +56,18 @@ function staffLogout() {
 function initializeAttendanceForToday() {
   const today = new Date().toISOString().split('T')[0];
   const lastCheckDate = localStorage.getItem('lastAttendanceCheckDate');
-  
+
   // 日付が変わった場合
   if (lastCheckDate && lastCheckDate !== today) {
     console.log('[Attendance] 日付が変わりました。新しい日の出退勤を開始します。');
     console.log('[Attendance] 前日の日付:', lastCheckDate, '→ 今日の日付:', today);
-    
+
     // 前日のデータは保持（出勤履歴で使用）
     // 今日のデータを初期化（存在しない場合のみ）
     if (!attendanceRecords[today]) {
       attendanceRecords[today] = {};
     }
-    
+
     // 今日のデータが存在する場合でも、現在のユーザーのデータを初期化しない
     // （既に打刻済みの場合は保持）
     // ただし、前日のデータが今日のデータとして誤って表示されないようにする
@@ -78,7 +78,7 @@ function initializeAttendanceForToday() {
     // 初回実行時
     console.log('[Attendance] 初回実行。今日の日付:', today);
   }
-  
+
   // 最後にチェックした日付を更新
   localStorage.setItem('lastAttendanceCheckDate', today);
 }
@@ -93,25 +93,25 @@ async function loadCurrentUser() {
     loadingEl.style.display = 'block';
     contentEl.style.display = 'none';
     errorEl.style.display = 'none';
-    
+
     // 日付が変わったかチェックして初期化
     initializeAttendanceForToday();
 
     // ユーザーIDまたはメールアドレスを取得（優先順位: URLパラメータ > 認証情報）
     let userId = null;
     let userEmail = null;
-    
+
     // URLパラメータからIDまたはメールアドレスを取得
     const urlParams = new URLSearchParams(window.location.search);
     const urlId = urlParams.get('id');
     const urlEmail = urlParams.get('email');
-    
+
     if (urlId) {
       userId = urlId;
     } else if (urlEmail) {
       userEmail = urlEmail;
     }
-    
+
     // URLパラメータがない場合、認証情報から個人のIDまたはメールアドレスを取得（Cognito認証を優先）
     if (!userId && !userEmail) {
       // まずローカルストレージのcognito_userを確認（最も信頼性が高い）
@@ -131,7 +131,7 @@ async function loadCurrentUser() {
       } catch (e) {
         console.warn('[Mypage] Error parsing stored cognito_user:', e);
       }
-      
+
       // ローカルストレージになければCognito認証を確認
       if (!userId && !userEmail && window.CognitoAuth && window.CognitoAuth.isAuthenticated()) {
         const cognitoUser = await window.CognitoAuth.getCurrentUser();
@@ -147,7 +147,7 @@ async function loadCurrentUser() {
           }
         }
       }
-      
+
       // misesapo_authも確認（フォールバック）
       if (!userId && !userEmail) {
         try {
@@ -166,23 +166,23 @@ async function loadCurrentUser() {
           console.warn('[Mypage] Error parsing misesapo_auth:', e);
         }
       }
-      
+
     }
-    
+
     if (!userId && !userEmail) {
       throw new Error('ミセサポへようこそ。従業員アカウントでログインしてください。');
     }
-    
+
     // ユーザー情報を取得（AWS APIを優先、ローカルJSONはフォールバック）
     try {
       // キャッシュを無効化するためにタイムスタンプを追加
       const timestamp = new Date().getTime();
-      
+
       // まずAWS APIから最新データを取得
       let response = null;
       let urlParamId = userId; // URLパラメータのIDを保存
       const authHeaders = await buildAuthHeaders();
-      
+
       if (userId) {
         // IDで取得を試みる（キャッシュ無効化）
         response = await fetch(`${API_BASE}/workers/${userId}?t=${timestamp}&_=${Date.now()}`, {
@@ -214,7 +214,7 @@ async function loadCurrentUser() {
           }
         }
       }
-      
+
       // IDで見つからない場合、Cognito認証から取得したIDを使用
       if (!currentUser || !currentUser.id) {
         // まずCognito認証から最新のユーザー情報を取得
@@ -242,7 +242,7 @@ async function loadCurrentUser() {
           }
         }
       }
-      
+
       // まだ見つからない場合、メールアドレスで検索
       if (!currentUser || !currentUser.id) {
         if (userEmail) {
@@ -267,11 +267,11 @@ async function loadCurrentUser() {
           }
         }
       }
-      
+
       // まだ見つからない場合、Cognito Subで検索
       if (!currentUser || !currentUser.id) {
         let fallbackResponse = null;
-        
+
         // Cognito Subで検索
         if (window.CognitoAuth) {
           const cognitoUser = await window.CognitoAuth.getCurrentUser();
@@ -282,8 +282,8 @@ async function loadCurrentUser() {
             });
           }
         }
-        
-        
+
+
         if (fallbackResponse && fallbackResponse.ok) {
           const users = await fallbackResponse.json();
           const items = users.items || users.workers || users;
@@ -297,7 +297,7 @@ async function loadCurrentUser() {
           }
         }
       }
-      
+
       // APIで取得できない場合のみ、ローカルのworkers.jsonをフォールバックとして使用
       if (!currentUser || !currentUser.id) {
         console.warn('[Mypage] API取得に失敗、ローカルのworkers.jsonを試行');
@@ -370,26 +370,26 @@ async function loadCurrentUser() {
     if (hasCalendarUI) {
       renderCalendar();
     }
-    
+
     loadingEl.style.display = 'none';
     contentEl.style.display = 'flex';
-    
+
     console.log('Content displayed, checking button...');
     console.log('Button element:', document.getElementById('attendance-toggle-btn'));
     console.log('Content element display:', window.getComputedStyle(contentEl).display);
-    
+
     // Bentoグリッドでは配置はCSS Gridで管理されるため、restoreSectionLayoutは不要
     // setTimeout(() => {
     //   restoreSectionLayout();
     // }, 100);
-    
+
     // 出退勤ボタンのイベントリスナーを再設定（コンテンツ表示後）
     // 少し遅延を入れてDOMが完全にレンダリングされるのを待つ
     if (hasAttendanceUI) {
       setTimeout(() => {
         console.log('Setting up button after delay...');
         setupAttendanceToggleButton();
-      
+
         // ボタンが存在するか再確認
         const btn = document.getElementById('attendance-toggle-btn');
         if (btn) {
@@ -400,7 +400,7 @@ async function loadCurrentUser() {
         } else {
           console.error('Button still not found after setup!');
         }
-        
+
         // アコーディオン機能は削除されました
       }, 100);
     }
@@ -437,17 +437,17 @@ function getRoleColor(role) {
 // ユーザー情報を表示
 function renderUser(user) {
   // ヘッダーは削除されたため、ユーザー名の表示は不要
-  
+
   // 基本情報を表示
   renderBasicInfo(user);
-  
+
   // 出退勤セクションのヘッダーにユーザー名を表示する処理は削除（基本情報に統合されたため）
-  
+
   // 営業マイページまたはOS課マイページの場合、今月の総案件数を読み込む
   if (window.location.pathname.includes('/sales/mypage') || window.location.pathname.includes('/staff/os/mypage')) {
     loadMonthlySchedulesCount();
   }
-  
+
   // OS課マイページの場合、直近のスケジュール情報を読み込む
   if (window.location.pathname.includes('/staff/os/mypage')) {
     loadOSNextSchedule(user);
@@ -456,15 +456,15 @@ function renderUser(user) {
       loadOSNextSchedule(user);
     }, 30000);
   }
-  
+
   // TODOリストコンテナの時計を初期化
   initializeTodoClock();
-  
+
   // スケジュール一覧を読み込む（清掃員マイページの場合）
   if (window.location.pathname.includes('/staff/mypage') || window.location.pathname.includes('/staff/os/mypage')) {
     loadScheduleList(user);
   }
-  
+
   // OS課の場合は専用サイドバーに置き換え
   if (user.department === 'OS課') {
     loadOSSectionSidebar();
@@ -485,13 +485,13 @@ function loadOSSectionSidebar() {
     console.warn('Sidebar nav not found');
     return;
   }
-  
+
   // ロールバッジを更新
   const roleBadge = document.getElementById('sidebar-role-badge');
   if (roleBadge) {
     roleBadge.textContent = 'OS課';
   }
-  
+
   // 日報と出勤履歴を非表示にする
   const dailyReportsLink = sidebarNav.querySelector('a[data-page="daily-reports"]');
   const attendanceHistoryLink = sidebarNav.querySelector('a[data-page="attendance-history"]');
@@ -501,7 +501,7 @@ function loadOSSectionSidebar() {
   if (attendanceHistoryLink) {
     attendanceHistoryLink.style.display = 'none';
   }
-  
+
   // 作業一覧リンクが存在しない場合は追加
   let workListLink = sidebarNav.querySelector('a[data-page="work-list"]');
   if (!workListLink) {
@@ -516,7 +516,7 @@ function loadOSSectionSidebar() {
       scheduleLink.insertAdjacentElement('afterend', workListLink);
     }
   }
-  
+
   // レポート作成リンクが存在しない場合は追加
   let reportNewLink = sidebarNav.querySelector('a[data-page="reports-new"]');
   if (!reportNewLink) {
@@ -530,7 +530,7 @@ function loadOSSectionSidebar() {
       workListLink.insertAdjacentElement('afterend', reportNewLink);
     }
   }
-  
+
   console.log('OS section sidebar configured');
 }
 
@@ -538,9 +538,9 @@ function loadOSSectionSidebar() {
 function formatDate(dateString) {
   if (!dateString) return '-';
   const date = new Date(dateString);
-  return date.toLocaleDateString('ja-JP', { 
-    year: 'numeric', 
-    month: 'long', 
+  return date.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
     day: 'numeric'
   });
 }
@@ -548,7 +548,7 @@ function formatDate(dateString) {
 function formatTime(dateString) {
   if (!dateString) return '-';
   const date = new Date(dateString);
-  return date.toLocaleTimeString('ja-JP', { 
+  return date.toLocaleTimeString('ja-JP', {
     hour: '2-digit',
     minute: '2-digit'
   });
@@ -557,14 +557,14 @@ function formatTime(dateString) {
 // 労働時間を計算（休憩時間を考慮）
 function calculateWorkHours(clockIn, clockOut, breaks) {
   if (!clockIn || !clockOut) return 0;
-  
+
   const start = new Date(clockIn);
   const end = new Date(clockOut);
   const totalHours = (end - start) / (1000 * 60 * 60);
-  
+
   const breakTime = calculateTotalBreakTime(breaks || []);
   const workHours = Math.max(0, totalHours - breakTime);
-  
+
   return round(workHours, 2);
 }
 
@@ -596,7 +596,7 @@ async function loadAttendanceRecords() {
     calculateMonthlyStats();
     return;
   }
-  
+
   try {
     // APIから勤怠記録を取得（今日の記録）
     const today = new Date().toISOString().split('T')[0];
@@ -620,13 +620,13 @@ async function loadAttendanceRecords() {
       }
       response = null;
     }
-    
+
     // 404エラーの場合は静かに処理（APIが実装されていない場合）
     if (response && response.status === 404) {
       // 404は正常なケース（APIが実装されていない）として扱い、ログを出力しない
       response = null;
     }
-    
+
     if (response && response.ok) {
       const data = await response.json();
       // レスポンスが配列の場合とオブジェクトの場合に対応
@@ -636,7 +636,7 @@ async function loadAttendanceRecords() {
       } else if (data.date || data.clock_in) {
         record = data;
       }
-      
+
       if (record) {
         // APIから取得したデータをattendanceRecordsに変換
         const date = record.date || today;
@@ -665,7 +665,7 @@ async function loadAttendanceRecords() {
       console.warn('APIからの勤怠記録取得に失敗しました。ローカルストレージから読み込みます:', error);
     }
   }
-  
+
   // ローカルストレージからも読み込み（フォールバック）
   try {
     const stored = localStorage.getItem('attendanceRecords');
@@ -685,7 +685,7 @@ async function loadAttendanceRecords() {
       attendanceRecords = {};
     }
   }
-  
+
   // DOM要素が存在することを確認してから表示を更新
   const statusIndicator = document.getElementById('status-indicator');
   if (statusIndicator) {
@@ -703,25 +703,25 @@ async function loadAttendanceRecords() {
 // 出退勤ステータスを表示
 function renderAttendanceStatus() {
   if (!currentUser) return;
-  
+
   // 日付が変わったかチェック（表示前に実行）
   initializeAttendanceForToday();
-  
+
   const today = new Date().toISOString().split('T')[0];
   const todayRecord = attendanceRecords[today]?.[currentUser.id];
-  
+
   const statusIndicator = document.getElementById('status-indicator');
   const statusLabel = document.getElementById('status-label');
   const statusTime = document.getElementById('status-time');
   const toggleBtn = document.getElementById('attendance-toggle-btn');
   const toggleBtnText = document.getElementById('toggle-btn-text');
-  
+
   // 要素が存在しない場合は処理を中断
   if (!statusIndicator || !statusLabel || !statusTime || !toggleBtn || !toggleBtnText) {
     console.warn('[Attendance] 出退勤ステータス表示用の要素が見つかりません。ページの読み込みが完了していない可能性があります。');
     return;
   }
-  
+
   if (todayRecord && todayRecord.clock_in && !todayRecord.clock_out) {
     // 出勤中
     statusIndicator.className = 'status-indicator working';
@@ -738,10 +738,10 @@ function renderAttendanceStatus() {
     // 退勤済み
     statusIndicator.className = 'status-indicator';
     statusLabel.textContent = '退勤済み';
-    
+
     // 退勤時刻を表示
     statusTime.textContent = formatTime(todayRecord.clock_out);
-    
+
     toggleBtnText.textContent = '出勤';
     toggleBtn.classList.remove('btn-clock-out');
     toggleBtn.classList.add('btn-clock-in');
@@ -785,20 +785,20 @@ function calculateMonthlyStats() {
   const workDaysEl = document.getElementById('monthly-work-days');
   const workHoursEl = document.getElementById('monthly-work-hours');
   if (!workDaysEl || !workHoursEl) return;
-  
+
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  
+
   let workDays = 0;
   let totalHours = 0;
-  
+
   for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
     const dateStr = d.toISOString().split('T')[0];
     const record = attendanceRecords[dateStr]?.[currentUser.id];
-    
+
     if (record && record.clock_in && record.clock_out) {
       workDays++;
       // 実労働時間を計算（休憩時間を考慮）
@@ -806,7 +806,7 @@ function calculateMonthlyStats() {
       totalHours += hours;
     }
   }
-  
+
   workDaysEl.textContent = `${workDays}日`;
   workHoursEl.textContent = formatWorkHours(totalHours);
 }
@@ -876,26 +876,26 @@ function showConfirmDialog(title, message, confirmText, cancelText) {
         </div>
       </div>
     `;
-    
+
     // ダイアログをDOMに追加
     document.body.insertAdjacentHTML('beforeend', dialogHTML);
-    
+
     const dialog = document.getElementById('attendance-confirm-dialog');
     const confirmBtn = document.getElementById('dialog-confirm-btn');
     const cancelBtn = document.getElementById('dialog-cancel-btn');
-    
+
     // 確認ボタン
     confirmBtn.addEventListener('click', () => {
       dialog.remove();
       resolve(true);
     });
-    
+
     // キャンセルボタン
     cancelBtn.addEventListener('click', () => {
       dialog.remove();
       resolve(false);
     });
-    
+
     // 背景クリックでキャンセル
     dialog.addEventListener('click', (e) => {
       if (e.target === dialog) {
@@ -914,7 +914,7 @@ function showErrorMessage(message) {
     errorEl.style.display = 'block';
     errorEl.style.background = '#fee2e2';
     errorEl.style.color = '#991b1b';
-    
+
     // 5秒後に自動的に非表示
     setTimeout(() => {
       errorEl.style.display = 'none';
@@ -932,7 +932,7 @@ function showWarningMessage(message) {
     errorEl.style.display = 'block';
     errorEl.style.background = '#fef3c7';
     errorEl.style.color = '#92400e';
-    
+
     // 5秒後に自動的に非表示
     setTimeout(() => {
       errorEl.style.display = 'none';
@@ -950,7 +950,7 @@ function showSuccessMessage(message) {
     errorEl.style.display = 'block';
     errorEl.style.background = '#d1fae5';
     errorEl.style.color = '#065f46';
-    
+
     // 3秒後に自動的に非表示
     setTimeout(() => {
       errorEl.style.display = 'none';
@@ -986,14 +986,14 @@ function calculateWorkHoursOld(clockIn, clockOut) {
 // 労働時間を計算（休憩時間を考慮）
 function calculateWorkHours(clockIn, clockOut, breaks) {
   if (!clockIn || !clockOut) return 0;
-  
+
   const start = new Date(clockIn);
   const end = new Date(clockOut);
   const totalHours = (end - start) / (1000 * 60 * 60);
-  
+
   const breakTime = calculateTotalBreakTime(breaks || []);
   const workHours = Math.max(0, totalHours - breakTime);
-  
+
   return round(workHours, 2);
 }
 
@@ -1016,10 +1016,10 @@ function round(value, decimals) {
 // 時刻の妥当性チェック
 function validateTime(timeString, type = 'clock_in') {
   if (!timeString) return { valid: true };
-  
+
   const time = new Date(timeString);
   const now = new Date();
-  
+
   // 未来時刻のチェック（5分の許容範囲を設ける）
   const futureLimit = new Date(now.getTime() + 5 * 60 * 1000); // 5分後
   if (time > futureLimit) {
@@ -1028,7 +1028,7 @@ function validateTime(timeString, type = 'clock_in') {
       message: `${type === 'clock_in' ? '出勤' : '退勤'}時刻が未来の時刻です`
     };
   }
-  
+
   // 過去の時刻チェック（1日前より前はエラー）
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   if (time < oneDayAgo) {
@@ -1037,17 +1037,17 @@ function validateTime(timeString, type = 'clock_in') {
       message: `${type === 'clock_in' ? '出勤' : '退勤'}時刻が過去すぎます（24時間以内の時刻を指定してください）`
     };
   }
-  
+
   return { valid: true };
 }
 
 // 出退勤時刻の整合性チェック
 function validateAttendanceTimes(clockIn, clockOut) {
   if (!clockIn || !clockOut) return { valid: true };
-  
+
   const inTime = new Date(clockIn);
   const outTime = new Date(clockOut);
-  
+
   // 退勤時刻が出勤時刻より前の場合はエラー
   if (outTime <= inTime) {
     return {
@@ -1055,7 +1055,7 @@ function validateAttendanceTimes(clockIn, clockOut) {
       message: '退勤時刻が出勤時刻より前です'
     };
   }
-  
+
   // 勤務時間が24時間を超える場合は警告
   const workHours = (outTime - inTime) / (1000 * 60 * 60);
   if (workHours > 24) {
@@ -1064,7 +1064,7 @@ function validateAttendanceTimes(clockIn, clockOut) {
       message: '勤務時間が24時間を超えています。時刻を確認してください'
     };
   }
-  
+
   return { valid: true };
 }
 
@@ -1074,347 +1074,347 @@ function setupAttendanceToggleButton() {
   if (!toggleBtn) {
     return;
   }
-  
+
   console.log('Setting up attendance toggle button:', toggleBtn);
-  
+
   // 既存のイベントリスナーを削除（重複防止）
   const newToggleBtn = toggleBtn.cloneNode(true);
   toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
-  
+
   newToggleBtn.addEventListener('click', async () => {
-  if (!currentUser) return;
-  
-  // 日付が変わったかチェック（打刻前に実行）
-  initializeAttendanceForToday();
-  
-  // 重複送信を防止（ローディング中は無効化）
-  if (newToggleBtn.disabled) {
-    console.log('[Attendance] 既に処理中です。重複送信を防止します。');
-    return;
-  }
-  
-  // ボタンを無効化
-  newToggleBtn.disabled = true;
-  const originalText = newToggleBtn.innerHTML;
-  newToggleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 処理中...';
-  
-  const today = new Date().toISOString().split('T')[0];
-  const now = new Date().toISOString();
-  
-  if (!attendanceRecords[today]) {
-    attendanceRecords[today] = {};
-  }
-  
-  const todayRecord = attendanceRecords[today][currentUser.id] || {};
-  let attendanceData = {};
-  let shouldProceed = false;
-  
-  if (!todayRecord.clock_in) {
-    // 出勤
-    // 1日1回制限チェックは既に!todayRecord.clock_inで確認済み
-    
-    // 時刻の妥当性チェック
-    const timeValidation = validateTime(now, 'clock_in');
-    if (!timeValidation.valid) {
-      showErrorMessage(timeValidation.message);
-      newToggleBtn.disabled = false;
-      newToggleBtn.innerHTML = originalText;
+    if (!currentUser) return;
+
+    // 日付が変わったかチェック（打刻前に実行）
+    initializeAttendanceForToday();
+
+    // 重複送信を防止（ローディング中は無効化）
+    if (newToggleBtn.disabled) {
+      console.log('[Attendance] 既に処理中です。重複送信を防止します。');
       return;
     }
-    
-    // 確認ダイアログを表示
-    const currentTime = formatTimeForDialog(now);
-    const message = `現在時刻: ${currentTime}\n\n出勤を記録しますか？`;
-    shouldProceed = await showConfirmDialog('出勤を記録しますか？', message, '出勤する', 'キャンセル');
-    
-    if (!shouldProceed) {
-      newToggleBtn.disabled = false;
-      newToggleBtn.innerHTML = originalText;
-      return;
+
+    // ボタンを無効化
+    newToggleBtn.disabled = true;
+    const originalText = newToggleBtn.innerHTML;
+    newToggleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 処理中...';
+
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
+
+    if (!attendanceRecords[today]) {
+      attendanceRecords[today] = {};
     }
-    
-    attendanceData = {
-      staff_id: currentUser.id,
-      staff_name: currentUser.name,
-      date: today,
-      clock_in: now
-    };
-    attendanceRecords[today][currentUser.id] = {
-      ...todayRecord,
-      clock_in: now,
-      staff_id: currentUser.id,
-      staff_name: currentUser.name
-    };
-    
-    // 出勤記録後、作業開始ボタンを表示
-    setTimeout(() => {
-      renderAttendanceStatus();
-    }, 100);
-  } else if (!todayRecord.clock_out) {
-    // 退勤
-    // 1日1回制限チェックは既に!todayRecord.clock_outで確認済み
-    
-    // 時刻の妥当性チェック
-    const timeValidation = validateTime(now, 'clock_out');
-    if (!timeValidation.valid) {
-      showErrorMessage(timeValidation.message);
-      newToggleBtn.disabled = false;
-      newToggleBtn.innerHTML = originalText;
-      return;
+
+    const todayRecord = attendanceRecords[today][currentUser.id] || {};
+    let attendanceData = {};
+    let shouldProceed = false;
+
+    if (!todayRecord.clock_in) {
+      // 出勤
+      // 1日1回制限チェックは既に!todayRecord.clock_inで確認済み
+
+      // 時刻の妥当性チェック
+      const timeValidation = validateTime(now, 'clock_in');
+      if (!timeValidation.valid) {
+        showErrorMessage(timeValidation.message);
+        newToggleBtn.disabled = false;
+        newToggleBtn.innerHTML = originalText;
+        return;
+      }
+
+      // 確認ダイアログを表示
+      const currentTime = formatTimeForDialog(now);
+      const message = `現在時刻: ${currentTime}\n\n出勤を記録しますか？`;
+      shouldProceed = await showConfirmDialog('出勤を記録しますか？', message, '出勤する', 'キャンセル');
+
+      if (!shouldProceed) {
+        newToggleBtn.disabled = false;
+        newToggleBtn.innerHTML = originalText;
+        return;
+      }
+
+      attendanceData = {
+        staff_id: currentUser.id,
+        staff_name: currentUser.name,
+        date: today,
+        clock_in: now
+      };
+      attendanceRecords[today][currentUser.id] = {
+        ...todayRecord,
+        clock_in: now,
+        staff_id: currentUser.id,
+        staff_name: currentUser.name
+      };
+
+      // 出勤記録後、作業開始ボタンを表示
+      setTimeout(() => {
+        renderAttendanceStatus();
+      }, 100);
+    } else if (!todayRecord.clock_out) {
+      // 退勤
+      // 1日1回制限チェックは既に!todayRecord.clock_outで確認済み
+
+      // 時刻の妥当性チェック
+      const timeValidation = validateTime(now, 'clock_out');
+      if (!timeValidation.valid) {
+        showErrorMessage(timeValidation.message);
+        newToggleBtn.disabled = false;
+        newToggleBtn.innerHTML = originalText;
+        return;
+      }
+
+      // 出退勤時刻の整合性チェック
+      const consistencyValidation = validateAttendanceTimes(todayRecord.clock_in, now);
+      if (!consistencyValidation.valid) {
+        showErrorMessage(consistencyValidation.message);
+        newToggleBtn.disabled = false;
+        newToggleBtn.innerHTML = originalText;
+        return;
+      }
+
+      // 確認ダイアログを表示
+      const clockInTime = formatTimeForDialog(todayRecord.clock_in);
+      const currentTime = formatTimeForDialog(now);
+      const breaks = todayRecord.breaks || [];
+      const workHours = calculateWorkHours(todayRecord.clock_in, now, breaks);
+      const workHoursText = formatWorkHours(workHours);
+
+      const message = `出勤時刻: ${clockInTime}\n現在時刻: ${currentTime}\n実労働時間: ${workHoursText}\n\n退勤を記録しますか？`;
+      shouldProceed = await showConfirmDialog('退勤を記録しますか？', message, '退勤する', 'キャンセル');
+
+      if (!shouldProceed) {
+        newToggleBtn.disabled = false;
+        newToggleBtn.innerHTML = originalText;
+        return;
+      }
+
+      attendanceData = {
+        staff_id: currentUser.id,
+        staff_name: currentUser.name,
+        date: today,
+        clock_in: todayRecord.clock_in,
+        clock_out: now,
+        breaks: todayRecord.breaks || []
+      };
+      attendanceRecords[today][currentUser.id] = {
+        ...todayRecord,
+        clock_out: now
+      };
+    } else {
+      // 再出勤（1日1回制限の例外：退勤後の再出勤は別記録として扱う）
+      // 時刻の妥当性チェック
+      const timeValidation = validateTime(now, 'clock_in');
+      if (!timeValidation.valid) {
+        showErrorMessage(timeValidation.message);
+        newToggleBtn.disabled = false;
+        newToggleBtn.innerHTML = originalText;
+        return;
+      }
+
+      // 確認ダイアログを表示
+      const currentTime = formatTimeForDialog(now);
+      const message = `現在時刻: ${currentTime}\n\n再出勤を記録しますか？\n（退勤後の再出勤は別記録として扱われます）`;
+      shouldProceed = await showConfirmDialog('再出勤を記録しますか？', message, '再出勤する', 'キャンセル');
+
+      if (!shouldProceed) {
+        newToggleBtn.disabled = false;
+        newToggleBtn.innerHTML = originalText;
+        return;
+      }
+
+      attendanceData = {
+        staff_id: currentUser.id,
+        staff_name: currentUser.name,
+        date: today,
+        clock_in: now,
+        breaks: []
+      };
+      attendanceRecords[today][currentUser.id] = {
+        clock_in: now,
+        staff_id: currentUser.id,
+        staff_name: currentUser.name,
+        breaks: []
+      };
     }
-    
-    // 出退勤時刻の整合性チェック
-    const consistencyValidation = validateAttendanceTimes(todayRecord.clock_in, now);
-    if (!consistencyValidation.valid) {
-      showErrorMessage(consistencyValidation.message);
-      newToggleBtn.disabled = false;
-      newToggleBtn.innerHTML = originalText;
-      return;
-    }
-    
-    // 確認ダイアログを表示
-    const clockInTime = formatTimeForDialog(todayRecord.clock_in);
-    const currentTime = formatTimeForDialog(now);
-    const breaks = todayRecord.breaks || [];
-    const workHours = calculateWorkHours(todayRecord.clock_in, now, breaks);
-    const workHoursText = formatWorkHours(workHours);
-    
-    const message = `出勤時刻: ${clockInTime}\n現在時刻: ${currentTime}\n実労働時間: ${workHoursText}\n\n退勤を記録しますか？`;
-    shouldProceed = await showConfirmDialog('退勤を記録しますか？', message, '退勤する', 'キャンセル');
-    
-    if (!shouldProceed) {
-      newToggleBtn.disabled = false;
-      newToggleBtn.innerHTML = originalText;
-      return;
-    }
-    
-    attendanceData = {
-      staff_id: currentUser.id,
-      staff_name: currentUser.name,
-      date: today,
-      clock_in: todayRecord.clock_in,
-      clock_out: now,
-      breaks: todayRecord.breaks || []
-    };
-    attendanceRecords[today][currentUser.id] = {
-      ...todayRecord,
-      clock_out: now
-    };
-  } else {
-    // 再出勤（1日1回制限の例外：退勤後の再出勤は別記録として扱う）
-    // 時刻の妥当性チェック
-    const timeValidation = validateTime(now, 'clock_in');
-    if (!timeValidation.valid) {
-      showErrorMessage(timeValidation.message);
-      newToggleBtn.disabled = false;
-      newToggleBtn.innerHTML = originalText;
-      return;
-    }
-    
-    // 確認ダイアログを表示
-    const currentTime = formatTimeForDialog(now);
-    const message = `現在時刻: ${currentTime}\n\n再出勤を記録しますか？\n（退勤後の再出勤は別記録として扱われます）`;
-    shouldProceed = await showConfirmDialog('再出勤を記録しますか？', message, '再出勤する', 'キャンセル');
-    
-    if (!shouldProceed) {
-      newToggleBtn.disabled = false;
-      newToggleBtn.innerHTML = originalText;
-      return;
-    }
-    
-    attendanceData = {
-      staff_id: currentUser.id,
-      staff_name: currentUser.name,
-      date: today,
-      clock_in: now,
-      breaks: []
-    };
-    attendanceRecords[today][currentUser.id] = {
-      clock_in: now,
-      staff_id: currentUser.id,
-      staff_name: currentUser.name,
-      breaks: []
-    };
-  }
-  
-  try {
-    // APIに保存
-    const idToken = await getCognitoIdToken();
-    const headers = {
-      'Content-Type': 'application/json'
-    };
-    if (idToken) {
-      headers['Authorization'] = `Bearer ${idToken}`;
-    }
-    
-    // リクエストボディの形式を確認・修正
-    // breaks配列が正しい形式（break_start, break_end）になっているか確認
-    const sanitizedData = {
-      staff_id: attendanceData.staff_id,
-      staff_name: attendanceData.staff_name,
-      date: attendanceData.date,
-      clock_in: attendanceData.clock_in,
-      clock_out: attendanceData.clock_out
-    };
-    
-    // breaks配列の処理
-    if (attendanceData.breaks && Array.isArray(attendanceData.breaks) && attendanceData.breaks.length > 0) {
-      sanitizedData.breaks = attendanceData.breaks.map(breakItem => {
-        // APIが期待する形式に変換
-        if (breakItem && typeof breakItem === 'object') {
-          if (breakItem.start && breakItem.end) {
-            // start/end形式からbreak_start/break_end形式に変換
-            return {
-              break_start: breakItem.start,
-              break_end: breakItem.end,
-              break_duration: breakItem.duration || breakItem.break_duration
-            };
-          } else if (breakItem.break_start && breakItem.break_end) {
-            // 既に正しい形式の場合はそのまま
-            return breakItem;
+
+    try {
+      // APIに保存
+      const idToken = await getCognitoIdToken();
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (idToken) {
+        headers['Authorization'] = `Bearer ${idToken}`;
+      }
+
+      // リクエストボディの形式を確認・修正
+      // breaks配列が正しい形式（break_start, break_end）になっているか確認
+      const sanitizedData = {
+        staff_id: attendanceData.staff_id,
+        staff_name: attendanceData.staff_name,
+        date: attendanceData.date,
+        clock_in: attendanceData.clock_in,
+        clock_out: attendanceData.clock_out
+      };
+
+      // breaks配列の処理
+      if (attendanceData.breaks && Array.isArray(attendanceData.breaks) && attendanceData.breaks.length > 0) {
+        sanitizedData.breaks = attendanceData.breaks.map(breakItem => {
+          // APIが期待する形式に変換
+          if (breakItem && typeof breakItem === 'object') {
+            if (breakItem.start && breakItem.end) {
+              // start/end形式からbreak_start/break_end形式に変換
+              return {
+                break_start: breakItem.start,
+                break_end: breakItem.end,
+                break_duration: breakItem.duration || breakItem.break_duration
+              };
+            } else if (breakItem.break_start && breakItem.break_end) {
+              // 既に正しい形式の場合はそのまま
+              return breakItem;
+            }
+          }
+          // 無効な形式の場合はスキップ
+          return null;
+        }).filter(item => item !== null); // nullを除外
+      } else {
+        // breaksが空または存在しない場合は空配列を送信しない（サーバー側で処理）
+        sanitizedData.breaks = [];
+      }
+
+      console.log('Sending attendance data:', JSON.stringify(sanitizedData, null, 2));
+      console.log('Request headers:', headers);
+
+      const response = await fetch(`${API_BASE}/attendance`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(sanitizedData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('[Attendance] 出退勤記録をAPIに保存しました:', result);
+        console.log('[Attendance] 保存したデータ:', sanitizedData);
+        console.log('[Attendance] 保存した日付:', sanitizedData.date);
+        console.log('[Attendance] 保存した出勤時刻:', sanitizedData.clock_in);
+        console.log('[Attendance] 保存した退勤時刻:', sanitizedData.clock_out);
+
+        // 成功メッセージを表示（オプション）
+        showSuccessMessage('出退勤記録を保存しました');
+
+        // ローカルストレージにも保存（オフライン対応）
+        localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+        console.log('[Attendance] ローカルストレージに保存しました');
+
+        // 画面をリフレッシュしてボタン状態を更新
+        setTimeout(() => {
+          location.reload();
+        }, 500);
+      } else {
+        // ボタンを再有効化
+        newToggleBtn.disabled = false;
+        newToggleBtn.innerHTML = originalText;
+        // エラーレスポンスを解析
+        let errorMessage = '出退勤記録の保存に失敗しました';
+        let errorCode = 'UNKNOWN_ERROR';
+
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          errorCode = errorData.code || errorCode;
+
+          // エラーメッセージの詳細をログに出力
+          console.error('Error response data:', errorData);
+
+          // サーバーエラーの詳細メッセージを確認
+          if (errorData.message && errorData.message.includes('Float types are not supported')) {
+            // DynamoDBのFloat型エラーの場合
+            errorMessage = 'サーバー側のデータベースエラーが発生しました。システム管理者に連絡してください。';
+            console.error('DynamoDB Float type error - this is a server-side issue that needs to be fixed in the Lambda function');
+          }
+
+          // エラーコードに応じた処理
+          if (errorCode === 'VALIDATION_ERROR') {
+            // バリデーションエラーの場合
+            showErrorMessage(`入力エラー: ${errorMessage}`);
+
+            // ローカルストレージには保存しない（不正なデータのため）
+            return;
+          } else if (errorCode === 'DUPLICATE_RECORD') {
+            // 重複記録エラーの場合
+            showErrorMessage(`記録エラー: ${errorMessage}`);
+
+            // 既存の記録を再読み込み
+            await loadAttendanceRecords();
+            renderAttendanceStatus();
+            return;
+          }
+        } catch (parseError) {
+          // JSON解析に失敗した場合、テキストとして取得を試みる
+          try {
+            const errorText = await response.text();
+            console.error('Error response text:', errorText);
+            errorMessage = `サーバーエラー (${response.status}): ${errorText || response.statusText}`;
+          } catch (textError) {
+            errorMessage = `サーバーエラー (${response.status}): ${response.statusText}`;
+            console.error('Error parsing response:', parseError, textError);
           }
         }
-        // 無効な形式の場合はスキップ
-        return null;
-      }).filter(item => item !== null); // nullを除外
-    } else {
-      // breaksが空または存在しない場合は空配列を送信しない（サーバー側で処理）
-      sanitizedData.breaks = [];
-    }
-    
-    console.log('Sending attendance data:', JSON.stringify(sanitizedData, null, 2));
-    console.log('Request headers:', headers);
-    
-    const response = await fetch(`${API_BASE}/attendance`, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(sanitizedData)
-    });
-    
-    if (response.ok) {
-      const result = await response.json();
-      console.log('[Attendance] 出退勤記録をAPIに保存しました:', result);
-      console.log('[Attendance] 保存したデータ:', sanitizedData);
-      console.log('[Attendance] 保存した日付:', sanitizedData.date);
-      console.log('[Attendance] 保存した出勤時刻:', sanitizedData.clock_in);
-      console.log('[Attendance] 保存した退勤時刻:', sanitizedData.clock_out);
-      
-      // 成功メッセージを表示（オプション）
-      showSuccessMessage('出退勤記録を保存しました');
-      
-      // ローカルストレージにも保存（オフライン対応）
-      localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-      console.log('[Attendance] ローカルストレージに保存しました');
-      
-      // 画面をリフレッシュしてボタン状態を更新
-        setTimeout(() => {
-        location.reload();
-      }, 500);
-    } else {
-      // ボタンを再有効化
-      newToggleBtn.disabled = false;
-      newToggleBtn.innerHTML = originalText;
-      // エラーレスポンスを解析
-      let errorMessage = '出退勤記録の保存に失敗しました';
-      let errorCode = 'UNKNOWN_ERROR';
-      
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error || errorData.message || errorMessage;
-        errorCode = errorData.code || errorCode;
-        
-        // エラーメッセージの詳細をログに出力
-        console.error('Error response data:', errorData);
-        
-        // サーバーエラーの詳細メッセージを確認
-        if (errorData.message && errorData.message.includes('Float types are not supported')) {
-          // DynamoDBのFloat型エラーの場合
-          errorMessage = 'サーバー側のデータベースエラーが発生しました。システム管理者に連絡してください。';
-          console.error('DynamoDB Float type error - this is a server-side issue that needs to be fixed in the Lambda function');
-        }
-        
-        // エラーコードに応じた処理
-        if (errorCode === 'VALIDATION_ERROR') {
-          // バリデーションエラーの場合
-          showErrorMessage(`入力エラー: ${errorMessage}`);
-          
-          // ローカルストレージには保存しない（不正なデータのため）
-          return;
-        } else if (errorCode === 'DUPLICATE_RECORD') {
-          // 重複記録エラーの場合
-          showErrorMessage(`記録エラー: ${errorMessage}`);
-          
-          // 既存の記録を再読み込み
-          await loadAttendanceRecords();
+
+        // エラーの詳細をログに出力
+        console.error('Attendance API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorMessage: errorMessage,
+          errorCode: errorCode,
+          requestData: sanitizedData,
+          originalRequestData: attendanceData
+        });
+
+        // ネットワークエラー以外の場合は、ローカルストレージに保存を試みる
+        if (response.status >= 500) {
+          // サーバーエラーの場合はローカルストレージに保存
+          localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
           renderAttendanceStatus();
-          return;
-        }
-      } catch (parseError) {
-        // JSON解析に失敗した場合、テキストとして取得を試みる
-        try {
-          const errorText = await response.text();
-          console.error('Error response text:', errorText);
-          errorMessage = `サーバーエラー (${response.status}): ${errorText || response.statusText}`;
-        } catch (textError) {
-          errorMessage = `サーバーエラー (${response.status}): ${response.statusText}`;
-          console.error('Error parsing response:', parseError, textError);
+          calculateMonthlyStats();
+          renderCalendar();
+          showWarningMessage('APIへの保存に失敗しましたが、ローカルストレージに保存しました。後で同期してください。');
+        } else if (response.status === 401) {
+          // 認証エラーの場合
+          showErrorMessage('認証エラーが発生しました。ページを再読み込みしてください。');
+          console.error('Authentication error - token may be invalid or expired');
+        } else {
+          // クライアントエラー（400番台）の場合は保存しない
+          showErrorMessage(errorMessage);
         }
       }
-      
-      // エラーの詳細をログに出力
-      console.error('Attendance API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorMessage: errorMessage,
-        errorCode: errorCode,
-        requestData: sanitizedData,
-        originalRequestData: attendanceData
-      });
-      
-      // ネットワークエラー以外の場合は、ローカルストレージに保存を試みる
-      if (response.status >= 500) {
-        // サーバーエラーの場合はローカルストレージに保存
+    } catch (error) {
+      // ネットワークエラーなどの例外
+      console.error('Error saving attendance:', error);
+
+      // ネットワークエラーの場合はローカルストレージに保存
+      try {
         localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
         renderAttendanceStatus();
         calculateMonthlyStats();
         renderCalendar();
-        showWarningMessage('APIへの保存に失敗しましたが、ローカルストレージに保存しました。後で同期してください。');
-      } else if (response.status === 401) {
-        // 認証エラーの場合
-        showErrorMessage('認証エラーが発生しました。ページを再読み込みしてください。');
-        console.error('Authentication error - token may be invalid or expired');
-      } else {
-        // クライアントエラー（400番台）の場合は保存しない
-        showErrorMessage(errorMessage);
+        showWarningMessage('ネットワークエラーが発生しましたが、ローカルストレージに保存しました。接続が復旧したら自動的に同期されます。');
+      } catch (localError) {
+        console.error('Error saving to local storage:', localError);
+        showErrorMessage('出退勤記録の保存に失敗しました。ページを再読み込みして再試行してください。');
       }
+    } finally {
+      // ボタンを再有効化（エラー時も確実に実行）
+      newToggleBtn.disabled = false;
+      newToggleBtn.innerHTML = originalText;
     }
-  } catch (error) {
-    // ネットワークエラーなどの例外
-    console.error('Error saving attendance:', error);
-    
-    // ネットワークエラーの場合はローカルストレージに保存
-    try {
-      localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-      renderAttendanceStatus();
-      calculateMonthlyStats();
-      renderCalendar();
-      showWarningMessage('ネットワークエラーが発生しましたが、ローカルストレージに保存しました。接続が復旧したら自動的に同期されます。');
-    } catch (localError) {
-      console.error('Error saving to local storage:', localError);
-      showErrorMessage('出退勤記録の保存に失敗しました。ページを再読み込みして再試行してください。');
-    }
-  } finally {
-    // ボタンを再有効化（エラー時も確実に実行）
-    newToggleBtn.disabled = false;
-    newToggleBtn.innerHTML = originalText;
-  }
   });
 }
 
 // 週間スケジュールを読み込み
 async function loadWeeklySchedule() {
   if (!currentUser) return;
-  
+
   try {
     // TODO: APIからスケジュールを取得
     const scheduleEl = document.getElementById('weekly-schedule-content');
@@ -1439,7 +1439,7 @@ async function getFirebaseIdToken() {
     if (cognitoIdToken) {
       return cognitoIdToken;
     }
-    
+
     // 2. Cognito認証のユーザーオブジェクトからトークンを取得
     const cognitoUser = localStorage.getItem('cognito_user');
     if (cognitoUser) {
@@ -1455,7 +1455,7 @@ async function getFirebaseIdToken() {
         console.warn('Error parsing cognito user:', e);
       }
     }
-    
+
     // 3. CognitoAuthから取得
     if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
       try {
@@ -1467,7 +1467,7 @@ async function getFirebaseIdToken() {
         console.warn('Error getting token from CognitoAuth:', e);
       }
     }
-    
+
     // 4. misesapo_auth から取得（フォールバック）
     const authData = localStorage.getItem('misesapo_auth');
     if (authData) {
@@ -1480,13 +1480,13 @@ async function getFirebaseIdToken() {
         console.warn('Error parsing auth data:', e);
       }
     }
-    
+
     // 5. getCognitoIdToken()を試す（最後の手段）
     const cognitoToken = await getCognitoIdToken();
     if (cognitoToken && cognitoToken !== 'mock-token' && cognitoToken !== 'dev-token') {
       return cognitoToken;
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error getting Firebase ID token:', error);
@@ -1499,7 +1499,7 @@ async function loadAnnouncements() {
     renderAnnouncements([]);
     return;
   }
-  
+
   try {
     // Cognitoトークンを優先的に使用（REPORT_APIエンドポイントはCognitoトークンを受け入れる）
     const idToken = await getCognitoIdToken();
@@ -1509,7 +1509,7 @@ async function loadAnnouncements() {
       renderAnnouncements([]);
       return;
     }
-    
+
     console.log('[Announcements] Attempting to load announcements with token');
     const response = await fetch(`${REPORT_API}/staff/announcements`, {
       method: 'GET',
@@ -1521,7 +1521,7 @@ async function loadAnnouncements() {
       console.warn('Network error loading announcements:', error);
       return null;
     });
-    
+
     if (response && response.ok) {
       const data = await response.json();
       const announcements = data.announcements || [];
@@ -1548,12 +1548,12 @@ async function loadAnnouncements() {
 // 基本情報を表示
 function renderBasicInfo(user) {
   if (!user) return;
-  
+
   const nameEl = document.getElementById('basic-info-name');
   const departmentEl = document.getElementById('basic-info-department');
   const emailEl = document.getElementById('basic-info-email');
   const phoneEl = document.getElementById('basic-info-phone');
-  
+
   if (nameEl) nameEl.textContent = user.name || '-';
   if (departmentEl) departmentEl.textContent = user.department || '-';
   if (emailEl) emailEl.textContent = user.email || '-';
@@ -1564,15 +1564,15 @@ function renderBasicInfo(user) {
 function renderAnnouncements(announcements) {
   const announcementsEl = document.getElementById('announcements-list');
   if (!announcementsEl) return;
-  
+
   if (announcements.length === 0) {
     announcementsEl.innerHTML = '<div class="empty-state">業務連絡はありません</div>';
     return;
   }
-  
+
   // 最新5件のみ表示
   const recentAnnouncements = announcements.slice(0, 5);
-  
+
   let html = '';
   recentAnnouncements.forEach(announcement => {
     const createdDate = new Date(announcement.created_at);
@@ -1581,10 +1581,10 @@ function renderAnnouncements(announcements) {
       month: 'long',
       day: 'numeric'
     });
-    
+
     const newBadge = announcement.is_new ? '<span class="new-badge">NEW</span>' : '';
     const readClass = announcement.is_read ? 'read' : 'unread';
-    
+
     html += `
       <div class="announcement-item ${readClass}" data-id="${announcement.id}">
         <div class="announcement-header">
@@ -1598,19 +1598,19 @@ function renderAnnouncements(announcements) {
       </div>
     `;
   });
-  
+
   if (announcements.length > 5) {
     html += `<div class="announcement-more"><a href="/staff/announcements" class="btn btn-text btn-sm">すべて見る</a></div>`;
   }
-  
+
   announcementsEl.innerHTML = html;
-  
+
   // クリックイベントを追加（既読マーク）
   announcementsEl.querySelectorAll('.announcement-item').forEach(item => {
     item.addEventListener('click', async () => {
       const announcementId = item.dataset.id;
       if (!announcementId) return;
-      
+
       // 既読マーク
       try {
         const idToken = await getCognitoIdToken();
@@ -1620,14 +1620,14 @@ function renderAnnouncements(announcements) {
             'Authorization': `Bearer ${idToken}`
           }
         });
-        
+
         // 表示を更新
         item.classList.remove('unread');
         item.classList.add('read');
       } catch (error) {
         console.error('Error marking announcement read:', error);
       }
-      
+
       // 詳細ページに遷移
       window.location.href = `/staff/announcements?id=${announcementId}`;
     });
@@ -1638,7 +1638,7 @@ function renderAnnouncements(announcements) {
 async function loadDailyReports() {
   if (!currentUser) return;
   if (!document.getElementById('daily-report-content')) return;
-  
+
   // 今日の日付を表示
   const today = new Date();
   const todayStr = today.toLocaleDateString('ja-JP', {
@@ -1652,10 +1652,10 @@ async function loadDailyReports() {
     todayDateEl.textContent = todayStr;
     todayDateEl.dataset.date = today.toISOString().split('T')[0];
   }
-  
+
   // 今日の日報を読み込む
   loadTodayDailyReport();
-  
+
   // イベントリスナーを設定
   setupDailyReportListeners();
 }
@@ -1664,10 +1664,11 @@ async function loadDailyReports() {
 async function loadTodayDailyReport() {
   if (!currentUser) return;
   if (!document.getElementById('daily-report-content')) return;
-  
+
   const today = new Date().toISOString().split('T')[0];
   const storageKey = `daily_report_${currentUser.id}_${today}`;
-  
+  const listStorageKey = `daily_reports_${currentUser.id}`;
+
   try {
     // まずAPIから読み込む
     try {
@@ -1677,7 +1678,7 @@ async function loadTodayDailyReport() {
       if (idToken) {
         headers['Authorization'] = `Bearer ${idToken}`;
       }
-      
+
       const response = await fetch(`${API_BASE}/daily-reports?staff_id=${encodeURIComponent(currentUser.id)}&date=${today}`, {
         method: 'GET',
         headers: headers,
@@ -1689,7 +1690,7 @@ async function loadTodayDailyReport() {
         }
         throw err;
       });
-      
+
       if (response && response.ok) {
         const data = await response.json();
         if (data.content !== undefined) {
@@ -1705,6 +1706,18 @@ async function loadTodayDailyReport() {
           }
           // APIから取得したデータをlocalStorageにも保存
           localStorage.setItem(storageKey, JSON.stringify(data));
+          upsertDailyReportList(listStorageKey, {
+            id: `report_${currentUser.id}_${today}`,
+            staff_id: currentUser.id,
+            date: today,
+            work_content: data.content || '',
+            achievements: data.achievements || '',
+            issues: data.issues || '',
+            tomorrow: data.tomorrow || '',
+            notes: data.notes || '',
+            created_at: data.created_at || new Date().toISOString(),
+            updated_at: data.updated_at || new Date().toISOString()
+          });
           return;
         }
       } else if (response && response.status === 401) {
@@ -1720,7 +1733,7 @@ async function loadTodayDailyReport() {
         console.warn('日報のAPI読み込みに失敗、ローカルストレージから読み込みます:', apiError);
       }
     }
-    
+
     // APIから読み込めない場合はローカルストレージから読み込む
     const saved = localStorage.getItem(storageKey);
     if (saved) {
@@ -1734,9 +1747,48 @@ async function loadTodayDailyReport() {
           clearBtn.style.display = 'inline-flex';
         }
       }
+      upsertDailyReportList(listStorageKey, {
+        id: data.id || `report_${currentUser.id}_${today}`,
+        staff_id: currentUser.id,
+        date: today,
+        work_content: data.content || '',
+        achievements: data.achievements || '',
+        issues: data.issues || '',
+        tomorrow: data.tomorrow || '',
+        notes: data.notes || '',
+        created_at: data.created_at || new Date().toISOString(),
+        updated_at: data.updated_at || new Date().toISOString()
+      });
     }
   } catch (error) {
     console.error('Error loading today daily report:', error);
+  }
+}
+
+function upsertDailyReportList(listStorageKey, entry) {
+  let list = [];
+  try {
+    list = JSON.parse(localStorage.getItem(listStorageKey)) || [];
+  } catch (error) {
+    list = [];
+  }
+
+  const existingIndex = list.findIndex((report) => report.date === entry.date);
+  if (existingIndex >= 0) {
+    const existing = list[existingIndex];
+    list[existingIndex] = {
+      ...existing,
+      ...entry,
+      created_at: existing.created_at || entry.created_at
+    };
+  } else {
+    list.push(entry);
+  }
+
+  try {
+    localStorage.setItem(listStorageKey, JSON.stringify(list));
+  } catch (error) {
+    console.error('Error saving daily report list:', error);
   }
 }
 
@@ -1753,15 +1805,15 @@ function setupDigitalClock() {
   const alarmToggleBtn = document.getElementById('alarm-toggle-btn');
   const alarmSection = document.getElementById('digital-clock-alarm-section');
   const alarmTimeDisplay = document.getElementById('alarm-time-display');
-  
+
   if (!clockDisplay) return;
-  
+
   // 表示形式の読み込み
   const savedFormat = localStorage.getItem('digital-clock-format');
   if (savedFormat === '12') {
     clockFormat24 = false;
   }
-  
+
   // アラーム設定の読み込み
   const savedAlarm = localStorage.getItem('digital-clock-alarm');
   if (savedAlarm) {
@@ -1780,7 +1832,7 @@ function setupDigitalClock() {
       console.warn('Failed to load alarm settings:', e);
     }
   }
-  
+
   // 時計の更新
   function updateClock() {
     const now = new Date();
@@ -1788,15 +1840,15 @@ function setupDigitalClock() {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
     let ampm = '';
-    
+
     if (!clockFormat24) {
       ampm = hours >= 12 ? ' PM' : ' AM';
       hours = hours % 12 || 12;
     }
-    
+
     const hoursStr = String(hours).padStart(2, '0');
     clockDisplay.textContent = `${hoursStr}:${minutes}:${seconds}${ampm}`;
-    
+
     // アラームチェック
     if (alarmEnabled && alarmTime) {
       const currentTime = `${hoursStr}:${minutes}`;
@@ -1805,7 +1857,7 @@ function setupDigitalClock() {
       }
     }
   }
-  
+
   // アラーム発動
   function triggerAlarm() {
     // ブラウザの通知APIを使用
@@ -1815,16 +1867,16 @@ function setupDigitalClock() {
         icon: '/images/logo_144x144.png'
       });
     }
-    
+
     // 音声で通知（オプション）
     try {
       const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURAJR6Ph8sBlIAUwgM/z1oY5CBxsvO3mnlEQDE+n4vG2YxwGOJLX8sx5LAUkd8fw3ZBACxRetOnrqFUUCkaf4PK+bCEFMYfR89OCMwYebsDv45lREAlHo+HywGUgBTCAz/PWhjkIHGy87eaeURAMT6fi8bZjHAY4ktfy');
-      audio.play().catch(() => {});
+      audio.play().catch(() => { });
     } catch (e) {
       // 音声再生に失敗しても続行
     }
   }
-  
+
   // 表示形式の切り替え
   if (formatToggle) {
     formatToggle.addEventListener('click', () => {
@@ -1833,7 +1885,7 @@ function setupDigitalClock() {
       updateClock();
     });
   }
-  
+
   // アラーム設定ボタン
   if (alarmSetBtn) {
     alarmSetBtn.addEventListener('click', () => {
@@ -1850,7 +1902,7 @@ function setupDigitalClock() {
       }
     });
   }
-  
+
   // アラームON/OFF切り替え
   if (alarmToggleBtn) {
     alarmToggleBtn.addEventListener('click', () => {
@@ -1863,7 +1915,7 @@ function setupDigitalClock() {
       saveAlarmSettings();
     });
   }
-  
+
   // アラーム設定の保存
   function saveAlarmSettings() {
     localStorage.setItem('digital-clock-alarm', JSON.stringify({
@@ -1871,12 +1923,12 @@ function setupDigitalClock() {
       enabled: alarmEnabled
     }));
   }
-  
+
   // 通知の許可をリクエスト
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
-  
+
   // 1秒ごとに時計を更新
   updateClock();
   setInterval(updateClock, 1000);
@@ -1889,11 +1941,11 @@ function setupDailyReportListeners() {
   const templateBtn = document.getElementById('daily-report-template-btn');
 
   if (!saveBtn && !clearBtn && !textarea && !templateBtn) return;
-  
+
   if (saveBtn) {
     saveBtn.addEventListener('click', saveDailyReport);
   }
-  
+
   if (clearBtn) {
     clearBtn.addEventListener('click', clearDailyReport);
   }
@@ -1901,7 +1953,7 @@ function setupDailyReportListeners() {
   if (templateBtn) {
     templateBtn.addEventListener('click', insertDailyReportTemplate);
   }
-  
+
   if (textarea) {
     textarea.addEventListener('input', () => {
       // 入力がある場合はクリアボタンを表示
@@ -1938,23 +1990,29 @@ function insertDailyReportTemplate() {
 // 日報を保存
 async function saveDailyReport() {
   if (!currentUser) return;
-  
+
   const textarea = document.getElementById('daily-report-content');
   const todayDateEl = document.getElementById('daily-report-today-date');
-  
+
   if (!textarea) return;
-  
+
   const content = textarea.value.trim();
   const date = todayDateEl?.dataset.date || new Date().toISOString().split('T')[0];
   const storageKey = `daily_report_${currentUser.id}_${date}`;
-  
+  const listStorageKey = `daily_reports_${currentUser.id}`;
+
   const data = {
     content: content,
+    work_content: content, // Backend requires this field
+    achievements: '',
+    issues: '',
+    tomorrow: '',
+    notes: '',
     staff_id: currentUser.id,
     staff_name: currentUser.name,
     date: date
   };
-  
+
   try {
     // localStorageに保存（オフライン対応）
     const localData = {
@@ -1963,7 +2021,19 @@ async function saveDailyReport() {
       updated_at: new Date().toISOString()
     };
     localStorage.setItem(storageKey, JSON.stringify(localData));
-    
+    upsertDailyReportList(listStorageKey, {
+      id: `report_${currentUser.id}_${date}`,
+      staff_id: currentUser.id,
+      date: date,
+      work_content: content,
+      achievements: '',
+      issues: '',
+      tomorrow: '',
+      notes: '',
+      created_at: localData.created_at,
+      updated_at: localData.updated_at
+    });
+
     // APIに保存
     try {
       const idToken = await requireAuthOrRedirect('日報の保存');
@@ -1974,13 +2044,13 @@ async function saveDailyReport() {
       if (idToken) {
         headers['Authorization'] = `Bearer ${idToken}`;
       }
-      
+
       const response = await fetch(`${API_BASE}/daily-reports`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(data)
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('日報をAPIに保存しました:', result);
@@ -2000,7 +2070,7 @@ async function saveDailyReport() {
       // API保存に失敗してもローカル保存は成功しているので、警告のみ
       showSuccessMessage('日報をローカルに保存しました（API保存に失敗）');
     }
-    
+
     // クリアボタンを表示
     const clearBtn = document.getElementById('daily-report-clear-btn');
     if (clearBtn && content) {
@@ -2017,15 +2087,15 @@ function clearDailyReport() {
   const textarea = document.getElementById('daily-report-content');
   const todayDateEl = document.getElementById('daily-report-today-date');
   const clearBtn = document.getElementById('daily-report-clear-btn');
-  
+
   if (!textarea) return;
-  
+
   if (confirm('入力内容をクリアしますか？')) {
     textarea.value = '';
     if (clearBtn) {
       clearBtn.style.display = 'none';
     }
-    
+
     // 今日の日付に戻す
     const today = new Date();
     const todayStr = today.toLocaleDateString('ja-JP', {
@@ -2102,11 +2172,11 @@ async function refreshCognitoToken() {
 
               const idToken = newSession.getIdToken().getJwtToken();
               const accessToken = newSession.getAccessToken().getJwtToken();
-              
+
               // トークンを更新
               localStorage.setItem('cognito_id_token', idToken);
               localStorage.setItem('cognito_access_token', accessToken);
-              
+
               resolve(idToken);
             });
           } else {
@@ -2118,11 +2188,11 @@ async function refreshCognitoToken() {
         if (session.isValid()) {
           const idToken = session.getIdToken().getJwtToken();
           const accessToken = session.getAccessToken().getJwtToken();
-          
+
           // トークンを更新
           localStorage.setItem('cognito_id_token', idToken);
           localStorage.setItem('cognito_access_token', accessToken);
-          
+
           resolve(idToken);
         } else {
           // セッションが無効な場合はリフレッシュ
@@ -2136,11 +2206,11 @@ async function refreshCognitoToken() {
 
             const idToken = newSession.getIdToken().getJwtToken();
             const accessToken = newSession.getAccessToken().getJwtToken();
-            
+
             // トークンを更新
             localStorage.setItem('cognito_id_token', idToken);
             localStorage.setItem('cognito_access_token', accessToken);
-            
+
             resolve(idToken);
           });
         }
@@ -2157,7 +2227,7 @@ async function getCognitoIdToken() {
   try {
     // 1. localStorageから直接取得
     let cognitoIdToken = localStorage.getItem('cognito_id_token');
-    
+
     // トークンが期限切れの場合はリフレッシュを試みる
     if (cognitoIdToken && isTokenExpired(cognitoIdToken)) {
       console.log('Token expired, attempting to refresh...');
@@ -2168,11 +2238,11 @@ async function getCognitoIdToken() {
         console.warn('Failed to refresh token, token may be invalid');
       }
     }
-    
+
     if (cognitoIdToken && !isTokenExpired(cognitoIdToken)) {
       return cognitoIdToken;
     }
-    
+
     // 2. Cognito User Poolから直接セッションを取得
     if (typeof AmazonCognitoIdentity !== 'undefined') {
       try {
@@ -2184,7 +2254,7 @@ async function getCognitoIdToken() {
           };
           const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
           const cognitoUser = userPool.getCurrentUser();
-          
+
           if (cognitoUser) {
             const sessionToken = await new Promise((resolve) => {
               cognitoUser.getSession((err, session) => {
@@ -2209,7 +2279,7 @@ async function getCognitoIdToken() {
         console.warn('Error getting token from Cognito User Pool:', e);
       }
     }
-    
+
     // 3. CognitoAuthから取得
     if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
       try {
@@ -2224,7 +2294,7 @@ async function getCognitoIdToken() {
         console.warn('Error getting token from CognitoAuth:', e);
       }
     }
-    
+
     // 4. cognito_userから取得
     const cognitoUser = localStorage.getItem('cognito_user');
     if (cognitoUser) {
@@ -2246,7 +2316,7 @@ async function getCognitoIdToken() {
         console.warn('Error parsing cognito user:', e);
       }
     }
-    
+
     // 4. misesapo_authから取得
     const authData = localStorage.getItem('misesapo_auth');
     if (authData) {
@@ -2262,7 +2332,7 @@ async function getCognitoIdToken() {
         console.warn('Error parsing auth data:', e);
       }
     }
-    
+
     console.warn('No valid authentication token found');
     return null;
   } catch (error) {
@@ -2276,19 +2346,19 @@ async function getCognitoIdToken() {
 function renderCalendar() {
   const year = currentCalendarDate.getFullYear();
   const month = currentCalendarDate.getMonth();
-  
+
   const titleEl = document.getElementById('calendar-title');
   const grid = document.getElementById('calendar-grid');
   if (!titleEl || !grid) return;
   titleEl.textContent = `${year} ${month + 1}`;
-  
+
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const startDate = new Date(firstDay);
   startDate.setDate(startDate.getDate() - startDate.getDay());
-  
+
   grid.innerHTML = '';
-  
+
   // 曜日ヘッダー
   const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
   dayNames.forEach(day => {
@@ -2297,26 +2367,26 @@ function renderCalendar() {
     cell.textContent = day;
     grid.appendChild(cell);
   });
-  
+
   // 日付セル
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   for (let i = 0; i < 42; i++) {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
     const dateStr = date.toISOString().split('T')[0];
-    
+
     const cell = document.createElement('div');
     cell.className = 'calendar-cell calendar-date';
-    
+
     if (date.getMonth() !== month) {
       cell.classList.add('disabled');
     } else {
       if (date.getTime() === today.getTime()) {
         cell.classList.add('today');
       }
-      
+
       // 出勤記録があるかチェック（clock_inがある日を出勤日とする）
       if (currentUser && attendanceRecords[dateStr]?.[currentUser.id]) {
         const record = attendanceRecords[dateStr][currentUser.id];
@@ -2325,7 +2395,7 @@ function renderCalendar() {
         }
       }
     }
-    
+
     cell.textContent = date.getDate();
     grid.appendChild(cell);
   }
@@ -2346,10 +2416,10 @@ function setupCorrectionRequestButton() {
 // 修正申請モーダルを開く
 function openCorrectionRequestModal() {
   if (!currentUser) return;
-  
+
   const today = new Date().toISOString().split('T')[0];
   const todayRecord = attendanceRecords[today]?.[currentUser.id] || {};
-  
+
   // モーダルHTMLを作成
   const modalHTML = `
     <div id="correction-request-modal" style="
@@ -2491,23 +2561,23 @@ function openCorrectionRequestModal() {
       </div>
     </div>
   `;
-  
+
   document.body.insertAdjacentHTML('beforeend', modalHTML);
-  
+
   const modal = document.getElementById('correction-request-modal');
   const form = document.getElementById('correction-request-form');
   const closeBtn = document.getElementById('close-correction-modal');
   const cancelBtn = document.getElementById('cancel-correction-btn');
-  
+
   // 閉じるボタン
   closeBtn.addEventListener('click', () => modal.remove());
   cancelBtn.addEventListener('click', () => modal.remove());
-  
+
   // 背景クリックで閉じる
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.remove();
   });
-  
+
   // フォーム送信
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -2518,28 +2588,28 @@ function openCorrectionRequestModal() {
 // 修正申請を送信
 async function submitCorrectionRequest() {
   if (!currentUser) return;
-  
+
   const date = document.getElementById('correction-date').value;
   const currentClockIn = document.getElementById('current-clock-in').value;
   const requestedClockIn = document.getElementById('requested-clock-in').value;
   const currentClockOut = document.getElementById('current-clock-out').value;
   const requestedClockOut = document.getElementById('requested-clock-out').value;
   const reason = document.getElementById('correction-reason').value.trim();
-  
+
   if (!reason) {
     alert('修正理由を入力してください');
     return;
   }
-  
+
   // 日付からattendance_idを生成
   const attendance_id = `${date}_${currentUser.id}`;
-  
+
   // 時刻をISO形式に変換
   const formatDateTime = (dateTimeStr) => {
     if (!dateTimeStr) return null;
     return new Date(dateTimeStr).toISOString();
   };
-  
+
   const requestData = {
     staff_id: currentUser.id,
     staff_name: currentUser.name,
@@ -2551,14 +2621,14 @@ async function submitCorrectionRequest() {
     requested_clock_in: formatDateTime(requestedClockIn),
     requested_clock_out: formatDateTime(requestedClockOut)
   };
-  
+
   try {
     const response = await fetch(`${API_BASE}/attendance/requests`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestData)
     });
-    
+
     if (response.ok) {
       const result = await response.json();
       showSuccessMessage('修正申請を送信しました');
@@ -2586,7 +2656,7 @@ let todoFilter = 'all';
 async function loadTodos() {
   try {
     const userId = currentUser?.id || 'default';
-    
+
     // まずAPIから読み込む
     try {
       const idToken = await getCognitoIdToken();
@@ -2594,7 +2664,7 @@ async function loadTodos() {
       if (idToken) {
         headers['Authorization'] = `Bearer ${idToken}`;
       }
-      
+
       const response = await fetch(`${API_BASE}/todos?staff_id=${encodeURIComponent(userId)}`, {
         method: 'GET',
         headers: headers,
@@ -2606,7 +2676,7 @@ async function loadTodos() {
         }
         throw err;
       });
-      
+
       if (response && response.ok) {
         const result = await response.json();
         if (result.todos && Array.isArray(result.todos)) {
@@ -2626,7 +2696,7 @@ async function loadTodos() {
         console.warn('TODOのAPI読み込みに失敗、ローカルストレージから読み込みます:', apiError);
       }
     }
-    
+
     // APIから読み込めない場合はローカルストレージから読み込む
     const stored = localStorage.getItem(`${TODO_STORAGE_KEY}_${userId}`);
     if (stored) {
@@ -2653,7 +2723,7 @@ function saveTodos() {
 // TODOをAPIにアップロード
 async function uploadTodoToAPI(todo, method = 'POST') {
   if (!currentUser) return null;
-  
+
   try {
     const idToken = await getCognitoIdToken();
     const headers = {
@@ -2662,23 +2732,23 @@ async function uploadTodoToAPI(todo, method = 'POST') {
     if (idToken) {
       headers['Authorization'] = `Bearer ${idToken}`;
     }
-    
-    const url = method === 'POST' 
+
+    const url = method === 'POST'
       ? `${API_BASE}/todos`
       : `${API_BASE}/todos/${todo.id}`;
-    
+
     const data = {
       staff_id: currentUser.id,
       text: todo.text,
       completed: todo.completed
     };
-    
+
     const response = await fetch(url, {
       method: method === 'POST' ? 'POST' : 'PUT',
       headers: headers,
       body: JSON.stringify(data)
     });
-    
+
     if (response.ok) {
       const result = await response.json();
       // APIから返されたIDを使用（新規作成の場合）
@@ -2700,19 +2770,19 @@ async function uploadTodoToAPI(todo, method = 'POST') {
 // TODOをAPIから削除
 async function deleteTodoFromAPI(todoId) {
   if (!currentUser) return false;
-  
+
   try {
     const idToken = await getCognitoIdToken();
     const headers = {};
     if (idToken) {
       headers['Authorization'] = `Bearer ${idToken}`;
     }
-    
+
     const response = await fetch(`${API_BASE}/todos/${todoId}`, {
       method: 'DELETE',
       headers: headers
     });
-    
+
     if (response.ok) {
       return true;
     } else {
@@ -2727,18 +2797,18 @@ async function deleteTodoFromAPI(todoId) {
 
 async function addTodo(text) {
   if (!text.trim()) return;
-  
+
   const todo = {
     id: `todo_${Date.now()}`,
     text: text.trim(),
     completed: false,
     created_at: new Date().toISOString()
   };
-  
+
   todos.unshift(todo);
   saveTodos();
   renderTodos();
-  
+
   // APIにアップロード
   const apiId = await uploadTodoToAPI(todo, 'POST');
   if (apiId && apiId !== todo.id) {
@@ -2754,7 +2824,7 @@ async function toggleTodo(id) {
     todo.completed = !todo.completed;
     saveTodos();
     renderTodos();
-    
+
     // APIにアップロード
     await uploadTodoToAPI(todo, 'PUT');
   }
@@ -2765,7 +2835,7 @@ async function deleteTodo(id) {
   if (todo) {
     // APIから削除
     await deleteTodoFromAPI(id);
-    
+
     todos = todos.filter(t => t.id !== id);
     saveTodos();
     renderTodos();
@@ -2777,7 +2847,7 @@ async function updateTodoText(id, newText) {
   if (todo && newText.trim()) {
     todo.text = newText.trim();
     saveTodos();
-    
+
     // APIにアップロード
     await uploadTodoToAPI(todo, 'PUT');
   }
@@ -2786,7 +2856,7 @@ async function updateTodoText(id, newText) {
 function renderTodos() {
   const listEl = document.getElementById('todo-list');
   const countEl = document.getElementById('todo-count');
-  
+
   if (!listEl || !countEl) return;
 
   // フィルタリング
@@ -2803,8 +2873,8 @@ function renderTodos() {
 
   if (filteredTodos.length === 0) {
     const message = todoFilter === 'all' ? 'タスクがありません' :
-                    todoFilter === 'active' ? '未完了のタスクはありません' :
-                    '完了したタスクはありません';
+      todoFilter === 'active' ? '未完了のタスクはありません' :
+        '完了したタスクはありません';
     listEl.innerHTML = `<div class="todo-empty"><i class="fas fa-check-circle"></i> ${message}</div>`;
     return;
   }
@@ -2865,7 +2935,7 @@ function setupTodoListeners() {
       });
     });
   }
-  
+
   // TODOリストの時計表示/非表示ボタン
   const clockToggleBtn = document.getElementById('todo-clock-toggle-btn');
   if (clockToggleBtn) {
@@ -2882,7 +2952,7 @@ function setupTodoListeners() {
         localStorage.setItem('todo_clock_visible', !isVisible ? 'true' : 'false');
       }
     });
-    
+
     // 保存された表示状態を復元
     const savedVisibility = localStorage.getItem('todo_clock_visible');
     if (savedVisibility === 'true') {
@@ -2902,7 +2972,7 @@ function setupTodoListeners() {
 function initializeTodoClock() {
   const todoClockDisplay = document.getElementById('todo-clock-display');
   if (!todoClockDisplay) return;
-  
+
   function updateTodoClock() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
@@ -2910,10 +2980,10 @@ function initializeTodoClock() {
     const seconds = String(now.getSeconds()).padStart(2, '0');
     todoClockDisplay.textContent = `${hours}:${minutes}:${seconds}`;
   }
-  
+
   // 初回表示
   updateTodoClock();
-  
+
   // 1秒ごとに更新
   setInterval(updateTodoClock, 1000);
 }
@@ -2926,29 +2996,29 @@ async function loadMonthlySchedulesCount() {
     if (idToken) {
       headers['Authorization'] = `Bearer ${idToken}`;
     }
-    
+
     const response = await fetch(`${API_BASE}/schedules`, { headers });
     if (!response.ok) {
       throw new Error('Failed to load schedules');
     }
-    
+
     const schedulesData = await response.json();
     const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
-    
+
     // 今月のスケジュール数をカウント
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
-    
+
     const monthlySchedules = allSchedules.filter(schedule => {
       if (!schedule.scheduled_date && !schedule.date) return false;
-      
+
       const scheduleDate = schedule.scheduled_date || schedule.date;
       const date = new Date(scheduleDate);
-      
+
       return date.getFullYear() === currentYear && date.getMonth() === currentMonth;
     });
-    
+
     // 表示を更新
     const countEl = document.getElementById('monthly-schedules-count');
     if (countEl) {
@@ -2976,22 +3046,22 @@ function getGridDimensions() {
   if (!grid) {
     return { cols: 10, rows: 6 }; // デフォルト値
   }
-  
+
   // スマホの場合は1列（縦積み）
   if (window.innerWidth <= 599) {
     return { cols: 1, rows: 1 };
   }
-  
+
   // グリッド要素の実際の幅を取得
   const gridWidth = grid.offsetWidth;
   const gridHeight = grid.offsetHeight;
-  
+
   // 80px固定グリッドで列数を計算（画面幅が小さくなると使える列数が減るだけ）
   const CELL_SIZE = 80; // 固定80px
   const cols = Math.floor(gridWidth / CELL_SIZE);
   // 行数は画面の高さに応じて計算（最小6行、最大は画面高さに合わせて）
   const rows = Math.max(6, Math.floor(gridHeight / CELL_SIZE));
-  
+
   return { cols, rows, cellSize: CELL_SIZE };
 }
 
@@ -3000,21 +3070,21 @@ function drawGridLines() {
   const grid = document.getElementById('mypage-grid');
   const container = document.querySelector('.mypage-main-grid-container');
   if (!grid || !container) return;
-  
+
   // 既存のグリッド線を削除（コンテナレベルで検索）
   const existingGrid = container.querySelector('.grid-lines-overlay');
   if (existingGrid) {
     existingGrid.remove();
   }
-  
+
   // 現在の画面サイズに応じたグリッド数を取得
   const { cols, rows } = getGridDimensions();
-  
+
   // スマホの場合はグリッド線を描画しない
   if (cols === 1) {
     return;
   }
-  
+
   // グリッド線のオーバーレイを作成（コンテナレベルに配置）
   const overlay = document.createElement('div');
   overlay.className = 'grid-lines-overlay';
@@ -3027,21 +3097,21 @@ function drawGridLines() {
     pointer-events: none;
     z-index: 0;
   `;
-  
+
   // コンテナの実際のサイズを取得
   const containerWidth = container.offsetWidth;
   const containerHeight = container.offsetHeight;
-  
+
   // 80px間隔で等間隔にグリッド線を描画
   const cellSize = 80; // 固定80px
-  
+
   // SVGでグリッド線を描画（コンテナのサイズを基準に）
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', '100%');
   svg.setAttribute('height', '100%');
   svg.setAttribute('viewBox', `0 0 ${containerWidth} ${containerHeight}`);
   svg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%;';
-  
+
   // 縦線を描画（左端（0px）から右端まで80px間隔で）
   const maxCols = Math.ceil(containerWidth / cellSize) + 1;
   for (let i = 0; i <= maxCols; i++) {
@@ -3058,7 +3128,7 @@ function drawGridLines() {
       svg.appendChild(line);
     }
   }
-  
+
   // 横線を描画（上端（0px）から下端まで80px間隔で）
   const maxRows = Math.ceil(containerHeight / cellSize) + 1;
   for (let i = 0; i <= maxRows; i++) {
@@ -3075,7 +3145,7 @@ function drawGridLines() {
       svg.appendChild(line);
     }
   }
-  
+
   overlay.appendChild(svg);
   container.appendChild(overlay);
 }
@@ -3085,14 +3155,14 @@ function drawGridLines() {
 // コンテナを絶対位置で配置（ピクセル単位で自由に配置）
 function setAbsolutePosition(container, x, y) {
   if (!container) return;
-  
+
   // data-container-widthとdata-container-heightを使用してサイズを計算
   const width = parseInt(container.dataset.containerWidth) || 3;
   const height = parseInt(container.dataset.containerHeight) || 3;
   const CELL_SIZE = 80; // 80px固定
   const containerWidth = width * CELL_SIZE;
   const containerHeight = height * CELL_SIZE;
-  
+
   // 絶対位置とサイズを強制的に設定
   container.style.setProperty('left', `${x}px`, 'important');
   container.style.setProperty('top', `${y}px`, 'important');
@@ -3101,7 +3171,7 @@ function setAbsolutePosition(container, x, y) {
   container.style.setProperty('max-width', 'none', 'important');
   container.style.setProperty('max-height', 'none', 'important');
   container.dataset.absolutePosition = `${x},${y}`;
-  
+
   console.log(`[Layout] Set absolute position for ${container.dataset.containerId}: x=${x}, y=${y}, width=${containerWidth}, height=${containerHeight}`);
 }
 
@@ -3122,7 +3192,7 @@ function getAbsolutePosition(container) {
     const [x, y] = pos.split(',').map(Number);
     // 異常な値をチェック
     if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y) ||
-        Math.abs(x) > 100000 || Math.abs(y) > 100000) {
+      Math.abs(x) > 100000 || Math.abs(y) > 100000) {
       console.warn('[Layout] Invalid position in data attribute for container:', container.dataset.containerId, 'position:', pos);
       return null;
     }
@@ -3133,7 +3203,7 @@ function getAbsolutePosition(container) {
   const top = parseInt(container.style.top) || 0;
   // 異常な値をチェック
   if (isNaN(left) || isNaN(top) || !isFinite(left) || !isFinite(top) ||
-      Math.abs(left) > 100000 || Math.abs(top) > 100000) {
+    Math.abs(left) > 100000 || Math.abs(top) > 100000) {
     console.warn('[Layout] Invalid position in style for container:', container.dataset.containerId, 'left:', left, 'top:', top);
     return null;
   }
@@ -3157,23 +3227,23 @@ function getGridPosition(container) {
 function saveSectionLayout() {
   const grid = document.getElementById('mypage-grid');
   if (!grid) return;
-  
+
   const containers = Array.from(grid.querySelectorAll('.draggable-container'));
   const gridWidth = grid.offsetWidth;
   const gridHeight = grid.offsetHeight;
   // グリッドアンカーを計算（保存前に位置をスナップするため）
   getGridAnchors(grid);
-  
+
   const layout = containers.map(container => {
     const pos = getAbsolutePosition(container);
     // 位置データが有効かチェック
     if (pos && (isNaN(pos.x) || isNaN(pos.y) || !isFinite(pos.x) || !isFinite(pos.y) ||
-                Math.abs(pos.x) > 100000 || Math.abs(pos.y) > 100000 ||
-                pos.x < 0 || pos.y < 0 || pos.x >= gridWidth || pos.y >= gridHeight)) {
+      Math.abs(pos.x) > 100000 || Math.abs(pos.y) > 100000 ||
+      pos.x < 0 || pos.y < 0 || pos.x >= gridWidth || pos.y >= gridHeight)) {
       console.warn('[Layout] Skipping invalid position when saving:', container.dataset.containerId, 'x:', pos.x, 'y:', pos.y);
-    return {
-      id: container.dataset.containerId,
-      cost: parseInt(container.dataset.containerCost) || 1,
+      return {
+        id: container.dataset.containerId,
+        cost: parseInt(container.dataset.containerCost) || 1,
         position: null
       };
     }
@@ -3207,37 +3277,37 @@ function restoreSectionLayout() {
       // Bentoグリッドでは早期リターン（CSS Gridで配置が管理されるため）
       return;
     }
-    
+
     // Bentoグリッドの場合は早期リターン（CSS Gridで配置が管理されるため）
     const bentoCards = grid.querySelectorAll('.bento-card');
     if (bentoCards.length > 0) {
       // Bentoグリッドでは配置はCSSで管理されるため、restoreSectionLayoutは不要
       return;
     }
-    
+
     const savedLayout = localStorage.getItem('mypage_section_layout');
     if (!savedLayout) {
       // デフォルト配置を適用
       applyDefaultLayout();
       return;
     }
-    
+
     const layout = JSON.parse(savedLayout);
-    
+
     // コンテナが読み込まれるまで待つ（旧グリッドシステム用）
     const containers = grid.querySelectorAll('.draggable-container');
     if (containers.length === 0) {
       // Bentoグリッドの場合は早期リターン
       return;
     }
-    
+
     // グリッドアンカーを計算（復元前に計算）
     getGridAnchors(grid);
-    
+
     const gridWidth = grid.offsetWidth;
     const gridHeight = grid.offsetHeight;
     let hasInvalidPosition = false;
-    
+
     layout.forEach(item => {
       const container = grid.querySelector(`[data-container-id="${item.id}"]`);
       if (container && item.position) {
@@ -3245,10 +3315,10 @@ function restoreSectionLayout() {
         const parts = item.position.split(',').map(Number);
         if (parts.length === 2) {
           // 異常な値（NaN、無限大、極端に大きい/小さい値、負の値）をチェック
-          if (isNaN(parts[0]) || isNaN(parts[1]) || 
-              !isFinite(parts[0]) || !isFinite(parts[1]) ||
-              Math.abs(parts[0]) > 100000 || Math.abs(parts[1]) > 100000 ||
-              parts[0] < -1000 || parts[1] < -1000) {
+          if (isNaN(parts[0]) || isNaN(parts[1]) ||
+            !isFinite(parts[0]) || !isFinite(parts[1]) ||
+            Math.abs(parts[0]) > 100000 || Math.abs(parts[1]) > 100000 ||
+            parts[0] < -1000 || parts[1] < -1000) {
             console.warn('[Layout] Invalid position data for container:', item.id, 'position:', item.position);
             hasInvalidPosition = true;
             // 異常な値の場合は位置をクリア
@@ -3257,7 +3327,7 @@ function restoreSectionLayout() {
             container.dataset.absolutePosition = '';
             return;
           }
-          
+
           // 数値が小さい場合は旧形式（col,row）、大きい場合は新形式（x,y）と判断
           if (parts[0] < 100 && parts[1] < 100) {
             // 旧形式: col, row
@@ -3265,8 +3335,8 @@ function restoreSectionLayout() {
           } else {
             // 新形式: x, y
             // 位置が有効な範囲内かチェック
-            if (parts[0] >= 0 && parts[1] >= 0 && 
-                parts[0] < gridWidth && parts[1] < gridHeight) {
+            if (parts[0] >= 0 && parts[1] >= 0 &&
+              parts[0] < gridWidth && parts[1] < gridHeight) {
               // 位置をアンカーにスナップ
               const snapped = findNearestAnchor(grid, parts[0], parts[1]);
               setAbsolutePosition(container, snapped.x, snapped.y);
@@ -3282,7 +3352,7 @@ function restoreSectionLayout() {
         }
       }
     });
-    
+
     // 異常な位置データが見つかった場合、localStorageをクリアしてデフォルト配置を適用
     if (hasInvalidPosition) {
       console.warn('[Layout] Invalid position data detected, clearing localStorage and applying default layout');
@@ -3290,7 +3360,7 @@ function restoreSectionLayout() {
       applyDefaultLayout();
       return;
     }
-    
+
     // 保存されていないコンテナ（新規追加など）にもサイズを設定
     const allContainers = Array.from(grid.querySelectorAll('.draggable-container'));
     allContainers.forEach(container => {
@@ -3300,7 +3370,7 @@ function restoreSectionLayout() {
       const CELL_SIZE = 80;
       const containerWidth = width * CELL_SIZE;
       const containerHeight = height * CELL_SIZE;
-      
+
       // サイズを強制的に設定
       container.style.setProperty('width', `${containerWidth}px`, 'important');
       container.style.setProperty('height', `${containerHeight}px`, 'important');
@@ -3308,7 +3378,7 @@ function restoreSectionLayout() {
       container.style.setProperty('max-height', 'none', 'important');
       console.log('[Layout] Set size for container:', container.dataset.containerId, 'width:', containerWidth, 'height:', containerHeight);
     });
-    
+
     console.log('Container layout restored');
   } catch (error) {
     console.warn('Failed to restore container layout:', error);
@@ -3323,7 +3393,7 @@ function applyDefaultLayout() {
     console.warn('[Layout] Grid not found in applyDefaultLayout');
     return;
   }
-  
+
   const CELL_SIZE = 80;
   // 各コンテナのデフォルト位置を設定（ピクセル単位、全て3×3マス）
   const defaultLayout = {
@@ -3336,30 +3406,30 @@ function applyDefaultLayout() {
     'weekly-schedule': { x: 720, y: 0 },       // 今週のスケジュール: 3×3マス
     'digital-clock': { x: 960, y: 0 }          // デジタル時計: 3×3マス
   };
-  
+
   const containers = Array.from(grid.querySelectorAll('.draggable-container'));
   console.log('[Layout] Found containers:', containers.length);
-  
+
   if (containers.length === 0) {
     console.warn('[Layout] No containers found, retrying...');
     setTimeout(applyDefaultLayout, 100);
     return;
   }
-  
+
   // 各コンテナのサイズを設定
   containers.forEach(container => {
     const width = parseInt(container.dataset.containerWidth) || 3;
     const height = parseInt(container.dataset.containerHeight) || 3;
     const containerWidth = width * CELL_SIZE;
     const containerHeight = height * CELL_SIZE;
-    
+
     // サイズを強制的に設定
     container.style.setProperty('width', `${containerWidth}px`, 'important');
     container.style.setProperty('height', `${containerHeight}px`, 'important');
     container.style.setProperty('max-width', 'none', 'important');
     container.style.setProperty('max-height', 'none', 'important');
   });
-  
+
   // 自動整列アルゴリズムで配置
   autoAlignContainers(grid, containers);
 }
@@ -3370,25 +3440,25 @@ function autoAlignContainers(grid, containers) {
   const CELL_SIZE = 80;
   const gridWidth = grid.offsetWidth;
   const gridHeight = grid.offsetHeight;
-  
+
   // 配置済みのコンテナの矩形を記録
   const placedRects = [];
-  
+
   // 各コンテナを順番に配置
   containers.forEach(container => {
     const width = parseInt(container.dataset.containerWidth) || 3;
     const height = parseInt(container.dataset.containerHeight) || 3;
     const containerWidth = width * CELL_SIZE;
     const containerHeight = height * CELL_SIZE;
-    
+
     // 配置可能な位置を探す
     let placed = false;
     let currentY = 0;
-    
+
     // 上から下へ、各行をチェック
     while (currentY + containerHeight <= gridHeight && !placed) {
       let currentX = 0;
-      
+
       // 左から右へ、各列をチェック
       while (currentX + containerWidth <= gridWidth && !placed) {
         // この位置に配置できるかチェック
@@ -3398,26 +3468,26 @@ function autoAlignContainers(grid, containers) {
           right: currentX + containerWidth,
           bottom: currentY + containerHeight
         };
-        
+
         // 既存のコンテナと重複していないかチェック
         let overlaps = false;
         for (const placedRect of placedRects) {
           if (newRect.left < placedRect.right &&
-              newRect.right > placedRect.left &&
-              newRect.top < placedRect.bottom &&
-              newRect.bottom > placedRect.top) {
+            newRect.right > placedRect.left &&
+            newRect.top < placedRect.bottom &&
+            newRect.bottom > placedRect.top) {
             overlaps = true;
             break;
           }
         }
-        
+
         // 重複していない場合、この位置に配置
         if (!overlaps) {
           setAbsolutePosition(container, currentX, currentY);
           placedRects.push(newRect);
           placed = true;
           console.log('[Layout] Auto-aligned container:', container.dataset.containerId, 'at x:', currentX, 'y:', currentY);
-    } else {
+        } else {
           // 重複している場合、次の位置を試す
           // 重複しているコンテナの右端までスキップ
           let skipX = currentX + CELL_SIZE;
@@ -3432,7 +3502,7 @@ function autoAlignContainers(grid, containers) {
           currentX = skipX;
         }
       }
-      
+
       // この行で配置できなかった場合、次の行へ
       if (!placed) {
         // 次の行のY座標を計算（既存のコンテナの下に密着）
@@ -3448,7 +3518,7 @@ function autoAlignContainers(grid, containers) {
         currentY = nextY;
       }
     }
-    
+
     // 配置できなかった場合（画面からはみ出す場合）、重ならない範囲で配置
     if (!placed) {
       // 画面内で重ならない位置を探す（画面からはみ出しても重ならないように）
@@ -3461,19 +3531,19 @@ function autoAlignContainers(grid, containers) {
             right: x + containerWidth,
             bottom: y + containerHeight
           };
-          
+
           // 既存のコンテナと重複していないかチェック
           let overlaps = false;
           for (const placedRect of placedRects) {
             if (newRect.left < placedRect.right &&
-                newRect.right > placedRect.left &&
-                newRect.top < placedRect.bottom &&
-                newRect.bottom > placedRect.top) {
+              newRect.right > placedRect.left &&
+              newRect.top < placedRect.bottom &&
+              newRect.bottom > placedRect.top) {
               overlaps = true;
               break;
             }
           }
-          
+
           if (!overlaps) {
             setAbsolutePosition(container, x, y);
             placedRects.push(newRect);
@@ -3482,7 +3552,7 @@ function autoAlignContainers(grid, containers) {
           }
         }
       }
-      
+
       // それでも配置できなかった場合、既存のコンテナの下に配置
       if (!found && placedRects.length > 0) {
         // 最も下にあるコンテナの下端を取得
@@ -3512,10 +3582,10 @@ function autoAlignContainers(grid, containers) {
         };
         placedRects.push(newRect);
         console.log('[Layout] Auto-aligned container (first):', container.dataset.containerId, 'at x: 0, y: 0');
-    }
+      }
     }
   });
-  
+
   // レイアウトを保存
   saveSectionLayout();
 }
@@ -3527,16 +3597,16 @@ function getGridCellPositions(grid) {
   if (gridPositionCache && (now - gridPositionCacheTimestamp) < GRID_CACHE_DURATION) {
     return gridPositionCache;
   }
-  
+
   const rect = grid.getBoundingClientRect();
   const { cols, rows } = getGridDimensions();
-  
+
   const cellPositions = {
     cols: [],
     rows: [],
     rect: rect
   };
-  
+
   // 各列の境界位置を取得（offsetLeft/offsetTopを使用してスクロール位置の影響を排除）
   for (let col = 1; col <= cols; col++) {
     const marker = document.createElement('div');
@@ -3552,20 +3622,20 @@ function getGridCellPositions(grid) {
     `;
     grid.appendChild(marker);
     void marker.offsetHeight; // レイアウト再計算
-    
+
     // offsetLeft/offsetTopを使用（スクロール位置の影響を受けない）
     const cellLeft = marker.offsetLeft;
     const cellRight = cellLeft + marker.offsetWidth;
-    
+
     grid.removeChild(marker);
-    
+
     cellPositions.cols.push({
       left: cellLeft,
       right: cellRight,
       center: (cellLeft + cellRight) / 2
     });
   }
-  
+
   // 各行の境界位置を取得（offsetLeft/offsetTopを使用してスクロール位置の影響を排除）
   for (let row = 1; row <= rows; row++) {
     const marker = document.createElement('div');
@@ -3581,24 +3651,24 @@ function getGridCellPositions(grid) {
     `;
     grid.appendChild(marker);
     void marker.offsetHeight; // レイアウト再計算
-    
+
     // offsetLeft/offsetTopを使用（スクロール位置の影響を受けない）
     const cellTop = marker.offsetTop;
     const cellBottom = cellTop + marker.offsetHeight;
-    
+
     grid.removeChild(marker);
-    
+
     cellPositions.rows.push({
       top: cellTop,
       bottom: cellBottom,
       center: (cellTop + cellBottom) / 2
     });
   }
-  
+
   // キャッシュに保存
   gridPositionCache = cellPositions;
   gridPositionCacheTimestamp = now;
-  
+
   return cellPositions;
 }
 
@@ -3622,19 +3692,19 @@ function getGridAnchors(grid) {
   if (gridAnchors && (now - gridAnchorsCacheTimestamp) < ANCHOR_CACHE_DURATION) {
     return gridAnchors;
   }
-  
+
   const CELL_SIZE = 80;
   // グリッドコンテナのサイズを取得（grid要素ではなく、親のコンテナ要素）
   const container = grid.closest('.mypage-main-grid-container') || grid.parentElement;
   const gridWidth = container ? container.offsetWidth : grid.offsetWidth;
   const gridHeight = container ? container.offsetHeight : grid.offsetHeight;
-  
+
   // グリッドの交点（アンカー）を計算
   // 画面に表示されているマス目の交点を確定
   const anchors = [];
   const maxCols = Math.floor(gridWidth / CELL_SIZE);
   const maxRows = Math.floor(gridHeight / CELL_SIZE);
-  
+
   // 0からmaxCols/maxRowsまで、すべての交点を計算
   for (let row = 0; row <= maxRows; row++) {
     for (let col = 0; col <= maxCols; col++) {
@@ -3646,10 +3716,10 @@ function getGridAnchors(grid) {
       }
     }
   }
-  
+
   gridAnchors = anchors;
   gridAnchorsCacheTimestamp = now;
-  
+
   console.log('[Grid] Calculated grid anchors:', anchors.length, 'anchors', 'gridWidth:', gridWidth, 'gridHeight:', gridHeight, 'maxCols:', maxCols, 'maxRows:', maxRows);
   return anchors;
 }
@@ -3660,10 +3730,10 @@ function findNearestAnchor(grid, x, y) {
   if (anchors.length === 0) {
     return { x: 0, y: 0 };
   }
-  
+
   let nearestAnchor = anchors[0];
   let minDistance = Math.sqrt(Math.pow(x - nearestAnchor.x, 2) + Math.pow(y - nearestAnchor.y, 2));
-  
+
   for (const anchor of anchors) {
     const distance = Math.sqrt(Math.pow(x - anchor.x, 2) + Math.pow(y - anchor.y, 2));
     if (distance < minDistance) {
@@ -3671,7 +3741,7 @@ function findNearestAnchor(grid, x, y) {
       nearestAnchor = anchor;
     }
   }
-  
+
   return nearestAnchor;
 }
 
@@ -3683,14 +3753,14 @@ function getAbsolutePositionFromMouse(grid, x, y) {
     const rect = grid.getBoundingClientRect();
     const gridX = x - rect.left;
     const gridY = y - rect.top;
-    
+
     // 負の値は0に制限
     const clampedX = Math.max(0, gridX);
     const clampedY = Math.max(0, gridY);
-    
+
     // 最も近いアンカーを見つけてスナップ
     const nearestAnchor = findNearestAnchor(grid, clampedX, clampedY);
-    
+
     return {
       x: nearestAnchor.x,
       y: nearestAnchor.y
@@ -3725,13 +3795,13 @@ function getGridPositionFromMouse(grid, x, y) {
 function showDropPreviewAbsolute(grid, container, x, y) {
   // 既存のプレビューを削除
   hideDropPreview(grid);
-  
+
   const width = parseInt(container.dataset.containerWidth) || 3;
   const height = parseInt(container.dataset.containerHeight) || 3;
   const CELL_SIZE = 80;
   const previewWidth = width * CELL_SIZE;
   const previewHeight = height * CELL_SIZE;
-  
+
   // プレビュー要素を作成（絶対位置で配置）
   const preview = document.createElement('div');
   preview.className = 'drop-preview-guide';
@@ -3747,7 +3817,7 @@ function showDropPreviewAbsolute(grid, container, x, y) {
     z-index: 1;
     box-sizing: border-box;
   `;
-  
+
   grid.appendChild(preview);
   console.log('[Drag] Preview shown at x:', x, 'y:', y, 'width:', previewWidth, 'height:', previewHeight);
 }
@@ -3792,27 +3862,27 @@ function isValidAbsolutePosition(grid, container, x, y) {
   const CELL_SIZE = 80;
   const containerWidth = width * CELL_SIZE;
   const containerHeight = height * CELL_SIZE;
-  
+
   // サイズ制約チェック
   if (!isValidContainerSize(container, width, height)) {
     return false;
   }
-  
+
   // グリッドの範囲を取得
   const gridWidth = grid.offsetWidth;
   const gridHeight = grid.offsetHeight;
-  
+
   // 画面からはみ出さないようにチェック
   // 左端・上端が範囲外の場合は無効
   if (x < 0 || y < 0) {
     return false;
   }
-  
+
   // 右端・下端が範囲外の場合は無効（コンテナが完全にグリッド内に収まる必要がある）
   if (x + containerWidth > gridWidth || y + containerHeight > gridHeight) {
     return false;
   }
-  
+
   // 新しい位置の矩形
   const newRect = {
     left: x,
@@ -3820,17 +3890,17 @@ function isValidAbsolutePosition(grid, container, x, y) {
     right: x + containerWidth,
     bottom: y + containerHeight
   };
-  
+
   // グリッド内のすべてのコンテナを取得（ドラッグ中のコンテナを除く）
   const allContainers = grid.querySelectorAll('.draggable-container');
-  
+
   // 他のコンテナと重複していないかチェック
   for (const otherContainer of allContainers) {
     // ドラッグ中のコンテナはスキップ
     if (otherContainer === container || otherContainer === draggedElement) {
       continue;
     }
-    
+
     // 他のコンテナの位置とサイズを取得
     const otherLeft = parseInt(otherContainer.style.left) || 0;
     const otherTop = parseInt(otherContainer.style.top) || 0;
@@ -3838,24 +3908,24 @@ function isValidAbsolutePosition(grid, container, x, y) {
     const otherHeight = parseInt(otherContainer.dataset.containerHeight) || 3;
     const otherContainerWidth = otherWidth * CELL_SIZE;
     const otherContainerHeight = otherHeight * CELL_SIZE;
-    
+
     const otherRect = {
       left: otherLeft,
       top: otherTop,
       right: otherLeft + otherContainerWidth,
       bottom: otherTop + otherContainerHeight
     };
-    
+
     // 矩形の重複チェック
     if (newRect.left < otherRect.right &&
-        newRect.right > otherRect.left &&
-        newRect.top < otherRect.bottom &&
-        newRect.bottom > otherRect.top) {
+      newRect.right > otherRect.left &&
+      newRect.top < otherRect.bottom &&
+      newRect.bottom > otherRect.top) {
       // 重複している
       return false;
     }
   }
-  
+
   // 重複していない
   return true;
 }
@@ -3875,16 +3945,16 @@ function applyMypageTheme(theme = null) {
   try {
     const settings = JSON.parse(localStorage.getItem('staff_settings') || '{}');
     const selectedTheme = theme || settings.theme || 'misesapo';
-    
+
     // テーマクラスを適用（mypage-contentのみ、ヘッダーは除外）
     const mypageContent = document.getElementById('mypage-content');
     if (mypageContent) {
       mypageContent.setAttribute('data-theme', selectedTheme);
     }
-    
+
     // ドキュメント全体にも適用
     document.documentElement.setAttribute('data-mypage-theme', selectedTheme);
-    
+
     console.log('[Theme] Applied theme:', selectedTheme);
   } catch (error) {
     console.warn('Failed to apply mypage theme:', error);
@@ -3907,29 +3977,29 @@ function validateAndClearInvalidLayout() {
   try {
     const savedLayout = localStorage.getItem('mypage_section_layout');
     if (!savedLayout) return;
-    
+
     const layout = JSON.parse(savedLayout);
     const grid = document.getElementById('mypage-grid');
     if (!grid) return;
-    
+
     const gridWidth = grid.offsetWidth || 1920;
     const gridHeight = grid.offsetHeight || 1080;
     let hasInvalid = false;
-    
+
     layout.forEach(item => {
       if (item.position) {
         const parts = item.position.split(',').map(Number);
         if (parts.length === 2) {
-          if (isNaN(parts[0]) || isNaN(parts[1]) || 
-              !isFinite(parts[0]) || !isFinite(parts[1]) ||
-              Math.abs(parts[0]) > 100000 || Math.abs(parts[1]) > 100000 ||
-              (parts[0] >= 100 && (parts[0] < 0 || parts[0] >= gridWidth || parts[1] < 0 || parts[1] >= gridHeight))) {
+          if (isNaN(parts[0]) || isNaN(parts[1]) ||
+            !isFinite(parts[0]) || !isFinite(parts[1]) ||
+            Math.abs(parts[0]) > 100000 || Math.abs(parts[1]) > 100000 ||
+            (parts[0] >= 100 && (parts[0] < 0 || parts[0] >= gridWidth || parts[1] < 0 || parts[1] >= gridHeight))) {
             hasInvalid = true;
           }
         }
       }
     });
-    
+
     if (hasInvalid) {
       console.warn('[Layout] Invalid layout data found in localStorage, clearing...');
       localStorage.removeItem('mypage_section_layout');
@@ -3941,7 +4011,7 @@ function validateAndClearInvalidLayout() {
 }
 
 // NFCタグ打刻処理（バックグラウンド）
-(function() {
+(function () {
   const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
 
   // IDトークン取得
@@ -3949,7 +4019,7 @@ function validateAndClearInvalidLayout() {
     try {
       const cognitoIdToken = localStorage.getItem('cognito_id_token');
       if (cognitoIdToken) return cognitoIdToken;
-      
+
       const cognitoUser = localStorage.getItem('cognito_user');
       if (cognitoUser) {
         try {
@@ -3960,7 +4030,7 @@ function validateAndClearInvalidLayout() {
           console.warn('Error parsing cognito user:', e);
         }
       }
-      
+
       const authData = localStorage.getItem('misesapo_auth');
       if (authData) {
         try {
@@ -3970,7 +4040,7 @@ function validateAndClearInvalidLayout() {
           console.warn('Error parsing auth data:', e);
         }
       }
-      
+
       return 'dev-token';
     } catch (error) {
       console.error('Error getting ID token:', error);
@@ -3986,13 +4056,13 @@ function validateAndClearInvalidLayout() {
         const parsed = JSON.parse(cognitoUser);
         return parsed.username || parsed.email?.split('@')[0] || 'WKR_001';
       }
-      
+
       const authData = localStorage.getItem('misesapo_auth');
       if (authData) {
         const parsed = JSON.parse(authData);
         return parsed.user?.id || parsed.user?.email?.split('@')[0] || 'WKR_001';
       }
-      
+
       return 'WKR_001';
     } catch (e) {
       console.error('Error getting user ID:', e);
@@ -4004,7 +4074,7 @@ function validateAndClearInvalidLayout() {
   async function recordClockIn(facilityId, locationId) {
     try {
       const user_id = getCurrentUserId();
-      
+
       const response = await fetch(`${REPORT_API}/staff/nfc/clock-in`, {
         method: 'POST',
         headers: {
@@ -4089,12 +4159,12 @@ function validateAndClearInvalidLayout() {
   // 認証チェック関数
   async function checkAuthentication() {
     const token = await getFirebaseIdToken();
-    
+
     // dev-tokenの場合は認証されていない
     if (token === 'dev-token') {
       return false;
     }
-    
+
     // Cognitoユーザーを確認
     const cognitoUser = localStorage.getItem('cognito_user');
     if (cognitoUser) {
@@ -4107,7 +4177,7 @@ function validateAndClearInvalidLayout() {
         console.warn('Error parsing cognito user:', e);
       }
     }
-    
+
     // misesapo_authを確認
     const authData = localStorage.getItem('misesapo_auth');
     if (authData) {
@@ -4120,12 +4190,12 @@ function validateAndClearInvalidLayout() {
         console.warn('Error parsing auth data:', e);
       }
     }
-    
+
     return false;
   }
 
   // ページ読み込み時にURLパラメータをチェック
-  window.addEventListener('DOMContentLoaded', async function() {
+  window.addEventListener('DOMContentLoaded', async function () {
     const urlParams = new URLSearchParams(window.location.search);
     const tagId = urlParams.get('nfc_tag_id');
 
@@ -4168,7 +4238,7 @@ function validateAndClearInvalidLayout() {
           const facilityName = tagInfo.facility_name || tagInfo.facility_id;
           const locationName = tagInfo.location_name || tagInfo.location_id;
           showToast(`打刻完了: ${facilityName} - ${locationName}`, 'success');
-          
+
           // 出退勤記録を再読み込み（もし表示されている場合）
           if (typeof loadAttendanceRecords === 'function') {
             setTimeout(() => {
@@ -4190,10 +4260,10 @@ function validateAndClearInvalidLayout() {
 document.addEventListener('DOMContentLoaded', () => {
   // ページ読み込み時にlocalStorageの異常なデータをクリア
   setTimeout(validateAndClearInvalidLayout, 100);
-  
+
   // 日付が変わったかチェック（最初に実行）
   initializeAttendanceForToday();
-  
+
   loadCurrentUser();
   if (document.getElementById('attendance-toggle-btn')) {
     setupAttendanceToggleButton();
@@ -4206,21 +4276,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   setupDigitalClock();
   applyMypageTheme();
-  
+
   // 設定ページでテーマが変更された場合のイベントリスナー
   window.addEventListener('themeChanged', (e) => {
     applyMypageTheme(e.detail.theme);
   });
-  
+
   // localStorageの変更を監視（別タブで設定が変更された場合）
   window.addEventListener('storage', (e) => {
     if (e.key === 'staff_settings') {
       applyMypageTheme();
     }
   });
-  
+
   // 編集モード機能は削除されました
-  
+
   // 自動整列ボタン
   const autoAlignBtn = document.getElementById('auto-align-btn');
   if (autoAlignBtn) {
@@ -4234,14 +4304,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  
+
   // ドラッグ&ドロップ機能は削除されました
-  
+
   // セクションの配置はloadCurrentUser()内で復元されるため、ここでは呼ばない
-  
+
   // コンテナのツールチップを設定
   setupContainerTooltips();
-  
+
   // ウィンドウリサイズ時にキャッシュをクリア
   let resizeTimeout;
   window.addEventListener('resize', () => {
@@ -4249,7 +4319,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // リサイズ時にキャッシュをクリア
     clearGridPositionCache();
   });
-  
+
   // カレンダーナビゲーション
   const calendarPrev = document.getElementById('calendar-prev');
   const calendarNext = document.getElementById('calendar-next');
@@ -4267,7 +4337,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderCalendar();
     });
   }
-  
+
   // ユーザー読み込み後にTODOを読み込む
   const originalLoadCurrentUser = loadCurrentUser;
   if (hasTodoUI) {
@@ -4277,7 +4347,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(checkAndLoadTodos);
       }
     }, 500);
-    
+
     // 5秒後にタイムアウト
     setTimeout(() => {
       clearInterval(checkAndLoadTodos);
@@ -4286,7 +4356,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, 5000);
   }
-  
+
   // アコーディオン機能のセットアップはloadCurrentUser()の完了後に実行される
 });
 
@@ -4296,37 +4366,37 @@ async function loadScheduleList(user) {
     console.warn('[Mypage] User ID not available for schedule list');
     return;
   }
-  
+
   const scheduleListContent = document.getElementById('schedule-list-content');
   if (!scheduleListContent) return;
-  
+
   try {
     const idToken = await getCognitoIdToken();
     const headers = {};
     if (idToken) {
       headers['Authorization'] = `Bearer ${idToken}`;
     }
-    
+
     // スケジュールを取得
     const response = await fetch(`${API_BASE}/schedules`, { headers });
     if (!response.ok) {
       throw new Error('Failed to load schedules');
     }
-    
+
     const schedulesData = await response.json();
     const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
-    
+
     // 現在のユーザーに割り当てられたスケジュール、または全員に割り当てられたスケジュールをフィルタリング
     // デフォルトは全員に割り当て（worker_idが空/null = 全員が見られる）
     // 特定の清掃員に割り当てられた場合は、その清掃員のみに表示
     const userSchedules = allSchedules.filter(schedule => {
       const scheduleWorkerId = schedule.worker_id || schedule.assigned_to || schedule.staff_id;
-      
+
       // worker_idが空/nullの場合 = 全員に割り当て = 全員に表示
       if (!scheduleWorkerId || scheduleWorkerId === '' || scheduleWorkerId === null) {
         return true;
       }
-      
+
       // 特定の清掃員に割り当てられた場合、現在のユーザーに割り当てられているか確認
       // IDの正規化処理を使用して比較
       if (window.DataUtils && window.DataUtils.IdUtils && window.DataUtils.IdUtils.isSame) {
@@ -4335,7 +4405,7 @@ async function loadScheduleList(user) {
         return String(scheduleWorkerId) === String(user.id);
       }
     });
-    
+
     // 確定済み（scheduledまたはin_progress）で、現在以降のスケジュールをフィルタリング
     const now = new Date();
     const upcomingSchedules = userSchedules
@@ -4345,13 +4415,13 @@ async function loadScheduleList(user) {
         if (status !== 'scheduled' && status !== 'in_progress') {
           return false;
         }
-        
+
         // 日付と時刻を取得
         const scheduleDate = schedule.scheduled_date || schedule.date;
         const scheduleTime = schedule.scheduled_time || schedule.time || schedule.time_slot || '00:00';
-        
+
         if (!scheduleDate) return false;
-        
+
         // 日時を生成して現在時刻と比較
         const scheduleDateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
         return scheduleDateTime >= now;
@@ -4361,27 +4431,27 @@ async function loadScheduleList(user) {
         const dateA = a.scheduled_date || a.date;
         const timeA = a.scheduled_time || a.time || a.time_slot || '00:00';
         const dateTimeA = new Date(`${dateA}T${timeA}:00`);
-        
+
         const dateB = b.scheduled_date || b.date;
         const timeB = b.scheduled_time || b.time || b.time_slot || '00:00';
         const dateTimeB = new Date(`${dateB}T${timeB}:00`);
-        
+
         return dateTimeA - dateTimeB;
       })
       .slice(0, 3); // 3件のみ表示
-    
+
     // 表示を更新
     if (upcomingSchedules.length === 0) {
       scheduleListContent.innerHTML = '<div class="empty-state">確定済みのスケジュールはありません</div>';
       return;
     }
-    
+
     // スケジュール一覧を表示
     scheduleListContent.innerHTML = upcomingSchedules.map(schedule => {
       const scheduleDate = schedule.scheduled_date || schedule.date;
       const scheduleTime = schedule.scheduled_time || schedule.time || schedule.time_slot || '00:00';
       const dateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
-      
+
       // 日付と時刻をフォーマット
       const dateStr = dateTime.toLocaleDateString('ja-JP', {
         month: 'long',
@@ -4389,13 +4459,13 @@ async function loadScheduleList(user) {
         weekday: 'short'
       });
       const timeStr = scheduleTime.length === 5 ? scheduleTime : scheduleTime.substring(0, 5);
-      
+
       // ブランド名と店舗名を取得
       const brandName = schedule.brand_name || '';
       const storeName = schedule.store_name || schedule.client_name || '-';
       // ブランド名と店名を組み合わせて表示（ブランド名がある場合のみ表示）
       const displayName = brandName ? `${escapeHtml(brandName)} / ${escapeHtml(storeName)}` : escapeHtml(storeName);
-      
+
       // 現在のユーザーに既に受託されているか確認
       const scheduleWorkerId = schedule.worker_id || schedule.assigned_to || schedule.staff_id || '';
       let isAssigned = false;
@@ -4406,11 +4476,11 @@ async function loadScheduleList(user) {
           isAssigned = String(scheduleWorkerId) === String(user.id);
         }
       }
-      
+
       // 既に受託済みの場合は「確定」バッジ、未受託の場合は「受託」ボタンを表示
       const statusLabel = schedule.status === 'in_progress' ? '作業中' : '確定';
       const statusClass = schedule.status === 'in_progress' ? 'status-in-progress' : 'status-scheduled';
-      
+
       return `
         <div class="schedule-list-item" style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
@@ -4419,10 +4489,10 @@ async function loadScheduleList(user) {
               <span style="font-weight: 600; color: #111827;">${escapeHtml(dateStr)}</span>
               <span style="color: #6b7280; font-size: 0.875rem;">${timeStr}</span>
             </div>
-            ${isAssigned 
-              ? `<span class="status-badge ${statusClass}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500;">${statusLabel}</span>`
-              : `<button class="btn-accept-schedule" onclick="event.stopPropagation(); acceptSchedule('${escapeHtml(schedule.id)}', this);" style="padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: #ff679c; color: white; border: none; cursor: pointer; transition: all 0.2s;">受託</button>`
-            }
+            ${isAssigned
+          ? `<span class="status-badge ${statusClass}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500;">${statusLabel}</span>`
+          : `<button class="btn-accept-schedule" onclick="event.stopPropagation(); acceptSchedule('${escapeHtml(schedule.id)}', this);" style="padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: #ff679c; color: white; border: none; cursor: pointer; transition: all 0.2s;">受託</button>`
+        }
           </div>
           <div style="color: #6b7280; font-size: 0.875rem; cursor: pointer;" onclick="window.location.href='/staff/schedule'">
             <i class="fas fa-store" style="margin-right: 4px;"></i>
@@ -4431,7 +4501,7 @@ async function loadScheduleList(user) {
         </div>
       `;
     }).join('');
-    
+
     console.log('[Mypage] Loaded schedule list:', upcomingSchedules.length, 'schedules');
   } catch (error) {
     console.error('[Mypage] Failed to load schedule list:', error);
@@ -4445,44 +4515,44 @@ async function loadOSNextSchedule(user) {
     console.warn('[OS Mypage] User ID not available');
     return;
   }
-  
+
   const scheduleInfoContent = document.getElementById('schedule-info-content');
   const refreshIndicator = document.getElementById('schedule-refresh-indicator');
-  
+
   if (!scheduleInfoContent) return;
-  
+
   try {
     // 更新インジケーターを表示
     if (refreshIndicator) {
       refreshIndicator.classList.add('fa-spin');
     }
-    
+
     const idToken = await getCognitoIdToken();
     const headers = {};
     if (idToken) {
       headers['Authorization'] = `Bearer ${idToken}`;
     }
-    
+
     // スケジュールを取得
     const response = await fetch(`${API_BASE}/schedules`, { headers });
     if (!response.ok) {
       throw new Error('Failed to load schedules');
     }
-    
+
     const schedulesData = await response.json();
     const allSchedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData.items || schedulesData.schedules || []);
-    
+
     // 現在のユーザーに割り当てられたスケジュール、または全員に割り当てられたスケジュールをフィルタリング
     // デフォルトは全員に割り当て（worker_idが空/null = 全員が見られる）
     // 特定の清掃員に割り当てられた場合は、その清掃員のみに表示
     const userSchedules = allSchedules.filter(schedule => {
       const scheduleWorkerId = schedule.worker_id || schedule.assigned_to || schedule.staff_id;
-      
+
       // worker_idが空/nullの場合 = 全員に割り当て = 全員に表示
       if (!scheduleWorkerId || scheduleWorkerId === '' || scheduleWorkerId === null) {
         return true;
       }
-      
+
       // 特定の清掃員に割り当てられた場合、現在のユーザーに割り当てられているか確認
       // IDの正規化処理を使用して比較
       if (window.DataUtils && window.DataUtils.IdUtils && window.DataUtils.IdUtils.isSame) {
@@ -4491,7 +4561,7 @@ async function loadOSNextSchedule(user) {
         return String(scheduleWorkerId) === String(user.id);
       }
     });
-    
+
     // 確定済み（scheduledまたはin_progress）で、現在時刻以降のスケジュールを取得し、開始時刻順にソート
     const now = new Date();
     const upcomingSchedules = userSchedules
@@ -4501,35 +4571,35 @@ async function loadOSNextSchedule(user) {
         if (status !== 'scheduled' && status !== 'in_progress') {
           return false;
         }
-        
+
         if (!schedule.scheduled_date && !schedule.date) return false;
-        
+
         const scheduleDate = schedule.scheduled_date || schedule.date;
         const scheduleTime = schedule.scheduled_time || schedule.time || schedule.time_slot || '00:00';
         const scheduleDateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
-        
+
         return scheduleDateTime >= now;
       })
       .sort((a, b) => {
         const dateA = a.scheduled_date || a.date;
         const timeA = a.scheduled_time || a.time || a.time_slot || '00:00';
         const dateTimeA = new Date(`${dateA}T${timeA}:00`);
-        
+
         const dateB = b.scheduled_date || b.date;
         const timeB = b.scheduled_time || b.time || b.time_slot || '00:00';
         const dateTimeB = new Date(`${dateB}T${timeB}:00`);
-        
+
         return dateTimeA - dateTimeB;
       });
-    
+
     // 直近のスケジュール（最初の1件）
     const nextSchedule = upcomingSchedules[0];
-    
+
     if (nextSchedule) {
       const scheduleDate = nextSchedule.scheduled_date || nextSchedule.date;
       const scheduleTime = nextSchedule.scheduled_time || nextSchedule.time || nextSchedule.time_slot || '00:00';
       const scheduleDateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
-      
+
       // 日付と時刻をフォーマット
       const dateStr = new Date(scheduleDate).toLocaleDateString('ja-JP', {
         month: 'long',
@@ -4537,12 +4607,12 @@ async function loadOSNextSchedule(user) {
         weekday: 'short'
       });
       const timeStr = scheduleTime.length === 5 ? scheduleTime : scheduleTime.substring(0, 5);
-      
+
       // 残り時間を計算
       const timeDiff = scheduleDateTime - now;
       const hoursLeft = Math.floor(timeDiff / (1000 * 60 * 60));
       const minutesLeft = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-      
+
       let timeLeftText = '';
       if (hoursLeft > 0) {
         timeLeftText = `あと${hoursLeft}時間${minutesLeft}分`;
@@ -4553,13 +4623,13 @@ async function loadOSNextSchedule(user) {
       } else {
         timeLeftText = '開始時刻を過ぎています';
       }
-      
+
       // ブランド名と店舗名を取得
       const brandName = nextSchedule.brand_name || '';
       const storeName = nextSchedule.store_name || nextSchedule.store?.name || '-';
       // ブランド名と店名を組み合わせて表示（ブランド名がある場合のみ表示）
       const displayName = brandName ? `${escapeHtml(brandName)} / ${escapeHtml(storeName)}` : escapeHtml(storeName);
-      
+
       scheduleInfoContent.innerHTML = `
         <div class="schedule-detail" style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb;">
           <div class="schedule-time-section" style="margin-bottom: 12px;">

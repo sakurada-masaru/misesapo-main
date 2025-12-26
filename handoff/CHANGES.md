@@ -36,3 +36,9 @@
 - **2025-12-26**: Fixed karte edit/create link for static routing. (by Codex)
     - 変更したファイル: `src/assets/js/admin-karte.js`
     - 詳細: 本番の静的配信でも404にならないよう `[id]/chart.html?store_id=...` に修正。
+- **2025-12-26**: Synced daily report archive from staff mypage saves. (by Codex)
+    - 変更したファイル: `src/assets/js/staff-mypage.js`, `public/js/staff-mypage.js`
+    - 詳細: マイページの日報保存時に `daily_reports_{staff_id}` へも保存し、日報アーカイブに反映されるよう同期。
+- **2025-12-26**: Added API-backed loading/saving for staff daily reports. (by Codex)
+    - 変更したファイル: `src/pages/staff/daily-reports.html`, `public/staff/daily-reports.html`
+    - 詳細: Cognitoトークンで `/daily-reports` を読み込み/保存し、API失敗時はローカルストレージにフォールバック。

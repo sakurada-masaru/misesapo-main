@@ -797,7 +797,7 @@
       }
 
       // 日報データを読み込み
-      loadReports();
+      await loadReports();
 
       loadingEl.style.display = 'none';
       contentEl.style.display = 'block';
@@ -810,19 +810,75 @@
     }
   }
 
-  // 日報データを読み込み（ローカルストレージ）
-  function loadReports() {
+  function getIdToken() {
+    if (window.CognitoAuth && typeof window.CognitoAuth.getIdToken === 'function') {
+      return window.CognitoAuth.getIdToken();
+    }
+    return localStorage.getItem('cognito_id_token');
+  }
+
+  function buildAuthHeaders(includeContentType = false) {
+    const headers = {};
+    if (includeContentType) {
+      headers['Content-Type'] = 'application/json';
+    }
+    const idToken = getIdToken();
+    if (idToken) {
+      headers['Authorization'] = `Bearer ${idToken}`;
+    }
+    return headers;
+  }
+
+  function normalizeApiReports(data) {
+    const items = data?.items || data?.reports || (Array.isArray(data) ? data : []);
+    return items.map(report => ({
+      ...report,
+      id: report.id || report.report_id || `report_${Date.now()}`,
+      staff_id: report.staff_id || report.staffId || '',
+      date: report.date || report.created_at || '',
+      work_content: report.work_content || report.workContent || '',
+      achievements: report.achievements || report.progress || '',
+      issues: report.issues || report.problems || '',
+      tomorrow: report.tomorrow || report.next_plan || '',
+      notes: report.notes || report.memo || '',
+      content: report.content || report.text || ''
+    }));
+  }
+
+  function readLocalReports(storageKey) {
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEY}_${currentUser.id}`);
-      if (stored) {
-        reports = JSON.parse(stored);
-      } else {
-        reports = [];
-      }
+      const stored = localStorage.getItem(storageKey);
+      return stored ? JSON.parse(stored) : [];
     } catch (error) {
       console.error('Error loading reports:', error);
-      reports = [];
+      return [];
     }
+  }
+
+  async function loadReports() {
+    const storageKey = `${STORAGE_KEY}_${currentUser.id}`;
+    const localReports = readLocalReports(storageKey);
+    reports = localReports;
+
+    try {
+      const response = await fetch(`${API_BASE}/daily-reports?staff_id=${encodeURIComponent(currentUser.id)}`, {
+        method: 'GET',
+        headers: buildAuthHeaders(),
+        cache: 'no-store'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const apiReports = normalizeApiReports(data);
+        if (apiReports.length) {
+          reports = apiReports;
+          saveReports();
+        }
+      }
+    } catch (error) {
+      console.error('Error loading reports from API:', error);
+    }
+
     renderReports();
   }
 
@@ -925,6 +981,12 @@
                 <div class="report-section-content">${escapeHtml(report.notes)}</div>
               </div>
             ` : ''}
+            ${(!report.work_content && !report.achievements && !report.issues && !report.tomorrow && !report.notes && report.content) ? `
+              <div class="report-section">
+                <div class="report-section-title"><i class="fas fa-file-alt"></i> 日報内容</div>
+                <div class="report-section-content">${escapeHtml(report.content)}</div>
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
@@ -984,7 +1046,7 @@
   }
 
   // 日報を保存
-  function saveReport() {
+  async function saveReport() {
     const date = document.getElementById('report-date').value;
     const workContent = document.getElementById('report-work-content').value.trim();
     const achievements = document.getElementById('report-achievements').value.trim();
@@ -1003,6 +1065,8 @@
     }
 
     const now = new Date().toISOString();
+
+    let reportId = editingReportId;
 
     if (editingReportId) {
       // 編集
@@ -1033,7 +1097,43 @@
         created_at: now,
         updated_at: now
       };
+      reportId = newReport.id;
       reports.push(newReport);
+    }
+
+    const contentFallback = [
+      workContent && `業務内容:\n${workContent}`,
+      achievements && `成果・進捗:\n${achievements}`,
+      issues && `課題・問題点:\n${issues}`,
+      tomorrow && `明日の予定:\n${tomorrow}`,
+      notes && `備考:\n${notes}`
+    ].filter(Boolean).join('\n\n');
+
+    try {
+      const payload = {
+        id: reportId,
+        staff_id: currentUser.id,
+        staff_name: currentUser.name || '',
+        date,
+        work_content: workContent,
+        achievements,
+        issues,
+        tomorrow,
+        notes,
+        content: contentFallback
+      };
+
+      const response = await fetch(`${API_BASE}/daily-reports`, {
+        method: 'POST',
+        headers: buildAuthHeaders(true),
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to save daily report to API:', response.status);
+      }
+    } catch (error) {
+      console.error('Error saving daily report to API:', error);
     }
 
     saveReports();
@@ -1135,5 +1235,4 @@
     </script>
   </body>
   </html>
-
 
