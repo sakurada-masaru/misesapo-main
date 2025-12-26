@@ -472,6 +472,52 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       margin-bottom: 24px;
     }
+    .report-card .card-header {
+      align-items: center;
+    }
+    .card-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin: 0;
+      color: #111827;
+    }
+    .card-subtitle {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    .status-chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .status-draft {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    .report-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed #e5e7eb;
+      flex-wrap: wrap;
+    }
+    .report-hint {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
     .card-header {
       display: flex;
       justify-content: space-between;
@@ -643,54 +689,7 @@
         grid-template-columns: repeat(2, 1fr);
       }
     }
-  
-    .report-card .card-header {
-      align-items: center;
-    }
-    .card-title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 1.125rem;
-      font-weight: 700;
-      margin: 0;
-      color: #111827;
-    }
-    .card-subtitle {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin: 0;
-    }
-    .status-chip {
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .status-draft {
-      background: #e0f2fe;
-      color: #0369a1;
-    }
-    .report-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px dashed #e5e7eb;
-      flex-wrap: wrap;
-    }
-    .report-hint {
-      font-size: 0.875rem;
-      color: #6b7280;
-    }
-</style>
+  </style>
 
   <script>
     // Show/hide URL and notes sections based on content
@@ -715,7 +714,6 @@
     })();
   </script>
 </main>
-
 
     </main>
     <footer class="site-footer">

@@ -129,16 +129,16 @@ function getStoreIdFromUrl() {
   if (window.__chartStoreId) {
     return window.__chartStoreId;
   }
-  
+
   const path = window.location.pathname;
   const fullUrl = window.location.href;
-  
+
   // 方法1: /admin/customers/stores/{id}/chart.html の形式から取得（末尾の/を考慮、大文字小文字を区別しない）
   const chartMatch = path.match(/\/admin\/customers\/stores\/([^\/\?]+)\/chart\.html\/?$/i);
   if (chartMatch && chartMatch[1] && chartMatch[1] !== '[id]') {
     return chartMatch[1];
   }
-  
+
   // 方法2: パスパーツから取得（storesの次の要素を取得）
   const pathParts = path.split('/').filter(p => p); // 空文字列を除外
   const storeIdIndex = pathParts.indexOf('stores');
@@ -149,7 +149,7 @@ function getStoreIdFromUrl() {
       return potentialStoreId;
     }
   }
-  
+
   // 方法3: ハッシュやクエリパラメータから取得（フォールバック）
   const hash = window.location.hash;
   if (hash) {
@@ -158,19 +158,19 @@ function getStoreIdFromUrl() {
       return hashMatch[1];
     }
   }
-  
+
   const params = new URLSearchParams(window.location.search);
   const storeIdParam = params.get('store_id') || params.get('storeId') || params.get('id');
   if (storeIdParam && storeIdParam !== '[id]') {
     return storeIdParam;
   }
-  
+
   // 方法4: URL全体から直接抽出を試みる（最後の手段）
   const urlMatch = fullUrl.match(/\/stores\/([^\/\?]+)/i);
   if (urlMatch && urlMatch[1] && urlMatch[1] !== '[id]' && urlMatch[1] !== 'chart.html' && !urlMatch[1].includes('?')) {
     return urlMatch[1];
   }
-  
+
   return null;
 }
 
@@ -179,11 +179,11 @@ function execute404Routing() {
   const path = window.location.pathname;
   const basePath = document.querySelector('base')?.getAttribute('href') || '/';
   const chartMatch = path.match(/^\/admin\/customers\/stores\/([^\/]+)\/chart\.html\/?$/);
-  
+
   if (chartMatch) {
     const storeId = chartMatch[1];
     const templateUrl = basePath.replace(/\/$/, '') + '/admin/customers/stores/[id]/chart.html';
-    
+
     return fetch(templateUrl)
       .then(response => {
         if (!response.ok) {
@@ -207,30 +207,30 @@ function execute404Routing() {
 }
 
 // 初期化（即時実行、DOMContentLoadedを待たない）
-(function() {
+(function () {
   // URLから店舗IDを取得
   currentStoreId = getStoreIdFromUrl();
-  
+
   // [id]が含まれている場合、または店舗IDが取得できない場合は、404.htmlのルーティングを手動で実行
   if (currentStoreId === '[id]' || !currentStoreId) {
     console.warn('Store ID not found, attempting 404.html routing manually...');
-    
+
     // 404.htmlのルーティングを手動で実行
     execute404Routing().then(routingSuccess => {
       if (routingSuccess) {
         // ルーティングが成功した場合、ページが再読み込みされるのでここで終了
         return;
       }
-      
+
       // ルーティングが失敗した場合、URLから直接取得を再試行
       currentStoreId = getStoreIdFromUrl();
-      
+
       if (!currentStoreId || currentStoreId === '[id]') {
         console.error('Store ID not found in URL after routing attempt');
         // エラー表示はしない（ページが既に表示されている可能性があるため）
         return;
       }
-      
+
       // DOMContentLoadedを待ってから初期化
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
@@ -281,7 +281,7 @@ async function initializeChart() {
 
   // セクションのアコーディオン機能
   setupAccordions();
-  
+
   // バージョン表示を更新
   updateVersionDisplay();
 
@@ -447,7 +447,7 @@ function updateVersionDisplay() {
   const versionBadge = document.getElementById('chart-version-badge');
   const versionText = document.getElementById('version-text');
   const upgradeBtn = document.getElementById('upgrade-chart-btn');
-  
+
   if (versionBadge && versionText) {
     const version = chartData.version || 'simple';
     if (version === 'complete') {
@@ -475,7 +475,7 @@ async function loadAllCharts() {
     // const response = await fetch(`${API_BASE}/stores/${currentStoreId}/charts`);
     // const data = await response.json();
     // allCharts = Array.isArray(data) ? data : (data.items || data.charts || []);
-    
+
     // 仮のデータ（ローカルストレージから読み込む）
     const saved = localStorage.getItem(`chart_${currentStoreId}`);
     if (saved) {
@@ -484,7 +484,7 @@ async function loadAllCharts() {
     } else {
       allCharts = [];
     }
-    
+
     renderChartHistorySelector();
   } catch (error) {
     console.error('Failed to load all charts:', error);
@@ -495,14 +495,14 @@ async function loadAllCharts() {
 function renderChartHistorySelector() {
   const selector = document.getElementById('chart-history-selector');
   const select = document.getElementById('chart-select');
-  
+
   if (!selector || !select) return;
-  
+
   if (allCharts.length <= 1) {
     selector.style.display = 'none';
     return;
   }
-  
+
   selector.style.display = 'block';
   select.innerHTML = '<option value="">アクティブなカルテを選択</option>' +
     allCharts.map(chart => {
@@ -511,7 +511,7 @@ function renderChartHistorySelector() {
       const status = chart.status === 'active' ? 'アクティブ' : 'アーカイブ';
       return `<option value="${chart.chart_id || ''}">${chart.chart_id || '新規'} - ${version} - ${status} (${date})</option>`;
     }).join('');
-  
+
   // アクティブなカルテを選択
   const activeChart = allCharts.find(c => c.status === 'active');
   if (activeChart && activeChart.chart_id) {
@@ -590,7 +590,7 @@ async function loadChartData() {
     // const response = await fetch(`${API_BASE}/stores/${currentStoreId}/chart`);
     // const data = await response.json();
     // chartData = data;
-    
+
     // 仮のデータ（ローカルストレージから読み込む）
     const saved = localStorage.getItem(`chart_${currentStoreId}`);
     if (saved) {
@@ -626,7 +626,7 @@ async function loadChartData() {
         chartData.client_id = currentStore.client_id;
       }
     }
-    
+
     renderChartData();
     updateVersionDisplay();
   } catch (error) {
@@ -643,22 +643,22 @@ function renderBasicInfo() {
   const headerBrandIdEl = document.getElementById('header-brand-id');
   const headerStoreIdEl = document.getElementById('header-store-id');
   const headerChartIdEl = document.getElementById('header-chart-id');
-  
+
   if (headerClientIdEl) {
-    const clientId = currentStore.client_id || (currentStore.brand_id ? 
+    const clientId = currentStore.client_id || (currentStore.brand_id ?
       allBrands.find(b => b.id === currentStore.brand_id)?.client_id : null);
     headerClientIdEl.textContent = clientId ? `-${clientId}` : '-';
   }
-  
+
   if (headerBrandIdEl) {
     const brandId = currentStore.brand_id;
     headerBrandIdEl.textContent = brandId ? `-${brandId}` : '-';
   }
-  
+
   if (headerStoreIdEl) {
     headerStoreIdEl.textContent = currentStoreId ? `-${currentStoreId}` : '-';
   }
-  
+
   if (headerChartIdEl) {
     headerChartIdEl.textContent = chartData.chart_id || '-';
   }
@@ -672,7 +672,7 @@ function renderBasicInfo() {
   const storeEmailEl = document.getElementById('store-email');
 
   if (storeNameEl) storeNameEl.textContent = currentStore.name || '-';
-  
+
   if (brandNameEl) {
     const brandId = currentStore.brand_id;
     const brand = allBrands.find(b => b.id === brandId || String(b.id) === String(brandId));
@@ -684,7 +684,7 @@ function renderBasicInfo() {
   }
 
   if (storeAddressEl) {
-    const address = currentStore.address || 
+    const address = currentStore.address ||
       `${currentStore.postcode ? '〒' + currentStore.postcode + ' ' : ''}${currentStore.pref || ''}${currentStore.city || ''}${currentStore.address1 || ''}${currentStore.address2 || ''}`;
     storeAddressEl.textContent = address.trim() || '-';
   }
@@ -692,18 +692,18 @@ function renderBasicInfo() {
   if (storePhoneEl) {
     storePhoneEl.textContent = currentStore.phone || currentStore.tel || '-';
   }
-  
+
   if (storeEmailEl) {
     storeEmailEl.textContent = currentStore.email || currentStore.email_address || '-';
   }
-  
+
   // プラン選択
   const planFrequency = chartData.plan_frequency || 'semiannual';
   const planRadio = document.getElementById(`plan-${planFrequency}`);
   if (planRadio) {
     planRadio.checked = true;
   }
-  
+
   // セキュリティボックス番号
   const securityBoxNumberEl = document.getElementById('security-box-number');
   if (securityBoxNumberEl) {
@@ -735,7 +735,7 @@ function renderServices() {
     html += `<div class="equipment-category">
       <h3 class="category-title">${escapeHtml(category)}</h3>
       <div class="checkbox-group">`;
-    
+
     servicesByCategory[category].forEach(service => {
       const serviceName = service.title || service.name || '';
       const isChecked = chartData.services.includes(serviceName);
@@ -745,7 +745,7 @@ function renderServices() {
           <span class="checkbox-label">${escapeHtml(serviceName)}</span>
         </label>`;
     });
-    
+
     html += `</div></div>`;
   });
 
@@ -759,7 +759,7 @@ function renderChartData() {
   if (chartIdEl) {
     chartIdEl.textContent = chartData.chart_id || '-';
   }
-  
+
   // 設備チェックボックス
   const equipmentCheckboxes = document.querySelectorAll('input[name="equipment"]');
   equipmentCheckboxes.forEach(checkbox => {
@@ -779,7 +779,7 @@ function renderChartData() {
   if (notesEl) {
     notesEl.value = chartData.notes || '';
   }
-  
+
   // ステータス
   const statusEl = document.getElementById('chart-status');
   if (statusEl) {
@@ -904,7 +904,7 @@ function setupEventListeners() {
   });
 
   setupIntakeTagListeners();
-  
+
   // セキュリティボックス番号変更
   const securityBoxNumberEl = document.getElementById('security-box-number');
   if (securityBoxNumberEl) {
@@ -1018,7 +1018,7 @@ function setupAccordions() {
       const section = header.closest('.chart-section');
       const content = section.querySelector('.section-content');
       const toggle = header.querySelector('.section-toggle');
-      
+
       if (content) {
         content.classList.toggle('collapsed');
         if (toggle) {
@@ -1042,7 +1042,7 @@ async function upgradeToComplete() {
 
   chartData.version = 'complete';
   chartData.updated_at = new Date().toISOString();
-  
+
   try {
     // TODO: APIで変換
     // const response = await fetch(`${API_BASE}/charts/${chartData.chart_id}/upgrade`, {
@@ -1050,10 +1050,10 @@ async function upgradeToComplete() {
     //   headers: { 'Content-Type': 'application/json' },
     //   body: JSON.stringify({ version: 'complete' })
     // });
-    
+
     // ローカルストレージに保存
     localStorage.setItem(`chart_${currentStoreId}`, JSON.stringify(chartData));
-    
+
     updateVersionDisplay();
     alert('完全版に変換しました');
   } catch (error) {
@@ -1069,7 +1069,7 @@ async function loadChartById(chartId) {
     // const response = await fetch(`${API_BASE}/charts/${chartId}`);
     // const data = await response.json();
     // chartData = data;
-    
+
     // 仮の実装（ローカルストレージから読み込む）
     const chart = allCharts.find(c => c.chart_id === chartId);
     if (chart) {
@@ -1113,7 +1113,7 @@ function addConsumable() {
 }
 
 // 消耗品の編集
-window.editConsumable = function(index) {
+window.editConsumable = function (index) {
   const item = chartData.consumables[index];
   if (!item) return;
 
@@ -1123,7 +1123,7 @@ window.editConsumable = function(index) {
     document.getElementById('consumable-quantity').value = item.quantity || '';
     document.getElementById('consumable-notes').value = item.notes || '';
     modal.showModal();
-    
+
     // 保存ボタンのイベントを一時的に変更
     const saveBtn = document.getElementById('save-consumable-btn');
     if (saveBtn) {
@@ -1140,7 +1140,7 @@ window.editConsumable = function(index) {
 };
 
 // 消耗品の削除
-window.removeConsumable = function(index) {
+window.removeConsumable = function (index) {
   if (confirm('この消耗品を削除しますか？')) {
     chartData.consumables.splice(index, 1);
     renderConsumables();
@@ -1182,7 +1182,7 @@ function addStaff() {
 }
 
 // 担当者履歴の編集
-window.editStaffHistory = function(index) {
+window.editStaffHistory = function (index) {
   const item = chartData.cleaning_staff_history[index];
   if (!item) return;
 
@@ -1193,7 +1193,7 @@ window.editStaffHistory = function(index) {
     document.getElementById('staff-end-date').value = item.end_date || '';
     document.getElementById('staff-notes').value = item.notes || '';
     modal.showModal();
-    
+
     const saveBtn = document.getElementById('save-staff-btn');
     if (saveBtn) {
       saveBtn.onclick = () => {
@@ -1213,7 +1213,7 @@ window.editStaffHistory = function(index) {
 };
 
 // 担当者履歴の削除
-window.removeStaffHistory = function(index) {
+window.removeStaffHistory = function (index) {
   if (confirm('この担当者履歴を削除しますか？')) {
     chartData.cleaning_staff_history.splice(index, 1);
     renderStaffHistory();
@@ -1234,32 +1234,32 @@ function generateChartId() {
 // カルテデータの保存
 async function saveChartData() {
   chartData.store_id = currentStoreId;
-  
+
   if (currentStore) {
     chartData.brand_id = currentStore.brand_id;
     chartData.client_id = currentStore.client_id;
   }
-  
+
   if (!chartData.chart_id) {
     chartData.chart_id = generateChartId();
     chartData.created_at = new Date().toISOString();
   }
-  
+
   chartData.updated_at = new Date().toISOString();
   chartData.version = 'complete'; // 管理画面は完全版
-  
+
   // プラン頻度を取得
   const planRadio = document.querySelector('input[name="plan-frequency"]:checked');
   if (planRadio) {
     chartData.plan_frequency = planRadio.value;
   }
-  
+
   // セキュリティボックス番号を取得
   const securityBoxNumberEl = document.getElementById('security-box-number');
   if (securityBoxNumberEl) {
     chartData.security_box_number = securityBoxNumberEl.value.trim();
   }
-  
+
   // 設備データを取得
   const equipmentCheckboxes = document.querySelectorAll('input[name="equipment"]:checked');
   chartData.equipment = Array.from(equipmentCheckboxes).map(cb => cb.value);
@@ -1281,10 +1281,10 @@ async function saveChartData() {
     //   headers: { 'Content-Type': 'application/json' },
     //   body: JSON.stringify(chartData)
     // });
-    
+
     // ローカルストレージに保存
     localStorage.setItem(`chart_${currentStoreId}`, JSON.stringify(chartData));
-    
+
     // 全カルテリストを更新
     const existingIndex = allCharts.findIndex(c => c.chart_id === chartData.chart_id);
     if (existingIndex >= 0) {
@@ -1293,10 +1293,9 @@ async function saveChartData() {
       allCharts.push({ ...chartData });
     }
     renderChartHistorySelector();
-
     await saveKarteData();
-    
     alert('カルテを保存しました');
+    window.location.href = `/admin/customers/karte.html?store_id=${encodeURIComponent(currentStoreId)}`;
   } catch (error) {
     console.error('Failed to save chart data:', error);
     alert('保存に失敗しました');

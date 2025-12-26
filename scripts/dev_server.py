@@ -6,6 +6,7 @@
 
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -13,6 +14,7 @@ import datetime
 from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+import urllib.request
 from io import BytesIO
 import threading
 
@@ -58,12 +60,79 @@ DATA_DIR = SRC / "data"
 SERVICE_ITEMS_JSON = DATA_DIR / "service_items.json"
 BROWSER_CHANGES_LOG = DATA_DIR / "browser_changes.json"
 STAFF_USERS_JSON = DATA_DIR / "staff_users.json"
-CLEANING_MANUAL_JSON = DATA_DIR / "cleaning-manual.json"
-WIKI_ENTRIES_JSON = DATA_DIR / "wiki_entries.json"
-BUILD_SCRIPT = ROOT / "scripts" / "build.py"
 IMAGES_SERVICE_DIR = PUBLIC / "images-service"
 
+# 役割分担のディレクトリ
+CORPORATE_PAGES_DIR = SRC / "corporate" / "pages"
+CUSTOMER_PAGES_DIR = SRC / "customer" / "pages"
+STAFF_PAGES_DIR = SRC / "staff" / "pages"
+SALES_PAGES_DIR = SRC / "sales" / "pages"
+ADMIN_PAGES_DIR = SRC / "admin" / "pages"
+PAGES_DIR_LEGACY = SRC / "pages"
+
 PORT = 5173
+
+
+def resolve_includes(content):
+    pattern = re.compile(r"@include\('([^']+)'\)")
+    while True:
+        match = pattern.search(content)
+        if not match:
+            return content
+        include_key = match.group(1)
+        include_path = SRC / (include_key.replace('.', '/') + '.html')
+        try:
+            include_content = include_path.read_text(encoding='utf-8')
+        except FileNotFoundError:
+            include_content = ''
+        content = content[:match.start()] + include_content + content[match.end():]
+
+
+def extract_json_bindings(content):
+    bindings = {}
+    json_pattern = re.compile(r"@json\('([^']+)'\s*,\s*\$([\w_]+)\)")
+    for match in json_pattern.finditer(content):
+        json_path = SRC / match.group(1)
+        var_name = match.group(2)
+        if not json_path.exists():
+            continue
+        try:
+            data = json.loads(json_path.read_text(encoding='utf-8'))
+        except json.JSONDecodeError:
+            continue
+        if var_name in data:
+            bindings[var_name] = data[var_name]
+        elif len(data) == 1:
+            bindings[var_name] = next(iter(data.values()))
+    return bindings
+
+
+def strip_template_directives(content):
+    lines = []
+    for line in content.splitlines():
+        if line.strip().startswith('@layout('):
+            continue
+        if line.strip().startswith('@json('):
+            continue
+        lines.append(line)
+    return '\n'.join(lines)
+
+
+def render_template(page_content, layout_key):
+    layout_path = SRC / (layout_key.replace('.', '/') + '.html')
+    if not layout_path.exists():
+        return page_content
+    layout_content = resolve_includes(layout_path.read_text(encoding='utf-8'))
+    body_content = resolve_includes(strip_template_directives(page_content))
+    bindings = extract_json_bindings(page_content)
+    bindings.setdefault('title', '')
+    bindings.setdefault('body_class', '')
+    bindings.setdefault('meta_tags', '')
+    bindings.setdefault('base_path', '/')
+    for key, value in bindings.items():
+        layout_content = layout_content.replace(f'{{{{ {key} }}}}', str(value))
+    layout_content = layout_content.replace('{{ content }}', body_content)
+    return layout_content
 
 
 class DevServerHandler(SimpleHTTPRequestHandler):
@@ -71,7 +140,7 @@ class DevServerHandler(SimpleHTTPRequestHandler):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(PUBLIC), **kwargs)
-    
+
     def translate_path(self, path):
         """パスを変換（動的ルーティング対応）"""
         # クエリパラメータを除去
@@ -82,8 +151,13 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         if path.startswith('/admin/reports/') and path.endswith('/edit.html'):
             edit_template = PUBLIC / "admin" / "reports" / "[id]" / "edit.html"
             if edit_template.exists():
-                # [id]/edit.html テンプレートのパスを返す
                 return str(edit_template)
+
+        # 動的ルーティング: /admin/customers/stores/{store_id}/chart.html を /admin/customers/stores/[id]/chart.html にマッピング
+        if path.startswith('/admin/customers/stores/') and path.endswith('/chart.html'):
+            chart_template = SRC / "pages" / "admin" / "customers" / "stores" / "[id]" / "chart.html"
+            if chart_template.exists():
+                return str(chart_template)
         
         # 動的ルーティング: /reports/{report_id}.html を /reports/[id].html にマッピング
         if path.startswith('/reports/') and path.endswith('.html') and not path.startswith('/reports/shared/'):
@@ -104,30 +178,45 @@ class DevServerHandler(SimpleHTTPRequestHandler):
         if path.startswith('/reports/shared/'):
             parts = [p for p in path.split('/') if p]  # 空文字列を除去
             # /reports/shared/{id} または /reports/shared/{id}/ の場合
-            # parts[0] = 'reports', parts[1] = 'shared', parts[2] = '{id}'
             if len(parts) >= 3 and parts[2] and parts[2] != 'view':
                 shared_template = PUBLIC / "reports" / "shared" / "[id].html"
                 if shared_template.exists():
                     return str(shared_template)
         
         # 通常のパス変換
-        return super().translate_path(original_path)
-    
+        translated = super().translate_path(original_path)
+        
+        # PUBLICに見つからない場合、src/assetsをフォールバックとして探す
+        if not os.path.exists(translated):
+            asset_path = SRC / "assets" / path.lstrip('/')
+            if asset_path.exists():
+                return str(asset_path)
+                
+        return translated
+
     def do_GET(self):
         """GETリクエスト: 静的ファイル配信またはAPI"""
-        if self.path.startswith('/api/'):
+        if self.path.startswith('/api/proxy/'):
+            self.handle_api_proxy()
+        elif self.path.startswith('/api/'):
             self.handle_api_get()
         else:
             # 動的ルーティング処理
             path = self.path.split('?')[0]
             print(f"[DEBUG] Processing path: {path}")
             
-            # /service/ へのアクセスを /service.html にリダイレクト
-            if path == '/service/' or path == '/service':
+            # /customer/ へのアクセスを /customer/dashboard にリダイレクト
+            if path == '/customer' or path == '/customer/':
                 self.send_response(301)
-                self.send_header('Location', '/service.html')
+                self.send_header('Location', '/customer/dashboard')
                 self.end_headers()
                 return
+
+            # /customer/dashboard, /customer/karte 等のクリーンURL対応
+            clean_customer_routes = ['/customer/dashboard', '/customer/karte', '/customer/reports', '/customer/ai-advisor']
+            if path in clean_customer_routes:
+                self.path = path + '.html' + ('?' + self.path.split('?')[1] if '?' in self.path else '')
+                path = self.path.split('?')[0]
             
             # /service.html へのアクセスを明示的に処理（/service/ ディレクトリへのリダイレクトを防ぐ）
             if path == '/service.html':
@@ -242,9 +331,98 @@ class DevServerHandler(SimpleHTTPRequestHandler):
                 html_file = PUBLIC / html_path.lstrip('/')
                 if html_file.exists() and html_file.is_file():
                     self.path = html_path + ('?' + self.path.split('?')[1] if '?' in self.path else '')
+                    path = html_path
+
+            # テンプレート（@layout）を簡易レンダリング
+            if path.endswith('.html'):
+                # 複数のディレクトリからソースを探す
+                search_roots = [
+                    (CUSTOMER_PAGES_DIR, "customer"),
+                    (STAFF_PAGES_DIR, "staff"),
+                    (SALES_PAGES_DIR, "sales"),
+                    (ADMIN_PAGES_DIR, "admin"),
+                    (CORPORATE_PAGES_DIR, ""), # ルート
+                    (PAGES_DIR_LEGACY, ""),     # 従来のpages
+                ]
+                
+                src_file = None
+                for root_dir, prefix in search_roots:
+                    if not root_dir.exists():
+                        continue
+                    
+                    test_path = path.lstrip('/')
+                    if prefix and test_path.startswith(prefix + '/'):
+                        test_path = test_path[len(prefix)+1:]
+                    
+                    candidate = root_dir / test_path
+                    if candidate.exists() and candidate.is_file():
+                        src_file = candidate
+                        break
+                
+                if src_file:
+                    page_content = src_file.read_text(encoding='utf-8')
+                    layout_match = re.search(r"@layout\('([^']+)'\)", page_content)
+                    if layout_match:
+                        rendered = render_template(page_content, layout_match.group(1))
+                        content_bytes = rendered.encode('utf-8')
+                        self.send_response(200)
+                        self.send_header('Content-type', 'text/html; charset=utf-8')
+                        self.send_header('Content-length', str(len(content_bytes)))
+                        self.end_headers()
+                        self.wfile.write(content_bytes)
+                        return
+                    else:
+                        # レイアウトがない場合はそのまま返すか SimpleHTTPRequestHandler に任せる
+                        # ここでは SimpleHTTPRequestHandler の動作を模倣してファイルを直接返す
+                        self.send_response(200)
+                        self.send_header('Content-type', 'text/html; charset=utf-8')
+                        self.send_header('Content-length', str(src_file.stat().st_size))
+                        self.end_headers()
+                        with open(src_file, 'rb') as f:
+                            self.wfile.write(f.read())
+                        return
             # 通常の静的ファイル配信
             super().do_GET()
     
+    def handle_api_proxy(self):
+        """AWS APIへのプロキシ処理（CORS回避用）"""
+        target_base = "https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod"
+        proxy_path = self.path.replace('/api/proxy', '')
+        target_url = target_base + proxy_path
+        
+        print(f"[DevServer] Proxying {self.command}: {target_url}")
+        
+        try:
+            req = urllib.request.Request(target_url, method=self.command)
+            # ヘッダーのコピー
+            for key, value in self.headers.items():
+                if key.lower() not in ('host', 'content-length', 'accept-encoding'):
+                    req.add_header(key, value)
+            
+            # ボディのコピー（POST/PUT）
+            if self.command in ('POST', 'PUT'):
+                content_length = int(self.headers.get('Content-Length', 0))
+                if content_length > 0:
+                    req.data = self.rfile.read(content_length)
+            
+            with urllib.request.urlopen(req, timeout=10) as response:
+                self.send_response(response.status)
+                for key, value in response.headers.items():
+                    if key.lower() not in ('content-encoding', 'transfer-encoding', 'access-control-allow-origin'):
+                        self.send_header(key, value)
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(response.read())
+        except urllib.error.HTTPError as e:
+            self.send_response(e.code)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(e.read())
+        except Exception as e:
+            print(f"[DevServer] Proxy error: {e}")
+            self.send_error(502, f"Proxy failed: {e}")
+
     def handle_api_get(self):
         """API GET処理"""
         # パスを正規化（クエリパラメータと末尾のスラッシュを除去）
@@ -335,17 +513,20 @@ class DevServerHandler(SimpleHTTPRequestHandler):
             self.handle_cleaning_manual_upload_image()
         else:
             self.send_error(404, f"API endpoint not found: {path}")
-    
+
     def do_POST(self):
         """POSTリクエスト: API処理"""
-        if self.path.startswith('/api/'):
+        if self.path.startswith('/api/proxy/'):
+            self.handle_api_proxy()
+        elif self.path.startswith('/api/'):
             self.handle_api_post()
         else:
             self.send_error(404, "Not Found")
-    
     def do_PUT(self):
         """PUTリクエスト: API処理（更新用）"""
-        if self.path.startswith('/api/'):
+        if self.path.startswith('/api/proxy/'):
+            self.handle_api_proxy()
+        elif self.path.startswith('/api/'):
             self.handle_api_put()
         else:
             self.send_error(404, "Not Found")
@@ -353,7 +534,9 @@ class DevServerHandler(SimpleHTTPRequestHandler):
     
     def do_DELETE(self):
         """DELETEリクエスト: API処理（削除用）"""
-        if self.path.startswith('/api/'):
+        if self.path.startswith('/api/proxy/'):
+            self.handle_api_proxy()
+        elif self.path.startswith('/api/'):
             self.handle_api_delete()
         else:
             self.send_error(404, "Not Found")
@@ -1796,4 +1979,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

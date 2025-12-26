@@ -951,7 +951,7 @@ def build_all() -> List[str]:
     # staff, sales, admin は各ディレクトリ配下に出力
     page_dirs = [
         (CORPORATE_PAGES_DIR, ""),      # corporate → public/ (ルート)
-        (CUSTOMER_PAGES_DIR, ""),       # customer → public/ (ルート)
+        (CUSTOMER_PAGES_DIR, "customer"),# customer → public/customer/
         (STAFF_PAGES_DIR, "staff"),     # staff → public/staff/
         (SALES_PAGES_DIR, "sales"),     # sales → public/sales/
         (ADMIN_PAGES_DIR, "admin"),     # admin → public/admin/
@@ -996,15 +996,17 @@ def build_all() -> List[str]:
                 continue
             
             # 出力パスの決定
+            # 出力パスの決定
             if output_prefix:
-                # staff, sales, admin は各ディレクトリ配下に出力
+                # staff, sales, admin, customer は各ディレクトリ配下に出力
                 out_path = PUBLIC / output_prefix / rel
             else:
-                # corporate, customer, pages はルートレベルに出力
+                # corporate, pages はルートレベルに出力
                 out_path = PUBLIC / rel
             
             html = render_page(page)
-            # Skip directory structure for template files (files with [id] in path)
+            # 全てのページに対して、[id] を含まず、かつ index.html でない場合はディレクトリを作成して index.html を出力
+            # これにより /customer/dashboard -> /customer/dashboard/index.html となる
             create_dir = "[id]" not in str(rel) and rel.name != "index.html"
             write_html_with_directory(out_path, html, outputs, create_dir_structure=create_dir)
     # copy static assets last

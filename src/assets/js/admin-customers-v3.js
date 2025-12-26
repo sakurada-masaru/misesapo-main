@@ -3,11 +3,13 @@
  * PC版詳細管理、スマホ版簡易、清掃員閲覧専用の3つのビューに対応
  */
 
-(function() {
+(function () {
   'use strict';
 
-  const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-  
+  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? '/api/proxy'
+    : 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+
   // グローバル状態（既存のグローバル変数と共有）
   let allStores = window.allStoresGlobal || [];
   let allClients = window.allClientsGlobal || [];
@@ -17,7 +19,7 @@
   let currentUserRole = null;
   let selectedItems = window.selectedItems || new Set();
   let favorites = new Set(JSON.parse(localStorage.getItem('customer_favorites') || '[]'));
-  
+
   // パフォーマンス最適化: キャッシュ
   let renderCache = new Map();
   let lastRenderTime = 0;
@@ -45,13 +47,13 @@
     }
 
     section.style.display = 'block';
-    
+
     const items = recentViews.slice(0, 5).map(view => {
-      const entity = view.type === 'store' 
+      const entity = view.type === 'store'
         ? allStores.find(s => (window.DataUtils?.IdUtils?.isSame ? window.DataUtils.IdUtils.isSame(s.id, view.id) : s.id === view.id))
         : view.type === 'brand'
-        ? allBrands.find(b => (window.DataUtils?.IdUtils?.isSame ? window.DataUtils.IdUtils.isSame(b.id, view.id) : b.id === view.id))
-        : allClients.find(c => (window.DataUtils?.IdUtils?.isSame ? window.DataUtils.IdUtils.isSame(c.id, view.id) : c.id === view.id));
+          ? allBrands.find(b => (window.DataUtils?.IdUtils?.isSame ? window.DataUtils.IdUtils.isSame(b.id, view.id) : b.id === view.id))
+          : allClients.find(c => (window.DataUtils?.IdUtils?.isSame ? window.DataUtils.IdUtils.isSame(c.id, view.id) : c.id === view.id));
 
       if (!entity) return '';
 
@@ -115,7 +117,7 @@
     applyReadonlyMode();
     optimizeMobileView();
     setupKeyboardShortcuts();
-    
+
     // リサイズ時に最適化
     window.addEventListener('resize', debounce(optimizeMobileView, 300));
   }
@@ -148,7 +150,7 @@
       btn.addEventListener('click', () => {
         const viewMode = btn.dataset.view;
         switchViewMode(viewMode);
-        
+
         buttons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       });
@@ -173,7 +175,7 @@
    */
   function switchViewMode(mode) {
     currentViewMode = mode;
-    
+
     // 各ビューの表示/非表示
     const hierarchyView = document.getElementById('hierarchy-view');
     const flatView = document.getElementById('flat-view');
@@ -217,21 +219,21 @@
             const cachedData = JSON.parse(cached);
             const cacheTime = cachedData.timestamp || 0;
             const CACHE_DURATION = 5 * 60 * 1000; // 5分
-            
+
             if (Date.now() - cacheTime < CACHE_DURATION) {
               allStores = cachedData.stores || [];
               allClients = cachedData.clients || [];
               allBrands = cachedData.brands || [];
               filteredData = allStores;
-              
+
               // グローバル変数に保存
               window.allStoresGlobal = allStores;
               window.allClientsGlobal = allClients;
               window.allBrandsGlobal = allBrands;
               window.filteredStoresGlobal = filteredData;
-              
+
               renderCurrentView();
-              
+
               // バックグラウンドで最新データを取得
               loadData(true).catch(() => {
                 // エラーは無視（キャッシュデータを使用）
@@ -256,7 +258,7 @@
 
       // フォールバック: 直接APIから取得（AWS連携）
       const headers = await getAuthHeaders();
-      
+
       // エラーハンドリングを強化
       const fetchWithRetry = async (url, options, retries = 3) => {
         for (let i = 0; i < retries; i++) {
@@ -338,7 +340,7 @@
       }
 
       filteredData = allStores;
-      
+
       // グローバル変数に保存
       window.allStoresGlobal = allStores;
       window.allClientsGlobal = allClients;
@@ -428,7 +430,7 @@
     // 法人ごとにグループ化（ID正規化対応）
     const clientsMap = new Map();
     allClients.forEach(client => {
-      const clientId = window.DataUtils?.IdUtils?.normalize 
+      const clientId = window.DataUtils?.IdUtils?.normalize
         ? window.DataUtils.IdUtils.normalize(client.id)
         : client.id;
       clientsMap.set(clientId, {
@@ -442,7 +444,7 @@
       const brandClientId = window.DataUtils?.IdUtils?.normalize
         ? window.DataUtils.IdUtils.normalize(brand.client_id)
         : brand.client_id;
-      
+
       // ID比較を正規化対応
       let matchedClientId = null;
       if (window.DataUtils?.IdUtils?.isSame) {
@@ -475,13 +477,13 @@
           const bId = window.DataUtils?.IdUtils?.normalize
             ? window.DataUtils.IdUtils.normalize(b.brand.id)
             : b.brand.id;
-          
+
           if (window.DataUtils?.IdUtils?.isSame) {
             return window.DataUtils.IdUtils.isSame(storeBrandId, bId);
           }
           return storeBrandId === bId;
         });
-        
+
         if (brandData) {
           brandData.stores.push(store);
           break; // 見つかったら次の店舗へ
@@ -492,7 +494,7 @@
     // HTML生成（DocumentFragmentを使用してパフォーマンス向上）
     const fragment = document.createDocumentFragment();
     const tempDiv = document.createElement('div');
-    
+
     clientsMap.forEach((data, clientId) => {
       tempDiv.innerHTML = renderTreeNode('client', data.client, data.brands);
       while (tempDiv.firstChild) {
@@ -503,7 +505,7 @@
     container.innerHTML = '';
     container.appendChild(fragment);
     setupTreeNodeToggle();
-    
+
     // 検索結果数を更新
     if (filteredData.length < allStores.length) {
       const info = document.createElement('div');
@@ -527,7 +529,7 @@
     const hasChildren = children && Array.isArray(children) && children.length > 0;
     const childrenHtml = hasChildren ? children.map(child => {
       if (!child) return ''; // childが存在しない場合は空文字を返す
-      
+
       if (type === 'client') {
         // child.brandとchild.storesが存在することを確認
         if (!child.brand) return '';
@@ -633,7 +635,7 @@
     if (!container) return;
 
     const storesToRender = filteredData.length > 0 ? filteredData : allStores;
-    
+
     if (storesToRender.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
@@ -651,7 +653,7 @@
       // 最初のバッチのみ表示
       const firstBatch = storesToRender.slice(0, BATCH_SIZE);
       renderCardsBatch(firstBatch, container);
-      
+
       // 残りを遅延読み込み
       setTimeout(() => {
         const remaining = storesToRender.slice(BATCH_SIZE);
@@ -677,8 +679,8 @@
   function renderCardsBatch(stores, container, append = false) {
     const fragment = document.createDocumentFragment();
     const tempDiv = document.createElement('div');
-    
-      const cards = stores.map(store => {
+
+    const cards = stores.map(store => {
       const brand = findBrand(store.brand_id);
       const client = findClient(brand?.client_id || store.client_id);
       const isSelected = window.selectedItems && window.selectedItems.has(store.id);
@@ -721,7 +723,7 @@
             </div>
           </div>
           <div class="customer-card-actions">
-            <a href="/admin/customers/stores/${store.id}/chart.html" class="card-action-btn">
+            <a href="/admin/customers/karte.html?store_id=${store.id}" class="card-action-btn">
               <i class="fas fa-clipboard-list"></i> カルテ
             </a>
             <a href="/admin/customers/stores/detail.html?id=${store.id}" class="card-action-btn primary">
@@ -784,7 +786,7 @@
   /**
    * お気に入りの切り替え
    */
-  window.toggleFavorite = function(id) {
+  window.toggleFavorite = function (id) {
     if (favorites.has(id)) {
       favorites.delete(id);
       if (window.showSuccess) showSuccess('お気に入りから削除しました');
@@ -807,7 +809,7 @@
     const datalist = document.getElementById('search-suggestions');
     if (!datalist) return;
 
-    datalist.innerHTML = searchHistory.slice(0, 10).map(term => 
+    datalist.innerHTML = searchHistory.slice(0, 10).map(term =>
       `<option value="${escapeHtml(term)}">`
     ).join('');
 
@@ -874,7 +876,7 @@
           if (window.showSuccess) showSuccess('検索履歴を削除しました');
         }
       });
-      
+
       // 検索履歴がある場合のみ表示
       if (searchHistory.length > 0) {
         clearHistoryBtn.style.display = 'inline-flex';
@@ -933,12 +935,12 @@
   function updateUnifiedBrandFilter() {
     const unifiedClientFilter = document.getElementById('unified-client-filter');
     const unifiedBrandFilter = document.getElementById('unified-brand-filter');
-    
+
     if (!unifiedBrandFilter) return;
 
     const selectedClient = unifiedClientFilter?.value || '';
     let brands;
-    
+
     if (selectedClient) {
       if (window.DataUtils?.IdUtils?.isSame) {
         brands = allBrands.filter(b => window.DataUtils.IdUtils.isSame(b.client_id, selectedClient));
@@ -949,7 +951,7 @@
       brands = allBrands;
     }
 
-    unifiedBrandFilter.innerHTML = '<option value="">全ブランド</option>' + 
+    unifiedBrandFilter.innerHTML = '<option value="">全ブランド</option>' +
       brands.map(b => `<option value="${b.id}">${escapeHtml(b.name || '')}</option>`).join('');
   }
 
@@ -962,7 +964,7 @@
     const clientFilter = document.getElementById('unified-client-filter')?.value || '';
     const brandFilter = document.getElementById('unified-brand-filter')?.value || '';
     const statusFilter = document.getElementById('unified-status-filter')?.value || '';
-    
+
     // 検索履歴に追加（検索語が3文字以上の場合）
     if (searchTerm.length >= 3) {
       searchHistory = searchHistory.filter(h => h !== searchTerm);
@@ -970,7 +972,7 @@
       searchHistory = searchHistory.slice(0, MAX_SEARCH_HISTORY);
       localStorage.setItem('customer_search_history', JSON.stringify(searchHistory));
     }
-    
+
     // パフォーマンス最適化: 検索結果をキャッシュ（簡易実装）
     const cacheKey = `${searchTerm}_${clientFilter}_${brandFilter}_${statusFilter}`;
     if (window.searchCache && window.searchCache.key === cacheKey) {
@@ -978,10 +980,10 @@
       renderCurrentView();
       return;
     }
-    
+
     filteredData = allStores.filter(store => {
       // 店舗名、住所、電話で検索
-      const matchStore = !searchTerm || 
+      const matchStore = !searchTerm ||
         (store.name || '').toLowerCase().includes(searchTerm) ||
         (store.city || '').toLowerCase().includes(searchTerm) ||
         (store.address1 || '').toLowerCase().includes(searchTerm) ||
@@ -1031,7 +1033,7 @@
     }
 
     renderCurrentView();
-    
+
     // 既存のテーブルビューも更新
     if (typeof window.filterAndRender === 'function') {
       // 統合検索の結果を既存のフィルターに反映
@@ -1065,7 +1067,7 @@
       if (hierarchyView) {
         hierarchyView.style.display = 'none';
       }
-      
+
       // デフォルトでカードビューに切り替え
       if (currentViewMode === 'hierarchy') {
         switchViewMode('cards');
@@ -1116,7 +1118,7 @@
 
   function debounce(fn, delay) {
     let timer;
-    return function(...args) {
+    return function (...args) {
       clearTimeout(timer);
       timer = setTimeout(() => fn.apply(this, args), delay);
     };
@@ -1143,7 +1145,7 @@
     `;
     errorDiv.textContent = message;
     document.body.appendChild(errorDiv);
-    
+
     setTimeout(() => {
       errorDiv.style.animation = 'slideOut 0.3s ease';
       setTimeout(() => errorDiv.remove(), 300);
@@ -1168,7 +1170,7 @@
     `;
     successDiv.textContent = message;
     document.body.appendChild(successDiv);
-    
+
     setTimeout(() => {
       successDiv.style.animation = 'slideOut 0.3s ease';
       setTimeout(() => successDiv.remove(), 300);
@@ -1181,7 +1183,7 @@
   function validateDataIntegrity() {
     const errors = [];
     const warnings = [];
-    
+
     // 店舗のブランドIDが存在するかチェック（ID正規化対応）
     allStores.forEach(store => {
       if (store.brand_id) {
@@ -1380,7 +1382,7 @@
       const usedMB = (memory.usedJSHeapSize / 1048576).toFixed(2);
       const totalMB = (memory.totalJSHeapSize / 1048576).toFixed(2);
       const limitMB = (memory.jsHeapSizeLimit / 1048576).toFixed(2);
-      
+
       if (usedMB > 50) {
         console.warn(`Memory usage: ${usedMB}MB / ${totalMB}MB (limit: ${limitMB}MB)`);
         // キャッシュをクリア

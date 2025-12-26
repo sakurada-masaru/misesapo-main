@@ -7,6 +7,39 @@
   #normal-header-wrapper {
     display: none !important;
   }
+  .view-mode-switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .view-mode-label {
+    font-size: 0.85rem;
+    color: #ff4f9a;
+    font-weight: 600;
+  }
+  .view-mode-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .view-mode-btn:hover {
+    border-color: #ff679c;
+    color: #ff679c;
+  }
+  .view-mode-btn.active {
+    background: #ff679c;
+    color: #fff;
+    border-color: #ff679c;
+  }
 </style>
 
 <link rel="stylesheet" href="/css/admin-customers-v3.css" />
@@ -73,14 +106,15 @@
 
     <!-- ビューモード切り替え -->
     <div class="view-mode-switcher" role="tablist" aria-label="ビューモード切り替え">
+      <span class="view-mode-label">表示切り替え→</span>
       <button class="view-mode-btn" data-view="hierarchy" title="階層ビュー" role="tab" aria-selected="false" aria-controls="hierarchy-view">
-        <i class="fas fa-sitemap"></i> 階層
+        <i class="fas fa-sitemap"></i>
       </button>
       <button class="view-mode-btn" data-view="flat" title="一覧ビュー" role="tab" aria-selected="false" aria-controls="flat-view">
-        <i class="fas fa-list"></i> 一覧
+        <i class="fas fa-list"></i>
       </button>
       <button class="view-mode-btn" data-view="cards" title="カードビュー" role="tab" aria-selected="false" aria-controls="cards-view">
-        <i class="fas fa-th"></i> カード
+        <i class="fas fa-th"></i>
       </button>
     </div>
 
@@ -1509,7 +1543,9 @@
 
 <script>
 (function() {
-  const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? '/api/proxy'
+    : 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
   
   let allStores = [];
   let allClients = [];
@@ -2027,7 +2063,7 @@
         <td>
           <div class="action-btns">
             <input type="checkbox" class="store-checkbox" data-id="${store.id}" onchange="toggleStoreSelection('${store.id}')" style="margin-right: 8px;">
-            <a href="/admin/customers/stores/[id]/chart.html?id=${encodeURIComponent(store.id)}" class="action-btn chart" title="清掃カルテ">
+            <a href="/admin/customers/karte.html?store_id=${encodeURIComponent(store.id)}" class="action-btn chart" title="清掃カルテ">
               <i class="fas fa-clipboard-list"></i>
             </a>
             <button type="button" class="action-btn edit" title="編集" onclick="editStore('${store.id}')">

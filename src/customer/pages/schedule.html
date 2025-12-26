@@ -1,299 +1,201 @@
 @layout('layouts.base')
-@json('data/meta/schedule_title.json', $title)
-@json('data/meta/schedule_body_class.json', $body_class)
+@json('data/meta/dashboard_title.json', $title)
+@json('data/meta/dashboard_body_class.json', $body_class)
 
-<main id="main" class="container schedule">
-  <div class="page-header">
-    <h1 class="page-title">清掃予定</h1>
-    <a href="/mypage" class="btn btn-outline btn-sm">
-      <i class="fas fa-chevron-left"></i> マイページへ戻る
+<link rel="stylesheet" href="/assets/css/customer-dashboard.css">
+<style>
+  .calendar-container {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: var(--glass-shadow);
+    border: 1px solid #f1f5f9;
+  }
+
+  .schedule-list-vertical {
+    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .schedule-item-premium {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .schedule-item-premium:hover {
+    background: white;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .date-badge {
+    width: 60px;
+    height: 60px;
+    background: white;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .date-badge .month {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  .date-badge .day {
+    font-size: 1.25rem;
+    color: #0f172a;
+    font-weight: 800;
+  }
+
+  .item-main {
+    flex: 1;
+  }
+
+  .item-main h3 {
+    font-size: 1rem;
+    margin: 0 0 4px;
+    color: #1e293b;
+  }
+
+  .item-meta {
+    font-size: 0.8125rem;
+    color: #64748b;
+    display: flex;
+    gap: 16px;
+  }
+
+  .status-tag {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+
+  .status-tag.confirmed {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .status-tag.pending {
+    background: #fef9c3;
+    color: #a16207;
+  }
+</style>
+
+<!-- サイドバー -->
+<aside class="sidebar" id="admin-sidebar">
+  <div class="sidebar-header">
+    <a href="/customer/dashboard" class="logo-link">
+      <img src="/images/logo_144x144.png" alt="ミセサポ" class="logo-img" />
+      <span class="logo-text">ミセサポ</span>
     </a>
   </div>
 
-  <div class="schedule-filter">
-    <button class="filter-btn active" data-filter="all">全て</button>
-    <button class="filter-btn" data-filter="upcoming">今後の予定</button>
-    <button class="filter-btn" data-filter="past">過去の予定</button>
-  </div>
+  <nav class="sidebar-nav">
+    <a href="/customer/dashboard" class="nav-item" data-page="dashboard">
+      <i class="fas fa-th-large"></i>
+      <span class="nav-label">ダッシュボード</span>
+    </a>
+    <a href="/customer/karte" class="nav-item" data-page="karte">
+      <i class="fas fa-heartbeat"></i>
+      <span class="nav-label">店舗カルテ</span>
+    </a>
+    <a href="/customer/reports" class="nav-item" data-page="reports">
+      <i class="fas fa-file-alt"></i>
+      <span class="nav-label">清掃レポート</span>
+    </a>
+    <a href="/customer/documents" class="nav-item" data-page="documents">
+      <i class="fas fa-file-invoice-dollar"></i>
+      <span class="nav-label">見積・契約</span>
+    </a>
+    <a href="/customer/schedule" class="nav-item active" data-page="schedule">
+      <i class="fas fa-calendar-alt"></i>
+      <span class="nav-label">スケジュール</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/customer/ai-advisor" class="nav-item nav-item-ai" data-page="ai-advisor">
+      <i class="fas fa-robot"></i>
+      <span class="nav-label">AIアドバイザー</span>
+    </a>
+    <div class="nav-divider"></div>
+    <a href="/customer/settings" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i>
+      <span class="nav-label">設定</span>
+    </a>
+    <button class="nav-item nav-item-button" onclick="window.Auth && window.Auth.logout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span class="nav-label">ログアウト</span>
+    </button>
+  </nav>
 
-  <div class="schedule-list">
-    <!-- Schedule Item 1 -->
-    <div class="schedule-card" data-status="upcoming">
-      <div class="schedule-date">
-        <div class="date-month">03</div>
-        <div class="date-day">28</div>
-        <div class="date-dow">金</div>
-      </div>
-      <div class="schedule-content">
-        <div class="schedule-header">
-          <h3 class="schedule-title">定期清掃</h3>
-          <span class="schedule-time">10:30</span>
-        </div>
-        <div class="schedule-details">
-          <div class="detail-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>神楽坂店</span>
+  <button class="sidebar-toggle" id="sidebar-toggle">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+</aside>
+
+<main id="main" class="container main-content customer-dashboard">
+  <header class="dashboard-header">
+    <div class="welcome-section">
+      <h1 class="welcome-text">清掃スケジュール</h1>
+      <p class="welcome-subtext">確定済みの清掃予定および調整中の案件をご確認いただけます。</p>
+    </div>
+  </header>
+
+  <section class="calendar-container">
+    <div id="calendar-view">
+      <!-- Simple list view for prototype, could integrate FullCalendar later -->
+      <h2 class="section-title">2025年 12月 / 2026年 1月</h2>
+
+      <div class="schedule-list-vertical" id="schedule-list">
+        <!-- Upcoming Items -->
+        <div class="schedule-item-premium">
+          <div class="date-badge">
+            <span class="month">12月</span>
+            <span class="day">28</span>
           </div>
-          <div class="detail-item">
-            <i class="fas fa-tasks"></i>
-            <span>レンジフード洗浄、グリストラップ清掃</span>
+          <div class="item-main">
+            <h3>代官山 権八 - 定期清掃</h3>
+            <div class="item-meta">
+              <span><i class="fas fa-clock"></i> 10:30 - 15:00</span>
+              <span><i class="fas fa-user-friends"></i> 作業員 2名</span>
+            </div>
           </div>
+          <div class="status-tag confirmed">確定済み</div>
+          <button class="btn btn-outline btn-sm">詳細</button>
         </div>
-      </div>
-      <div class="schedule-actions">
-        <a href="/schedule/2025-03-28" class="btn btn-outline btn-sm">詳細</a>
+
+        <div class="schedule-item-premium">
+          <div class="date-badge">
+            <span class="month">1月</span>
+            <span class="day">08</span>
+          </div>
+          <div class="item-main">
+            <h3>西麻布 権八 - グリストラップ清掃</h3>
+            <div class="item-meta">
+              <span><i class="fas fa-clock"></i> 14:00 - 16:00</span>
+              <span><i class="fas fa-user-friends"></i> 作業員 1名</span>
+            </div>
+          </div>
+          <div class="status-tag pending">調整中</div>
+          <button class="btn btn-outline btn-sm">詳細</button>
+        </div>
       </div>
     </div>
-
-    <!-- Schedule Item 2 -->
-    <div class="schedule-card" data-status="upcoming">
-      <div class="schedule-date">
-        <div class="date-month">04</div>
-        <div class="date-day">05</div>
-        <div class="date-dow">土</div>
-      </div>
-      <div class="schedule-content">
-        <div class="schedule-header">
-          <h3 class="schedule-title">定期清掃</h3>
-          <span class="schedule-time">13:00</span>
-        </div>
-        <div class="schedule-details">
-          <div class="detail-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>日本橋茅場町店</span>
-          </div>
-          <div class="detail-item">
-            <i class="fas fa-tasks"></i>
-            <span>エアコン分解洗浄、床清掃</span>
-          </div>
-        </div>
-      </div>
-      <div class="schedule-actions">
-        <a href="/schedule/2025-04-05" class="btn btn-outline btn-sm">詳細</a>
-      </div>
-    </div>
-
-    <!-- Schedule Item 3 (Past) -->
-    <div class="schedule-card" data-status="past">
-      <div class="schedule-date past-date">
-        <div class="date-month">03</div>
-        <div class="date-day">19</div>
-        <div class="date-dow">水</div>
-      </div>
-      <div class="schedule-content">
-        <div class="schedule-header">
-          <h3 class="schedule-title">定期清掃</h3>
-          <span class="schedule-time">13:00</span>
-        </div>
-        <div class="schedule-details">
-          <div class="detail-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>大塚店</span>
-          </div>
-          <div class="detail-item">
-            <i class="fas fa-tasks"></i>
-            <span>レンジフード洗浄</span>
-          </div>
-          <div class="detail-item">
-            <i class="fas fa-check-circle"></i>
-            <span class="completed-badge">完了</span>
-          </div>
-        </div>
-      </div>
-      <div class="schedule-actions">
-        <a href="/reports/1" class="btn btn-outline btn-sm">レポートを見る</a>
-      </div>
-    </div>
-  </div>
-
-  <style>
-    .schedule {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-    .page-header {
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .page-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #111827;
-      margin: 0;
-    }
-    .schedule-filter {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    .filter-btn {
-      padding: 8px 16px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: #ffffff;
-      color: #6b7280;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .filter-btn:hover {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .filter-btn.active {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
-    }
-    .schedule-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .schedule-card {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      gap: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .schedule-card[data-status="past"] {
-      opacity: 0.7;
-    }
-    .schedule-date {
-      min-width: 70px;
-      text-align: center;
-      padding: 12px;
-      background: #f9fafb;
-      border-radius: 8px;
-    }
-    .date-month {
-      font-size: 0.75rem;
-      color: #6b7280;
-      font-weight: 600;
-    }
-    .date-day {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #111827;
-      line-height: 1.2;
-    }
-    .date-dow {
-      font-size: 0.75rem;
-      color: #6b7280;
-      margin-top: 4px;
-    }
-    .past-date {
-      background: #f3f4f6;
-    }
-    .schedule-content {
-      flex: 1;
-      min-width: 0;
-    }
-    .schedule-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .schedule-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #111827;
-      margin: 0;
-    }
-    .schedule-time {
-      font-size: 0.875rem;
-      color: #6b7280;
-      font-weight: 500;
-    }
-    .schedule-details {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .detail-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.875rem;
-      color: #6b7280;
-    }
-    .detail-item i {
-      color: var(--primary);
-      width: 16px;
-    }
-    .completed-badge {
-      color: #059669;
-      font-weight: 600;
-    }
-    .schedule-actions {
-      display: flex;
-      align-items: center;
-    }
-    @media (max-width: 768px) {
-      .schedule {
-        padding: 12px;
-      }
-      .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .page-title {
-        font-size: 1.25rem;
-      }
-      .schedule-card {
-        flex-direction: column;
-        padding: 12px;
-      }
-      .schedule-date {
-        align-self: flex-start;
-        min-width: 60px;
-      }
-      .schedule-filter {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      .filter-btn {
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-    }
-  </style>
-  <script>
-    // Filter functionality
-    (function() {
-      const filterBtns = document.querySelectorAll('.filter-btn');
-      const scheduleCards = document.querySelectorAll('.schedule-card');
-      
-      filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          filterBtns.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          
-          const filter = btn.dataset.filter;
-          
-          scheduleCards.forEach(card => {
-            if (filter === 'all') {
-              card.style.display = 'flex';
-            } else {
-              const status = card.dataset.status;
-              card.style.display = (status === filter) ? 'flex' : 'none';
-            }
-          });
-        });
-      });
-    })();
-  </script>
+  </section>
 </main>
 
+<script src="/js/admin-sidebar.js"></script>
