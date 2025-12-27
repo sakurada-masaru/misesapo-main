@@ -4648,7 +4648,7 @@ async function loadOSNextSchedule(user) {
 
       try {
         // レポートの有無をチェック
-        const reportRes = await fetch(`${API_BASE}/reports?schedule_id=${nextSchedule.id}`, { headers });
+        const reportRes = await fetch(`${REPORT_API}/reports?schedule_id=${nextSchedule.id}`, { headers });
         if (reportRes.ok) {
           const reports = await reportRes.json();
           const list = Array.isArray(reports) ? reports : (reports.items || []);
