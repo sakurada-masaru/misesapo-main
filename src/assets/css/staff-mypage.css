@@ -1730,3 +1730,29 @@
   background: #fff1f6;
   border-color: #fecddf;
 }
+
+/* スケジュール一覧のグループヘッダー */
+.schedule-list-group-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #6b7280;
+  background: rgba(243, 244, 246, 0.8);
+  padding: 4px 12px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.schedule-list-group-header i {
+  color: #ff679c;
+  font-size: 0.7rem;
+}
+
+.schedule-list-group-header:first-child {
+  margin-top: 0;
+}

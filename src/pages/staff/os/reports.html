@@ -5,7 +5,8 @@
 <link rel="stylesheet" href="/css/admin-sidebar.css">
 <!-- AWS SDKの読み込み -->
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@6.3.0/dist/amazon-cognito-identity.min.js"></script>
 <script src="/js/cognito_config.js"></script>
 <script src="/js/cognito_auth.js"></script>
 <script src="/js/client_auth.js"></script>
@@ -13,9 +14,9 @@
 
 <!-- モバイルメニューボタン -->
 <div class="mobile-menu-area">
-<button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
-  <i class="fas fa-bars"></i>
-</button>
+  <button class="mobile-menu-button" id="mobile-menu-button" aria-label="メニューを開く">
+    <i class="fas fa-bars"></i>
+  </button>
 </div>
 
 <!-- サイドバーオーバーレイ -->
@@ -36,7 +37,8 @@
   </div>
 
   <nav class="sidebar-nav">
-    <a href="/admin/dashboard" class="nav-item nav-item-admin" data-page="dashboard" data-role-required="admin,operation,general_affairs" style="display: none;">
+    <a href="/admin/dashboard" class="nav-item nav-item-admin" data-page="dashboard"
+      data-role-required="admin,operation,general_affairs" style="display: none;">
       <i class="fas fa-tachometer-alt"></i>
       <span class="nav-label">管理ダッシュボード</span>
     </a>
@@ -90,7 +92,7 @@
       <i class="fas fa-sign-out-alt"></i>
       <span class="nav-label">ログアウト</span>
     </button>
-    
+
     <!-- マイページ編集用ボタン -->
     <div class="nav-divider"></div>
     <div class="sidebar-mypage-actions">
@@ -104,7 +106,7 @@
 </aside>
 
 <script>
-  (function() {
+  (function () {
     const isOsUser = () => {
       const candidates = ['cognito_user', 'misesapo_auth'];
       for (const key of candidates) {
@@ -131,8 +133,7 @@
 </script>
 
 <style>
-  #main {
-      }
+  #main {}
 </style>
 
 
@@ -144,7 +145,7 @@
       <li class="breadcrumb-item" aria-current="page">レポート一覧</li>
     </ol>
   </nav>
-  
+
   <div class="page-header">
     <a href="/staff/os/mypage" class="back-btn">
       <i class="fas fa-chevron-left"></i>
@@ -159,560 +160,202 @@
     <button class="tab-btn" data-filter="approved">承認済み</button>
   </div>
 
-  <div class="reports-list">
-    <!-- Report 1 - 未提出（緊急） -->
-    <div class="report-card urgent" data-status="pending">
-      <div class="report-header">
-        <div class="report-date">
-          <span class="date-label">2025年3月28日</span>
-          <span class="time-label">10:30</span>
-        </div>
-        <span class="status-badge status-pending">未提出</span>
-      </div>
-      <div class="report-content">
-        <div class="report-location">
-          <i class="fas fa-map-marker-alt"></i>
-          <span>神楽坂店</span>
-        </div>
-        <div class="report-tasks">
-          <span class="task-tag">レンジフード洗浄</span>
-          <span class="task-tag">グリストラップ清掃</span>
-        </div>
-        <div class="report-deadline">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span>提出期限: 2025年3月29日 18:00</span>
-        </div>
-      </div>
-      <div class="report-actions">
-        <a href="/staff/os/reports/new?assignment=1" class="btn btn-primary btn-block">
-          <i class="fas fa-file-upload"></i>
-          レポート作成
-        </a>
-      </div>
-    </div>
-
-    <!-- Report 2 - 未提出 -->
-    <div class="report-card" data-status="pending">
-      <div class="report-header">
-        <div class="report-date">
-          <span class="date-label">2025年3月27日</span>
-          <span class="time-label">14:00</span>
-        </div>
-        <span class="status-badge status-pending">未提出</span>
-      </div>
-      <div class="report-content">
-        <div class="report-location">
-          <i class="fas fa-map-marker-alt"></i>
-          <span>大塚店</span>
-        </div>
-        <div class="report-tasks">
-          <span class="task-tag">通常清掃</span>
-        </div>
-        <div class="report-deadline">
-          <i class="fas fa-clock"></i>
-          <span>提出期限: 2025年3月30日 18:00</span>
-        </div>
-      </div>
-      <div class="report-actions">
-        <a href="/staff/os/reports/new?assignment=2" class="btn btn-primary btn-block">
-          <i class="fas fa-file-upload"></i>
-          レポート作成
-        </a>
-      </div>
-    </div>
-
-    <!-- Report 3 - 提出済み -->
-    <div class="report-card" data-status="submitted">
-      <div class="report-header">
-        <div class="report-date">
-          <span class="date-label">2025年3月25日</span>
-          <span class="time-label">09:00</span>
-        </div>
-        <span class="status-badge status-submitted">提出済み</span>
-      </div>
-      <div class="report-content">
-        <div class="report-location">
-          <i class="fas fa-map-marker-alt"></i>
-          <span>新宿店</span>
-        </div>
-        <div class="report-tasks">
-          <span class="task-tag">エアコン分解洗浄</span>
-          <span class="task-tag">床清掃</span>
-        </div>
-        <div class="report-submitted-info">
-          <i class="fas fa-check-circle"></i>
-          <span>提出日時: 2025年3月25日 12:30</span>
-        </div>
-      </div>
-      <div class="report-actions">
-        <a href="/reports/report-001" class="btn btn-outline btn-block">
-          <i class="fas fa-eye"></i>
-          レポートを見る
-        </a>
-      </div>
-    </div>
-
-    <!-- Report 4 - 承認済み -->
-    <div class="report-card" data-status="approved">
-      <div class="report-header">
-        <div class="report-date">
-          <span class="date-label">2025年3月20日</span>
-          <span class="time-label">10:00</span>
-        </div>
-        <span class="status-badge status-approved">承認済み</span>
-      </div>
-      <div class="report-content">
-        <div class="report-location">
-          <i class="fas fa-map-marker-alt"></i>
-          <span>高円寺店</span>
-        </div>
-        <div class="report-tasks">
-          <span class="task-tag">厨房清掃</span>
-          <span class="task-tag">換気扇洗浄</span>
-        </div>
-        <div class="report-approved-info">
-          <i class="fas fa-check-double"></i>
-          <span>承認日時: 2025年3月21日 09:15</span>
-        </div>
-      </div>
-      <div class="report-actions">
-        <a href="/reports/report-002" class="btn btn-outline btn-block">
-          <i class="fas fa-eye"></i>
-          レポートを見る
-        </a>
-      </div>
-    </div>
-
-    <!-- Report 5 - 承認済み -->
-    <div class="report-card" data-status="approved">
-      <div class="report-header">
-        <div class="report-date">
-          <span class="date-label">2025年3月15日</span>
-          <span class="time-label">13:00</span>
-        </div>
-        <span class="status-badge status-approved">承認済み</span>
-      </div>
-      <div class="report-content">
-        <div class="report-location">
-          <i class="fas fa-map-marker-alt"></i>
-          <span>日本橋茅場町店</span>
-        </div>
-        <div class="report-tasks">
-          <span class="task-tag">定期清掃</span>
-        </div>
-        <div class="report-approved-info">
-          <i class="fas fa-check-double"></i>
-          <span>承認日時: 2025年3月16日 10:00</span>
-        </div>
-      </div>
-      <div class="report-actions">
-        <a href="/reports/report-003" class="btn btn-outline btn-block">
-          <i class="fas fa-eye"></i>
-          レポートを見る
-        </a>
-      </div>
-    </div>
+  <div class="reports-list" id="reports-list-content">
+    <div class="empty-state">読み込み中...</div>
   </div>
 
   <style>
-    .staff-reports {
-      max-width: 100%;
-      margin: 0;
-      padding: 16px;
-            padding-bottom: 100px;
-      background: #f9fafb;
-      min-height: 100vh;
-    }
-
-    .breadcrumb {
-      margin-bottom: 16px;
-    }
-
-    .breadcrumb-list {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      font-size: 0.875rem;
-    }
-
-    .breadcrumb-item a {
-      color: var(--primary);
-      text-decoration: none;
-    }
-
-    .breadcrumb-item:not(:last-child)::after {
-      content: '/';
-      margin-left: 8px;
-      color: #9ca3af;
-    }
-
-    .page-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .back-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      background: #ffffff;
-      border-radius: 12px;
-      color: #374151;
-      text-decoration: none;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      transition: all 0.2s;
-    }
-
-    .back-btn:hover {
-      background: var(--primary);
-      color: #ffffff;
-    }
-
-    .page-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #111827;
-      margin: 0;
-    }
-
-    .filter-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .tab-btn {
-      padding: 8px 16px;
-      border: 2px solid #e5e7eb;
-      border-radius: 20px;
-      background: #ffffff;
+    /* 追加のスタイル */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
       color: #6b7280;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-
-    .tab-btn:hover {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    .tab-btn.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #ffffff;
-    }
-
-    .reports-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .report-card {
       background: #ffffff;
       border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      border-left: 4px solid #e5e7eb;
-      transition: all 0.2s;
+      grid-column: 1 / -1;
     }
 
-    .report-card:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .report-card.urgent {
-      border-left-color: #ef4444;
-      background: #fef2f2;
-    }
-
-    .report-card[data-status="pending"] {
-      border-left-color: #f59e0b;
-    }
-
-    .report-card[data-status="submitted"] {
-      border-left-color: #3b82f6;
-    }
-
-    .report-card[data-status="approved"] {
-      border-left-color: #10b981;
-    }
-
-    .report-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 12px;
-    }
-
-    .report-date {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .date-label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #374151;
-    }
-
-    .time-label {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-
-    .status-badge {
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .status-pending {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .status-submitted {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
-    .status-approved {
+    .status-badge.status-completed {
       background: #d1fae5;
       color: #065f46;
     }
 
-    .report-content {
-      margin-bottom: 16px;
-    }
-
-    .report-location {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 12px;
-    }
-
-    .report-location i {
-      color: var(--primary);
-    }
-
-    .report-tasks {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .task-tag {
-      padding: 4px 10px;
-      background: #f3f4f6;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      color: #374151;
-    }
-
-    .report-deadline,
-    .report-submitted-info,
-    .report-approved-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.875rem;
-    }
-
-    .report-deadline {
-      color: #dc2626;
-    }
-
-    .report-deadline i {
-      color: #dc2626;
-    }
-
-    .report-submitted-info {
-      color: #2563eb;
-    }
-
-    .report-submitted-info i {
-      color: #2563eb;
-    }
-
-    .report-approved-info {
-      color: #059669;
-    }
-
-    .report-approved-info i {
-      color: #059669;
-    }
-
-    .report-actions {
-      display: flex;
-      gap: 12px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      text-decoration: none;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: none;
-    }
-
-    .btn-block {
-      width: 100%;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #ffffff;
-    }
-
-    .btn-primary:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .btn-outline {
-      background: #ffffff;
-      border: 2px solid #e5e7eb;
-      color: #374151;
-    }
-
-    .btn-outline:hover {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    /* ダークモード */
-    body.dark-mode .staff-reports {
-      background: #111827;
-    }
-
-    body.dark-mode .page-title {
-      color: #f9fafb;
-    }
-
-    body.dark-mode .back-btn {
-      background: #1f2937;
-      color: #f9fafb;
-    }
-
-    body.dark-mode .tab-btn {
-      background: #1f2937;
-      border-color: #374151;
-      color: #9ca3af;
-    }
-
-    body.dark-mode .tab-btn.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #ffffff;
-    }
-
-    body.dark-mode .report-card {
-      background: #1f2937;
-    }
-
-    body.dark-mode .report-card.urgent {
-      background: #7f1d1d;
-    }
-
-    body.dark-mode .date-label {
-      color: #f9fafb;
-    }
-
-    body.dark-mode .time-label {
-      color: #9ca3af;
-    }
-
-    body.dark-mode .report-location {
-      color: #f9fafb;
-    }
-
-    body.dark-mode .task-tag {
-      background: #374151;
-      color: #d1d5db;
-    }
-
-    body.dark-mode .btn-outline {
-      background: #374151;
-      border-color: #4b5563;
-      color: #f9fafb;
-    }
-
-    @media (max-width: 768px) {
-      .staff-reports {
-        padding: 12px;
-        padding-bottom: 100px;
-      }
-
-      .page-title {
-        font-size: 1.25rem;
-      }
-
-      .report-card {
-        padding: 16px;
-      }
+    .report-card.has-report {
+      border-left-color: #10b981;
     }
   </style>
 
+  <script src="/js/data-utils.js"></script>
   <script>
-    // フィルタータブの制御
-    (function() {
-      const tabs = document.querySelectorAll('.tab-btn');
-      const cards = document.querySelectorAll('.report-card');
+    (async function () {
+      const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
+      const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+      let currentUser = null;
+      let allSchedules = [];
+      let allReports = [];
 
-      tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-          // アクティブタブの切り替え
-          tabs.forEach(t => t.classList.remove('active'));
-          this.classList.add('active');
+      async function init() {
+        try {
+          currentUser = getCurrentUserFromStorage();
+          if (!currentUser) return;
 
-          const filter = this.getAttribute('data-filter');
+          const idToken = await getCognitoIdToken();
+          const headers = { 'Authorization': `Bearer ${idToken}` };
 
-          // カードのフィルタリング
-          cards.forEach(card => {
-            const status = card.getAttribute('data-status');
-            if (filter === 'all' || status === filter) {
-              card.style.display = 'block';
-            } else {
-              card.style.display = 'none';
-            }
+          // スケジュールとレポートを並列で取得
+          const [schedulesRes, reportsRes] = await Promise.all([
+            fetch(`${API_BASE}/schedules`, { headers }),
+            fetch(`${REPORT_API}/reports`, { headers })
+          ]);
+
+          if (schedulesRes.ok) {
+            const data = await schedulesRes.json();
+            allSchedules = Array.isArray(data) ? data : (data.items || data.schedules || []);
+          }
+
+          if (reportsRes.ok) {
+            const data = await reportsRes.json();
+            allReports = Array.isArray(data) ? data : (data.items || data.reports || []);
+          }
+
+          renderReports('all');
+          setupFilters();
+        } catch (error) {
+          console.error('[Reports] Init failed:', error);
+          document.getElementById('reports-list-content').innerHTML = '<div class="empty-state">データの読み込みに失敗しました</div>';
+        }
+      }
+
+      function getCurrentUserFromStorage() {
+        try {
+          const raw = localStorage.getItem('cognito_user') || localStorage.getItem('misesapo_auth');
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          return parsed.user || parsed;
+        } catch (e) { return null; }
+      }
+
+      async function getCognitoIdToken() {
+        // 既存のグローバル関数 or このツール内で解決
+        if (window.Auth && window.Auth.getIdToken) return await window.Auth.getIdToken();
+        const session = localStorage.getItem('cognito_session');
+        if (session) {
+          try {
+            const parsed = JSON.parse(session);
+            return parsed.idToken?.jwtToken || parsed;
+          } catch (e) { }
+        }
+        return null;
+      }
+
+      function renderReports(filter) {
+        const container = document.getElementById('reports-list-content');
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+
+        // 過去のスケジュール、または本日以前のスケジュールをフィルタリング
+        const pastSchedules = allSchedules.filter(s => {
+          const sDate = s.scheduled_date || s.date;
+          // OSスタッフ本人に割り当てられたもの、または共有のもの
+          const workerId = s.worker_id || s.assigned_to || s.staff_id;
+          const isMyTask = !workerId || (window.DataUtils && window.DataUtils.IdUtils && window.DataUtils.IdUtils.isSame(workerId, currentUser.id)) || String(workerId) === String(currentUser.id);
+
+          if (!isMyTask) return false;
+          return sDate <= todayStr;
+        }).sort((a, b) => {
+          const dA = a.scheduled_date || a.date || '';
+          const dB = b.scheduled_date || b.date || '';
+          return dB.localeCompare(dA); // 降順（新しい順）
+        });
+
+        let filtered = pastSchedules.map(s => {
+          const report = allReports.find(r => (r.schedule_id || r.scheduleId) === s.id);
+          return { schedule: s, report: report };
+        });
+
+        if (filter === 'pending') {
+          filtered = filtered.filter(f => !f.report);
+        } else if (filter === 'submitted' || filter === 'approved') {
+          filtered = filtered.filter(f => f.report);
+        }
+
+        if (filtered.length === 0) {
+          container.innerHTML = `<div class="empty-state">条件に一致する案件はありません</div>`;
+          return;
+        }
+
+        container.innerHTML = filtered.map(f => {
+          const s = f.schedule;
+          const r = f.report;
+          const sDate = s.scheduled_date || s.date;
+          const sTime = s.scheduled_time || s.time || '00:00';
+          const brandName = s.brand_name || '';
+          const storeName = s.store_name || s.client_name || '-';
+          const displayName = brandName ? `${brandName} / ${storeName}` : storeName;
+
+          const statusLabel = r ? '提出済み' : 'レポート未作成';
+          const statusClass = r ? 'status-submitted' : 'status-pending';
+          const cardClass = r ? 'has-report' : 'urgent';
+
+          return `
+            <div class="report-card ${cardClass}" data-status="${r ? 'submitted' : 'pending'}">
+              <div class="report-header">
+                <div class="report-date">
+                  <span class="date-label">${sDate}</span>
+                  <span class="time-label">${sTime}</span>
+                </div>
+                <span class="status-badge ${statusClass}">${statusLabel}</span>
+              </div>
+              <div class="report-content">
+                <div class="report-location">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span>${displayName}</span>
+                </div>
+                <div class="report-tasks">
+                  <span class="task-tag">${s.service_name || s.category || '通常作業'}</span>
+                </div>
+                ${r ? `
+                  <div class="report-submitted-info">
+                    <i class="fas fa-check-circle"></i>
+                    <span>提出済み</span>
+                  </div>
+                ` : `
+                  <div class="report-deadline">
+                    <i class="fas fa-clock"></i>
+                    <span>レポートの作成をお願いします</span>
+                  </div>
+                `}
+              </div>
+              <div class="report-actions">
+                ${r ? `
+                  <a href="/staff/os/reports/view?report_id=${r.id}" class="btn btn-outline btn-block">
+                    <i class="fas fa-eye"></i>
+                    レポートを見る
+                  </a>
+                ` : `
+                  <a href="/staff/os/reports/new?schedule_id=${s.id}" class="btn btn-primary btn-block">
+                    <i class="fas fa-file-upload"></i>
+                    レポート作成
+                  </a>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function setupFilters() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+          tab.addEventListener('click', function () {
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            renderReports(this.getAttribute('data-filter'));
           });
         });
-      });
-    })();
-
-    // ダークモードの適用
-    (function() {
-      const savedTheme = localStorage.getItem('staff-theme-mode') || 'light';
-      if (savedTheme === 'dark') {
-        document.body.classList.add('dark-mode');
       }
+
+      init();
     })();
   </script>
 </main>

@@ -3,7 +3,7 @@
  * SP最適化・セクション方式
  */
 
-(function() {
+(function () {
   const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
   const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
   const DEFAULT_NO_PHOTO_IMAGE = '/images-report/sorry.jpeg'; // デフォルト画像パス
@@ -32,7 +32,7 @@
   let imageStock = []; // ローカル保存された画像データ配列 { id, file, blobUrl, fileName, uploaded: false }
   const STOCK_DB_NAME = 'report-image-stock';
   const STOCK_DB_VERSION = 1;
-  
+
   // 一括操作用
   let isMultiSelectMode = false; // 複数選択モード（画像用）
   let selectedImageIds = new Set(); // 選択された画像ID
@@ -98,6 +98,16 @@
     const date = normalized.date || schedule.scheduled_date || schedule.date || '';
     const time = normalized.time || schedule.scheduled_time || schedule.time_slot || '';
     const duration = schedule.duration_minutes || normalized.duration || schedule.duration || 0;
+
+    // カルテボタンの表示制御
+    const karteRow = document.getElementById('karte-reference-row');
+    if (karteRow && storeId) {
+      karteRow.style.display = 'block';
+      const btnViewKarte = document.getElementById('btn-view-karte');
+      if (btnViewKarte) {
+        btnViewKarte.onclick = () => window.open(`/staff/os/karte?store_id=${storeId}`, '_blank');
+      }
+    }
     const endTime = addMinutesToTime(time, duration) || (schedule.scheduled_end_time || '');
 
     const scheduleIdInput = document.getElementById('report-schedule-id');
@@ -244,10 +254,10 @@
     const brandDropdownBtn = document.getElementById('brand-dropdown-btn');
     const brandResults = document.getElementById('brand-search-results');
     if (!brandSelect || !brandSearchInput || !brandDropdownBtn) return;
-    
+
     // 既存のオプションをクリア
     brandSelect.innerHTML = '<option value="">①ブランド名 *</option>';
-    
+
     // ブランドオプションを追加（brandsが配列であることを確認）
     if (Array.isArray(brands) && brands.length > 0) {
       brands.forEach(brand => {
@@ -257,32 +267,32 @@
         brandSelect.appendChild(option);
       });
     }
-    
+
     // 入力フィールドまたはドロップダウンボタンをクリックしたとき：モーダルを開く
     function openBrandModal() {
       if (typeof window.openBrandModal === 'function') {
         window.openBrandModal();
-          }
+      }
     }
-    
+
     // 下矢印ボタンをクリックしたとき：モーダルを開く
-    brandDropdownBtn.addEventListener('click', function(e) {
+    brandDropdownBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       e.preventDefault();
       openBrandModal();
     });
-    
+
     // 入力フィールドをクリックしたとき：モーダルを開く
-    brandSearchInput.addEventListener('click', function(e) {
+    brandSearchInput.addEventListener('click', function (e) {
       // readonlyの場合はモーダルを開く
       if (this.hasAttribute('readonly')) {
         e.preventDefault();
         openBrandModal();
       }
     });
-    
+
     // 入力フィールドで入力したとき：自由入力モード
-    brandSearchInput.addEventListener('input', function() {
+    brandSearchInput.addEventListener('input', function () {
       if (!this.hasAttribute('readonly')) {
         // 自由入力モード：ブランド名を更新
         const inputValue = this.value;
@@ -300,11 +310,11 @@
         }
       }
     });
-    
+
     // 初期状態でreadonlyを設定
     brandSearchInput.setAttribute('readonly', 'readonly');
   }
-  
+
   // 店舗名のselect要素を初期化
   function initStoreSelect() {
     const storeSelect = document.getElementById('report-store-select');
@@ -312,10 +322,10 @@
     const storeDropdownBtn = document.getElementById('store-dropdown-btn');
     const storeResults = document.getElementById('store-search-results');
     if (!storeSelect || !storeSearchInput || !storeDropdownBtn) return;
-    
+
     // 既存のオプションをクリア
     storeSelect.innerHTML = '<option value="">②店舗名 *</option>';
-    
+
     // 入力フィールドまたはドロップダウンボタンをクリックしたとき：モーダルを開く
     function openStoreModal() {
       // ブランドが選択されていない場合は警告
@@ -323,35 +333,35 @@
       const brandNameInput = document.getElementById('report-brand-search')?.value.trim() || '';
       const brandNameHidden = document.getElementById('report-brand-name')?.value || '';
       const hasBrandName = brandNameInput || brandNameHidden;
-      
+
       if (!selectedBrandId && !hasBrandName) {
         showWarning('まずブランド名を選択または入力してください');
         return;
       }
-      
+
       if (typeof window.openStoreModal === 'function') {
         window.openStoreModal();
       }
     }
-    
+
     // 下矢印ボタンをクリックしたとき：モーダルを開く
-    storeDropdownBtn.addEventListener('click', function(e) {
+    storeDropdownBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       e.preventDefault();
       openStoreModal();
     });
-    
+
     // 入力フィールドをクリックしたとき：モーダルを開く
-    storeSearchInput.addEventListener('click', function(e) {
+    storeSearchInput.addEventListener('click', function (e) {
       // readonlyの場合はモーダルを開く
       if (this.hasAttribute('readonly')) {
         e.preventDefault();
         openStoreModal();
       }
     });
-    
+
     // 入力フィールドで入力したとき：自由入力モード
-    storeSearchInput.addEventListener('input', function() {
+    storeSearchInput.addEventListener('input', function () {
       if (!this.hasAttribute('readonly')) {
         // 自由入力モード：店舗名を更新
         const inputValue = this.value;
@@ -369,12 +379,12 @@
         }
       }
     });
-    
+
     // updateStoreSelect関数を更新（グローバルスコープに公開）
-    window.updateStoreSelect = function() {
+    window.updateStoreSelect = function () {
       // ブランドが変更されたときの処理（モーダル方式では特に処理不要）
     };
-    
+
     // 初期状態でreadonlyを設定
     storeSearchInput.setAttribute('readonly', 'readonly');
   }
@@ -387,41 +397,56 @@
     setupEventListeners();
     setupTabs();
     setDefaultDate();
-    
+
     // 管理画面側では修正・編集タブの機能を無効化
-    const isAdminPage = window.location.pathname.includes('/admin/reports/new-pc') || 
-                       window.location.pathname.includes('/admin/reports/new');
+    const isAdminPage = window.location.pathname.includes('/admin/reports/new-pc') ||
+      window.location.pathname.includes('/admin/reports/new');
     if (!isAdminPage) {
-    loadRevisionRequests();
+      loadRevisionRequests();
     }
-    
+
     setupMobileKeyboardHandling();
     setupScrollIndicator(); // スクロール位置インジケーターを設定
     // ブランド名と店舗名のselect要素を初期化
     initBrandSelect();
     initStoreSelect();
     await loadAvailableSchedules();
-    
+
     // URLパラメータからレポートIDを取得して編集モードで開く
     const urlParams = new URLSearchParams(window.location.search);
     const editReportId = urlParams.get('edit');
     const isProposal = urlParams.get('proposal') === 'true';
-    
+
     if (editReportId) {
       // 編集モードで開く
       await loadReportForEdit(editReportId, isProposal);
+    } else {
+      // 新規作成モード：schedule_idがあれば自動入力
+      const scheduleId = urlParams.get('schedule_id');
+      if (scheduleId) {
+        // loadAvailableSchedulesを待っているので、availableSchedulesから探す
+        const selectedSchedule = availableSchedules.find(s => s.id === scheduleId);
+        if (selectedSchedule) {
+          applyScheduleToForm(selectedSchedule);
+          // 選択肢も更新（副作用として発火させる）
+          const scheduleSelect = document.getElementById('report-schedule');
+          if (scheduleSelect) {
+            scheduleSelect.value = scheduleId;
+          }
+        }
+      }
     }
-    
+
     // レポートヘッダーセクションの初期表示を設定（サイドパネル内に移動）
     const sharedHeader = document.getElementById('shared-report-header');
     const newTab = document.getElementById('tab-new');
     if (sharedHeader && newTab && newTab.classList.contains('active')) {
       sharedHeader.style.display = 'block';
     }
-    
+
     // サイドパネルの初期化
     setupSidePanel();
-    
+
     // 自動保存データの復元を試行（新規作成タブがアクティブな場合のみ）
     if (newTab && newTab.classList.contains('active')) {
       const restored = await loadAutoSaveData();
@@ -433,7 +458,7 @@
       // 新規作成タブがアクティブでない場合でも、タブが切り替わったときに追加
       // これはsetupTabs内で処理される
     }
-    
+
     // 次回ご提案タブがアクティブな場合も同様に処理
     const proposalTab = document.getElementById('tab-proposal');
     if (proposalTab && proposalTab.classList.contains('active')) {
@@ -443,13 +468,13 @@
         window.addCleaningItemSection();
       }
     }
-    
+
     // 自動保存のイベントリスナーを設定
     setupAutoSaveListeners();
-    
+
     // リアルタイムバリデーションを設定
     setupRealTimeValidation();
-    
+
     // プレビューモーダルが開いていないことを確認（強制的に非表示）
     const previewDialog = document.getElementById('preview-dialog');
     if (previewDialog) {
@@ -457,7 +482,7 @@
       previewDialog.style.display = 'none';
       previewDialog.style.setProperty('display', 'none', 'important');
     }
-    
+
     // プレビュー保存確認ダイアログが開いていないことを確認（強制的に閉じる）
     const previewSaveDialog = document.getElementById('preview-save-dialog');
     if (previewSaveDialog) {
@@ -466,11 +491,11 @@
       }
     }
   });
-  
+
   // モバイルキーボード表示時のスクロール問題を修正
   function setupMobileKeyboardHandling() {
     // textareaのblurイベントでスクロール位置を調整
-    document.addEventListener('blur', function(e) {
+    document.addEventListener('blur', function (e) {
       if (e.target.classList.contains('section-textarea')) {
         // キーボードが閉じた後にスクロール位置を調整
         setTimeout(() => {
@@ -483,15 +508,15 @@
         }, 300);
       }
     }, true);
-    
+
     // Visual Viewport APIを使用してキーボードの表示/非表示を検知
     if (window.visualViewport) {
       let lastViewportHeight = window.visualViewport.height;
-      
+
       window.visualViewport.addEventListener('resize', () => {
         const currentHeight = window.visualViewport.height;
         const heightDiff = lastViewportHeight - currentHeight;
-        
+
         // キーボードが閉じた場合（高さが増えた場合）
         if (heightDiff < -50) {
           setTimeout(() => {
@@ -506,20 +531,20 @@
             }
           }, 100);
         }
-        
+
         lastViewportHeight = currentHeight;
       });
     }
-    
+
     // textareaのフォーカスアウト時にスクロール位置を調整
-    document.addEventListener('focusout', function(e) {
+    document.addEventListener('focusout', function (e) {
       if (e.target.classList.contains('section-textarea')) {
         setTimeout(() => {
           // キーボードが閉じるのを待ってからスクロール位置を調整
           if (window.visualViewport) {
             const viewportHeight = window.visualViewport.height;
             const windowHeight = window.innerHeight;
-            
+
             // キーボードが閉じた場合（ビューポートの高さが増えた場合）
             if (viewportHeight > windowHeight * 0.8) {
               window.scrollTo(0, 0);
@@ -615,11 +640,11 @@
     const tabButtons = document.querySelectorAll('.tabs-navigation .tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     const sharedHeader = document.getElementById('shared-report-header');
-    
+
     tabButtons.forEach(btn => {
       btn.addEventListener('click', async () => {
         const targetTab = btn.dataset.tab;
-        
+
         // サイドパネルが開いている場合は閉じる
         const sidePanel = document.getElementById('side-panel');
         const sidePanelOverlay = document.getElementById('side-panel-overlay');
@@ -630,11 +655,11 @@
           if (detailsBtn) detailsBtn.classList.remove('active');
           document.body.style.overflow = '';
         }
-        
+
         // タブボタンのアクティブ状態を更新
         tabButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
+
         // タブコンテンツの表示を切り替え
         tabContents.forEach(content => {
           content.classList.remove('active');
@@ -653,7 +678,7 @@
             activeSectionAddIconsArea.style.display = '';
           }
         }
-        
+
         // レポートヘッダーセクションの表示/非表示を切り替え
         if (sharedHeader) {
           if (targetTab === 'new' || targetTab === 'proposal') {
@@ -662,7 +687,7 @@
             sharedHeader.style.display = 'none';
           }
         }
-        
+
         // タブ切り替え時に、そのタブのセクションデータを保存・復元
         if (targetTab === 'new' || targetTab === 'proposal' || targetTab === 'edit') {
           // 現在のタブのセクションデータを保存（sectionsオブジェクトをそのまま保存）
@@ -670,13 +695,13 @@
           if (previousActiveTab && (previousActiveTab === 'new' || previousActiveTab === 'proposal' || previousActiveTab === 'edit')) {
             sectionsByTab[previousActiveTab] = { ...sections };
           }
-          
+
           // 切り替え先のタブのセクションデータを復元
           sections = { ...sectionsByTab[targetTab] };
-          
+
           // currentActiveTabを更新
           currentActiveTab = targetTab;
-          
+
           // セクションカウンターを調整（既存のセクションIDから最大値を取得）
           const existingSectionIds = Object.keys(sections).map(id => {
             const match = id.match(/section-(\d+)/);
@@ -686,15 +711,15 @@
             sectionCounter = Math.max(...existingSectionIds);
           } else {
             sectionCounter = 0;
-        }
-        
+          }
+
           // 切り替え先のタブのDOMからセクションデータを再構築（DOMが既に存在する場合）
-          const reportContentId = targetTab === 'proposal' ? 'report-content-proposal' : 
-                                  targetTab === 'edit' ? 'report-content-edit' : 'report-content';
+          const reportContentId = targetTab === 'proposal' ? 'report-content-proposal' :
+            targetTab === 'edit' ? 'report-content-edit' : 'report-content';
           const reportContent = document.getElementById(reportContentId);
           if (reportContent) {
             const existingSectionCards = reportContent.querySelectorAll('.section-card');
-            
+
             // DOMにセクションが存在するが、sectionsオブジェクトが空の場合は、DOMから再構築
             if (existingSectionCards.length > 0 && Object.keys(sections).length === 0) {
               // DOMからセクションデータを再構築（簡易版：セクションIDだけを保持）
@@ -711,12 +736,12 @@
                   } else if (sectionTitle.includes('作業内容')) {
                     sectionType = 'work_content';
                   }
-                  
+
                   // 基本的なセクションデータを作成（詳細はDOMから読み取る必要があるが、簡易版として空データを作成）
                   sections[sectionId] = { type: sectionType };
                 }
               });
-              
+
               // セクションカウンターを更新
               const sectionIds = Object.keys(sections).map(id => {
                 const match = id.match(/section-(\d+)/);
@@ -726,23 +751,23 @@
                 sectionCounter = Math.max(...sectionIds);
               }
             }
-            
+
             // セクションが空の場合はデフォルトで清掃項目セクションを追加
             if (Object.keys(sections).length === 0 && existingSectionCards.length === 0) {
               if (window.addCleaningItemSection) {
-            window.addCleaningItemSection();
+                window.addCleaningItemSection();
               }
             }
           }
         }
-        
+
         // 修正タブに切り替えた場合は再読み込み
         if (targetTab === 'edit') {
           loadRevisionRequests();
         }
       });
     });
-    
+
     // 初期表示時の処理はDOMContentLoadedイベントで行うため、ここでは削除
   }
 
@@ -750,14 +775,14 @@
   async function resetFormForNewReport(tabType = 'new') {
     const formId = tabType === 'proposal' ? 'report-form-proposal' : 'report-form';
     const reportContentId = tabType === 'proposal' ? 'report-content-proposal' : 'report-content';
-    
+
     // フォームをリセット
     const form = document.getElementById(formId);
     if (form) {
       form.reset();
       form.dataset.reportId = '';
     }
-    
+
     // セクションをクリア
     sections = {};
     sectionCounter = 0;
@@ -766,22 +791,22 @@
       // セクション追加アイコンエリアを保持
       const sectionAddIconsAreaId = tabType === 'proposal' ? 'section-add-icons-area-proposal' : 'section-add-icons-area';
       const sectionAddIconsArea = document.getElementById(sectionAddIconsAreaId);
-      
+
       // セクションカードだけを削除（section-add-icons-areaは保持）
       const sectionCards = reportContent.querySelectorAll('.section-card');
       sectionCards.forEach(card => card.remove());
-      
+
       // セクション追加アイコンエリアが削除された場合は再追加
       // ただし、既に存在する場合は何もしない（重複を防ぐ）
       if (!sectionAddIconsArea && reportContent) {
         // 念のため、再度存在確認（他の処理で追加された可能性がある）
         const existingArea = document.getElementById(sectionAddIconsAreaId);
         if (!existingArea) {
-        const toggleBtnId = tabType === 'proposal' ? 'section-add-toggle-btn-proposal' : 'section-add-toggle-btn';
-        const hintId = tabType === 'proposal' ? 'section-add-hint-proposal' : 'section-add-hint';
-        
-        // HTMLを再作成
-        const sectionAddIconsAreaHTML = `
+          const toggleBtnId = tabType === 'proposal' ? 'section-add-toggle-btn-proposal' : 'section-add-toggle-btn';
+          const hintId = tabType === 'proposal' ? 'section-add-hint-proposal' : 'section-add-hint';
+
+          // HTMLを再作成
+          const sectionAddIconsAreaHTML = `
           <div class="section-add-icons-area" id="${sectionAddIconsAreaId}">
             <div class="section-add-hint" id="${hintId}">
               <span>↓New section↓</span>
@@ -791,27 +816,27 @@
             </button>
           </div>
         `;
-        reportContent.insertAdjacentHTML('beforeend', sectionAddIconsAreaHTML);
-        // イベントリスナーを再設定
-        setupSectionAddButtons(toggleBtnId, tabType);
+          reportContent.insertAdjacentHTML('beforeend', sectionAddIconsAreaHTML);
+          // イベントリスナーを再設定
+          setupSectionAddButtons(toggleBtnId, tabType);
         }
       }
     }
-    
+
     // 清掃項目リストをリセット
     const cleaningItemsList = document.getElementById('cleaning-items-list');
     if (cleaningItemsList) {
       cleaningItemsList.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
     }
-    
+
     // 画像ストックをリセット
     await clearImageStockDB();
     imageStock = [];
     renderImageStock();
-    
+
     // 日付を今日に設定
     setDefaultDate();
-    
+
     // 自動保存データをクリア
     clearAutoSaveData();
   }
@@ -826,7 +851,7 @@
     if (autoSaveTimer) {
       clearTimeout(autoSaveTimer);
     }
-    
+
     autoSaveTimer = setTimeout(() => {
       try {
         const formData = {
@@ -842,7 +867,7 @@
           sectionCounter: sectionCounter,
           timestamp: Date.now()
         };
-        
+
         localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(formData));
         console.log('[AutoSave] Saved draft');
       } catch (error) {
@@ -856,16 +881,16 @@
     try {
       const saved = localStorage.getItem(AUTO_SAVE_KEY);
       if (!saved) return false;
-      
+
       const formData = JSON.parse(saved);
-      
+
       // 24時間以上経過したデータは無効
       const now = Date.now();
       if (now - formData.timestamp > 24 * 60 * 60 * 1000) {
         clearAutoSaveData();
         return false;
       }
-      
+
       // ユーザーに確認
       const shouldRestore = await showConfirm('自動保存の復元', '前回の入力内容が保存されています。復元しますか？');
       if (shouldRestore) {
@@ -894,14 +919,14 @@
         if (formData.endTime) {
           document.getElementById('report-end')?.setAttribute('value', formData.endTime);
         }
-        
+
         // セクションを復元
         sections = formData.sections || {};
         sectionCounter = formData.sectionCounter || 0;
-        
+
         // セクションを再構築
         restoreSectionsFromAutoSave();
-        
+
         return true;
       } else {
         // キャンセル時は自動保存データをクリアし、セクションもクリア
@@ -921,18 +946,18 @@
   function restoreSectionsFromAutoSave() {
     const reportContent = document.getElementById('report-content');
     if (!reportContent) return;
-    
+
     reportContent.innerHTML = '';
-    
+
     // セクションを順番に復元
     Object.keys(sections).forEach(sectionId => {
       const section = sections[sectionId];
       if (section.type === 'cleaning') {
         // 清掃項目セクション
-        const options = serviceItems.map(si => 
+        const options = serviceItems.map(si =>
           `<option value="${escapeHtml(si.title)}" ${(si.title === section.item_name) ? 'selected' : ''}>${escapeHtml(si.title)}</option>`
         ).join('');
-        
+
         const html = `
           <div class="section-card" data-section-id="${sectionId}">
             <div class="section-header">
@@ -979,9 +1004,9 @@
                 </div>
               `).join('')}
               ${(section.imageContents || []).map(imageContent => {
-                const imageType = imageContent.imageType || 'before_after';
-                if (imageType === 'before_after') {
-                  return `
+          const imageType = imageContent.imageType || 'before_after';
+          if (imageType === 'before_after') {
+            return `
                     <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
                       <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
                         <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${sectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
@@ -995,9 +1020,9 @@
                           </div>
                           <div class="image-list" id="${imageContent.id}-before" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
                             ${(imageContent.photos?.before || []).map(photo => {
-                              const photoUrl = photo.blobUrl || photo;
-                              const photoId = photo.imageId || photo;
-                              return `
+              const photoUrl = photo.blobUrl || photo;
+              const photoId = photo.imageId || photo;
+              return `
                               <div class="image-thumb" draggable="true" data-image-url="${photoUrl}" data-image-id="${photoId}" data-category="before" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
                                 <img src="${photoUrl}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
                                 <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'before', '${photoId}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
@@ -1005,7 +1030,7 @@
                                 </button>
                               </div>
                             `;
-                            }).join('')}
+            }).join('')}
                             <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContent.id}', 'before')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
                               <i class="fas fa-plus"></i>
                               <span>追加</span>
@@ -1018,9 +1043,9 @@
                           </div>
                           <div class="image-list" id="${imageContent.id}-after" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
                             ${(imageContent.photos?.after || []).map(photo => {
-                              const photoUrl = photo.blobUrl || photo;
-                              const photoId = photo.imageId || photo;
-                              return `
+              const photoUrl = photo.blobUrl || photo;
+              const photoId = photo.imageId || photo;
+              return `
                               <div class="image-thumb" draggable="true" data-image-url="${photoUrl}" data-image-id="${photoId}" data-category="after" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
                                 <img src="${photoUrl}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
                                 <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'after', '${photoId}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
@@ -1028,7 +1053,7 @@
                                 </button>
                               </div>
                             `;
-                            }).join('')}
+            }).join('')}
                             <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContent.id}', 'after')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
                               <i class="fas fa-plus"></i>
                               <span>追加</span>
@@ -1038,12 +1063,12 @@
                       </div>
                     </div>
                   `;
-                } else {
-                  // 次回ご提案タブかどうかを判定
-                  const activeTab = document.querySelector('.tab-btn.active');
-                  const isProposal = activeTab && activeTab.dataset.tab === 'proposal';
-                  const labelText = isProposal ? 'ご提案箇所' : '施工後';
-                  return `
+          } else {
+            // 次回ご提案タブかどうかを判定
+            const activeTab = document.querySelector('.tab-btn.active');
+            const isProposal = activeTab && activeTab.dataset.tab === 'proposal';
+            const labelText = isProposal ? 'ご提案箇所' : '施工後';
+            return `
                     <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
                       <div class="cleaning-item-image-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <div class="image-category-title completed" style="font-size:0.875rem; font-weight:600; color:#374151;">
@@ -1057,9 +1082,9 @@
                         <div class="image-category">
                           <div class="image-list" id="${imageContent.id}-completed" style="min-height:120px; border:2px dashed #e5e7eb; border-radius:8px; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; justify-content:center;">
                             ${(imageContent.photos?.completed || []).map(photo => {
-                              const photoUrl = photo.blobUrl || photo;
-                              const photoId = photo.imageId || photo;
-                              return `
+              const photoUrl = photo.blobUrl || photo;
+              const photoId = photo.imageId || photo;
+              return `
                               <div class="image-thumb" draggable="true" data-image-url="${photoUrl}" data-image-id="${photoId}" data-category="completed" data-section-id="${sectionId}" data-image-content-id="${imageContent.id}" style="width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;">
                                 <img src="${photoUrl}" alt="Photo" draggable="false" style="width:100%; height:100%; object-fit:cover;">
                                 <button type="button" class="image-thumb-remove" onclick="removeCleaningItemImage('${sectionId}', '${imageContent.id}', 'completed', '${photoId}', this.parentElement)" style="position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;">
@@ -1067,7 +1092,7 @@
                                 </button>
                               </div>
                             `;
-                            }).join('')}
+            }).join('')}
                             <button type="button" class="image-add-btn cleaning-item-image-add-btn" onclick="openCleaningItemImageAddModal('${sectionId}', '${imageContent.id}', 'completed')" style="cursor:pointer; width:80px; height:80px; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#6b7280; font-size:0.75rem; background:transparent; padding:0;">
                               <i class="fas fa-plus"></i>
                               <span>追加</span>
@@ -1077,8 +1102,8 @@
                       </div>
                     </div>
                   `;
-                }
-              }).join('')}
+          }
+        }).join('')}
               <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
                 <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入">
                   <i class="fas fa-image"></i>
@@ -1097,21 +1122,21 @@
           </div>
         `;
         reportContent.insertAdjacentHTML('beforeend', html);
-        
+
         // セクション内画像コンテンツのイベントリスナーを設定
         if (section.imageContents && section.imageContents.length > 0) {
           setTimeout(() => {
             section.imageContents.forEach(imageContent => {
               const imageType = imageContent.imageType || 'before_after';
               setupCleaningItemImageUpload(imageContent.id, sectionId, imageType);
-              
+
               // ドラッグ&ドロップを設定
               if (imageType === 'before_after') {
                 const beforeList = document.getElementById(`${imageContent.id}-before`);
                 const afterList = document.getElementById(`${imageContent.id}-after`);
                 if (beforeList) setupImageListDragAndDrop(beforeList, sectionId, 'before', imageContent.id);
                 if (afterList) setupImageListDragAndDrop(afterList, sectionId, 'after', imageContent.id);
-                
+
                 // 画像サムネイルにドラッグ&ドロップを設定
                 if (beforeList) {
                   beforeList.querySelectorAll('.image-thumb').forEach(thumb => {
@@ -1135,7 +1160,7 @@
                 const completedList = document.getElementById(`${imageContent.id}-completed`);
                 if (completedList) {
                   setupImageListDragAndDrop(completedList, sectionId, 'completed', imageContent.id);
-                  
+
                   // 画像サムネイルにドラッグ&ドロップを設定
                   completedList.querySelectorAll('.image-thumb').forEach(thumb => {
                     const url = thumb.dataset.imageUrl;
@@ -1199,7 +1224,7 @@
         reportContent.insertAdjacentHTML('beforeend', html);
       }
     });
-    
+
     // ドラッグ&ドロップを再設定
     setupAllSectionDragAndDrop();
     updateCleaningItemsList();
@@ -1215,28 +1240,32 @@
   function setupRealTimeValidation() {
     // 必須項目のバリデーション
     const requiredFields = [
-      { id: 'report-brand-search', name: 'ブランド名', getValue: () => {
-        const brandNameInput = document.getElementById('report-brand-search')?.value.trim() || '';
-        const brandNameHidden = document.getElementById('report-brand-name')?.value || '';
-        return brandNameInput || brandNameHidden;
-      }},
-      { id: 'report-store-search', name: '店舗名', getValue: () => {
-        const storeNameInput = document.getElementById('report-store-search')?.value.trim() || '';
-        const storeNameHidden = document.getElementById('report-store-name')?.value || '';
-        return storeNameInput || storeNameHidden;
-      }},
-      { id: 'report-date', name: '清掃日', getValue: () => document.getElementById('report-date')?.value || ''}
+      {
+        id: 'report-brand-search', name: 'ブランド名', getValue: () => {
+          const brandNameInput = document.getElementById('report-brand-search')?.value.trim() || '';
+          const brandNameHidden = document.getElementById('report-brand-name')?.value || '';
+          return brandNameInput || brandNameHidden;
+        }
+      },
+      {
+        id: 'report-store-search', name: '店舗名', getValue: () => {
+          const storeNameInput = document.getElementById('report-store-search')?.value.trim() || '';
+          const storeNameHidden = document.getElementById('report-store-name')?.value || '';
+          return storeNameInput || storeNameHidden;
+        }
+      },
+      { id: 'report-date', name: '清掃日', getValue: () => document.getElementById('report-date')?.value || '' }
     ];
-    
+
     // バリデーション状態を更新
     function updateValidationState() {
       requiredFields.forEach(field => {
         const element = document.getElementById(field.id);
         if (!element) return;
-        
+
         const value = field.getValue();
         const isValid = value.length > 0;
-        
+
         // エラー表示を追加/削除
         if (isValid) {
           element.classList.remove('validation-error');
@@ -1256,17 +1285,17 @@
           }
         }
       });
-      
+
       // 進捗インジケーターを更新
       updateProgressIndicator();
     }
-    
+
     // 進捗インジケーターを更新
     function updateProgressIndicator() {
       const validCount = requiredFields.filter(f => f.getValue().length > 0).length;
       const totalCount = requiredFields.length;
       const progress = Math.round((validCount / totalCount) * 100);
-      
+
       // 進捗バーを更新
       let progressBar = document.getElementById('form-progress-bar');
       if (!progressBar) {
@@ -1278,11 +1307,11 @@
           header.appendChild(progressBar);
         }
       }
-      
+
       progressBar.style.width = `${progress}%`;
       progressBar.setAttribute('data-progress', progress);
     }
-    
+
     // 各フィールドにイベントリスナーを設定
     requiredFields.forEach(field => {
       const element = document.getElementById(field.id);
@@ -1292,7 +1321,7 @@
         element.addEventListener('blur', updateValidationState);
       }
     });
-    
+
     // ブランド・店舗選択時のバリデーション更新
     const brandSelect = document.getElementById('report-brand');
     const storeSelect = document.getElementById('report-store');
@@ -1302,7 +1331,7 @@
     if (storeSelect) {
       storeSelect.addEventListener('change', updateValidationState);
     }
-    
+
     // 初期状態を更新
     updateValidationState();
   }
@@ -1312,7 +1341,7 @@
     // フォーム入力フィールドに自動保存を設定
     const form = document.getElementById('report-form');
     if (!form) return;
-    
+
     // 基本情報フィールド
     const fields = [
       'report-brand-search',
@@ -1321,7 +1350,7 @@
       'report-start',
       'report-end'
     ];
-    
+
     fields.forEach(fieldId => {
       const field = document.getElementById(fieldId);
       if (field) {
@@ -1329,7 +1358,7 @@
         field.addEventListener('change', autoSave);
       }
     });
-    
+
     // セクション追加・削除・更新時に自動保存
     const originalAddCleaningItem = window.addCleaningItemSection;
     const originalAddImageSection = window.addImageSectionBeforeAfter;
@@ -1338,77 +1367,77 @@
     const originalDeleteSection = window.deleteSection;
     const originalUpdateCleaningItem = window.updateCleaningItem;
     const originalUpdateSectionContent = window.updateSectionContent;
-    
+
     if (originalAddCleaningItem) {
-      window.addCleaningItemSection = function() {
+      window.addCleaningItemSection = function () {
         originalAddCleaningItem();
         autoSave();
       };
     }
-    
+
     if (originalAddImageSection) {
-      window.addImageSectionBeforeAfter = function() {
+      window.addImageSectionBeforeAfter = function () {
         originalAddImageSection();
         autoSave();
       };
     }
-    
+
     if (originalAddComment) {
-      window.addCommentSection = function() {
+      window.addCommentSection = function () {
         originalAddComment();
         autoSave();
       };
     }
-    
+
     if (originalAddWorkContent) {
-      window.addWorkContentSection = function() {
+      window.addWorkContentSection = function () {
         originalAddWorkContent();
         autoSave();
       };
     }
-    
+
     if (originalDeleteSection) {
-      window.deleteSection = function(sectionId) {
+      window.deleteSection = function (sectionId) {
         originalDeleteSection(sectionId);
         autoSave();
       };
     }
-    
+
     if (originalUpdateCleaningItem) {
-      window.updateCleaningItem = function(sectionId, value) {
+      window.updateCleaningItem = function (sectionId, value) {
         originalUpdateCleaningItem(sectionId, value);
         autoSave();
       };
     }
-    
+
     // updateCleaningItemCustomも自動保存を呼ぶようにラップ
     const originalUpdateCleaningItemCustom = window.updateCleaningItemCustom;
     if (originalUpdateCleaningItemCustom) {
-      window.updateCleaningItemCustom = function(sectionId, value) {
+      window.updateCleaningItemCustom = function (sectionId, value) {
         originalUpdateCleaningItemCustom(sectionId, value);
         autoSave();
       };
     }
-    
+
     if (originalUpdateSectionContent) {
-      window.updateSectionContent = function(sectionId, value) {
+      window.updateSectionContent = function (sectionId, value) {
         originalUpdateSectionContent(sectionId, value);
         autoSave();
       };
     }
-    
+
     // textareaの入力にも自動保存を設定（動的に追加されるセクション用）
     document.addEventListener('input', (e) => {
-      if (e.target.classList.contains('section-textarea') || 
-          e.target.classList.contains('cleaning-item-select') ||
-          e.target.classList.contains('cleaning-item-custom') ||
-          e.target.classList.contains('cleaning-item-text-field') ||
-          e.target.classList.contains('cleaning-item-comment') ||
-          e.target.classList.contains('cleaning-item-subtitle')) {
+      if (e.target.classList.contains('section-textarea') ||
+        e.target.classList.contains('cleaning-item-select') ||
+        e.target.classList.contains('cleaning-item-custom') ||
+        e.target.classList.contains('cleaning-item-text-field') ||
+        e.target.classList.contains('cleaning-item-comment') ||
+        e.target.classList.contains('cleaning-item-subtitle')) {
         autoSave();
       }
     }, true);
-    
+
     // フォーム送信時に自動保存データをクリアし、送信処理を実行
     form.addEventListener('submit', async (e) => {
       // 送信ボタンがクリックされた場合のみ送信を許可
@@ -1420,7 +1449,7 @@
       clearAutoSaveData();
       await handleSubmit(e);
     });
-    
+
     // フォーム内のinput要素でエンターキーを押したときにフォーム送信を防ぐ
     form.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
@@ -1430,7 +1459,7 @@
         }
       }
     });
-    
+
     // 次回ご提案タブのフォームにも送信ハンドラーを設定
     const proposalForm = document.getElementById('report-form-proposal');
     if (proposalForm) {
@@ -1444,7 +1473,7 @@
         clearAutoSaveData('proposal');
         await handleSubmit(e);
       });
-      
+
       // フォーム内のinput要素でエンターキーを押したときにフォーム送信を防ぐ
       proposalForm.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
@@ -1461,14 +1490,14 @@
   async function loadRevisionRequests() {
     const listContainer = document.getElementById('revision-list');
     if (!listContainer) return;
-    
+
     listContainer.innerHTML = `
       <div class="loading-spinner">
         <i class="fas fa-spinner fa-spin"></i>
         <p>読み込み中...</p>
       </div>
     `;
-    
+
     try {
       const idToken = await getFirebaseIdToken();
       const response = await fetch(`${REPORT_API}/staff/reports?status=revision_requested`, {
@@ -1477,20 +1506,20 @@
           'Authorization': `Bearer ${idToken}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('レポートの取得に失敗しました');
       }
-      
+
       const data = await response.json();
       let reports = data.items || data.reports || [];
-      
+
       // 念のため、クライアント側でもrevision_requestedステータスのものだけをフィルタリング
       reports = reports.filter(report => {
         const status = report.status || '';
         return status === 'revision_requested';
       });
-      
+
       // バッジを更新
       const badge = document.getElementById('revision-badge');
       if (badge) {
@@ -1501,7 +1530,7 @@
           badge.style.display = 'none';
         }
       }
-      
+
       if (reports.length === 0) {
         listContainer.innerHTML = `
           <div class="empty-state">
@@ -1511,11 +1540,11 @@
         `;
         return;
       }
-      
+
       listContainer.innerHTML = reports.map(report => {
         const date = new Date(report.cleaning_date || report.created_at).toLocaleDateString('ja-JP');
         const comment = report.revision_comment || report.admin_comment || '';
-        
+
         return `
           <div class="revision-card" data-report-id="${report.report_id || report.id}">
             <div class="revision-card-header">
@@ -1541,7 +1570,7 @@
           </div>
         `;
       }).join('');
-      
+
     } catch (error) {
       console.error('Error loading revision requests:', error);
       listContainer.innerHTML = `
@@ -1563,24 +1592,24 @@
           'Authorization': `Bearer ${idToken}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('レポートの取得に失敗しました');
       }
-      
+
       const data = await response.json();
       const report = data.report || data;
-      
+
       // 次回提案の場合は次回ご提案タブに切り替え、それ以外は新規作成タブに切り替え
       if (isProposal || report.proposal_type === 'proposal' || report.type === 'proposal') {
         document.getElementById('tab-proposal').click();
       } else {
         document.getElementById('tab-new').click();
       }
-      
+
       // フォームにデータを読み込む
       await loadReportToForm(report);
-      
+
     } catch (error) {
       console.error('Error loading report for edit:', error);
       showError('レポートの読み込みに失敗しました: ' + getErrorMessage(error));
@@ -1588,7 +1617,7 @@
   }
 
   // レポートを編集モードで開く（清掃員側の修正・編集タブ用）
-  window.editReport = async function(reportId) {
+  window.editReport = async function (reportId) {
     try {
       const idToken = await getFirebaseIdToken();
       const response = await fetch(`${REPORT_API}/staff/reports/${reportId}`, {
@@ -1597,20 +1626,20 @@
           'Authorization': `Bearer ${idToken}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('レポートの取得に失敗しました');
       }
-      
+
       const data = await response.json();
       const report = data.report || data;
-      
+
       // 新規作成タブに切り替え
       document.getElementById('tab-new').click();
-      
+
       // フォームにデータを読み込む
       await loadReportToForm(report);
-      
+
     } catch (error) {
       console.error('Error loading report:', error);
       showError('レポートの読み込みに失敗しました: ' + getErrorMessage(error));
@@ -1632,11 +1661,11 @@
       if (scheduleSelect) scheduleSelect.value = scheduleId;
       if (scheduleIdInput) scheduleIdInput.value = scheduleId;
     }
-    
+
     // 基本情報
     const storeId = report.store_id || '';
     document.getElementById('report-store').value = storeId;
-    
+
     // 店舗名を取得（report.store_nameがあっても、stores配列からも検索して確実に取得）
     let storeName = report.store_name || '';
     if (storeId) {
@@ -1653,9 +1682,9 @@
         console.warn('[loadReportToForm] Store not found:', { storeId, storesCount: stores.length, sampleStore: stores[0] });
       }
     }
-    
+
     console.log('[loadReportToForm] Store name:', { storeId, storeName, reportStoreName: report.store_name });
-    
+
     document.getElementById('report-store-name').value = storeName;
     const storeSelect = document.getElementById('report-store-select');
     if (storeSelect) {
@@ -1667,7 +1696,7 @@
         storeSelect.value = storeId;
       }
     }
-    
+
     // ブランド情報を設定（店舗から取得）
     if (storeId) {
       const store = stores.find(s => {
@@ -1704,26 +1733,26 @@
         }
       }
     }
-    
+
     // 店舗名の入力フィールドを更新
     const storeSearchInput = document.getElementById('report-store-search');
     if (storeSearchInput && storeName) {
       storeSearchInput.value = storeName;
     }
-    
+
     document.getElementById('report-date').value = report.cleaning_date || '';
     document.getElementById('report-start').value = report.cleaning_start_time || '';
     document.getElementById('report-end').value = report.cleaning_end_time || '';
-    
+
     // レポートIDを保持（更新時に使用）
     const form = document.getElementById('report-form');
     form.dataset.reportId = report.report_id || report.id;
-    
+
     // セクションをクリア
     sections = {};
     sectionCounter = 0;
     document.getElementById('report-content').innerHTML = '';
-    
+
     // 清掃項目を追加
     const workItems = report.work_items || [];
     workItems.forEach(item => {
@@ -1733,11 +1762,11 @@
         type: 'cleaning',
         item_name: item.item_name || item.item_id
       };
-      
-      const options = serviceItems.map(si => 
+
+      const options = serviceItems.map(si =>
         `<option value="${escapeHtml(si.title)}" ${(si.title === item.item_name) ? 'selected' : ''}>${escapeHtml(si.title)}</option>`
       ).join('');
-      
+
       const html = `
         <div class="section-card" data-section-id="${sectionId}">
           <div class="section-header">
@@ -1760,7 +1789,7 @@
       const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
       if (newCard) setupSectionDragAndDrop(newCard);
     });
-    
+
     // セクションを追加
     const reportSections = report.sections || [];
     reportSections.forEach(section => {
@@ -1772,9 +1801,9 @@
         addWorkContentSectionWithData(section);
       }
     });
-    
+
     updateCleaningItemsList();
-    
+
     // 送信ボタンのテキストを変更
     const submitBtn = document.getElementById('submit-btn');
     if (submitBtn) {
@@ -1788,15 +1817,15 @@
     const sectionId = section.section_id || `section-${sectionCounter}`;
     const photos = section.photos || {};
     const imageType = section.image_type || (photos.completed && !photos.before && !photos.after ? 'completed' : 'before_after');
-    
+
     // セクションタイプに応じてデータを設定
     if (imageType === 'completed') {
-    sections[sectionId] = {
-      type: 'image',
+      sections[sectionId] = {
+        type: 'image',
         image_type: 'completed',
         photos: { completed: photos.completed || [] }
       };
-      
+
       const html = `
         <div class="section-card" data-section-id="${sectionId}">
           <div class="section-header">
@@ -1861,9 +1890,9 @@
         type: 'image',
         image_type: 'before_after',
         photos: { before: photos.before || [], after: photos.after || [] }
-    };
-    
-    const html = `
+      };
+
+      const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
           <span class="section-title"><i class="fas fa-image"></i> 画像（作業前・作業後）</span>
@@ -1913,7 +1942,7 @@
         </div>
       </div>
     `;
-    document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
+      document.getElementById('report-content').insertAdjacentHTML('beforeend', html);
       const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
       if (newCard) {
         setupSectionDragAndDrop(newCard);
@@ -1940,7 +1969,7 @@
       type: 'comment',
       content: section.content || ''
     };
-    
+
     const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
@@ -1966,7 +1995,7 @@
       type: 'work_content',
       content: section.content || ''
     };
-    
+
     const html = `
       <div class="section-card" data-section-id="${sectionId}">
         <div class="section-header">
@@ -2026,7 +2055,7 @@
         draggedCard = sectionCard;
         sectionCard.classList.add('dragging');
         sectionCard.classList.remove('touching');
-        
+
         // 振動フィードバック（対応デバイスのみ）
         if (navigator.vibrate) {
           navigator.vibrate(50);
@@ -2039,7 +2068,7 @@
       if (!isDragging && !draggedCard) {
         const touchY = e.touches[0].clientY;
         const deltaY = Math.abs(touchY - touchStartY);
-        
+
         // 5px以上動いたら長押しをキャンセル
         if (deltaY > 5) {
           clearTimeout(longPressTimer);
@@ -2128,7 +2157,7 @@
     sectionCard.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      
+
       const draggedId = e.dataTransfer.getData('text/plain');
       if (draggedId && draggedId !== sectionCard.dataset.sectionId) {
         sectionCard.classList.add('drag-over');
@@ -2198,26 +2227,26 @@
     const startTimeInput = document.getElementById('report-start');
     const endTimeInput = document.getElementById('report-end');
     const detailsHint = document.getElementById('details-hint');
-    
+
     if (!detailsHint) return;
-    
+
     // ブランド名が入力されているか（IDまたは名前のいずれか）
-    const hasBrand = (brandInput?.value) || 
-                     (brandNameInput?.value?.trim()) || 
-                     (brandNameHidden?.value?.trim());
-    
+    const hasBrand = (brandInput?.value) ||
+      (brandNameInput?.value?.trim()) ||
+      (brandNameHidden?.value?.trim());
+
     // 店舗名が入力されているか（IDまたは名前のいずれか）
-    const hasStore = (storeInput?.value) || 
-                     (storeNameInput?.value?.trim()) || 
-                     (storeNameHidden?.value?.trim());
-    
+    const hasStore = (storeInput?.value) ||
+      (storeNameInput?.value?.trim()) ||
+      (storeNameHidden?.value?.trim());
+
     // いずれかが未入力の場合、ヒントを表示
-    const isIncomplete = !hasBrand || !hasStore || !dateInput?.value || 
-                         !startTimeInput?.value || !endTimeInput?.value;
-    
+    const isIncomplete = !hasBrand || !hasStore || !dateInput?.value ||
+      !startTimeInput?.value || !endTimeInput?.value;
+
     if (isIncomplete) {
       detailsHint.classList.add('visible');
-      } else {
+    } else {
       detailsHint.classList.remove('visible');
     }
   }
@@ -2228,12 +2257,12 @@
     const sidePanelOverlay = document.getElementById('side-panel-overlay');
     const detailsBtn = document.getElementById('details-btn');
     const sidePanelClose = document.getElementById('side-panel-close');
-    
+
     if (!sidePanel || !sidePanelOverlay || !detailsBtn) return;
-    
+
     // 初期状態でヒントをチェック
     checkDetailsInputStatus();
-    
+
     // パネルを開く
     function openSidePanel() {
       sidePanel.classList.add('active');
@@ -2241,7 +2270,7 @@
       detailsBtn.classList.add('active');
       document.body.style.overflow = 'hidden'; // 背景のスクロールを無効化
     }
-    
+
     // パネルを閉じる
     function closeSidePanel() {
       sidePanel.classList.remove('active');
@@ -2249,7 +2278,7 @@
       detailsBtn.classList.remove('active');
       document.body.style.overflow = ''; // 背景のスクロールを有効化
     }
-    
+
     // 詳細ボタンのクリックイベント
     detailsBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -2259,7 +2288,7 @@
         openSidePanel();
       }
     });
-    
+
     // 閉じるボタンのクリックイベント
     if (sidePanelClose) {
       sidePanelClose.addEventListener('click', (e) => {
@@ -2267,80 +2296,80 @@
         closeSidePanel();
       });
     }
-    
+
     // オーバーレイのクリックイベント
     sidePanelOverlay.addEventListener('click', () => {
       closeSidePanel();
     });
-    
+
     // スワイプジェスチャー（モバイル対応）
     let touchStartX = 0;
     let touchStartY = 0;
     let touchEndX = 0;
     let touchEndY = 0;
     let isSwiping = false;
-    
+
     // タッチ開始
     document.addEventListener('touchstart', (e) => {
       touchStartX = e.changedTouches[0].screenX;
       touchStartY = e.changedTouches[0].screenY;
       isSwiping = false;
     }, { passive: true });
-    
+
     // タッチ移動
     document.addEventListener('touchmove', (e) => {
       if (!sidePanel.classList.contains('active')) return;
-      
+
       touchEndX = e.changedTouches[0].screenX;
       touchEndY = e.changedTouches[0].screenY;
-      
+
       const deltaX = touchEndX - touchStartX;
       const deltaY = touchEndY - touchStartY;
-      
+
       // 横方向のスワイプが縦方向より大きい場合
       if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
         isSwiping = true;
-        
+
         // 左方向にスワイプ（パネルを閉じる）
         if (deltaX < -50) {
           closeSidePanel();
         }
       }
     }, { passive: true });
-    
+
     // タッチ終了
     document.addEventListener('touchend', () => {
       isSwiping = false;
     }, { passive: true });
-    
+
     // ESCキーで閉じる
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && sidePanel.classList.contains('active')) {
         closeSidePanel();
       }
     });
-    
+
     // パネルを閉じた時にヒントをチェック
     const originalCloseSidePanel = closeSidePanel;
-    closeSidePanel = function() {
+    closeSidePanel = function () {
       originalCloseSidePanel();
       setTimeout(checkDetailsInputStatus, 100);
     };
-    
+
     // 詳細情報の入力フィールドにイベントリスナーを追加
     const brandInput = document.getElementById('report-brand');
     const storeInput = document.getElementById('report-store');
     const dateInput = document.getElementById('report-date');
     const startTimeInput = document.getElementById('report-start');
     const endTimeInput = document.getElementById('report-end');
-    
+
     [brandInput, storeInput, dateInput, startTimeInput, endTimeInput].forEach(input => {
       if (input) {
         input.addEventListener('change', checkDetailsInputStatus);
         input.addEventListener('input', checkDetailsInputStatus);
       }
     });
-    
+
     // ブランド・店舗選択時にもチェック（モーダル経由の選択に対応）
     const brandSearchInput = document.getElementById('report-brand-search');
     const storeSearchInput = document.getElementById('report-store-search');
@@ -2367,13 +2396,13 @@
     }
     // ブランド検索
     const brandSearchInput = document.getElementById('report-brand-search');
-    
+
     // ブランド選択モーダルを開く
-    window.openBrandModal = function() {
+    window.openBrandModal = function () {
       const modal = document.getElementById('brand-select-modal');
       const modalSearch = document.getElementById('brand-modal-search');
       const modalResults = document.getElementById('brand-modal-results');
-      
+
       if (modal) {
         modal.style.display = 'flex';
         updateBrandModal();
@@ -2383,9 +2412,9 @@
         }, 100);
       }
     };
-    
+
     // ブランド選択モーダルを閉じる
-    window.closeBrandModal = function() {
+    window.closeBrandModal = function () {
       const modal = document.getElementById('brand-select-modal');
       if (modal) {
         modal.style.display = 'none';
@@ -2393,25 +2422,25 @@
         if (modalSearch) modalSearch.value = '';
       }
     };
-    
+
     // ブランドモーダル内の検索結果を更新
     function updateBrandModal() {
       const modalSearch = document.getElementById('brand-modal-search');
       const modalResults = document.getElementById('brand-modal-results');
-      
+
       if (!modalSearch || !modalResults) return;
-      
+
       const query = modalSearch.value.trim();
-      const filtered = query.length === 0 
-        ? brands 
+      const filtered = query.length === 0
+        ? brands
         : brands.filter(brand => {
-            const name = (brand.name || '').toLowerCase();
-            return name.includes(query.toLowerCase());
-          });
-      
+          const name = (brand.name || '').toLowerCase();
+          return name.includes(query.toLowerCase());
+        });
+
       // 検索結果のHTMLを構築（一番上に「自由入力」オプションを追加）
       let html = '<div class="store-search-item free-input-option" data-free-input="true"><i class="fas fa-edit"></i> 自由入力</div>';
-      
+
       if (filtered.length === 0) {
         html += '<div class="store-search-item no-results">該当するブランドが見つかりません</div>';
       } else {
@@ -2421,13 +2450,13 @@
           return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`;
         }).join('');
       }
-      
+
       modalResults.innerHTML = html;
-      
+
       // 「自由入力」オプションのクリックイベント
       const freeInputOption = modalResults.querySelector('.free-input-option');
       if (freeInputOption) {
-        freeInputOption.addEventListener('click', function() {
+        freeInputOption.addEventListener('click', function () {
           // 入力欄を編集可能にする
           brandSearchInput.removeAttribute('readonly');
           // ブランドIDをクリア（自由入力のため）
@@ -2435,7 +2464,7 @@
           document.getElementById('report-brand-name').value = '';
           brandSearchInput.value = '';
           closeBrandModal();
-          
+
           // モーダルを閉じた後にフォーカスを設定（少し遅延させる）
           setTimeout(() => {
             brandSearchInput.focus();
@@ -2444,7 +2473,7 @@
               checkDetailsInputStatus();
             }
           }, 100);
-          
+
           // 店舗選択を有効化
           const storeSelect = document.getElementById('report-store-select');
           if (storeSelect) {
@@ -2452,17 +2481,17 @@
           }
         });
       }
-      
+
       // 通常のブランド選択のクリックイベント
       modalResults.querySelectorAll('.store-search-item:not(.free-input-option):not(.no-results)').forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function () {
           const id = this.dataset.id;
           const name = this.dataset.name;
-          
+
           // ブランドが変更されたかどうかを確認
           const currentBrandId = document.getElementById('report-brand')?.value;
           const brandChanged = currentBrandId !== id;
-          
+
           document.getElementById('report-brand').value = id;
           document.getElementById('report-brand-name').value = name;
           checkDetailsInputStatus();
@@ -2470,12 +2499,12 @@
           // ブランド選択時は入力欄をreadonlyにする
           brandSearchInput.setAttribute('readonly', 'readonly');
           closeBrandModal();
-          
+
           // ブランド選択時に店舗リストを更新
           if (typeof window.updateStoreSelect === 'function') {
             window.updateStoreSelect();
           }
-          
+
           // ブランドが変更された場合、店舗名をリセット
           if (brandChanged) {
             document.getElementById('report-store').value = '';
@@ -2492,24 +2521,24 @@
         });
       });
     }
-    
+
     // モーダル内の検索フィールドのイベント
     const brandModalSearch = document.getElementById('brand-modal-search');
     if (brandModalSearch) {
       brandModalSearch.addEventListener('input', updateBrandModal);
     }
-    
+
     // ブランド名入力欄のイベント設定（モーダル方式ではinitBrandSelectで設定済み）
     if (brandSearchInput) {
       // 初期状態はreadonly
       brandSearchInput.setAttribute('readonly', 'readonly');
-      
+
       // 自由入力モード時の入力処理（重複登録を防ぐため、既存のリスナーを削除してから追加）
       // initBrandSelectで既に登録されている可能性があるため、ここでは追加しない
       // ただし、setupEventListenersが複数回呼ばれる可能性があるため、一度だけ登録する
       if (!brandSearchInput.hasAttribute('data-free-input-listener')) {
         brandSearchInput.setAttribute('data-free-input-listener', 'true');
-        brandSearchInput.addEventListener('input', function() {
+        brandSearchInput.addEventListener('input', function () {
           // readonlyが解除されている場合のみ処理（自由入力モード）
           if (!this.hasAttribute('readonly')) {
             const inputValue = this.value;
@@ -2534,13 +2563,13 @@
 
     // 店舗セレクトボックス（モーダル方式では使用しないが、互換性のため残す）
     const storeSelect = document.getElementById('report-store-select');
-    
+
     // 店舗選択モーダルを開く
-    window.openStoreModal = function() {
+    window.openStoreModal = function () {
       const modal = document.getElementById('store-select-modal');
       const modalSearch = document.getElementById('store-modal-search');
       const modalResults = document.getElementById('store-modal-results');
-      
+
       if (modal) {
         modal.style.display = 'flex';
         updateStoreModal();
@@ -2550,9 +2579,9 @@
         }, 100);
       }
     };
-    
+
     // 店舗選択モーダルを閉じる
-    window.closeStoreModal = function() {
+    window.closeStoreModal = function () {
       const modal = document.getElementById('store-select-modal');
       if (modal) {
         modal.style.display = 'none';
@@ -2560,28 +2589,28 @@
         if (modalSearch) modalSearch.value = '';
       }
     };
-    
+
     // 店舗モーダル内の検索結果を更新
     function updateStoreModal() {
       const modalSearch = document.getElementById('store-modal-search');
       const modalResults = document.getElementById('store-modal-results');
       const storeSearchInput = document.getElementById('report-store-search');
-      
+
       if (!modalSearch || !modalResults) return;
-      
+
       const query = modalSearch.value.trim();
       const selectedBrandId = document.getElementById('report-brand')?.value;
       const brandNameInput = document.getElementById('report-brand-search')?.value.trim() || '';
       const brandNameHidden = document.getElementById('report-brand-name')?.value || '';
       const hasBrandName = brandNameInput || brandNameHidden;
-      
-      let filtered = query.length === 0 
-        ? stores 
+
+      let filtered = query.length === 0
+        ? stores
         : stores.filter(store => {
-            const name = (store.store_name || store.name || '').toLowerCase();
-            return name.includes(query.toLowerCase());
-          });
-      
+          const name = (store.store_name || store.name || '').toLowerCase();
+          return name.includes(query.toLowerCase());
+        });
+
       // ブランドが選択されている場合はフィルタリング
       if (selectedBrandId) {
         filtered = filtered.filter(store => {
@@ -2592,27 +2621,27 @@
         // ブランドが選択・入力されていない場合は空
         filtered = [];
       }
-      
+
       // 結果のHTMLを構築（一番上に「自由入力」オプションを追加）
       let html = '<div class="store-search-item free-input-option" data-free-input="true"><i class="fas fa-edit"></i> 自由入力</div>';
-      
+
       if (filtered.length === 0) {
         html += '<div class="store-search-item no-results">該当する店舗が見つかりません</div>';
-        } else {
-      html += filtered.map(store => {
-        const name = store.store_name || store.name;
-        const id = store.store_id || store.id;
-        const brandId = store.brand_id || store.brandId;
-        return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}" data-brand-id="${brandId || ''}">${escapeHtml(name)}</div>`;
-      }).join('');
+      } else {
+        html += filtered.map(store => {
+          const name = store.store_name || store.name;
+          const id = store.store_id || store.id;
+          const brandId = store.brand_id || store.brandId;
+          return `<div class="store-search-item" data-id="${id}" data-name="${escapeHtml(name)}" data-brand-id="${brandId || ''}">${escapeHtml(name)}</div>`;
+        }).join('');
       }
-      
+
       modalResults.innerHTML = html;
-      
+
       // 「自由入力」オプションのクリックイベント
       const freeInputOption = modalResults.querySelector('.free-input-option');
       if (freeInputOption) {
-        freeInputOption.addEventListener('click', function() {
+        freeInputOption.addEventListener('click', function () {
           // 入力欄を編集可能にする
           if (storeSearchInput) {
             storeSearchInput.removeAttribute('readonly');
@@ -2624,7 +2653,7 @@
             storeSearchInput.value = '';
           }
           closeStoreModal();
-          
+
           // モーダルを閉じた後にフォーカスを設定（少し遅延させる）
           setTimeout(() => {
             if (storeSearchInput) {
@@ -2637,14 +2666,14 @@
           }, 100);
         });
       }
-      
+
       // 通常の店舗選択のクリックイベント
       modalResults.querySelectorAll('.store-search-item:not(.free-input-option):not(.no-results)').forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function () {
           const id = this.dataset.id;
           const name = this.dataset.name;
           const brandId = this.dataset.brandId;
-          
+
           document.getElementById('report-store').value = id || '';
           document.getElementById('report-store-name').value = name || '';
           if (storeSearchInput) {
@@ -2657,7 +2686,7 @@
             storeSelect.value = id || '';
           }
           closeStoreModal();
-          
+
           // 店舗選択時にブランド名も自動設定（未設定の場合は設定しない）
           if (id && brandId && brandSearchInput) {
             const brandName = getBrandName(brandId);
@@ -2668,45 +2697,45 @@
               brandSearchInput.setAttribute('readonly', 'readonly');
             }
           }
-          
+
           checkDetailsInputStatus();
         });
       });
     }
-    
+
     // モーダル内の検索フィールドのイベント
     const storeModalSearch = document.getElementById('store-modal-search');
     if (storeModalSearch) {
       storeModalSearch.addEventListener('input', updateStoreModal);
     }
-    
+
     // セレクトボックスを使用するため、モーダル関連のイベントリスナーは不要
-    
+
     // モーダルの背景をクリックしたときに閉じる
-    document.getElementById('brand-select-modal')?.addEventListener('click', function(e) {
+    document.getElementById('brand-select-modal')?.addEventListener('click', function (e) {
       if (e.target === this) {
         closeBrandModal();
       }
     });
-    
-    document.getElementById('store-select-modal')?.addEventListener('click', function(e) {
+
+    document.getElementById('store-select-modal')?.addEventListener('click', function (e) {
       if (e.target === this) {
         closeStoreModal();
       }
     });
-    
+
     // 初期化時に店舗セレクトボックスを設定（モーダル方式では不要）
 
     // セクション選択モードボタン
     const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
     const sectionCopyBtn = document.getElementById('section-copy-btn');
     const sectionBulkDeleteBtn = document.getElementById('section-bulk-delete-btn');
-    
+
     if (sectionSelectModeBtn) {
       sectionSelectModeBtn.addEventListener('click', () => {
         isSectionSelectMode = !isSectionSelectMode;
         selectedSectionIds.clear();
-        
+
         if (isSectionSelectMode) {
           sectionSelectModeBtn.classList.add('active');
           sectionSelectModeBtn.innerHTML = '<i class="fas fa-times"></i><span>選択解除</span>';
@@ -2724,7 +2753,7 @@
         }
       });
     }
-    
+
     // セクションコピー
     if (sectionCopyBtn) {
       sectionCopyBtn.addEventListener('click', () => {
@@ -2732,12 +2761,12 @@
           showWarning('コピーするセクションを選択してください');
           return;
         }
-        
+
         // 選択されたセクションをコピー
         selectedSectionIds.forEach(sectionId => {
           copySection(sectionId);
         });
-        
+
         // 選択モードを解除
         isSectionSelectMode = false;
         selectedSectionIds.clear();
@@ -2750,7 +2779,7 @@
         updateSectionCardsForSelection();
       });
     }
-    
+
     // セクション一括削除
     if (sectionBulkDeleteBtn) {
       sectionBulkDeleteBtn.addEventListener('click', async () => {
@@ -2758,17 +2787,17 @@
           showWarning('削除するセクションを選択してください');
           return;
         }
-        
+
         const shouldDelete = await showConfirm('セクションの削除', `選択した${selectedSectionIds.size}個のセクションを削除しますか？`);
         if (!shouldDelete) {
           return;
         }
-        
+
         // 選択されたセクションを削除
         selectedSectionIds.forEach(sectionId => {
           deleteSection(sectionId);
         });
-        
+
         // 選択モードを解除
         isSectionSelectMode = false;
         selectedSectionIds.clear();
@@ -2787,12 +2816,12 @@
     const addImageBtn = document.getElementById('add-image');
     const addCommentBtn = document.getElementById('add-comment');
     const addWorkContentBtn = document.getElementById('add-work-content');
-    
+
     if (addCleaningItemBtn) addCleaningItemBtn.addEventListener('click', addCleaningItemSection);
     if (addImageBtn) addImageBtn.addEventListener('click', openImageSectionTypeModal);
     if (addCommentBtn) addCommentBtn.addEventListener('click', addCommentSection);
     if (addWorkContentBtn) addWorkContentBtn.addEventListener('click', addWorkContentSection);
-    
+
     // プレビューボタンのイベントリスナー
     const previewBtn = document.getElementById('preview-btn');
     const previewBtnProposal = document.getElementById('preview-btn-proposal');
@@ -2800,7 +2829,7 @@
     const previewSaveDialogClose = document.getElementById('preview-save-dialog-close');
     const previewSaveDialogCancel = document.getElementById('preview-save-dialog-cancel');
     const previewSaveDialog = document.getElementById('preview-save-dialog');
-    
+
     // ダイアログを閉じる関数
     const closePreviewSaveDialog = () => {
       if (previewSaveDialog) {
@@ -2809,7 +2838,7 @@
         }
       }
     };
-    
+
     // 保存確認ダイアログを表示する関数
     const showPreviewSaveDialog = () => {
       console.log('[Preview] showPreviewSaveDialog called');
@@ -2825,17 +2854,17 @@
         console.warn('[Preview] previewSaveDialog element not found');
       }
     };
-    
+
     // ダイアログの閉じるボタン
     if (previewSaveDialogClose) {
       previewSaveDialogClose.addEventListener('click', closePreviewSaveDialog);
     }
-    
+
     // キャンセルボタン
     if (previewSaveDialogCancel) {
       previewSaveDialogCancel.addEventListener('click', closePreviewSaveDialog);
     }
-    
+
     // ダイアログの背景クリックで閉じる（SP対応）
     if (previewSaveDialog) {
       // 背景クリックで閉じる
@@ -2844,13 +2873,13 @@
           closePreviewSaveDialog();
         }
       });
-      
+
       // ESCキーで閉じる
       previewSaveDialog.addEventListener('cancel', (e) => {
         e.preventDefault();
         closePreviewSaveDialog();
       });
-      
+
       // SP画面でのタッチイベント対応
       previewSaveDialog.addEventListener('touchstart', (e) => {
         if (e.target === previewSaveDialog) {
@@ -2859,7 +2888,7 @@
         }
       }, { passive: false });
     }
-    
+
     if (previewBtn) {
       console.log('[Preview] Preview button found, adding event listener');
       previewBtn.addEventListener('click', (e) => {
@@ -2877,14 +2906,14 @@
         showPreviewSaveDialog();
       });
     }
-    
+
     // 保存してプレビューを表示
     if (previewSaveConfirmBtn) {
       console.log('[Preview] Preview save confirm button found, adding event listener');
       previewSaveConfirmBtn.addEventListener('click', async () => {
         console.log('[Preview] Preview save confirm button clicked');
         closePreviewSaveDialog();
-        
+
         // レポートを一時保存してからプレビューを表示
         try {
           await saveReportForPreview();
@@ -2902,27 +2931,27 @@
       });
     }
     // レポート作成画面以外では存在しないため、警告を出さない
-    
+
     // セクション追加ボタンのイベントリスナー（新規作成タブ用）
     setupSectionAddButtons('section-add-toggle-btn', 'new');
-    
+
     // セクション追加ボタンのイベントリスナー（次回ご提案タブ用）
     setupSectionAddButtons('section-add-toggle-btn-proposal', 'proposal');
   }
-  
+
   // セクション追加ボタンのイベントリスナーを設定する共通関数
   function setupSectionAddButtons(toggleBtnId, tabType) {
     const sectionAddToggleBtn = document.getElementById(toggleBtnId);
-    
+
     if (sectionAddToggleBtn) {
       // 既存のイベントリスナーを削除するために、ノードをクローンして置き換え
       const newBtn = sectionAddToggleBtn.cloneNode(true);
       sectionAddToggleBtn.parentNode.replaceChild(newBtn, sectionAddToggleBtn);
-      
-      newBtn.addEventListener('click', function(e) {
+
+      newBtn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         // +ボタンを押したら直接清掃項目セクションを追加
         if (window.addCleaningItemSection) {
           window.addCleaningItemSection(tabType);
@@ -2934,12 +2963,12 @@
 
     // 画像倉庫タブ切り替え
     document.querySelectorAll('.warehouse-tabs .tab-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', function () {
         document.querySelectorAll('.warehouse-tabs .tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         this.classList.add('active');
         document.getElementById(`tab-${this.dataset.tab}`).classList.add('active');
-        
+
         // 画像ストックタブに切り替えた場合は選択状態を再表示
         if (this.dataset.tab === 'stock') {
           renderStockSelection();
@@ -2979,7 +3008,7 @@
 
     // 画像ストック機能
     setupImageStock();
-    
+
     // メニュー外をクリックしたときにメニューを閉じる
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.cleaning-item-add-actions')) {
@@ -2988,19 +3017,19 @@
         });
       }
     });
-    
+
     // セクション内の画像追加ボタンのファイル選択イベント
     document.addEventListener('change', async (e) => {
       if (e.target.classList.contains('section-image-file-input')) {
         const sectionId = e.target.dataset.sectionId;
         const category = e.target.dataset.category;
         const files = Array.from(e.target.files);
-        
+
         if (files.length === 0) return;
-        
+
         // 画像を画像ストックに追加（AWS画像倉庫にも同時にアップロード）
         await addImagesToStock(files);
-        
+
         // 選択した画像をセクションに追加
         const section = sections[sectionId];
         if (section && section.type === 'image') {
@@ -3016,11 +3045,11 @@
             });
           }
         }
-        
+
         e.target.value = ''; // リセット
       }
     }, true);
-    
+
   }
 
   // 画像ストック機能の設定
@@ -3033,13 +3062,13 @@
 
     // ファイル選択
     if (stockFileInput) {
-    stockFileInput.addEventListener('change', async (e) => {
-      const files = Array.from(e.target.files);
-      if (files.length === 0) return;
+      stockFileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
 
-      await addImagesToStock(files);
-      e.target.value = ''; // リセット
-    });
+        await addImagesToStock(files);
+        e.target.value = ''; // リセット
+      });
     }
 
     // 選択モード切り替え
@@ -3047,7 +3076,7 @@
       selectModeBtn.addEventListener('click', () => {
         isMultiSelectMode = !isMultiSelectMode;
         selectedImageIds.clear();
-        
+
         if (isMultiSelectMode) {
           selectModeBtn.classList.add('active');
           selectModeBtn.innerHTML = '<i class="fas fa-times"></i><span>選択解除</span>';
@@ -3057,7 +3086,7 @@
           selectModeBtn.innerHTML = '<i class="fas fa-check-square"></i><span>選択モード</span>';
           if (bulkDeleteBtn) bulkDeleteBtn.style.display = 'none';
         }
-        
+
         renderImageStock();
       });
     }
@@ -3069,12 +3098,12 @@
           showWarning('削除する画像を選択してください');
           return;
         }
-        
+
         const shouldDelete = await showConfirm('画像の削除', `選択した${selectedImageIds.size}枚の画像を削除しますか？`);
         if (!shouldDelete) {
           return;
         }
-        
+
         // 選択された画像を削除
         for (const imageId of selectedImageIds) {
           const imageData = imageStock.find(img => img.id === imageId);
@@ -3084,7 +3113,7 @@
           await deleteImageFromDB(imageId);
           imageStock = imageStock.filter(img => img.id !== imageId);
         }
-        
+
         selectedImageIds.clear();
         isMultiSelectMode = false;
         if (selectModeBtn) {
@@ -3092,35 +3121,35 @@
           selectModeBtn.innerHTML = '<i class="fas fa-check-square"></i><span>選択モード</span>';
         }
         if (bulkDeleteBtn) bulkDeleteBtn.style.display = 'none';
-        
+
         renderImageStock();
       });
     }
 
     // すべて削除
     if (clearStockBtn) {
-    clearStockBtn.addEventListener('click', async () => {
+      clearStockBtn.addEventListener('click', async () => {
         const shouldClear = await showConfirm('画像ストックのクリア', '画像ストック内のすべての画像を削除しますか？');
         if (shouldClear) {
-        // Blob URLを解放
-        imageStock.forEach(item => {
-          if (item.blobUrl) {
-            URL.revokeObjectURL(item.blobUrl);
-          }
-        });
-        
-        imageStock = [];
-        await clearImageStockDB();
+          // Blob URLを解放
+          imageStock.forEach(item => {
+            if (item.blobUrl) {
+              URL.revokeObjectURL(item.blobUrl);
+            }
+          });
+
+          imageStock = [];
+          await clearImageStockDB();
           selectedImageIds.clear();
           isMultiSelectMode = false;
-        renderImageStock();
-      }
-    });
+          renderImageStock();
+        }
+      });
     }
 
     // 画像ストックグリッドのドロップゾーン設定
     if (stockGrid) {
-    setupImageStockDropZone(stockGrid);
+      setupImageStockDropZone(stockGrid);
     }
   }
 
@@ -3129,13 +3158,13 @@
   async function initImageStockDB() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(STOCK_DB_NAME, STOCK_DB_VERSION);
-      
+
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         stockDB = request.result;
         resolve();
       };
-      
+
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
         if (!db.objectStoreNames.contains('images')) {
@@ -3150,30 +3179,30 @@
     if (!stockDB) {
       await initImageStockDB();
     }
-    
+
     return new Promise((resolve, reject) => {
       const transaction = stockDB.transaction(['images'], 'readonly');
       const store = transaction.objectStore('images');
       const request = store.getAll();
-      
+
       request.onsuccess = () => {
         imageStock = request.result || [];
         // warehouseUrlがない場合のみBlob URLを再生成（AWSアップロード済みの場合は不要）
         imageStock.forEach(item => {
           if (!item.warehouseUrl) {
             // ローカルのみの画像の場合、Blob URLを再生成
-          if (item.data && !item.blobUrl) {
-            const blob = new Blob([item.data], { type: item.type || 'image/jpeg' });
-            item.blobUrl = URL.createObjectURL(blob);
-          } else if (item.blobData && !item.blobUrl) {
-            item.blobUrl = URL.createObjectURL(new Blob([item.blobData], { type: item.fileType || 'image/jpeg' }));
+            if (item.data && !item.blobUrl) {
+              const blob = new Blob([item.data], { type: item.type || 'image/jpeg' });
+              item.blobUrl = URL.createObjectURL(blob);
+            } else if (item.blobData && !item.blobUrl) {
+              item.blobUrl = URL.createObjectURL(new Blob([item.blobData], { type: item.fileType || 'image/jpeg' }));
             }
           }
         });
         renderImageStock();
         resolve();
       };
-      
+
       request.onerror = () => reject(request.error);
     });
   }
@@ -3181,7 +3210,7 @@
   // IndexedDBに画像を保存
   async function saveImageToDB(imageData) {
     if (!stockDB) return;
-    
+
     // AWSアップロード済みの場合は、blobDataを保存しない（ストレージ節約）
     const dataToSave = { ...imageData };
     if (dataToSave.uploaded && dataToSave.warehouseUrl) {
@@ -3189,12 +3218,12 @@
       delete dataToSave.blobData;
       delete dataToSave.blobUrl;
     }
-    
+
     return new Promise((resolve, reject) => {
       const transaction = stockDB.transaction(['images'], 'readwrite');
       const store = transaction.objectStore('images');
       const request = store.put(dataToSave);
-      
+
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
@@ -3203,12 +3232,12 @@
   // IndexedDBから画像を削除
   async function deleteImageFromDB(imageId) {
     if (!stockDB) return;
-    
+
     return new Promise((resolve, reject) => {
       const transaction = stockDB.transaction(['images'], 'readwrite');
       const store = transaction.objectStore('images');
       const request = store.delete(imageId);
-      
+
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
@@ -3217,12 +3246,12 @@
   // IndexedDBの全画像を削除
   async function clearImageStockDB() {
     if (!stockDB) return;
-    
+
     return new Promise((resolve, reject) => {
       const transaction = stockDB.transaction(['images'], 'readwrite');
       const store = transaction.objectStore('images');
       const request = store.clear();
-      
+
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
@@ -3238,19 +3267,19 @@
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          
+
           // 最大幅を超える場合はリサイズ
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
             width = maxWidth;
           }
-          
+
           canvas.width = width;
           canvas.height = height;
-          
+
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          
+
           // JPEG形式で圧縮
           canvas.toBlob((blob) => {
             if (blob) {
@@ -3274,7 +3303,7 @@
     let processedCount = 0;
     let skippedCount = 0;
     const skippedFiles = [];
-    
+
     // 進捗表示（10枚以上の場合）
     const stockGrid = document.getElementById('image-stock-grid');
     const originalContent = stockGrid?.innerHTML || '';
@@ -3286,20 +3315,20 @@
         </div>
       `;
     }
-    
+
     // 処理中のファイルを追跡するセット（ファイル名+サイズの組み合わせ）
     const processingFiles = new Set();
     // 画像ストックへの追加を同期化するためのロック
     let isAddingToStock = false;
-    
+
     // 重複チェック関数（既存のimageStockと処理中のファイルの両方をチェック）
     function isDuplicate(file) {
       const fileKey = `${file.name}_${file.size}`;
       if (processingFiles.has(fileKey)) {
         return true; // 既に処理中
       }
-      const existsInStock = imageStock.some(existing => 
-        existing.fileName === file.name && 
+      const existsInStock = imageStock.some(existing =>
+        existing.fileName === file.name &&
         existing.originalFileSize === file.size
       );
       if (existsInStock) {
@@ -3309,12 +3338,12 @@
       processingFiles.add(fileKey);
       return false;
     }
-    
+
     // バッチ処理（5枚ずつ処理）
     const BATCH_SIZE = 5;
     for (let i = 0; i < files.length; i += BATCH_SIZE) {
       const batch = files.slice(i, i + BATCH_SIZE);
-      
+
       // バッチを並列処理
       const batchPromises = batch.map(async (file) => {
         const fileKey = `${file.name}_${file.size}`;
@@ -3326,103 +3355,103 @@
             processedCount++;
             return null; // 重複している場合はスキップ
           }
-          
+
           // 画像を最適化・圧縮
           const optimizedBlob = await optimizeImage(file);
-          
-        // 画像IDを生成
-        const imageId = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
-        // Blob URLを作成（プレビュー用）
+
+          // 画像IDを生成
+          const imageId = `stock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+          // Blob URLを作成（プレビュー用）
           const blobUrl = URL.createObjectURL(optimizedBlob);
-        
-        // ArrayBufferに変換（IndexedDB保存用）
+
+          // ArrayBufferに変換（IndexedDB保存用）
           const arrayBuffer = await optimizedBlob.arrayBuffer();
-        
-        // 画像データオブジェクト
-        const imageData = {
-          id: imageId,
-          fileName: file.name,
+
+          // 画像データオブジェクト
+          const imageData = {
+            id: imageId,
+            fileName: file.name,
             fileType: 'image/jpeg', // 最適化後は常にJPEG
             fileSize: optimizedBlob.size,
             originalFileSize: file.size,
-          blobData: arrayBuffer,
-          blobUrl: blobUrl,
-          uploaded: false,
-          warehouseUrl: null, // AWS画像倉庫のURL
-          createdAt: new Date().toISOString()
-        };
-        
-        // AWS画像倉庫に同時にアップロード
-        try {
-          const cleaningDate = document.getElementById('report-date')?.value || new Date().toISOString().split('T')[0];
-          const base64 = await blobToBase64(optimizedBlob);
-          
-          const storeIdForImages = document.getElementById('report-store')?.value || '';
-          const requestBody = {
-            image: base64,
-            category: 'after', // 画像ストックの画像はデフォルトで'after'カテゴリ
-            cleaning_date: cleaningDate,
-            store_id: storeIdForImages || undefined
+            blobData: arrayBuffer,
+            blobUrl: blobUrl,
+            uploaded: false,
+            warehouseUrl: null, // AWS画像倉庫のURL
+            createdAt: new Date().toISOString()
           };
-          
-          const response = await fetch(`${REPORT_API}/staff/report-images`, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await getFirebaseIdToken()}`
-            },
-            body: JSON.stringify(requestBody)
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            imageData.warehouseUrl = result.image?.url || result.url || null;
-            imageData.uploaded = true;
-            console.log('[ImageStock] Image uploaded to warehouse:', imageData.warehouseUrl);
-            
-            // AWSアップロード成功後、ローカルのblobDataを削除してストレージを節約
-            if (imageData.blobData) {
-              delete imageData.blobData;
-              // Blob URLも解放
-              if (imageData.blobUrl) {
-                URL.revokeObjectURL(imageData.blobUrl);
-                delete imageData.blobUrl; // warehouseUrlを使用するため削除
+
+          // AWS画像倉庫に同時にアップロード
+          try {
+            const cleaningDate = document.getElementById('report-date')?.value || new Date().toISOString().split('T')[0];
+            const base64 = await blobToBase64(optimizedBlob);
+
+            const storeIdForImages = document.getElementById('report-store')?.value || '';
+            const requestBody = {
+              image: base64,
+              category: 'after', // 画像ストックの画像はデフォルトで'after'カテゴリ
+              cleaning_date: cleaningDate,
+              store_id: storeIdForImages || undefined
+            };
+
+            const response = await fetch(`${REPORT_API}/staff/report-images`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${await getFirebaseIdToken()}`
+              },
+              body: JSON.stringify(requestBody)
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              imageData.warehouseUrl = result.image?.url || result.url || null;
+              imageData.uploaded = true;
+              console.log('[ImageStock] Image uploaded to warehouse:', imageData.warehouseUrl);
+
+              // AWSアップロード成功後、ローカルのblobDataを削除してストレージを節約
+              if (imageData.blobData) {
+                delete imageData.blobData;
+                // Blob URLも解放
+                if (imageData.blobUrl) {
+                  URL.revokeObjectURL(imageData.blobUrl);
+                  delete imageData.blobUrl; // warehouseUrlを使用するため削除
+                }
               }
+            } else {
+              console.warn('[ImageStock] Failed to upload to warehouse:', response.status);
             }
-          } else {
-            console.warn('[ImageStock] Failed to upload to warehouse:', response.status);
+          } catch (error) {
+            console.error('[ImageStock] Error uploading to warehouse:', error);
+            // エラーが発生しても画像ストックには追加する
           }
-        } catch (error) {
-          console.error('[ImageStock] Error uploading to warehouse:', error);
-          // エラーが発生しても画像ストックには追加する
-        }
-        
-        // IndexedDBに保存（AWSアップロード済みの場合はblobDataなしで保存）
-        await saveImageToDB(imageData);
-        
-        // メモリにも追加（追加前に再度重複チェック）
-        const fileKey = `${file.name}_${file.size}`;
-        const alreadyExists = imageStock.some(existing => 
-          existing.fileName === file.name && 
-          existing.originalFileSize === file.size
-        );
-        if (!alreadyExists) {
-          imageStock.push(imageData);
-        } else {
-          // 重複していた場合は処理中のマークを削除してスキップ
+
+          // IndexedDBに保存（AWSアップロード済みの場合はblobDataなしで保存）
+          await saveImageToDB(imageData);
+
+          // メモリにも追加（追加前に再度重複チェック）
+          const fileKey = `${file.name}_${file.size}`;
+          const alreadyExists = imageStock.some(existing =>
+            existing.fileName === file.name &&
+            existing.originalFileSize === file.size
+          );
+          if (!alreadyExists) {
+            imageStock.push(imageData);
+          } else {
+            // 重複していた場合は処理中のマークを削除してスキップ
+            processingFiles.delete(fileKey);
+            skippedCount++;
+            skippedFiles.push(file.name);
+            processedCount++;
+            return null;
+          }
+
+          // 処理完了後、処理中のマークを削除
           processingFiles.delete(fileKey);
-          skippedCount++;
-          skippedFiles.push(file.name);
+
           processedCount++;
-          return null;
-        }
-        
-        // 処理完了後、処理中のマークを削除
-        processingFiles.delete(fileKey);
-          
-          processedCount++;
-          
+
           // 進捗更新（10枚以上の場合）
           if (stockGrid && totalFiles > 10 && processedCount % BATCH_SIZE === 0) {
             const loadingDiv = stockGrid.querySelector('.image-stock-loading');
@@ -3430,21 +3459,21 @@
               loadingDiv.querySelector('p').textContent = `画像を処理中... ${processedCount}/${totalFiles}`;
             }
           }
-          
+
           return imageData;
-      } catch (error) {
-        console.error('Error adding image to stock:', error);
-        // エラーが発生した場合も処理中のマークを削除
-        const fileKey = `${file.name}_${file.size}`;
-        processingFiles.delete(fileKey);
+        } catch (error) {
+          console.error('Error adding image to stock:', error);
+          // エラーが発生した場合も処理中のマークを削除
+          const fileKey = `${file.name}_${file.size}`;
+          processingFiles.delete(fileKey);
           processedCount++;
           return null;
         }
       });
-      
+
       // バッチの完了を待つ
       await Promise.all(batchPromises);
-      
+
       // UIを更新（バッチごとに更新してパフォーマンスを向上）
       if (i + BATCH_SIZE < files.length) {
         // 中間更新（軽量版）
@@ -3454,24 +3483,24 @@
           renderImageStock();
         }
       }
-      
+
       // 次のバッチの前に少し待機（UIの応答性を保つ）
       if (i + BATCH_SIZE < files.length) {
         await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
-    
+
     // 最終的なレンダリング
     renderImageStock();
-    
+
     // 完了メッセージ
     if (totalFiles > 10) {
       console.log(`[ImageStock] Processed ${processedCount} images`);
     }
-    
+
     // 重複ファイルがあった場合は通知
     if (skippedCount > 0) {
-      const message = skippedCount === 1 
+      const message = skippedCount === 1
         ? `「${skippedFiles[0]}」は既にメディアに追加されています。`
         : `${skippedCount}件の画像は既にメディアに追加されているため、スキップしました。`;
       alert(message);
@@ -3482,7 +3511,7 @@
   function renderImageStock() {
     const stockGrid = document.getElementById('image-stock-grid');
     const clearStockBtn = document.getElementById('clear-stock-btn');
-    
+
     if (!stockGrid) {
       // レポート作成画面以外では存在しないため、警告を出さずに終了
       return;
@@ -3505,7 +3534,7 @@
     if (selectModeBtn && imageStock.length > 0) {
       selectModeBtn.style.display = 'flex';
     }
-    
+
     stockGrid.innerHTML = imageStock.map((imageData, index) => {
       // warehouseUrlがあればそれを使用、なければblobUrlを使用
       const imageUrl = imageData.warehouseUrl || imageData.blobUrl;
@@ -3537,24 +3566,24 @@
 
     // 各ストックアイテムにドラッグ&ドロップを設定（選択モードでない場合のみ）
     if (!isMultiSelectMode) {
-    stockGrid.querySelectorAll('.image-stock-item').forEach(item => {
-      setupStockItemDragAndDrop(item);
-    });
+      stockGrid.querySelectorAll('.image-stock-item').forEach(item => {
+        setupStockItemDragAndDrop(item);
+      });
     }
   }
 
   // 画像選択をトグル
-  window.toggleImageSelection = function(imageId) {
+  window.toggleImageSelection = function (imageId) {
     if (!isMultiSelectMode) return;
-    
+
     if (selectedImageIds.has(imageId)) {
       selectedImageIds.delete(imageId);
     } else {
       selectedImageIds.add(imageId);
     }
-    
+
     renderImageStock();
-    
+
     // 一括削除ボタンの表示を更新
     const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
     if (bulkDeleteBtn) {
@@ -3599,16 +3628,16 @@
   }
 
   // ストック画像の選択をトグル
-  window.toggleStockImageSelection = function(imageId, blobUrl) {
+  window.toggleStockImageSelection = function (imageId, blobUrl) {
     const arr = selectedWarehouseImages[currentImageCategory] || [];
     const idx = arr.indexOf(blobUrl);
-    
+
     if (idx > -1) {
       arr.splice(idx, 1);
     } else {
       arr.push(blobUrl);
     }
-    
+
     // UIを更新
     const item = document.querySelector(`.stock-selection-item[data-image-id="${imageId}"]`);
     if (item) {
@@ -3652,7 +3681,7 @@
       longPressTimer = setTimeout(() => {
         isDragging = true;
         item.classList.add('dragging');
-        
+
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
@@ -3782,8 +3811,8 @@
 
     // 既に存在する場合は追加しない（画像IDで判定）
     const exists = sections[sectionId].photos[category].some(
-      img => (typeof img === 'object' && img.imageId === imageData.id) || 
-             (typeof img === 'string' && img === imageData.id)
+      img => (typeof img === 'object' && img.imageId === imageData.id) ||
+        (typeof img === 'string' && img === imageData.id)
     );
     if (exists) {
       return;
@@ -3833,7 +3862,7 @@
     if (placeholder) {
       placeholder.remove();
     }
-    
+
     const addBtn = container.querySelector('.image-add-btn');
     const newThumb = createImageThumb(sectionId, category, imageUrl, imageData.id);
     container.insertBefore(newThumb, addBtn);
@@ -3841,7 +3870,7 @@
   }
 
   // ストックから削除
-  window.removeFromStock = async function(imageId) {
+  window.removeFromStock = async function (imageId) {
     const index = imageStock.findIndex(img => img.id === imageId);
     if (index > -1) {
       const imageData = imageStock[index];
@@ -3858,17 +3887,17 @@
   };
 
   // 清掃項目セクション追加
-  window.addCleaningItemSection = function() {
+  window.addCleaningItemSection = function () {
     // 現在アクティブなタブを確認
     const activeTab = document.querySelector('.tab-btn.active');
     const isProposalTab = activeTab && activeTab.dataset.tab === 'proposal';
     const reportContentId = isProposalTab ? 'report-content-proposal' : 'report-content';
-    
+
     sectionCounter++;
     const sectionId = `section-${sectionCounter}`;
     sections[sectionId] = { type: 'cleaning', item_name: '', textFields: [], subtitles: [], comments: [] };
 
-    const options = serviceItems.map(item => 
+    const options = serviceItems.map(item =>
       `<option value="${escapeHtml(item.title)}">${escapeHtml(item.title)}</option>`
     ).join('');
 
@@ -3914,19 +3943,19 @@
     const reportContent = document.getElementById(reportContentId);
     const sectionAddIconsAreaId = isProposalTab ? 'section-add-icons-area-proposal' : 'section-add-icons-area';
     const sectionAddIconsArea = document.getElementById(sectionAddIconsAreaId);
-    
+
     if (!reportContent) {
       console.error(`[addCleaningItemSection] reportContent not found: ${reportContentId}`);
       return;
     }
-    
+
     // セクション追加アイコンエリアの前に挿入
     if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
       sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
     } else {
       reportContent.insertAdjacentHTML('beforeend', html);
     }
-    
+
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -3941,17 +3970,17 @@
       }
       // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
-    
+
     // セクション追加アイコンエリアを常に最後に配置
     if (sectionAddIconsArea && reportContent) {
       reportContent.appendChild(sectionAddIconsArea);
     }
-    
+
     updateCleaningItemsList();
   };
 
   // 画像セクションタイプ選択モーダルを開く
-  window.openImageSectionTypeModal = function() {
+  window.openImageSectionTypeModal = function () {
     const modal = document.getElementById('image-section-type-modal');
     if (modal) {
       modal.style.display = 'flex';
@@ -3959,7 +3988,7 @@
   };
 
   // 画像セクションタイプ選択モーダルを閉じる
-  window.closeImageSectionTypeModal = function() {
+  window.closeImageSectionTypeModal = function () {
     const modal = document.getElementById('image-section-type-modal');
     if (modal) {
       modal.style.display = 'none';
@@ -3967,7 +3996,7 @@
   };
 
   // 作業前・作業後セクション追加
-  window.addImageSectionBeforeAfter = function() {
+  window.addImageSectionBeforeAfter = function () {
     closeImageSectionTypeModal();
     sectionCounter++;
     const sectionId = `section-${sectionCounter}`;
@@ -4022,14 +4051,14 @@
 
     const reportContent = document.getElementById('report-content');
     const sectionAddIconsArea = document.getElementById('section-add-icons-area');
-    
+
     // セクション追加アイコンエリアの前に挿入
     if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
       sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
     } else {
       reportContent.insertAdjacentHTML('beforeend', html);
     }
-    
+
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -4049,7 +4078,7 @@
       }
       // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
-    
+
     // セクション追加アイコンエリアを常に最後に配置
     if (sectionAddIconsArea && reportContent) {
       reportContent.appendChild(sectionAddIconsArea);
@@ -4057,7 +4086,7 @@
   };
 
   // 施工後セクション追加
-  window.addImageSectionCompleted = function() {
+  window.addImageSectionCompleted = function () {
     closeImageSectionTypeModal();
     sectionCounter++;
     const sectionId = `section-${sectionCounter}`;
@@ -4099,14 +4128,14 @@
 
     const reportContent = document.getElementById('report-content');
     const sectionAddIconsArea = document.getElementById('section-add-icons-area');
-    
+
     // セクション追加アイコンエリアの前に挿入
     if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
       sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
     } else {
       reportContent.insertAdjacentHTML('beforeend', html);
     }
-    
+
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -4124,7 +4153,7 @@
       }
       // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
-    
+
     // セクション追加アイコンエリアを常に最後に配置
     if (sectionAddIconsArea && reportContent) {
       reportContent.appendChild(sectionAddIconsArea);
@@ -4159,14 +4188,14 @@
 
     const reportContent = document.getElementById('report-content');
     const sectionAddIconsArea = document.getElementById('section-add-icons-area');
-    
+
     // セクション追加アイコンエリアの前に挿入
     if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
       sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
     } else {
       reportContent.insertAdjacentHTML('beforeend', html);
     }
-    
+
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
@@ -4181,7 +4210,7 @@
       }
       // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
-    
+
     // セクション追加アイコンエリアを常に最後に配置
     if (sectionAddIconsArea && reportContent) {
       reportContent.appendChild(sectionAddIconsArea);
@@ -4216,20 +4245,20 @@
 
     const reportContent = document.getElementById('report-content');
     const sectionAddIconsArea = document.getElementById('section-add-icons-area');
-    
+
     // セクション追加アイコンエリアの前に挿入
     if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
       sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
     } else {
       reportContent.insertAdjacentHTML('beforeend', html);
     }
-    
+
     const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (newCard) {
       setupSectionDragAndDrop(newCard);
       // セクション追加アイコンエリアは常に最後に配置されるため、個別に追加する必要はない
     }
-    
+
     // セクション追加アイコンエリアを常に最後に配置
     if (sectionAddIconsArea && reportContent) {
       reportContent.appendChild(sectionAddIconsArea);
@@ -4237,7 +4266,7 @@
   }
 
   // セクション削除
-  window.deleteSection = function(sectionId) {
+  window.deleteSection = function (sectionId) {
     delete sections[sectionId];
     const sectionElement = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (sectionElement) {
@@ -4251,7 +4280,7 @@
     // 選択状態からも削除
     selectedSectionIds.delete(sectionId);
     updateCleaningItemsList();
-    
+
     // セクションがなくなったら選択モードボタンを非表示
     const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
     if (sectionSelectModeBtn && Object.keys(sections).length === 0) {
@@ -4266,16 +4295,16 @@
   };
 
   // セクション選択のトグル（常に動作する）
-  window.toggleSectionSelection = function(sectionId) {
+  window.toggleSectionSelection = function (sectionId) {
     const checkbox = document.querySelector(`.section-select-checkbox[data-section-id="${sectionId}"]`);
     if (!checkbox) return;
-    
+
     if (checkbox.checked) {
       selectedSectionIds.add(sectionId);
     } else {
       selectedSectionIds.delete(sectionId);
     }
-    
+
     // セクションカードの選択状態を更新
     const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (sectionCard) {
@@ -4285,7 +4314,7 @@
         sectionCard.classList.remove('section-selected');
       }
     }
-    
+
     // ボタンの表示を更新
     const sectionCopyBtn = document.getElementById('section-copy-btn');
     const sectionBulkDeleteBtn = document.getElementById('section-bulk-delete-btn');
@@ -4306,27 +4335,27 @@
   };
 
   // セクションをコピー
-  window.copySection = function(sectionId) {
+  window.copySection = function (sectionId) {
     const originalSection = sections[sectionId];
     if (!originalSection) return;
-    
+
     sectionCounter++;
     const newSectionId = `section-${sectionCounter}`;
-    
+
     // セクションデータをディープコピー
     const newSection = JSON.parse(JSON.stringify(originalSection));
     sections[newSectionId] = newSection;
-    
+
     // セクションタイプに応じてHTMLを生成
     const reportContent = document.getElementById('report-content');
     if (!reportContent) return;
-    
+
     let html = '';
     if (newSection.type === 'cleaning') {
-      const options = serviceItems.map(item => 
+      const options = serviceItems.map(item =>
         `<option value="${escapeHtml(item.title)}" ${(item.title === newSection.item_name) ? 'selected' : ''}>${escapeHtml(item.title)}</option>`
       ).join('');
-      
+
       html = `
         <div class="section-card" data-section-id="${newSectionId}">
           <div class="section-header">
@@ -4373,9 +4402,9 @@
               </div>
             `).join('')}
             ${(newSection.imageContents || []).map(imageContent => {
-              const imageType = imageContent.imageType || 'before_after';
-              if (imageType === 'before_after') {
-                return `
+        const imageType = imageContent.imageType || 'before_after';
+        if (imageType === 'before_after') {
+          return `
                   <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
                     <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
                       <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${newSectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
@@ -4426,12 +4455,12 @@
                     </div>
                   </div>
                 `;
-              } else {
-                // 次回ご提案タブかどうかを判定
-                const activeTab = document.querySelector('.tab-btn.active');
-                const isProposal = activeTab && activeTab.dataset.tab === 'proposal';
-                const labelText = isProposal ? 'ご提案箇所' : '施工後';
-                return `
+        } else {
+          // 次回ご提案タブかどうかを判定
+          const activeTab = document.querySelector('.tab-btn.active');
+          const isProposal = activeTab && activeTab.dataset.tab === 'proposal';
+          const labelText = isProposal ? 'ご提案箇所' : '施工後';
+          return `
                   <div class="cleaning-item-image-content" data-image-content-id="${imageContent.id}" style="margin-top:16px; position:relative;">
                     <div class="cleaning-item-image-content-header" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
                       <button type="button" class="cleaning-item-image-content-delete" onclick="deleteCleaningItemImageContent('${newSectionId}', '${imageContent.id}')" style="width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">
@@ -4462,8 +4491,8 @@
                     </div>
                   </div>
                 `;
-              }
-            }).join('')}
+        }
+      }).join('')}
             <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
               <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${newSectionId}')" title="画像挿入">
                 <i class="fas fa-image"></i>
@@ -4610,7 +4639,7 @@
         newSection.photos = { completed: [] };
       }
     }
-    
+
     if (html) {
       // 元のセクションの後に挿入
       const originalElement = document.querySelector(`[data-section-id="${sectionId}"]`);
@@ -4619,21 +4648,21 @@
       } else {
         reportContent.insertAdjacentHTML('beforeend', html);
       }
-      
+
       // セクション内画像コンテンツのイベントリスナーを設定（清掃項目セクションの場合）
       if (newSection.type === 'cleaning' && newSection.imageContents && newSection.imageContents.length > 0) {
         setTimeout(() => {
           newSection.imageContents.forEach(imageContent => {
             const imageType = imageContent.imageType || 'before_after';
             setupCleaningItemImageUpload(imageContent.id, newSectionId, imageType);
-            
+
             // ドラッグ&ドロップを設定
             if (imageType === 'before_after') {
               const beforeList = document.getElementById(`${imageContent.id}-before`);
               const afterList = document.getElementById(`${imageContent.id}-after`);
               if (beforeList) setupImageListDragAndDrop(beforeList, newSectionId, 'before', imageContent.id);
               if (afterList) setupImageListDragAndDrop(afterList, newSectionId, 'after', imageContent.id);
-              
+
               // 画像サムネイルにドラッグ&ドロップを設定
               if (beforeList) {
                 beforeList.querySelectorAll('.image-thumb').forEach(thumb => {
@@ -4657,7 +4686,7 @@
               const completedList = document.getElementById(`${imageContent.id}-completed`);
               if (completedList) {
                 setupImageListDragAndDrop(completedList, newSectionId, 'completed', imageContent.id);
-                
+
                 // 画像サムネイルにドラッグ&ドロップを設定
                 completedList.querySelectorAll('.image-thumb').forEach(thumb => {
                   const url = thumb.dataset.imageUrl;
@@ -4671,13 +4700,13 @@
           });
         }, 0);
       }
-      
+
       // ドラッグ&ドロップを設定
       const newCard = document.querySelector(`[data-section-id="${newSectionId}"]`);
       if (newCard) {
         setupSectionDragAndDrop(newCard);
       }
-      
+
       updateCleaningItemsList();
       autoSave();
     }
@@ -4689,13 +4718,13 @@
     sectionCards.forEach(card => {
       const sectionId = card.dataset.sectionId;
       if (!sectionId) return;
-      
+
       // チェックボックスは常に表示される（HTMLに既に含まれている）
       const checkbox = card.querySelector('.section-select-checkbox[data-section-id]');
       if (checkbox) {
         checkbox.checked = selectedSectionIds.has(sectionId);
       }
-      
+
       // 選択状態を反映
       if (selectedSectionIds.has(sectionId)) {
         card.classList.add('section-selected');
@@ -4712,7 +4741,7 @@
     } else {
       selectedSectionIds.add(sectionId);
     }
-    
+
     // セクションカードの選択状態を更新
     const sectionCard = document.querySelector(`[data-section-id="${sectionId}"]`);
     const checkbox = document.querySelector(`.section-select-checkbox[data-section-id="${sectionId}"]`);
@@ -4725,7 +4754,7 @@
         if (checkbox) checkbox.checked = false;
       }
     }
-    
+
     // ボタンの表示を更新
     const sectionCopyBtn = document.getElementById('section-copy-btn');
     const sectionBulkDeleteBtn = document.getElementById('section-bulk-delete-btn');
@@ -4746,72 +4775,72 @@
   }
 
   // 清掃項目更新
-  window.updateCleaningItem = function(sectionId, value) {
+  window.updateCleaningItem = function (sectionId, value) {
     const card = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (!card) return;
-    
+
     const customInput = card.querySelector('.cleaning-item-custom');
     const select = card.querySelector('.cleaning-item-select');
-    
+
     if (value === '__other__') {
       // 自由入力を選択した場合
       if (customInput) {
-      customInput.style.display = 'block';
+        customInput.style.display = 'block';
         customInput.value = ''; // 入力フィールドをクリア
-      customInput.focus();
+        customInput.focus();
       }
       if (sections[sectionId]) {
-      sections[sectionId].item_name = '';
+        sections[sectionId].item_name = '';
       }
     } else if (value && value !== '') {
       // 通常の項目を選択した場合
       if (customInput) {
-      customInput.style.display = 'none';
+        customInput.style.display = 'none';
       }
       if (sections[sectionId]) {
-      sections[sectionId].item_name = value;
+        sections[sectionId].item_name = value;
       }
     }
-    
+
     updateCleaningItemsList();
   };
 
   // 自由入力フィールドの値を更新
-  window.updateCleaningItemCustom = function(sectionId, value) {
+  window.updateCleaningItemCustom = function (sectionId, value) {
     const card = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (!card) return;
-    
+
     const select = card.querySelector('.cleaning-item-select');
-    
+
     // 自由入力フィールドに値が入力された場合、セレクトボックスを「その他（自由入力）」に設定
     if (select && select.value !== '__other__') {
       select.value = '__other__';
     }
-    
+
     // セクションのitem_nameを更新
     if (sections[sectionId]) {
       sections[sectionId].item_name = value || '';
     }
-    
+
     updateCleaningItemsList();
   };
 
   // 清掃項目のメモ・備考を更新
-  window.updateCleaningItemNotes = function(sectionId, value) {
+  window.updateCleaningItemNotes = function (sectionId, value) {
     if (sections[sectionId]) {
       sections[sectionId].notes = value;
     }
   };
 
   // 清掃項目セクションの追加メニューを表示
-  window.showCleaningItemAddMenu = function(sectionId) {
+  window.showCleaningItemAddMenu = function (sectionId) {
     // 他のメニューを閉じる
     document.querySelectorAll('.cleaning-item-add-menu').forEach(menu => {
       if (menu.id !== `cleaning-item-add-menu-${sectionId}`) {
         menu.style.display = 'none';
       }
     });
-    
+
     const menu = document.getElementById(`cleaning-item-add-menu-${sectionId}`);
     if (menu) {
       menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
@@ -4819,20 +4848,20 @@
   };
 
   // 清掃項目セクションにテキスト入力フィールドを追加
-  window.addTextToCleaningItem = function(sectionId) {
+  window.addTextToCleaningItem = function (sectionId) {
     const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
     if (!sectionBody) return;
-    
+
     const addActions = sectionBody.querySelector('.cleaning-item-add-actions');
     if (!addActions) return;
-    
+
     // 新しいテキスト入力フィールドを作成
     const textFieldId = `cleaning-item-text-${sectionId}-${Date.now()}`;
     const textField = document.createElement('textarea');
     textField.className = 'form-input cleaning-item-text-field';
     textField.placeholder = 'テキストを入力してください';
     textField.style.cssText = 'margin-top:8px; min-height:80px; resize:vertical; width:100%;';
-    textField.oninput = function() {
+    textField.oninput = function () {
       if (sections[sectionId]) {
         if (!sections[sectionId].textFields) {
           sections[sectionId].textFields = [];
@@ -4846,33 +4875,33 @@
         autoSave();
       }
     };
-    
+
     // 削除ボタン付きのコンテナを作成
     const textFieldContainer = document.createElement('div');
     textFieldContainer.className = 'cleaning-item-text-field-container';
     textFieldContainer.style.cssText = 'position:relative; margin-top:8px;';
-    
+
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'cleaning-item-text-field-delete';
     deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
     deleteBtn.style.cssText = 'position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(239, 68, 68, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;';
-    deleteBtn.onclick = function() {
+    deleteBtn.onclick = function () {
       deleteCleaningItemTextField(sectionId, textFieldId);
     };
-    
+
     textFieldContainer.appendChild(textField);
     textFieldContainer.appendChild(deleteBtn);
-    
+
     // 追加アクションボタンの前に挿入
     addActions.parentNode.insertBefore(textFieldContainer, addActions);
-    
+
     // メニューを閉じる
     const menu = document.getElementById(`cleaning-item-add-menu-${sectionId}`);
     if (menu) {
       menu.style.display = 'none';
     }
-    
+
     // データに保存
     if (sections[sectionId]) {
       if (!sections[sectionId].textFields) {
@@ -4880,22 +4909,22 @@
       }
       sections[sectionId].textFields.push({ id: textFieldId, value: '' });
     }
-    
+
     autoSave();
   };
 
   // 清掃項目セクションに画像コンテンツを追加（セクションタイトルなし）
-  window.addImageToCleaningItem = function(sectionId, imageType = 'before_after') {
+  window.addImageToCleaningItem = function (sectionId, imageType = 'before_after') {
     // 画像タイプ選択モーダルを表示
     openCleaningItemImageTypeModal(sectionId);
   };
-  
+
   // 清掃項目セクション用の画像タイプ選択モーダルを開く
   function openCleaningItemImageTypeModal(sectionId) {
     // 現在アクティブなタブを確認
     const activeTab = document.querySelector('.tab-btn.active');
     const isProposalTab = activeTab && activeTab.dataset.tab === 'proposal';
-    
+
     const modal = document.getElementById('cleaning-item-image-type-modal');
     if (!modal) {
       // モーダルが存在しない場合は作成
@@ -4905,17 +4934,17 @@
     if (modalElement) {
       modalElement.dataset.sectionId = sectionId;
       modalElement.dataset.isProposal = isProposalTab ? 'true' : 'false';
-      
+
       // 次回ご提案タブの場合は、モーダルを表示せずに直接「施工後」タイプを追加
       if (isProposalTab) {
         addCleaningItemImageContent(sectionId, 'completed', true);
         return;
       }
-      
+
       modalElement.style.display = 'flex';
     }
   }
-  
+
   // 清掃項目セクション用の画像タイプ選択モーダルを作成
   function createCleaningItemImageTypeModal() {
     const modal = document.createElement('div');
@@ -4947,10 +4976,10 @@
       </div>
     `;
     document.body.appendChild(modal);
-    
+
     // ボタンのイベントリスナーを設定
     modal.querySelectorAll('.btn-image-type').forEach(btn => {
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', function () {
         const imageType = this.dataset.type;
         const sectionId = modal.dataset.sectionId;
         const isProposal = modal.dataset.isProposal === 'true';
@@ -4958,42 +4987,42 @@
         addCleaningItemImageContent(sectionId, imageType, isProposal);
       });
     });
-    
+
     // モーダル外クリックで閉じる
-    modal.addEventListener('click', function(e) {
+    modal.addEventListener('click', function (e) {
       if (e.target === modal) {
         modal.style.display = 'none';
       }
     });
   }
-  
+
   // 清掃項目セクションに画像コンテンツを追加（実際の追加処理）
   function addCleaningItemImageContent(sectionId, imageType = 'before_after', isProposal = false) {
     // 現在アクティブなタブを確認
     const activeTab = document.querySelector('.tab-btn.active');
     const isProposalTab = activeTab && activeTab.dataset.tab === 'proposal';
-    
+
     // セクションを検索（タブに関係なく検索）
     const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
     if (!sectionBody) {
       console.warn(`[addCleaningItemImageContent] sectionBody not found for sectionId: ${sectionId}`);
       return;
     }
-    
+
     const insertActions = sectionBody.querySelector('.cleaning-item-insert-actions');
     if (!insertActions) return;
-    
+
     // セクション内画像コンテンツのIDを生成
     const imageContentId = `cleaning-item-image-${sectionId}-${Date.now()}`;
-    
+
     // セクション内画像コンテンツのHTMLを作成
     const imageContentContainer = document.createElement('div');
     imageContentContainer.className = 'cleaning-item-image-content';
     imageContentContainer.dataset.imageContentId = imageContentId;
     imageContentContainer.style.cssText = 'margin-top:16px; position:relative;';
-    
+
     let imageContentHtml = '';
-    
+
     if (imageType === 'before_after') {
       // 作業前・作業後タイプ
       imageContentHtml = `
@@ -5051,12 +5080,12 @@
         </div>
       `;
     }
-    
+
     imageContentContainer.innerHTML = imageContentHtml;
-    
+
     // 挿入アクションボタンの前に挿入
     insertActions.parentNode.insertBefore(imageContentContainer, insertActions);
-    
+
     // データに保存
     if (sections[sectionId]) {
       if (!sections[sectionId].imageContents) {
@@ -5076,10 +5105,10 @@
         });
       }
     }
-    
+
     // 画像アップロードのイベントリスナーを設定
     setupCleaningItemImageUpload(imageContentId, sectionId, imageType);
-    
+
     // ドラッグ&ドロップを設定
     setTimeout(() => {
       if (imageType === 'before_after') {
@@ -5092,17 +5121,17 @@
         if (completedList) setupImageListDragAndDrop(completedList, sectionId, 'completed', imageContentId);
       }
     }, 0);
-    
+
     autoSave();
   }
-  
+
   // セクション内画像コンテンツの画像追加モーダルを開く
   // 管理レポート作成画面では、メディア選択モーダルを直接開く
-  window.openCleaningItemImageAddModal = function(sectionId, imageContentId, category) {
+  window.openCleaningItemImageAddModal = function (sectionId, imageContentId, category) {
     // メディア選択モーダルを直接開く
     openMediaSelectionDialog(sectionId, imageContentId, category);
   };
-  
+
   // メディア選択ダイアログを開く
   let mediaSelectionFolders = [];
   let mediaSelectionScheduleId = '';
@@ -5221,18 +5250,18 @@
   function openMediaSelectionDialog(sectionId, imageContentId, category) {
     const mediaDialog = document.getElementById('media-selection-dialog');
     if (!mediaDialog) return;
-    
+
     // 既存の画像リストを保存（キャンセル時に復元するため）
     const imageList = document.getElementById(`${imageContentId}-${category}`);
     if (imageList) {
       mediaDialog.dataset.originalImageListHTML = imageList.innerHTML;
     }
-    
+
     // ダイアログに情報を保存
     mediaDialog.dataset.sectionId = sectionId;
     mediaDialog.dataset.imageContentId = imageContentId;
     mediaDialog.dataset.category = category;
-    
+
     const scheduleId = getSelectedScheduleIdFromForm();
     if (!scheduleId) {
       alert('先にスケジュールIDを選択してください。');
@@ -5256,37 +5285,37 @@
     if (serviceInput) serviceInput.value = '';
     updateMediaServiceOptions();
     updateMediaFolderPreview();
-    
+
     // フォルダ一覧を読み込み
     loadMediaFolders();
-    
+
     // 画像を読み込み
     loadMediaImages();
-    
+
     // ダイアログを表示
     mediaDialog.style.display = 'flex';
-    
+
     // 保存ボタンのイベントリスナーを設定
     const saveBtn = document.getElementById('save-media-selection-btn');
     if (saveBtn) {
       const newSaveBtn = saveBtn.cloneNode(true);
       saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
-      
-      newSaveBtn.addEventListener('click', function() {
+
+      newSaveBtn.addEventListener('click', function () {
         const selectedImages = document.querySelectorAll('#media-selection-grid .media-item.selected');
         console.log('[MediaSelection] Save button clicked, selected images:', selectedImages.length);
-        
+
         // mediaDialog.datasetから情報を取得（クロージャーの変数ではなく、確実に取得）
         const currentSectionId = mediaDialog.dataset.sectionId;
         const currentImageContentId = mediaDialog.dataset.imageContentId;
         const currentCategory = mediaDialog.dataset.category;
-        
+
         console.log('[MediaSelection] Section info from dataset:', {
           sectionId: currentSectionId,
           imageContentId: currentImageContentId,
           category: currentCategory
         });
-        
+
         if (selectedImages.length > 0) {
           selectedImages.forEach((item, index) => {
             const imageId = item.dataset.imageId;
@@ -5297,7 +5326,7 @@
               imageUrl,
               imageData
             });
-            
+
             if (imageId && imageUrl && currentSectionId && currentImageContentId && currentCategory) {
               addImageToCleaningItemFromMedia(
                 currentSectionId,
@@ -5323,14 +5352,14 @@
         closeMediaSelectionDialog();
       });
     }
-    
+
     // フィルター変更時のイベントリスナー
     const dateInputEl = document.getElementById('media-selection-date');
     const scheduleSelectEl = document.getElementById('media-selection-schedule');
     const serviceInputEl = document.getElementById('media-selection-service');
     const folderSelectEl = document.getElementById('media-selection-folder');
     const categorySelectEl = document.getElementById('media-selection-category');
-    
+
     if (dateInputEl) {
       const newDateInput = dateInputEl.cloneNode(true);
       dateInputEl.parentNode.replaceChild(newDateInput, dateInputEl);
@@ -5367,7 +5396,7 @@
         loadMediaImages();
       });
     }
-    
+
     if (folderSelectEl) {
       const newFolderSelect = folderSelectEl.cloneNode(true);
       folderSelectEl.parentNode.replaceChild(newFolderSelect, folderSelectEl);
@@ -5381,32 +5410,32 @@
         loadMediaImages();
       });
     }
-    
+
     if (categorySelectEl) {
       const newCategorySelect = categorySelectEl.cloneNode(true);
       categorySelectEl.parentNode.replaceChild(newCategorySelect, categorySelectEl);
       newCategorySelect.addEventListener('change', loadMediaImages);
     }
   }
-  
+
   // メディアフォルダ一覧を読み込み
   async function loadMediaFolders() {
     try {
       const dateInput = document.getElementById('media-selection-date');
       const cleaningDate = dateInput?.value || new Date().toISOString().split('T')[0];
       const url = `${REPORT_API}/staff/report-images?date=${cleaningDate}`;
-      
+
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${await getFirebaseIdToken()}`
         }
       });
-      
+
       if (!response.ok) return;
-      
+
       const data = await response.json();
       const images = data.images || [];
-      
+
       // フォルダ名の一意リストを取得
       const folderSet = new Set();
       images.forEach(img => {
@@ -5414,7 +5443,7 @@
           folderSet.add(img.folder_name);
         }
       });
-      
+
       mediaSelectionFolders = Array.from(folderSet).sort();
       const folderSelect = document.getElementById('media-selection-folder');
       if (folderSelect) {
@@ -5444,27 +5473,27 @@
       console.error('Error loading media folders:', error);
     }
   }
-  
+
   // メディア画像を読み込み
   async function loadMediaImages() {
     const grid = document.getElementById('media-selection-grid');
     if (!grid) return;
-    
+
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#6b7280;"><i class="fas fa-spinner fa-spin" style="font-size:2rem; margin-bottom:12px;"></i><p>読み込み中...</p></div>';
-    
+
     try {
       const dateInput = document.getElementById('media-selection-date');
       const folderSelect = document.getElementById('media-selection-folder');
       const categorySelect = document.getElementById('media-selection-category');
-      
+
       const cleaningDate = dateInput?.value || new Date().toISOString().split('T')[0];
       let url = `${REPORT_API}/staff/report-images?date=${cleaningDate}`;
-      
+
       const category = categorySelect?.value;
       if (category) {
         url += `&category=${category}`;
       }
-      
+
       const folderName = folderSelect?.value || '';
       const builtFolder = buildMediaFolderName();
       if (folderName) {
@@ -5472,29 +5501,29 @@
       } else if (builtFolder) {
         url += `&folder_name=${encodeURIComponent(builtFolder)}`;
       }
-      
+
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${await getFirebaseIdToken()}`
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('画像の取得に失敗しました');
       }
-      
+
       const data = await response.json();
       let images = data.images || [];
       if (builtFolder && !folderName) {
         images = images.filter(img => img.folder_name && img.folder_name.startsWith(builtFolder));
       }
-      
+
       if (images.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#9ca3af;"><i class="fas fa-images" style="font-size:3rem; margin-bottom:16px; opacity:0.5;"></i><p>画像がありません</p></div>';
         updateMediaSelectionInfo(0);
         return;
       }
-      
+
       grid.innerHTML = images.map(img => {
         const categoryLabel = img.category === 'before' ? '作業前' : '作業後';
         const folderLabel = img.folder_name || 'フォルダなし';
@@ -5507,7 +5536,7 @@
           cleaning_date: img.cleaning_date,
           uploaded_at: img.uploaded_at
         });
-        
+
         return `
           <div class="media-item" data-image-id="${img.image_id}" data-image-data='${imageData.replace(/'/g, "&apos;")}' style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid #e5e7eb; transition:all 0.2s;">
             <img src="${img.url}" alt="Media" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
@@ -5518,10 +5547,10 @@
           </div>
         `;
       }).join('');
-      
+
       // クリックイベントを設定
       grid.querySelectorAll('.media-item').forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function () {
           this.classList.toggle('selected');
           const overlay = this.querySelector('.media-item-overlay');
           if (overlay) {
@@ -5530,19 +5559,19 @@
           updateMediaSelectionInfo();
         });
       });
-      
+
       updateMediaSelectionInfo(images.length);
     } catch (error) {
       console.error('Error loading media images:', error);
       grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#ef4444;"><i class="fas fa-exclamation-circle" style="font-size:2rem; margin-bottom:12px;"></i><p>画像の読み込みに失敗しました</p></div>';
     }
   }
-  
+
   // メディア選択情報を更新
   function updateMediaSelectionInfo(totalCount) {
     const infoEl = document.getElementById('media-selection-info');
     if (!infoEl) return;
-    
+
     const selectedCount = document.querySelectorAll('#media-selection-grid .media-item.selected').length;
     if (totalCount !== undefined) {
       infoEl.textContent = `全${totalCount}件中${selectedCount}件選択中`;
@@ -5551,17 +5580,17 @@
       infoEl.textContent = `全${total}件中${selectedCount}件選択中`;
     }
   }
-  
+
   // メディア選択ダイアログを閉じる
-  window.closeMediaSelectionDialog = function() {
+  window.closeMediaSelectionDialog = function () {
     const mediaDialog = document.getElementById('media-selection-dialog');
     if (!mediaDialog) return;
-    
+
     // 画像が選択されていない場合（キャンセル時）は、元の画像リストを復元
     const imageContentId = mediaDialog.dataset.imageContentId;
     const category = mediaDialog.dataset.category;
     const originalHTML = mediaDialog.dataset.originalImageListHTML;
-    
+
     if (originalHTML !== undefined && imageContentId && category) {
       const imageList = document.getElementById(`${imageContentId}-${category}`);
       if (imageList) {
@@ -5571,24 +5600,24 @@
         }
       }
     }
-    
+
     // データ属性をクリア
     delete mediaDialog.dataset.sectionId;
     delete mediaDialog.dataset.imageContentId;
     delete mediaDialog.dataset.category;
     delete mediaDialog.dataset.originalImageListHTML;
-    
+
     // 選択状態をリセット
     mediaDialog.querySelectorAll('.media-item.selected').forEach(item => {
       item.classList.remove('selected');
       const overlay = item.querySelector('.media-item-overlay');
       if (overlay) overlay.style.opacity = '0';
     });
-    
+
     // モーダルを閉じる
     mediaDialog.style.display = 'none';
   };
-  
+
   // メディアから選択した画像をセクションに追加
   function addImageToCleaningItemFromMedia(sectionId, imageContentId, category, imageId, imageUrl, imageData) {
     console.log('[addImageToCleaningItemFromMedia] Called with:', {
@@ -5599,24 +5628,24 @@
       imageUrl,
       imageData
     });
-    
+
     const imageList = document.getElementById(`${imageContentId}-${category}`);
     if (!imageList) {
       console.warn('[addImageToCleaningItemFromMedia] Image list not found:', `${imageContentId}-${category}`);
       return;
     }
-    
+
     // 画像サムネイルを作成
     const imageThumb = document.createElement('div');
     imageThumb.className = 'image-thumb';
     imageThumb.dataset.imageId = imageId;
     imageThumb.dataset.imageUrl = imageUrl;
-    
+
     // メディア情報を表示
     const folderName = imageData?.folder_name || 'フォルダなし';
     const categoryLabel = imageData?.category === 'before' ? '作業前' : '作業後';
     const date = imageData?.cleaning_date ? new Date(imageData.cleaning_date).toLocaleDateString('ja-JP') : '';
-    
+
     imageThumb.innerHTML = `
       <img src="${imageUrl}" alt="Selected from media" loading="lazy">
       <div class="image-thumb-info" style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); padding:8px; color:#fff; font-size:0.7rem;">
@@ -5627,7 +5656,7 @@
         <i class="fas fa-times"></i>
       </button>
     `;
-    
+
     // 追加ボタンの前に挿入
     const addBtn = imageList.querySelector('.image-add-btn');
     if (addBtn) {
@@ -5635,7 +5664,7 @@
     } else {
       imageList.appendChild(imageThumb);
     }
-    
+
     // セクションデータを更新（imageContentsに保存）
     if (sections[sectionId] && sections[sectionId].imageContents) {
       const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
@@ -5645,10 +5674,10 @@
         }
         const imageDataObj = {
           imageId: imageId,
-        url: imageUrl,
+          url: imageUrl,
           warehouseUrl: imageUrl,
           imageUrl: imageUrl,
-        source: 'media',
+          source: 'media',
           media_info: imageData,
           uploaded: true
         };
@@ -5670,7 +5699,7 @@
         hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
       });
     }
-    
+
     // sectionsByTabも更新
     try {
       const activeTab = (typeof currentActiveTab !== 'undefined' && currentActiveTab) ? currentActiveTab : 'new';
@@ -5685,36 +5714,36 @@
       // エラーが発生しても処理を続行
     }
   }
-  
+
   // AWS画像倉庫から選択（旧関数、互換性のため残す）
   function openCleaningItemImageWarehouseDialog(sectionId, imageContentId, category) {
     // 既存のwarehouse-dialogを使用
     const warehouseDialog = document.getElementById('warehouse-dialog');
     if (!warehouseDialog) return;
-    
+
     // 既存の画像リストを保存（キャンセル時に復元するため）
     const imageList = document.getElementById(`${imageContentId}-${category}`);
     if (imageList) {
       warehouseDialog.dataset.originalImageListHTML = imageList.innerHTML;
     }
-    
+
     // ダイアログに情報を保存
     warehouseDialog.dataset.cleaningItemSectionId = sectionId;
     warehouseDialog.dataset.cleaningItemImageContentId = imageContentId;
     warehouseDialog.dataset.cleaningItemCategory = category;
     warehouseDialog.dataset.cleaningItemMode = 'true';
-    
+
     // ダイアログを表示
     warehouseDialog.style.display = 'flex';
-    
+
     // 既存のsave-images-btnのイベントを確認
     const saveBtn = document.getElementById('save-images-btn');
     if (saveBtn) {
       // 既存のイベントリスナーを削除して新しいものを追加
       const newSaveBtn = saveBtn.cloneNode(true);
       saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
-      
-      newSaveBtn.addEventListener('click', function() {
+
+      newSaveBtn.addEventListener('click', function () {
         // 選択された画像をセクション内画像コンテンツに追加
         const selectedImages = document.querySelectorAll('#stock-selection-grid .stock-item.selected, #library-grid .library-item.selected');
         if (selectedImages.length > 0) {
@@ -5730,18 +5759,18 @@
       });
     }
   }
-  
+
   // 画像倉庫モーダルを閉じる（セクションが消えないように安全に閉じる）
-  window.closeWarehouseDialog = function() {
+  window.closeWarehouseDialog = function () {
     const warehouseDialog = document.getElementById('warehouse-dialog');
     if (!warehouseDialog) return;
-    
+
     // セクション内画像コンテンツモードの場合は、画像リストを復元
     if (warehouseDialog.dataset.cleaningItemMode === 'true') {
       const imageContentId = warehouseDialog.dataset.cleaningItemImageContentId;
       const category = warehouseDialog.dataset.cleaningItemCategory;
       const originalHTML = warehouseDialog.dataset.originalImageListHTML;
-      
+
       // 画像が選択されていない場合（キャンセル時）は、元の画像リストを復元
       if (originalHTML !== undefined) {
         const imageList = document.getElementById(`${imageContentId}-${category}`);
@@ -5753,7 +5782,7 @@
           }
         }
       }
-      
+
       // データ属性をクリア
       delete warehouseDialog.dataset.cleaningItemSectionId;
       delete warehouseDialog.dataset.cleaningItemImageContentId;
@@ -5761,11 +5790,11 @@
       delete warehouseDialog.dataset.cleaningItemMode;
       delete warehouseDialog.dataset.originalImageListHTML;
     }
-    
+
     // モーダルを閉じる
     warehouseDialog.style.display = 'none';
   };
-  
+
   // ライブラリから選択
   function openCleaningItemImageLibraryPicker(sectionId, imageContentId, category) {
     // ファイル入力を作成（ライブラリモード）
@@ -5778,8 +5807,8 @@
     // capture属性を明示的にnullに設定（写真ライブラリを優先）
     // 注意: スマホのブラウザの仕様上、完全に「写真ライブラリ」だけを開くことはできませんが、
     // capture属性がない場合、多くのブラウザでは「写真ライブラリ」が最初の選択肢として表示されます
-    
-    input.addEventListener('change', function(e) {
+
+    input.addEventListener('change', function (e) {
       const files = Array.from(e.target.files);
       if (files.length > 0) {
         files.forEach(file => {
@@ -5792,14 +5821,14 @@
         document.body.removeChild(input);
       }
     });
-    
+
     document.body.appendChild(input);
     // 少し遅延させてからクリック（モーダルが完全に閉じた後に実行）
     setTimeout(() => {
       input.click();
     }, 100);
   }
-  
+
   // カメラで撮影
   function openCleaningItemImageCamera(sectionId, imageContentId, category) {
     // ファイル入力を作成（カメラモード）
@@ -5808,8 +5837,8 @@
     input.accept = 'image/*';
     input.capture = 'environment'; // カメラを起動
     input.style.display = 'none';
-    
-    input.addEventListener('change', function(e) {
+
+    input.addEventListener('change', function (e) {
       const files = Array.from(e.target.files);
       if (files.length > 0) {
         files.forEach(file => {
@@ -5818,23 +5847,23 @@
       }
       document.body.removeChild(input);
     });
-    
+
     document.body.appendChild(input);
     input.click();
   }
-  
+
   // セクション内画像コンテンツに画像ファイルをアップロード
   async function handleCleaningItemImageFileUpload(file, sectionId, imageContentId, category) {
     const imageList = document.getElementById(`${imageContentId}-${category}`);
     if (!imageList) return;
-    
+
     // 画像を最適化
     const optimizedBlob = await optimizeImage(file);
     const blobUrl = URL.createObjectURL(optimizedBlob);
-    
+
     // 画像IDを生成
     const imageId = `cleaning-item-image-${imageContentId}-${category}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // 画像をストックに追加
     const imageData = {
       id: imageId,
@@ -5842,12 +5871,12 @@
       fileName: file.name,
       uploaded: false
     };
-    
+
     // 画像ストックに追加
     if (window.addImagesToStock) {
       await window.addImagesToStock([imageData]);
     }
-    
+
     // 画像を表示
     const imageThumb = document.createElement('div');
     imageThumb.className = 'image-thumb';
@@ -5858,28 +5887,28 @@
     imageThumb.dataset.sectionId = sectionId;
     imageThumb.dataset.imageContentId = imageContentId;
     imageThumb.style.cssText = 'width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;';
-    
+
     const img = document.createElement('img');
     img.src = blobUrl;
     img.alt = 'Photo';
     img.draggable = false;
     img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
-    
+
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'image-thumb-remove';
     removeBtn.innerHTML = '<i class="fas fa-times"></i>';
     removeBtn.style.cssText = 'position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;';
-    removeBtn.onclick = function() {
+    removeBtn.onclick = function () {
       removeCleaningItemImage(sectionId, imageContentId, category, imageId, imageThumb);
     };
-    
+
     imageThumb.appendChild(img);
     imageThumb.appendChild(removeBtn);
-    
+
     // セクション内画像コンテンツ用のドラッグ&ドロップを設定
     setupCleaningItemImageThumbDragAndDrop(imageThumb, sectionId, imageContentId, category, blobUrl, imageId);
-    
+
     // 追加ボタンの前に挿入
     const addBtn = imageList.querySelector('.cleaning-item-image-add-btn');
     if (addBtn) {
@@ -5887,7 +5916,7 @@
     } else {
       imageList.appendChild(imageThumb);
     }
-    
+
     // データに保存
     if (sections[sectionId] && sections[sectionId].imageContents) {
       const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
@@ -5920,7 +5949,7 @@
         hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
       });
     }
-    
+
     // sectionsByTabも更新
     try {
       const activeTab = (typeof currentActiveTab !== 'undefined' && currentActiveTab) ? currentActiveTab : 'new';
@@ -5934,15 +5963,15 @@
       console.warn('[ImageUpload] Error updating sectionsByTab:', error);
       // エラーが発生しても処理を続行
     }
-    
+
     autoSave();
   }
-  
+
   // AWS画像倉庫からセクション内画像コンテンツに画像を追加
   async function addImageToCleaningItemFromWarehouse(sectionId, imageContentId, category, imageId, imageUrl) {
     const imageList = document.getElementById(`${imageContentId}-${category}`);
     if (!imageList) return;
-    
+
     // 画像を表示
     const imageThumb = document.createElement('div');
     imageThumb.className = 'image-thumb';
@@ -5953,28 +5982,28 @@
     imageThumb.dataset.sectionId = sectionId;
     imageThumb.dataset.imageContentId = imageContentId;
     imageThumb.style.cssText = 'width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;';
-    
+
     const img = document.createElement('img');
     img.src = imageUrl;
     img.alt = 'Photo';
     img.draggable = false;
     img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
-    
+
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'image-thumb-remove';
     removeBtn.innerHTML = '<i class="fas fa-times"></i>';
     removeBtn.style.cssText = 'position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;';
-    removeBtn.onclick = function() {
+    removeBtn.onclick = function () {
       removeCleaningItemImage(sectionId, imageContentId, category, imageId, imageThumb);
     };
-    
+
     imageThumb.appendChild(img);
     imageThumb.appendChild(removeBtn);
-    
+
     // セクション内画像コンテンツ用のドラッグ&ドロップを設定
     setupCleaningItemImageThumbDragAndDrop(imageThumb, sectionId, imageContentId, category, imageUrl, imageId);
-    
+
     // 追加ボタンの前に挿入
     const addBtn = imageList.querySelector('.cleaning-item-image-add-btn');
     if (addBtn) {
@@ -5982,7 +6011,7 @@
     } else {
       imageList.appendChild(imageThumb);
     }
-    
+
     // データに保存
     if (sections[sectionId] && sections[sectionId].imageContents) {
       const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
@@ -6015,31 +6044,31 @@
         hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
       });
     }
-    
+
     autoSave();
   }
-  
+
   // セクション内画像コンテンツの画像アップロードを設定（後方互換性のため残す）
   function setupCleaningItemImageUpload(imageContentId, sectionId, imageType = 'before_after') {
     // モーダル方式に変更したため、この関数は不要になったが、後方互換性のため残す
   }
-  
+
   // セクション内画像コンテンツの画像アップロード処理
   async function handleCleaningItemImageUpload(event, sectionId, imageContentId, category) {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
-    
+
     const imageList = document.getElementById(`${imageContentId}-${category}`);
     if (!imageList) return;
-    
+
     for (const file of files) {
       // 画像を最適化
       const optimizedBlob = await optimizeImage(file);
       const blobUrl = URL.createObjectURL(optimizedBlob);
-      
+
       // 画像IDを生成
       const imageId = `cleaning-item-image-${imageContentId}-${category}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+
       // 画像をストックに追加
       const imageData = {
         id: imageId,
@@ -6047,12 +6076,12 @@
         fileName: file.name,
         uploaded: false
       };
-      
+
       // 画像ストックに追加
       if (window.addImagesToStock) {
         await window.addImagesToStock([imageData]);
       }
-      
+
       // 画像を表示
       const imageThumb = document.createElement('div');
       imageThumb.className = 'image-thumb';
@@ -6061,30 +6090,30 @@
       imageThumb.dataset.imageId = imageId;
       imageThumb.dataset.category = category;
       imageThumb.style.cssText = 'width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;';
-      
+
       const img = document.createElement('img');
       img.src = blobUrl;
       img.alt = 'Photo';
       img.draggable = false;
       img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
-      
+
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'image-thumb-remove';
       removeBtn.innerHTML = '<i class="fas fa-times"></i>';
       removeBtn.style.cssText = 'position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;';
-      removeBtn.onclick = function() {
+      removeBtn.onclick = function () {
         removeCleaningItemImage(sectionId, imageContentId, category, imageId, imageThumb);
       };
-      
+
       imageThumb.appendChild(img);
       imageThumb.appendChild(removeBtn);
-      
+
       // セクション内画像コンテンツ用のドラッグ&ドロップを設定
       imageThumb.dataset.sectionId = sectionId;
       imageThumb.dataset.imageContentId = imageContentId;
       setupCleaningItemImageThumbDragAndDrop(imageThumb, sectionId, imageContentId, category, blobUrl, imageId);
-      
+
       // 追加ボタンの前に挿入
       const addBtn = imageList.querySelector('.image-add-btn');
       if (addBtn) {
@@ -6092,7 +6121,7 @@
       } else {
         imageList.appendChild(imageThumb);
       }
-      
+
       // データに保存
       if (sections[sectionId] && sections[sectionId].imageContents) {
         const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
@@ -6100,41 +6129,41 @@
           if (!imageContent.photos[category]) {
             imageContent.photos[category] = [];
           }
-        const imageData = {
+          const imageData = {
             imageId: imageId,
             blobUrl: blobUrl,
             fileName: file.name,
             uploaded: false
-        };
-        imageContent.photos[category].push(imageData);
-        console.log('[ImageUpload] Image added to section (file upload):', {
-          sectionId,
-          imageContentId,
-          category,
-          imageData,
-          allPhotos: imageContent.photos
-        });
+          };
+          imageContent.photos[category].push(imageData);
+          console.log('[ImageUpload] Image added to section (file upload):', {
+            sectionId,
+            imageContentId,
+            category,
+            imageData,
+            allPhotos: imageContent.photos
+          });
+        } else {
+          console.warn('[ImageUpload] ImageContent not found (file upload):', imageContentId, 'in section:', sectionId);
+        }
       } else {
-        console.warn('[ImageUpload] ImageContent not found (file upload):', imageContentId, 'in section:', sectionId);
-      }
-    } else {
-      console.warn('[ImageUpload] Section or imageContents not found (file upload):', {
-        sectionId,
-        hasSection: !!sections[sectionId],
-        hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
-      });
+        console.warn('[ImageUpload] Section or imageContents not found (file upload):', {
+          sectionId,
+          hasSection: !!sections[sectionId],
+          hasImageContents: !!(sections[sectionId] && sections[sectionId].imageContents)
+        });
       }
     }
-    
+
     autoSave();
   }
-  
+
   // セクション内画像コンテンツの画像を削除
-  window.removeCleaningItemImage = function(sectionId, imageContentId, category, imageId, element) {
+  window.removeCleaningItemImage = function (sectionId, imageContentId, category, imageId, element) {
     if (element) {
       element.remove();
     }
-    
+
     // データから削除
     if (sections[sectionId] && sections[sectionId].imageContents) {
       const imageContent = sections[sectionId].imageContents.find(ic => ic.id === imageContentId);
@@ -6142,49 +6171,49 @@
         imageContent.photos[category] = imageContent.photos[category].filter(img => img.imageId !== imageId);
       }
     }
-    
+
     autoSave();
   };
-  
+
   // セクション内画像コンテンツを削除
-  window.deleteCleaningItemImageContent = function(sectionId, imageContentId) {
+  window.deleteCleaningItemImageContent = function (sectionId, imageContentId) {
     const imageContentContainer = document.querySelector(`.cleaning-item-image-content[data-image-content-id="${imageContentId}"]`);
     if (imageContentContainer) {
       imageContentContainer.remove();
     }
-    
+
     // データから削除
     if (sections[sectionId] && sections[sectionId].imageContents) {
       sections[sectionId].imageContents = sections[sectionId].imageContents.filter(ic => ic.id !== imageContentId);
     }
-    
+
     autoSave();
   };
 
   // 清掃項目セクションにコメントを追加
-  window.addCommentToCleaningItem = function(sectionId) {
+  window.addCommentToCleaningItem = function (sectionId) {
     // セクションを検索（タブに関係なく検索）
     const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
     if (!sectionBody) {
       console.warn(`[addCommentToCleaningItem] sectionBody not found for sectionId: ${sectionId}`);
       return;
     }
-    
+
     const insertActions = sectionBody.querySelector('.cleaning-item-insert-actions');
     if (!insertActions) return;
-    
+
     // 新しいコメントフィールドを作成
     const commentId = `cleaning-item-comment-${sectionId}-${Date.now()}`;
     const commentContainer = document.createElement('div');
     commentContainer.className = 'cleaning-item-comment-container';
     commentContainer.dataset.commentId = commentId;
     commentContainer.style.cssText = 'position:relative; margin-top:8px;';
-    
+
     const commentField = document.createElement('textarea');
     commentField.className = 'form-input cleaning-item-comment';
     commentField.placeholder = 'コメントを入力してください';
     commentField.style.cssText = 'margin-top:8px; min-height:80px; resize:vertical; width:100%;';
-    commentField.oninput = function() {
+    commentField.oninput = function () {
       if (sections[sectionId]) {
         if (!sections[sectionId].comments) {
           sections[sectionId].comments = [];
@@ -6198,7 +6227,7 @@
         autoSave();
       }
     };
-    
+
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'cleaning-item-comment-delete';
@@ -6206,16 +6235,16 @@
     deleteBtn.dataset.commentId = commentId;
     deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
     deleteBtn.style.cssText = 'position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;';
-    deleteBtn.onclick = function() {
+    deleteBtn.onclick = function () {
       deleteCleaningItemComment(sectionId, commentId);
     };
-    
+
     commentContainer.appendChild(commentField);
     commentContainer.appendChild(deleteBtn);
-    
+
     // 挿入アクションボタンの前に挿入
     insertActions.parentNode.insertBefore(commentContainer, insertActions);
-    
+
     // データに保存
     if (sections[sectionId]) {
       if (!sections[sectionId].comments) {
@@ -6223,35 +6252,35 @@
       }
       sections[sectionId].comments.push({ id: commentId, value: '' });
     }
-    
+
     autoSave();
   };
 
   // 清掃項目セクションにサブタイトルを追加
-  window.addSubtitleToCleaningItem = function(sectionId) {
+  window.addSubtitleToCleaningItem = function (sectionId) {
     // セクションを検索（タブに関係なく検索）
     const sectionBody = document.querySelector(`[data-section-id="${sectionId}"] .section-body`);
     if (!sectionBody) {
       console.warn(`[addSubtitleToCleaningItem] sectionBody not found for sectionId: ${sectionId}`);
       return;
     }
-    
+
     const insertActions = sectionBody.querySelector('.cleaning-item-insert-actions');
     if (!insertActions) return;
-    
+
     // 新しいサブタイトルフィールドを作成
     const subtitleId = `cleaning-item-subtitle-${sectionId}-${Date.now()}`;
     const subtitleContainer = document.createElement('div');
     subtitleContainer.className = 'cleaning-item-subtitle-container';
     subtitleContainer.dataset.subtitleId = subtitleId;
     subtitleContainer.style.cssText = 'position:relative; margin-top:8px;';
-    
+
     const subtitleField = document.createElement('input');
     subtitleField.type = 'text';
     subtitleField.className = 'form-input cleaning-item-subtitle';
     subtitleField.placeholder = 'サブタイトルを入力';
     subtitleField.style.cssText = 'width:100%; font-weight:600; font-size:1rem;';
-    subtitleField.oninput = function() {
+    subtitleField.oninput = function () {
       if (sections[sectionId]) {
         if (!sections[sectionId].subtitles) {
           sections[sectionId].subtitles = [];
@@ -6265,7 +6294,7 @@
         autoSave();
       }
     };
-    
+
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'cleaning-item-subtitle-delete';
@@ -6273,16 +6302,16 @@
     deleteBtn.dataset.subtitleId = subtitleId;
     deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
     deleteBtn.style.cssText = 'position:absolute; top:8px; right:8px; width:24px; height:24px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.7rem; z-index:10;';
-    deleteBtn.onclick = function() {
+    deleteBtn.onclick = function () {
       deleteCleaningItemSubtitle(sectionId, subtitleId);
     };
-    
+
     subtitleContainer.appendChild(subtitleField);
     subtitleContainer.appendChild(deleteBtn);
-    
+
     // 挿入アクションボタンの前に挿入
     insertActions.parentNode.insertBefore(subtitleContainer, insertActions);
-    
+
     // データに保存
     if (sections[sectionId]) {
       if (!sections[sectionId].subtitles) {
@@ -6290,12 +6319,12 @@
       }
       sections[sectionId].subtitles.push({ id: subtitleId, value: '' });
     }
-    
+
     autoSave();
   };
 
   // 清掃項目セクションのコメントを更新
-  window.updateCleaningItemComment = function(sectionId, commentId, value) {
+  window.updateCleaningItemComment = function (sectionId, commentId, value) {
     if (sections[sectionId]) {
       if (!sections[sectionId].comments) {
         sections[sectionId].comments = [];
@@ -6311,7 +6340,7 @@
   };
 
   // 清掃項目セクションのコメントを削除
-  window.deleteCleaningItemComment = function(sectionId, commentId) {
+  window.deleteCleaningItemComment = function (sectionId, commentId) {
     if (sections[sectionId] && sections[sectionId].comments) {
       sections[sectionId].comments = sections[sectionId].comments.filter(c => c.id !== commentId);
     }
@@ -6344,7 +6373,7 @@
   };
 
   // 清掃項目セクションのサブタイトルを更新
-  window.updateCleaningItemSubtitle = function(sectionId, subtitleId, value) {
+  window.updateCleaningItemSubtitle = function (sectionId, subtitleId, value) {
     if (sections[sectionId]) {
       if (!sections[sectionId].subtitles) {
         sections[sectionId].subtitles = [];
@@ -6360,7 +6389,7 @@
   };
 
   // 清掃項目セクションのサブタイトルを削除
-  window.deleteCleaningItemSubtitle = function(sectionId, subtitleId) {
+  window.deleteCleaningItemSubtitle = function (sectionId, subtitleId) {
     if (sections[sectionId] && sections[sectionId].subtitles) {
       sections[sectionId].subtitles = sections[sectionId].subtitles.filter(s => s.id !== subtitleId);
     }
@@ -6393,12 +6422,12 @@
   };
 
   // セクション内容更新
-  window.updateSectionContent = function(sectionId, value) {
+  window.updateSectionContent = function (sectionId, value) {
     sections[sectionId].content = value;
   };
 
   // 清掃項目セクションのテキストフィールドを更新
-  window.updateCleaningItemTextField = function(sectionId, fieldId, value) {
+  window.updateCleaningItemTextField = function (sectionId, fieldId, value) {
     if (sections[sectionId]) {
       if (!sections[sectionId].textFields) {
         sections[sectionId].textFields = [];
@@ -6414,7 +6443,7 @@
   };
 
   // 清掃項目セクションのテキストフィールドを削除
-  window.deleteCleaningItemTextField = function(sectionId, fieldId) {
+  window.deleteCleaningItemTextField = function (sectionId, fieldId) {
     if (sections[sectionId] && sections[sectionId].textFields) {
       sections[sectionId].textFields = sections[sectionId].textFields.filter(f => f.id !== fieldId);
     }
@@ -6439,14 +6468,14 @@
     if (items.length === 0) {
       container.innerHTML = '<span class="items-list-empty">項目を追加してください</span>';
     } else {
-      container.innerHTML = items.map(name => 
+      container.innerHTML = items.map(name =>
         `<span class="items-list-tag">${escapeHtml(name)}</span>`
       ).join('');
     }
   }
 
   // 画像ダイアログを開く
-  window.openImageDialog = function(sectionId, category) {
+  window.openImageDialog = function (sectionId, category) {
     currentImageSection = sectionId;
     currentImageCategory = category;
     selectedWarehouseImages = { before: [], after: [], completed: [] };
@@ -6472,7 +6501,7 @@
       console.log('[Warehouse] Loading images:', { date, category, url });
 
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[Warehouse] Error response:', response.status, errorText);
@@ -6481,7 +6510,7 @@
 
       const data = await response.json();
       console.log('[Warehouse] Received data:', data);
-      
+
       warehouseImages = data.images || [];
 
       if (warehouseImages.length === 0) {
@@ -6502,7 +6531,7 @@
   }
 
   // ライブラリ画像選択切り替え
-  window.toggleLibraryImage = function(el, url) {
+  window.toggleLibraryImage = function (el, url) {
     el.classList.toggle('selected');
     const arr = selectedWarehouseImages[currentImageCategory];
     const idx = arr.indexOf(url);
@@ -6533,7 +6562,7 @@
         sections[sectionId] = { type: 'image', image_type: 'before_after', photos: { before: [], after: [] } };
       }
     }
-    
+
     // ストック画像の場合は、imageDataオブジェクトとして保存
     images.forEach(blobUrl => {
       const imageData = imageStock.find(img => img.blobUrl === blobUrl);
@@ -6576,7 +6605,7 @@
         container.insertBefore(thumb, addBtn);
       }
     });
-    
+
     // 画像リストにドラッグ&ドロップを設定
     setupImageListDragAndDrop(container, sectionId, category);
 
@@ -6585,8 +6614,8 @@
 
   // 画像サムネイルを作成
   function createImageThumb(sectionId, category, url, imageId = null) {
-      const thumb = document.createElement('div');
-      thumb.className = 'image-thumb';
+    const thumb = document.createElement('div');
+    thumb.className = 'image-thumb';
     thumb.draggable = true;
     thumb.dataset.imageUrl = url;
     thumb.dataset.sectionId = sectionId;
@@ -6594,16 +6623,16 @@
     if (imageId) {
       thumb.dataset.imageId = imageId;
     }
-      thumb.innerHTML = `
+    thumb.innerHTML = `
       <img src="${url}" alt="Photo" draggable="false">
       <button type="button" class="image-thumb-remove" onclick="removeImage('${sectionId}', '${category}', '${url}', '${imageId || ''}', this)">
           <i class="fas fa-times"></i>
         </button>
       `;
-    
+
     // 画像サムネイルのドラッグ&ドロップを設定
     setupImageThumbDragAndDrop(thumb, sectionId, category, url, imageId);
-    
+
     return thumb;
   }
 
@@ -6637,7 +6666,7 @@
         isDragging = true;
         thumb.classList.add('dragging');
         thumb.classList.remove('touching');
-        
+
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
@@ -6724,7 +6753,7 @@
   function setupImageListDragAndDrop(listElement, sectionId, category, imageContentId = null) {
     if (listElement.dataset.dragSetup) return;
     listElement.dataset.dragSetup = 'true';
-    
+
     // セクション内画像コンテンツの場合は専用の処理を使用
     if (imageContentId) {
       setupCleaningItemImageListDragAndDrop(listElement, sectionId, imageContentId, category);
@@ -6735,10 +6764,10 @@
     listElement.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       // データを取得（dragoverではgetDataが動作しない場合があるため、effectAllowedで判定）
       const effectAllowed = e.dataTransfer.effectAllowed;
-      
+
       // ストックからのドロップまたは別セクションからの移動
       if (effectAllowed === 'copy' || effectAllowed === 'all') {
         e.dataTransfer.dropEffect = 'copy';
@@ -6767,7 +6796,7 @@
 
       try {
         const dragData = JSON.parse(data);
-        
+
         // ストックからのドロップ
         if (dragData.source === 'stock' && dragData.imageId) {
           const imageData = imageStock.find(img => img.id === dragData.imageId);
@@ -6779,8 +6808,8 @@
 
         // セクション間の移動
         const { sectionId: sourceSectionId, category: sourceCategory, url } = dragData;
-        if (sourceSectionId && sourceCategory && url && 
-            (sourceSectionId !== sectionId || sourceCategory !== category)) {
+        if (sourceSectionId && sourceCategory && url &&
+          (sourceSectionId !== sectionId || sourceCategory !== category)) {
           moveImage(sourceSectionId, sourceCategory, url, sectionId, category);
         }
       } catch (e) {
@@ -6798,7 +6827,7 @@
     // 画像データを検索（オブジェクト形式または文字列形式に対応）
     let imageData = null;
     let sourceIndex = -1;
-    
+
     for (let i = 0; i < sourcePhotos.length; i++) {
       const photo = sourcePhotos[i];
       if (typeof photo === 'string') {
@@ -6815,7 +6844,7 @@
         }
       }
     }
-    
+
     if (sourceIndex === -1 || !imageData) return;
 
     sourcePhotos.splice(sourceIndex, 1);
@@ -6853,7 +6882,7 @@
     if (placeholder) {
       placeholder.remove();
     }
-    
+
     const addBtn = targetContainer.querySelector('.image-add-btn');
     // imageDataがオブジェクト形式の場合はimageIdも渡す
     const imageId = (typeof imageData === 'object' && imageData.imageId) ? imageData.imageId : null;
@@ -6863,11 +6892,11 @@
 
     // ターゲットリストにドラッグ&ドロップを設定（まだ設定されていない場合）
     setupImageListDragAndDrop(targetContainer, targetSectionId, targetCategory);
-    
+
     // 自動保存
     autoSave();
   }
-  
+
   // セクション内画像コンテンツの画像サムネイルにドラッグ&ドロップを設定
   function setupCleaningItemImageThumbDragAndDrop(thumb, sectionId, imageContentId, category, url, imageId) {
     // ドラッグ開始（PC用）
@@ -6883,36 +6912,36 @@
         imageId: imageId
       }));
     });
-    
+
     // ドラッグ終了（PC用）
     thumb.addEventListener('dragend', (e) => {
       thumb.classList.remove('dragging');
       document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
     });
-    
+
     // タッチ開始（スマホ用）
     let touchStartTime = 0;
     let isDragging = false;
     let longPressTimer;
     const LONG_PRESS_DURATION = 300;
-    
+
     thumb.addEventListener('touchstart', (e) => {
       e.stopPropagation();
       touchStartTime = Date.now();
       isDragging = false;
       thumb.classList.add('touching');
-      
+
       longPressTimer = setTimeout(() => {
         isDragging = true;
         thumb.classList.add('dragging');
         thumb.classList.remove('touching');
-        
+
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
       }, LONG_PRESS_DURATION);
     }, { passive: true });
-    
+
     // タッチ移動（スマホ用）
     thumb.addEventListener('touchmove', (e) => {
       if (!isDragging) {
@@ -6920,13 +6949,13 @@
         thumb.classList.remove('touching');
         return;
       }
-      
+
       e.preventDefault();
       e.stopPropagation();
-      
+
       const touch = e.touches[0];
       const targetList = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.image-list');
-      
+
       if (targetList) {
         document.querySelectorAll('.image-list').forEach(list => {
           if (list !== targetList) {
@@ -6937,36 +6966,36 @@
         });
       }
     });
-    
+
     // タッチ終了（スマホ用）
     thumb.addEventListener('touchend', (e) => {
       clearTimeout(longPressTimer);
       thumb.classList.remove('touching', 'dragging');
-      
+
       if (!isDragging) return;
-      
+
       e.preventDefault();
       e.stopPropagation();
-      
+
       const touch = e.changedTouches[0];
       const targetList = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.image-list');
-      
+
       if (targetList && targetList.id) {
         const targetIdParts = targetList.id.split('-');
         const targetImageContentId = targetIdParts.slice(0, -1).join('-');
         const targetCategory = targetIdParts[targetIdParts.length - 1];
-        
+
         // セクション内画像コンテンツ間の移動
-        if (targetImageContentId && targetCategory && 
-            (targetImageContentId !== imageContentId || targetCategory !== category)) {
+        if (targetImageContentId && targetCategory &&
+          (targetImageContentId !== imageContentId || targetCategory !== category)) {
           moveCleaningItemImage(sectionId, imageContentId, category, sectionId, targetImageContentId, targetCategory, url, imageId);
         }
       }
-      
+
       document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
       isDragging = false;
     }, { passive: false });
-    
+
     thumb.addEventListener('touchcancel', () => {
       clearTimeout(longPressTimer);
       thumb.classList.remove('touching', 'dragging');
@@ -6974,7 +7003,7 @@
       document.querySelectorAll('.image-list').forEach(list => list.classList.remove('drag-over'));
     });
   }
-  
+
   // セクション内画像コンテンツの画像リストにドラッグ&ドロップを設定
   function setupCleaningItemImageListDragAndDrop(listElement, sectionId, imageContentId, category) {
     // ドラッグオーバー（PC用）
@@ -6984,31 +7013,31 @@
       e.dataTransfer.dropEffect = 'move';
       listElement.classList.add('drag-over');
     });
-    
+
     // ドラッグリーブ（PC用）
     listElement.addEventListener('dragleave', (e) => {
       if (!listElement.contains(e.relatedTarget)) {
         listElement.classList.remove('drag-over');
       }
     });
-    
+
     // ドロップ（PC用）
     listElement.addEventListener('drop', (e) => {
       e.preventDefault();
       e.stopPropagation();
       listElement.classList.remove('drag-over');
-      
+
       const data = e.dataTransfer.getData('application/json');
       if (!data) return;
-      
+
       try {
         const dragData = JSON.parse(data);
-        
+
         // セクション内画像コンテンツ間の移動
-        if (dragData.source === 'cleaning-item-image' && 
-            dragData.sectionId && dragData.imageContentId && dragData.category && dragData.url) {
+        if (dragData.source === 'cleaning-item-image' &&
+          dragData.sectionId && dragData.imageContentId && dragData.category && dragData.url) {
           const { sectionId: sourceSectionId, imageContentId: sourceImageContentId, category: sourceCategory, url, imageId } = dragData;
-          
+
           if ((sourceImageContentId !== imageContentId || sourceCategory !== category)) {
             moveCleaningItemImage(sourceSectionId, sourceImageContentId, sourceCategory, sectionId, imageContentId, category, url, imageId);
           }
@@ -7018,18 +7047,18 @@
       }
     });
   }
-  
+
   // セクション内画像コンテンツの画像を移動
   function moveCleaningItemImage(sourceSectionId, sourceImageContentId, sourceCategory, targetSectionId, targetImageContentId, targetCategory, url, imageId) {
     // データから削除
     if (!sections[sourceSectionId] || !sections[sourceSectionId].imageContents) return;
     const sourceImageContent = sections[sourceSectionId].imageContents.find(ic => ic.id === sourceImageContentId);
     if (!sourceImageContent || !sourceImageContent.photos[sourceCategory]) return;
-    
+
     const sourcePhotos = sourceImageContent.photos[sourceCategory];
     let imageData = null;
     let sourceIndex = -1;
-    
+
     for (let i = 0; i < sourcePhotos.length; i++) {
       const photo = sourcePhotos[i];
       if (photo.imageId === imageId || photo.blobUrl === url) {
@@ -7038,21 +7067,21 @@
         break;
       }
     }
-    
+
     if (sourceIndex === -1 || !imageData) return;
-    
+
     sourcePhotos.splice(sourceIndex, 1);
-    
+
     // データに追加
     if (!sections[targetSectionId] || !sections[targetSectionId].imageContents) return;
     let targetImageContent = sections[targetSectionId].imageContents.find(ic => ic.id === targetImageContentId);
     if (!targetImageContent) return;
-    
+
     if (!targetImageContent.photos[targetCategory]) {
       targetImageContent.photos[targetCategory] = [];
     }
     targetImageContent.photos[targetCategory].push(imageData);
-    
+
     // UIから削除
     const sourceThumb = document.querySelector(
       `.image-thumb[data-image-content-id="${sourceImageContentId}"][data-category="${sourceCategory}"][data-image-url="${url}"]`
@@ -7060,11 +7089,11 @@
     if (sourceThumb) {
       sourceThumb.remove();
     }
-    
+
     // UIに追加
     const targetList = document.getElementById(`${targetImageContentId}-${targetCategory}`);
     if (!targetList) return;
-    
+
     const addBtn = targetList.querySelector('.image-add-btn');
     const newThumb = document.createElement('div');
     newThumb.className = 'image-thumb';
@@ -7075,48 +7104,48 @@
     newThumb.dataset.sectionId = targetSectionId;
     newThumb.dataset.imageContentId = targetImageContentId;
     newThumb.style.cssText = 'width:120px; height:120px; position:relative; border-radius:4px; overflow:hidden; margin:0 auto;';
-    
+
     const img = document.createElement('img');
     img.src = url;
     img.alt = 'Photo';
     img.draggable = false;
     img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
-    
+
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'image-thumb-remove';
     removeBtn.innerHTML = '<i class="fas fa-times"></i>';
     removeBtn.style.cssText = 'position:absolute; top:4px; right:4px; width:18px; height:18px; background:rgba(255, 103, 156, 0.9); color:#fff; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.6rem; z-index:10;';
-    removeBtn.onclick = function() {
+    removeBtn.onclick = function () {
       removeCleaningItemImage(targetSectionId, targetImageContentId, targetCategory, imageId, newThumb);
     };
-    
+
     newThumb.appendChild(img);
     newThumb.appendChild(removeBtn);
-    
+
     // ドラッグ&ドロップを設定
     setupCleaningItemImageThumbDragAndDrop(newThumb, targetSectionId, targetImageContentId, targetCategory, url, imageId);
-    
+
     if (addBtn) {
       targetList.insertBefore(newThumb, addBtn);
     } else {
       targetList.appendChild(newThumb);
     }
-    
+
     // 自動保存
     autoSave();
   }
 
   // セクション内画像コンテンツから画像を削除
-  window.removeImageFromSection = function(imageContentId, category, imageId) {
+  window.removeImageFromSection = function (imageContentId, category, imageId) {
     const imageList = document.getElementById(`${imageContentId}-${category}`);
     if (!imageList) return;
-    
+
     const imageThumb = imageList.querySelector(`.image-thumb[data-image-id="${imageId}"]`);
     if (imageThumb) {
       imageThumb.remove();
     }
-    
+
     // セクションデータからも削除
     const sectionId = imageList.closest('.section')?.dataset?.sectionId;
     if (sectionId && sections[sectionId]) {
@@ -7125,7 +7154,7 @@
         section.images[category] = section.images[category].filter(img => img.id !== imageId);
       }
     }
-    
+
     // 画像がなくなった場合、デフォルト画像を表示
     const remainingImages = imageList.querySelectorAll('.image-thumb');
     if (remainingImages.length === 0) {
@@ -7137,31 +7166,31 @@
         imageList.insertBefore(placeholderDiv, addBtn);
       }
     }
-    
+
     // 自動保存
     autoSave();
   };
 
   // 画像削除
-  window.removeImage = function(sectionId, category, url, imageId, btn) {
+  window.removeImage = function (sectionId, category, url, imageId, btn) {
     const arr = sections[sectionId].photos[category];
     if (imageId) {
       // 画像データオブジェクトの場合
-      const idx = arr.findIndex(img => 
-        (typeof img === 'object' && img.imageId === imageId) || 
+      const idx = arr.findIndex(img =>
+        (typeof img === 'object' && img.imageId === imageId) ||
         (typeof img === 'string' && img === imageId)
       );
-    if (idx > -1) arr.splice(idx, 1);
+      if (idx > -1) arr.splice(idx, 1);
     } else {
       // URL文字列の場合
-      const idx = arr.findIndex(img => 
+      const idx = arr.findIndex(img =>
         (typeof img === 'string' && img === url) ||
         (typeof img === 'object' && img.blobUrl === url)
       );
       if (idx > -1) arr.splice(idx, 1);
     }
     btn.closest('.image-thumb').remove();
-    
+
     // 画像がなくなった場合、デフォルト画像を表示
     const container = document.getElementById(`${sectionId}-${category}`);
     if (container && arr.length === 0) {
@@ -7218,19 +7247,19 @@
     // アップロードが必要な画像の総数をカウント（先にカウント）
     let totalImagesToUpload = 0;
     let uploadedImagesCount = 0;
-    
+
     Object.values(sections).forEach(s => {
       if (s.type === 'image') {
         const imageType = s.image_type || 'before_after';
         if (imageType === 'completed') {
-          totalImagesToUpload += (s.photos?.completed || []).filter(img => 
+          totalImagesToUpload += (s.photos?.completed || []).filter(img =>
             typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
         } else {
-          totalImagesToUpload += (s.photos?.before || []).filter(img => 
+          totalImagesToUpload += (s.photos?.before || []).filter(img =>
             typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
-          totalImagesToUpload += (s.photos?.after || []).filter(img => 
+          totalImagesToUpload += (s.photos?.after || []).filter(img =>
             typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
         }
@@ -7239,28 +7268,28 @@
         s.imageContents.forEach(imageContent => {
           const imageType = imageContent.imageType || 'before_after';
           if (imageType === 'completed') {
-            totalImagesToUpload += (imageContent.photos?.completed || []).filter(img => 
+            totalImagesToUpload += (imageContent.photos?.completed || []).filter(img =>
               typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
             ).length;
           } else {
-            totalImagesToUpload += (imageContent.photos?.before || []).filter(img => 
+            totalImagesToUpload += (imageContent.photos?.before || []).filter(img =>
               typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
             ).length;
-            totalImagesToUpload += (imageContent.photos?.after || []).filter(img => 
+            totalImagesToUpload += (imageContent.photos?.after || []).filter(img =>
               typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
             ).length;
           }
         });
       }
     });
-    
+
     console.log('[Submit] Total images to upload:', totalImagesToUpload);
-    
+
     // 画像アップロード進捗表示を開始
     if (totalImagesToUpload > 0) {
       showUploadProgress(0, totalImagesToUpload, '画像をアップロードしています...');
     }
-    
+
     // 進捗コールバック関数（グローバルカウンターを使用）
     const updateProgress = () => {
       uploadedImagesCount++;
@@ -7273,24 +7302,24 @@
     // item_nameが空でも、画像がある場合はworkItemsに含める
     const workItems = await Promise.all(
       Object.values(sections)
-      .filter(s => {
-        if (s.type !== 'cleaning') return false;
-        // item_nameがある場合、または画像がある場合は含める
-        const hasItemName = s.item_name && s.item_name.trim() !== '';
-        const hasImages = s.imageContents && Array.isArray(s.imageContents) && s.imageContents.length > 0;
-        return hasItemName || hasImages;
-      })
+        .filter(s => {
+          if (s.type !== 'cleaning') return false;
+          // item_nameがある場合、または画像がある場合は含める
+          const hasItemName = s.item_name && s.item_name.trim() !== '';
+          const hasImages = s.imageContents && Array.isArray(s.imageContents) && s.imageContents.length > 0;
+          return hasItemName || hasImages;
+        })
         .map(async (s) => {
-        // item_nameが空の場合はデフォルト名を使用
-        const itemName = s.item_name && s.item_name.trim() !== '' ? s.item_name : '清掃項目';
-        // item_nameからitem_idを生成（スラッグ化）
-        const itemId = itemName.toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^\w\-]+/g, '')
-          .replace(/\-\-+/g, '-')
-          .replace(/^-+/, '')
-          .replace(/-+$/, '');
-        
+          // item_nameが空の場合はデフォルト名を使用
+          const itemName = s.item_name && s.item_name.trim() !== '' ? s.item_name : '清掃項目';
+          // item_nameからitem_idを生成（スラッグ化）
+          const itemId = itemName.toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^\w\-]+/g, '')
+            .replace(/\-\-+/g, '-')
+            .replace(/^-+/, '')
+            .replace(/-+$/, '');
+
           // imageContentsから画像をアップロード
           const photos = { before: [], after: [] };
           if (s.imageContents && Array.isArray(s.imageContents)) {
@@ -7307,7 +7336,7 @@
               }
             }
           }
-          
+
           // コメントとサブタイトルを取得
           const comments = (s.comments || []).map(c => {
             const value = (typeof c === 'string') ? c : (c.value || '');
@@ -7317,59 +7346,59 @@
             const value = (typeof st === 'string') ? st : (st.value || '');
             return value;
           }).filter(Boolean);
-          
-        return {
-          item_id: itemId,
-          item_name: itemName,
-          details: {},
+
+          return {
+            item_id: itemId,
+            item_name: itemName,
+            details: {},
             photos: photos,
             comments: comments,
             subtitles: subtitles
-        };
+          };
         })
     );
 
     // セクションを収集（画像をアップロード）
     const sectionData = await Promise.all(
       Object.entries(sections)
-      .filter(([_, s]) => s.type !== 'cleaning')
+        .filter(([_, s]) => s.type !== 'cleaning')
         .map(async ([id, s]) => {
-        if (s.type === 'image') {
+          if (s.type === 'image') {
             // 画像セクションの場合、ローカル画像をS3にアップロード
             const imageType = s.image_type || 'before_after';
             const uploadedPhotos = {};
-            
+
             if (imageType === 'completed') {
               uploadedPhotos.completed = await uploadSectionImages(s.photos?.completed || [], cleaningDate, 'completed', updateProgress);
             } else {
               uploadedPhotos.before = await uploadSectionImages(s.photos?.before || [], cleaningDate, 'before', updateProgress);
               uploadedPhotos.after = await uploadSectionImages(s.photos?.after || [], cleaningDate, 'after', updateProgress);
             }
-            
-          return {
-            section_id: id,
-            section_type: 'image',
+
+            return {
+              section_id: id,
+              section_type: 'image',
               image_type: imageType,
               photos: uploadedPhotos
-          };
-        } else if (s.type === 'comment') {
-          return {
-            section_id: id,
-            section_type: 'comment',
-            content: s.content
-          };
-        } else if (s.type === 'work_content') {
-          return {
-            section_id: id,
-            section_type: 'work_content',
-            content: s.content
-          };
-        }
-        return null;
-      })
+            };
+          } else if (s.type === 'comment') {
+            return {
+              section_id: id,
+              section_type: 'comment',
+              content: s.content
+            };
+          } else if (s.type === 'work_content') {
+            return {
+              section_id: id,
+              section_type: 'work_content',
+              content: s.content
+            };
+          }
+          return null;
+        })
     );
     const validSectionData = sectionData.filter(Boolean);
-    
+
     // 画像アップロード進捗表示を閉じる
     if (totalImagesToUpload > 0) {
       hideUploadProgress();
@@ -7395,18 +7424,18 @@
       // 送信ボタンを取得（新規作成タブまたは次回ご提案タブ）
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
       }
 
       const idToken = await getFirebaseIdToken();
 
       // 編集モードの場合はPUT、新規作成の場合はPOST
-      const url = isEditMode 
+      const url = isEditMode
         ? `${REPORT_API}/staff/reports/${reportId}`
         : `${REPORT_API}/staff/reports`;
       const method = isEditMode ? 'PUT' : 'POST';
-      
+
       // 編集モードの場合はstatusをpendingに戻す
       if (isEditMode) {
         reportData.status = 'pending';
@@ -7438,18 +7467,18 @@
       const result = await response.json();
       console.log('[Submit] Success:', result);
       console.log('[Submit] Report ID:', result.report_id || result.id);
-      
+
       // レポートIDが返ってきているか確認
       if (!result.report_id && !result.id) {
         console.warn('[Submit] Warning: No report_id in response:', result);
       }
-      
+
       showSuccess(isEditMode ? 'レポートを修正しました！' : 'レポートを提出しました！');
-      
+
       // 管理画面側のレポート作成画面かどうかを判定
-      const isAdminPage = window.location.pathname.includes('/admin/reports/new-pc') || 
-                         window.location.pathname.includes('/admin/reports/new');
-      
+      const isAdminPage = window.location.pathname.includes('/admin/reports/new-pc') ||
+        window.location.pathname.includes('/admin/reports/new');
+
       // 編集モードの場合はフォームをリセット
       if (isEditMode) {
         form.dataset.reportId = '';
@@ -7490,8 +7519,8 @@
       showError('送信に失敗しました: ' + getErrorMessage(error));
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> レポートを提出';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> レポートを提出';
       }
     }
   }
@@ -7504,7 +7533,7 @@
       if (cognitoIdToken) {
         return cognitoIdToken;
       }
-      
+
       // 2. Cognito認証のユーザーオブジェクトからトークンを取得
       const cognitoUser = localStorage.getItem('cognito_user');
       if (cognitoUser) {
@@ -7520,7 +7549,7 @@
           console.warn('Error parsing cognito user:', e);
         }
       }
-      
+
       // 3. CognitoAuthから取得
       if (window.CognitoAuth && window.CognitoAuth.isAuthenticated && window.CognitoAuth.isAuthenticated()) {
         try {
@@ -7532,7 +7561,7 @@
           console.warn('Error getting token from CognitoAuth:', e);
         }
       }
-      
+
       // 4. misesapo_auth から取得（フォールバック）
       const authData = localStorage.getItem('misesapo_auth');
       if (authData) {
@@ -7545,13 +7574,13 @@
           console.warn('Error parsing auth data:', e);
         }
       }
-      
+
       // 5. 開発環境用のフォールバック
       console.warn('No authentication token found, using dev-token');
       return 'dev-token';
     } catch (error) {
       console.error('Error getting ID token:', error);
-    return 'dev-token';
+      return 'dev-token';
     }
   }
 
@@ -7561,7 +7590,7 @@
     if (!progressToast) {
       const container = document.getElementById('toast-container');
       if (!container) return;
-      
+
       progressToast = document.createElement('div');
       progressToast.id = 'upload-progress-toast';
       progressToast.className = 'toast toast-info upload-progress-toast';
@@ -7580,21 +7609,21 @@
       `;
       container.appendChild(progressToast);
     }
-    
+
     const progressBar = document.getElementById('upload-progress-bar');
     const progressPercent = document.getElementById('upload-progress-percent');
     const percent = total > 0 ? Math.round((current / total) * 100) : 0;
-    
+
     if (progressBar) {
       progressBar.style.width = `${percent}%`;
     }
     if (progressPercent) {
       progressPercent.textContent = `${percent}%`;
     }
-    
+
     return progressToast;
   }
-  
+
   // 画像アップロード進捗表示を閉じる
   function hideUploadProgress() {
     const progressToast = document.getElementById('upload-progress-toast');
@@ -7613,37 +7642,37 @@
     if (!images || images.length === 0) {
       return [];
     }
-    
+
     const storeIdForImages = document.getElementById('report-store')?.value || '';
     // 順次処理でアップロード（進捗を正確に追跡するため）
     const uploadedUrls = [];
     for (const img of images) {
-        // 既にURLの場合はそのまま返す
-        if (typeof img === 'string') {
+      // 既にURLの場合はそのまま返す
+      if (typeof img === 'string') {
         uploadedUrls.push(img);
         continue;
-        }
-        
-        // 画像データオブジェクトの場合
+      }
+
+      // 画像データオブジェクトの場合
       if (typeof img === 'object') {
-          // 既にアップロード済みの場合はURLを返す
+        // 既にアップロード済みの場合はURLを返す
         if (img.uploaded && (img.url || img.warehouseUrl)) {
           uploadedUrls.push(img.url || img.warehouseUrl);
           continue;
         }
-        
+
         // warehouseUrlがある場合はそのまま使用
         if (img.warehouseUrl) {
           uploadedUrls.push(img.warehouseUrl);
           continue;
         }
-        
+
         // urlプロパティがある場合はそのまま使用
         if (img.url && (img.url.startsWith('http://') || img.url.startsWith('https://'))) {
           uploadedUrls.push(img.url);
           continue;
         }
-        
+
         // imageIdがある場合のみアップロード処理を実行
         if (img.imageId) {
           // ローカル画像をS3にアップロード
@@ -7657,7 +7686,7 @@
               }
               continue;
             }
-            
+
             let blob;
             // blobDataが存在する場合はそれを使用、なければblobUrlから取得
             if (imageData.blobData) {
@@ -7678,13 +7707,13 @@
               }
               continue;
             }
-            
+
             // Base64に変換
             const base64 = await blobToBase64(blob);
-            
+
             // categoryが'completed'の場合は'after'として扱う（APIの制約）
             const apiCategory = category === 'completed' ? 'after' : category;
-            
+
             // S3にアップロード
             const requestBody = {
               image: base64,
@@ -7692,7 +7721,7 @@
               cleaning_date: cleaningDate,
               store_id: storeIdForImages || undefined
             };
-            
+
             console.log('[uploadSectionImages] Uploading image:', {
               imageId: img.imageId,
               base64Length: base64?.length,
@@ -7700,16 +7729,16 @@
               originalCategory: category,
               cleaning_date: cleaningDate
             });
-            
+
             const response = await fetch(`${REPORT_API}/staff/report-images`, {
               method: 'POST',
-              headers: { 
+              headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${await getFirebaseIdToken()}`
               },
               body: JSON.stringify(requestBody)
             });
-            
+
             if (!response.ok) {
               let errorText;
               try {
@@ -7730,16 +7759,16 @@
               }
               throw new Error(`Upload failed: ${response.status} - ${errorText}`);
             }
-            
+
             const result = await response.json();
             const uploadedUrl = result.image?.url || result.url || null;
             console.log('[uploadSectionImages] Image uploaded successfully:', uploadedUrl);
-            
+
             // 進捗を更新
             if (onProgress) {
               onProgress();
             }
-            
+
             if (uploadedUrl) {
               uploadedUrls.push(uploadedUrl);
             }
@@ -7756,7 +7785,7 @@
             const response = await fetch(img.blobUrl);
             const blob = await response.blob();
             const base64 = await blobToBase64(blob);
-            
+
             const apiCategory = category === 'completed' ? 'after' : category;
             const requestBody = {
               image: base64,
@@ -7764,16 +7793,16 @@
               cleaning_date: cleaningDate,
               store_id: storeIdForImages || undefined
             };
-            
+
             const uploadResponse = await fetch(`${REPORT_API}/staff/report-images`, {
               method: 'POST',
-              headers: { 
+              headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${await getFirebaseIdToken()}`
               },
               body: JSON.stringify(requestBody)
             });
-            
+
             if (uploadResponse.ok) {
               const result = await uploadResponse.json();
               const uploadedUrl = result.image?.url || result.url || null;
@@ -7792,7 +7821,7 @@
         }
       }
     }
-    
+
     // nullを除外
     return uploadedUrls.filter(url => url !== null && url !== undefined);
   }
@@ -7837,7 +7866,7 @@
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    
+
     const icons = {
       success: 'fa-check-circle',
       error: 'fa-exclamation-circle',
@@ -7911,7 +7940,7 @@
 
       titleEl.textContent = title || '確認';
       messageEl.textContent = message;
-      
+
       const okText = options.okText || 'OK';
       const cancelText = options.cancelText || 'キャンセル';
       okBtn.textContent = okText;
@@ -7956,34 +7985,34 @@
   // エラーメッセージを日本語化
   function getErrorMessage(error) {
     if (!error) return 'エラーが発生しました';
-    
+
     const errorMessage = error.message || error.toString();
-    
+
     // ネットワークエラー
     if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
       return 'ネットワークエラーが発生しました。接続を確認してください。';
     }
-    
+
     // タイムアウトエラー
     if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
       return 'リクエストがタイムアウトしました。しばらく待ってから再度お試しください。';
     }
-    
+
     // 認証エラー
     if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
       return '認証に失敗しました。再度ログインしてください。';
     }
-    
+
     // 権限エラー
     if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
       return 'この操作を実行する権限がありません。';
     }
-    
+
     // サーバーエラー
     if (errorMessage.includes('500') || errorMessage.includes('Internal Server Error')) {
       return 'サーバーエラーが発生しました。しばらく待ってから再度お試しください。';
     }
-    
+
     // その他のエラー
     return errorMessage || 'エラーが発生しました';
   }
@@ -7991,23 +8020,23 @@
   // レポートを一時保存してプレビュー用データを準備（画像もアップロード）
   async function saveReportForPreview() {
     const cleaningDate = document.getElementById('report-date')?.value || '';
-    
+
     // アップロードが必要な画像の総数をカウント
     let totalImagesToUpload = 0;
     let uploadedImagesCount = 0;
-    
+
     Object.values(sections).forEach(s => {
       if (s.type === 'image') {
         const imageType = s.image_type || 'before_after';
         if (imageType === 'completed') {
-          totalImagesToUpload += (s.photos?.completed || []).filter(img => 
+          totalImagesToUpload += (s.photos?.completed || []).filter(img =>
             typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
         } else {
-          totalImagesToUpload += (s.photos?.before || []).filter(img => 
+          totalImagesToUpload += (s.photos?.before || []).filter(img =>
             typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
-          totalImagesToUpload += (s.photos?.after || []).filter(img => 
+          totalImagesToUpload += (s.photos?.after || []).filter(img =>
             typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
           ).length;
         }
@@ -8016,28 +8045,28 @@
         s.imageContents.forEach(imageContent => {
           const imageType = imageContent.imageType || 'before_after';
           if (imageType === 'completed') {
-            totalImagesToUpload += (imageContent.photos?.completed || []).filter(img => 
+            totalImagesToUpload += (imageContent.photos?.completed || []).filter(img =>
               typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
             ).length;
           } else {
-            totalImagesToUpload += (imageContent.photos?.before || []).filter(img => 
+            totalImagesToUpload += (imageContent.photos?.before || []).filter(img =>
               typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
             ).length;
-            totalImagesToUpload += (imageContent.photos?.after || []).filter(img => 
+            totalImagesToUpload += (imageContent.photos?.after || []).filter(img =>
               typeof img === 'object' && img.imageId && !(img.uploaded && (img.url || img.warehouseUrl))
             ).length;
           }
         });
       }
     });
-    
+
     console.log('[Preview] Total images to upload:', totalImagesToUpload);
-    
+
     // 画像アップロード進捗表示を開始
     if (totalImagesToUpload > 0) {
       showUploadProgress(0, totalImagesToUpload, '画像をアップロードしています...');
     }
-    
+
     // 進捗コールバック関数（グローバルカウンターを使用）
     const updateProgress = () => {
       uploadedImagesCount++;
@@ -8045,14 +8074,14 @@
         showUploadProgress(uploadedImagesCount, totalImagesToUpload, '画像をアップロードしています...');
       }
     };
-    
+
     // 画像をアップロードしてからプレビュー用データを準備
     const previewSections = {};
     for (const [id, s] of Object.entries(sections)) {
       if (s.type === 'image') {
         const imageType = s.image_type || 'before_after';
         const uploadedPhotos = {};
-        
+
         // 画像データを正規化（オブジェクト形式の場合はURLを抽出）
         const normalizeImages = (images) => {
           if (!images || !Array.isArray(images)) return [];
@@ -8072,14 +8101,14 @@
             return img;
           });
         };
-        
+
         if (imageType === 'completed') {
           uploadedPhotos.completed = await uploadSectionImages(normalizeImages(s.photos?.completed), cleaningDate, 'completed', updateProgress);
         } else {
           uploadedPhotos.before = await uploadSectionImages(normalizeImages(s.photos?.before), cleaningDate, 'before', updateProgress);
           uploadedPhotos.after = await uploadSectionImages(normalizeImages(s.photos?.after), cleaningDate, 'after', updateProgress);
         }
-        
+
         previewSections[id] = {
           ...s,
           photos: uploadedPhotos
@@ -8090,7 +8119,7 @@
           (s.imageContents || []).map(async (imageContent) => {
             const imageType = imageContent.imageType || 'before_after';
             const uploadedPhotos = {};
-            
+
             const normalizeImages = (images) => {
               if (!images || !Array.isArray(images)) return [];
               return images.map(img => {
@@ -8106,21 +8135,21 @@
                 return img;
               });
             };
-            
+
             if (imageType === 'completed') {
               uploadedPhotos.completed = await uploadSectionImages(normalizeImages(imageContent.photos?.completed), cleaningDate, 'completed', updateProgress);
             } else {
               uploadedPhotos.before = await uploadSectionImages(normalizeImages(imageContent.photos?.before), cleaningDate, 'before', updateProgress);
               uploadedPhotos.after = await uploadSectionImages(normalizeImages(imageContent.photos?.after), cleaningDate, 'after', updateProgress);
             }
-            
+
             return {
               ...imageContent,
               photos: uploadedPhotos
             };
           })
         );
-        
+
         previewSections[id] = {
           ...s,
           imageContents: uploadedImageContents
@@ -8129,75 +8158,75 @@
         previewSections[id] = { ...s };
       }
     }
-    
+
     // 画像アップロード進捗表示を閉じる
     if (totalImagesToUpload > 0) {
       hideUploadProgress();
     }
-    
+
     // 現在のフォームデータを一時保存（localStorageに保存）
     const previewData = {
-      brandName: document.getElementById('report-brand-search')?.value || 
-                 document.getElementById('report-brand-name')?.value || '',
-      storeName: document.getElementById('report-store-search')?.value || 
-                 document.getElementById('report-store-name')?.value || '',
+      brandName: document.getElementById('report-brand-search')?.value ||
+        document.getElementById('report-brand-name')?.value || '',
+      storeName: document.getElementById('report-store-search')?.value ||
+        document.getElementById('report-store-name')?.value || '',
       date: cleaningDate,
       startTime: document.getElementById('report-start')?.value || '',
       endTime: document.getElementById('report-end')?.value || '',
       sections: previewSections, // アップロード済み画像を含む
       savedAt: new Date().toISOString()
     };
-    
+
     // localStorageには保存しない（常に最新のsectionsを使用するため）
     // localStorage.setItem('preview_report_data', JSON.stringify(previewData));
-    
+
     // オートセーブも実行（念のため）
     await autoSave();
   }
 
   // プレビューモーダルを開く（レポートURL発行後の表示形式に合わせる）
-  window.openPreviewModal = async function() {
+  window.openPreviewModal = async function () {
     // 保存確認モーダルが開いていれば確実に閉じる
     const previewSaveDialog = document.getElementById('preview-save-dialog');
     if (previewSaveDialog && previewSaveDialog.open) {
       previewSaveDialog.close();
     }
-    
+
     const previewDialog = document.getElementById('preview-dialog');
     if (!previewDialog) {
       console.warn('[openPreviewModal] preview-dialog element not found');
       return;
     }
-    
+
     // 既にモーダルが開いている場合は何もしない
     const currentDisplay = previewDialog.style.display || window.getComputedStyle(previewDialog).display;
     if (currentDisplay === 'flex' || currentDisplay === 'block' || previewDialog.classList.contains('show')) {
       console.log('[openPreviewModal] Modal is already open, skipping');
       return;
     }
-    
+
     const previewContent = document.getElementById('preview-report-content');
     if (!previewContent) {
       console.warn('[openPreviewModal] preview-report-content element not found');
       return;
     }
-    
+
     // 現在のフォームデータを使用（常に最新のsectionsを使用）
-    const brandName = document.getElementById('report-brand-search')?.value || 
-                     document.getElementById('report-brand-name')?.value || '';
-    const storeName = document.getElementById('report-store-search')?.value || 
-                     document.getElementById('report-store-name')?.value || '';
+    const brandName = document.getElementById('report-brand-search')?.value ||
+      document.getElementById('report-brand-name')?.value || '';
+    const storeName = document.getElementById('report-store-search')?.value ||
+      document.getElementById('report-store-name')?.value || '';
     const date = document.getElementById('report-date')?.value || '';
     const startTime = document.getElementById('report-start')?.value || '';
     const endTime = document.getElementById('report-end')?.value || '';
-    
+
     // 常に現在のsectionsを使用（localStorageではなく、メモリ上の最新データを使用）
     // 現在アクティブなタブのsectionsを使用
     const activeTab = typeof currentActiveTab !== 'undefined' ? currentActiveTab : 'new';
     const savedSections = sectionsByTab[activeTab] || sections;
     console.log('[Preview] Using sections from tab:', activeTab);
     console.log('[Preview] sectionsByTab:', sectionsByTab);
-    
+
     // デバッグ: sectionsの構造を確認
     console.log('[Preview] savedSections:', savedSections);
     console.log('[Preview] sections (current):', sections);
@@ -8215,12 +8244,12 @@
             console.log('[Preview] imageContent[' + idx + ']:', ic);
             console.log('[Preview] imageContent[' + idx + '] photos:', ic.photos);
           });
-    } else {
+        } else {
           console.warn('[Preview] No imageContents in cleaning section:', sectionId);
         }
       }
     });
-    
+
     // レポートデータを準備（report-shared-view.jsのrenderReport関数と同じ形式）
     // item_nameが空でも、画像がある場合はworkItemsに含める
     const workItems = Object.values(savedSections)
@@ -8245,7 +8274,7 @@
                 if (typeof img === 'string') {
                   console.log('[Preview] Completed photo (string):', img);
                   return img;
-    }
+                }
                 if (typeof img === 'object' && img !== null) {
                   const url = img.url || img.warehouseUrl || img.imageUrl || img.blobUrl || '';
                   console.log('[Preview] Completed photo (object):', img, '-> url:', url);
@@ -8287,11 +8316,11 @@
             }
           });
         }
-        
+
         // item_nameが空の場合はデフォルト名を使用
         const itemName = s.item_name && s.item_name.trim() !== '' ? s.item_name : '清掃項目';
         console.log('[Preview] Final photos for', itemName, ':', photos);
-        
+
         // コメントとサブタイトルを取得
         console.log('[Preview] Section data for', itemName, ':', s);
         console.log('[Preview] Section comments (raw):', s.comments);
@@ -8308,19 +8337,19 @@
         }).filter(Boolean);
         console.log('[Preview] Comments for', itemName, ':', comments);
         console.log('[Preview] Subtitles for', itemName, ':', subtitles);
-        
+
         return {
           item_id: itemName.toLowerCase().replace(/\s+/g, '-'),
           item_name: itemName,
-        details: {},
+          details: {},
           photos: photos,
           comments: comments,
           subtitles: subtitles
         };
       });
-    
+
     console.log('[Preview] Final workItems:', workItems);
-    
+
     const reportSections = Object.values(savedSections)
       .filter(s => s.type !== 'cleaning')
       .map(section => {
@@ -8344,7 +8373,7 @@
         return null;
       })
       .filter(s => s !== null);
-    
+
     // レポートオブジェクトを作成（report-shared-view.jsのrenderReport関数と同じ形式）
     const report = {
       cleaning_date: date,
@@ -8355,7 +8384,7 @@
       work_items: workItems,
       sections: reportSections
     };
-    
+
     // report-shared-view.jsのrenderReportToContainer関数を使用して表示
     // 一時的なコンテナを作成してレンダリング
     const tempContainer = document.createElement('div');
@@ -8372,12 +8401,12 @@
       } else {
         console.warn('[Preview] report-main not found in tempContainer');
       }
-      
+
       // レンダリングされたHTMLから必要な部分を取得
       const renderedHeader = tempContainer.querySelector('.report-header');
       const renderedItemsBar = tempContainer.querySelector('.items-list-bar');
       const renderedMain = tempContainer.querySelector('.report-main');
-      
+
       // プレビュー用の要素にコピー
       if (renderedHeader) {
         const previewHeader = document.getElementById('preview-report-header');
@@ -8386,19 +8415,19 @@
           const dateEl = renderedHeader.querySelector('.report-date');
           const storeEl = renderedHeader.querySelector('.report-store');
           const staffEl = renderedHeader.querySelector('.report-staff');
-          
+
           const previewBrandEl = document.getElementById('preview-report-brand');
           const previewDateEl = document.getElementById('preview-report-date');
           const previewStoreEl = document.getElementById('preview-report-store');
           const previewStaffEl = document.getElementById('preview-report-staff');
-          
+
           if (brandEl && previewBrandEl) previewBrandEl.textContent = brandEl.textContent;
           if (dateEl && previewDateEl) previewDateEl.textContent = dateEl.textContent;
           if (storeEl && previewStoreEl) previewStoreEl.textContent = storeEl.textContent;
           if (staffEl && previewStaffEl) previewStaffEl.textContent = staffEl.textContent;
         }
       }
-      
+
       if (renderedItemsBar) {
         const itemsEl = renderedItemsBar.querySelector('.items-list-items');
         const previewItemsEl = document.getElementById('preview-cleaning-items');
@@ -8406,7 +8435,7 @@
           previewItemsEl.innerHTML = itemsEl.innerHTML;
         }
       }
-      
+
       if (renderedMain) {
         const previewMainEl = document.getElementById('preview-report-main');
         if (previewMainEl) {
@@ -8415,7 +8444,7 @@
           previewMainEl.innerHTML = renderedMain.innerHTML;
           console.log('[Preview] previewMainEl.innerHTML length after copy:', previewMainEl.innerHTML.length);
           console.log('[Preview] previewMainEl images count:', previewMainEl.querySelectorAll('img').length);
-    
+
           // コメントとサブタイトルが実際にDOMに存在するか確認
           const subtitleElements = previewMainEl.querySelectorAll('.cleaning-item-subtitle-display');
           const commentElements = previewMainEl.querySelectorAll('.cleaning-item-comment-display');
@@ -8433,7 +8462,7 @@
       } else {
         console.warn('[Preview] renderedMain not found in tempContainer');
       }
-      
+
       // 画像クリックイベントを設定（report-shared-view.jsのsetupImageModalInContainerと同じロジック）
       // プレビュー用の要素に対して設定
       const previewImageItems = previewContent.querySelectorAll('#preview-report-main .image-item');
@@ -8442,8 +8471,8 @@
         // 既存のイベントリスナーを削除
         const newItem = item.cloneNode(true);
         item.parentNode.replaceChild(newItem, item);
-        
-        newItem.addEventListener('click', function() {
+
+        newItem.addEventListener('click', function () {
           const img = this.querySelector('img');
           if (img && img.src) {
             // report-shared-view.jsのopenImageModalを使用
@@ -8469,40 +8498,40 @@
         `;
       }
     }
-    
+
     // プレビュー用のタブ機能を設定（既存のイベントリスナーを削除してから追加）
     setupPreviewTabs();
-    
+
     // モーダルを表示
     if (previewDialog) {
       previewDialog.classList.add('show');
       previewDialog.style.display = 'flex';
     }
   }
-  
+
   // プレビュー用のタブ機能を設定
   function setupPreviewTabs() {
     const previewContent = document.getElementById('preview-report-content');
     if (!previewContent) return;
-    
+
     const tabBtns = previewContent.querySelectorAll('.tab-btn');
     const tabContents = previewContent.querySelectorAll('.tab-content');
-    
+
     // 既存のイベントリスナーを削除してから追加（重複を防ぐ）
     tabBtns.forEach(btn => {
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
-      
-      newBtn.addEventListener('click', function() {
+
+      newBtn.addEventListener('click', function () {
         const targetTab = this.dataset.tab;
-        
+
         // すべてのタブボタンとコンテンツからactiveクラスを削除
         tabBtns.forEach(b => b.classList.remove('active'));
         tabContents.forEach(c => {
           c.classList.remove('active');
           c.style.display = 'none';
         });
-        
+
         // クリックされたタブをアクティブにする
         this.classList.add('active');
         const targetContent = previewContent.querySelector(`#preview-tab-content-${targetTab}`);
@@ -8517,10 +8546,10 @@
   // プレビュー用の画像モーダル機能（report-shared-view.jsと同じ）
   function setupPreviewImageModal() {
     const imageItems = document.querySelectorAll('#preview-report-content .image-item');
-    
+
     imageItems.forEach(item => {
       item.style.cursor = 'pointer';
-      item.addEventListener('click', function() {
+      item.addEventListener('click', function () {
         const img = this.querySelector('img');
         if (img && img.src) {
           openPreviewImageModal(img.src);
@@ -8536,7 +8565,7 @@
     if (existingModal) {
       existingModal.remove();
     }
-    
+
     // モーダル要素を作成
     const modal = document.createElement('div');
     modal.id = 'preview-image-modal';
@@ -8548,20 +8577,20 @@
         <img src="${imageSrc}" alt="拡大画像" class="image-modal-img">
       </div>
     `;
-    
+
     document.body.appendChild(modal);
-    
+
     // 閉じるボタンのイベント
     const closeBtn = modal.querySelector('.image-modal-close');
     const overlay = modal.querySelector('.image-modal-overlay');
-    
+
     const closeModal = () => {
       modal.remove();
     };
-    
+
     closeBtn.addEventListener('click', closeModal);
     overlay.addEventListener('click', closeModal);
-    
+
     // ESCキーで閉じる
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
@@ -8573,13 +8602,13 @@
   }
 
   // プレビューモーダルを閉じる
-  window.closePreviewModal = function() {
+  window.closePreviewModal = function () {
     // 保存確認モーダルが開いていれば確実に閉じる
     const previewSaveDialog = document.getElementById('preview-save-dialog');
     if (previewSaveDialog && previewSaveDialog.open) {
       previewSaveDialog.close();
     }
-    
+
     const previewDialog = document.getElementById('preview-dialog');
     if (previewDialog) {
       previewDialog.classList.remove('show');
@@ -8590,7 +8619,7 @@
       console.log('[closePreviewModal] Modal closed and preview data cleared');
     }
   };
-  
+
 
   // スクロール位置インジケーターを設定（SP版のみ）
   function setupScrollIndicator() {
@@ -8598,7 +8627,7 @@
     if (window.innerWidth > 375) return;
 
     const tabContents = document.querySelectorAll('.tab-content');
-    
+
     tabContents.forEach(tabContent => {
       // スクロールインジケーター要素を作成
       const indicator = document.createElement('div');
@@ -8620,19 +8649,19 @@
         const scrollHeight = tabContent.scrollHeight;
         const clientHeight = tabContent.clientHeight;
         const scrollableHeight = scrollHeight - clientHeight;
-        
+
         if (scrollableHeight > 0) {
           // スクロール位置の割合（0-1）
           const scrollPercent = scrollTop / scrollableHeight;
-          
+
           // 画面の高さを取得
           const viewportHeight = window.innerHeight;
           const headerHeight = 98; // ヘッダー + タブナビゲーション
           const availableHeight = viewportHeight - headerHeight;
-          
+
           // インジケーターの位置を計算（ヘッダー下から開始）
           const indicatorTop = headerHeight + (availableHeight - 20) * scrollPercent;
-          
+
           indicator.style.top = `${indicatorTop}px`;
         }
 
@@ -8650,7 +8679,7 @@
           indicator.classList.remove('visible');
         }
       });
-      
+
       observer.observe(tabContent, {
         attributes: true,
         attributeFilter: ['class']

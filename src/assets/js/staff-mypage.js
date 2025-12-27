@@ -4410,107 +4410,118 @@ async function loadScheduleList(user) {
       }
     });
 
-    // 確定済み（scheduledまたはin_progress）で、現在以降のスケジュールをフィルタリング
+    // 確定済み（scheduledまたはin_progress）の全スケジュール（過去・未来含む）
+    const allRelevantSchedules = userSchedules.filter(schedule => {
+      const status = schedule.status || '';
+      return status === 'scheduled' || status === 'in_progress';
+    });
+
     const now = new Date();
-    const upcomingSchedules = userSchedules
-      .filter(schedule => {
-        // ステータスが確定済み（scheduledまたはin_progress）
-        const status = schedule.status || '';
-        if (status !== 'scheduled' && status !== 'in_progress') {
-          return false;
-        }
+    const todayStr = now.toISOString().split('T')[0];
+    const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-        // 日付と時刻を取得
-        const scheduleDate = schedule.scheduled_date || schedule.date;
-        const scheduleTime = schedule.scheduled_time || schedule.time || schedule.time_slot || '00:00';
+    // 本日の予定
+    const todaySchedules = allRelevantSchedules.filter(s => {
+      const sDate = s.scheduled_date || s.date;
+      return sDate === todayStr;
+    }).sort((a, b) => {
+      const tA = a.scheduled_time || a.time || '00:00';
+      const tB = b.scheduled_time || b.time || '00:00';
+      return tA.localeCompare(tB);
+    });
 
-        if (!scheduleDate) return false;
-
-        // 日時を生成して現在時刻と比較
-        const scheduleDateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
-        return scheduleDateTime >= now;
-      })
-      .sort((a, b) => {
-        // 日時順にソート（近い順）
-        const dateA = a.scheduled_date || a.date;
-        const timeA = a.scheduled_time || a.time || a.time_slot || '00:00';
-        const dateTimeA = new Date(`${dateA}T${timeA}:00`);
-
-        const dateB = b.scheduled_date || b.date;
-        const timeB = b.scheduled_time || b.time || b.time_slot || '00:00';
-        const dateTimeB = new Date(`${dateB}T${timeB}:00`);
-
-        return dateTimeA - dateTimeB;
-      })
-      .slice(0, 3); // 3件のみ表示
+    // 今週の予定（明日以降、7日後まで）
+    const thisWeekSchedules = allRelevantSchedules.filter(s => {
+      const sDate = s.scheduled_date || s.date;
+      if (!sDate) return false;
+      const sDateTime = new Date(sDate);
+      return sDate > todayStr && sDateTime <= sevenDaysLater;
+    }).sort((a, b) => {
+      const dA = a.scheduled_date || a.date;
+      const dB = b.scheduled_date || b.date;
+      if (dA !== dB) return dA.localeCompare(dB);
+      const tA = a.scheduled_time || a.time || '00:00';
+      const tB = b.scheduled_time || b.time || '00:00';
+      return tA.localeCompare(tB);
+    });
 
     // 表示を更新
-    if (upcomingSchedules.length === 0) {
-      scheduleListContent.innerHTML = '<div class="empty-state">確定済みのスケジュールはありません</div>';
+    if (todaySchedules.length === 0 && thisWeekSchedules.length === 0) {
+      scheduleListContent.innerHTML = '<div class="empty-state">直近1週間のスケジュールはありません</div>';
       return;
     }
 
-    // スケジュール一覧を表示
-    scheduleListContent.innerHTML = upcomingSchedules.map(schedule => {
-      const scheduleDate = schedule.scheduled_date || schedule.date;
-      const scheduleTime = schedule.scheduled_time || schedule.time || schedule.time_slot || '00:00';
-      const dateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
+    let listHtml = '';
 
-      // 日付と時刻をフォーマット
-      const dateStr = dateTime.toLocaleDateString('ja-JP', {
-        month: 'long',
-        day: 'numeric',
-        weekday: 'short'
-      });
-      const timeStr = scheduleTime.length === 5 ? scheduleTime : scheduleTime.substring(0, 5);
+    if (todaySchedules.length > 0) {
+      listHtml += `<div class="schedule-list-group-header"><i class="fas fa-star"></i> 本日の予定</div>`;
+      listHtml += todaySchedules.map(s => renderScheduleItemHtml(s, user)).join('');
+    }
 
-      // ブランド名と店舗名を取得
-      const brandName = schedule.brand_name || '';
-      const storeName = schedule.store_name || schedule.client_name || '-';
-      // ブランド名と店名を組み合わせて表示（ブランド名がある場合のみ表示）
-      const displayName = brandName ? `${escapeHtml(brandName)} / ${escapeHtml(storeName)}` : escapeHtml(storeName);
+    if (thisWeekSchedules.length > 0) {
+      listHtml += `<div class="schedule-list-group-header"><i class="fas fa-calendar-alt"></i> 今週の予定</div>`;
+      listHtml += thisWeekSchedules.map(s => renderScheduleItemHtml(s, user)).join('');
+    }
 
-      // 現在のユーザーに既に受託されているか確認
-      const scheduleWorkerId = schedule.worker_id || schedule.assigned_to || schedule.staff_id || '';
-      let isAssigned = false;
-      if (scheduleWorkerId) {
-        if (window.DataUtils && window.DataUtils.IdUtils && window.DataUtils.IdUtils.isSame) {
-          isAssigned = window.DataUtils.IdUtils.isSame(scheduleWorkerId, user.id);
-        } else {
-          isAssigned = String(scheduleWorkerId) === String(user.id);
-        }
-      }
-
-      // 既に受託済みの場合は「確定」バッジ、未受託の場合は「受託」ボタンを表示
-      const statusLabel = schedule.status === 'in_progress' ? '作業中' : '確定';
-      const statusClass = schedule.status === 'in_progress' ? 'status-in-progress' : 'status-scheduled';
-
-      return `
-        <div class="schedule-list-item" style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer;" onclick="window.location.href='/staff/schedule'">
-              <i class="fas fa-calendar-check" style="color: #ff679c; font-size: 0.875rem;"></i>
-              <span style="font-weight: 600; color: #111827;">${escapeHtml(dateStr)}</span>
-              <span style="color: #6b7280; font-size: 0.875rem;">${timeStr}</span>
-            </div>
-            ${isAssigned
-          ? `<span class="status-badge ${statusClass}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500;">${statusLabel}</span>`
-          : `<button class="btn-accept-schedule" onclick="event.stopPropagation(); acceptSchedule('${escapeHtml(schedule.id)}', this);" style="padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: #ff679c; color: white; border: none; cursor: pointer; transition: all 0.2s;">受託</button>`
-        }
-          </div>
-          <div style="color: #6b7280; font-size: 0.875rem; cursor: pointer;" onclick="window.location.href='/staff/schedule'">
-            <i class="fas fa-store" style="margin-right: 4px;"></i>
-            ${displayName}
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    console.log('[Mypage] Loaded schedule list:', upcomingSchedules.length, 'schedules');
+    scheduleListContent.innerHTML = listHtml;
   } catch (error) {
     console.error('[Mypage] Failed to load schedule list:', error);
-    scheduleListContent.innerHTML = '<div class="empty-state" style="color: #ef4444;">読み込みに失敗しました</div>';
+    scheduleListContent.innerHTML = '<div class="error-state">読み込みに失敗しました</div>';
   }
+}
+
+// スケジュールアイテムのHTMLを生成するヘルパー
+function renderScheduleItemHtml(schedule, user) {
+  const scheduleDate = schedule.scheduled_date || schedule.date;
+  const scheduleTime = schedule.scheduled_time || schedule.time || schedule.time_slot || '00:00';
+  const dateTime = new Date(`${scheduleDate}T${scheduleTime}:00`);
+
+  // 日付と時刻をフォーマット
+  const dateStr = dateTime.toLocaleDateString('ja-JP', {
+    month: 'numeric',
+    day: 'numeric',
+    weekday: 'short'
+  });
+  const timeStr = scheduleTime.length === 5 ? scheduleTime : scheduleTime.substring(0, 5);
+
+  // ブランド名と店舗名を取得
+  const brandName = schedule.brand_name || '';
+  const storeName = schedule.store_name || schedule.client_name || '-';
+  const displayName = brandName ? `${escapeHtml(brandName)} / ${escapeHtml(storeName)}` : escapeHtml(storeName);
+
+  // 現在のユーザーに既に受託されているか確認
+  const scheduleWorkerId = schedule.worker_id || schedule.assigned_to || schedule.staff_id || '';
+  let isAssigned = false;
+  if (scheduleWorkerId) {
+    if (window.DataUtils && window.DataUtils.IdUtils && window.DataUtils.IdUtils.isSame) {
+      isAssigned = window.DataUtils.IdUtils.isSame(scheduleWorkerId, user.id);
+    } else {
+      isAssigned = String(scheduleWorkerId) === String(user.id);
+    }
+  }
+
+  const statusLabel = schedule.status === 'in_progress' ? '作業中' : '確定';
+  const statusClass = schedule.status === 'in_progress' ? 'status-in-progress' : 'status-scheduled';
+
+  return `
+    <div class="schedule-list-item" style="padding: 10px 12px; border-bottom: 1px solid #f3f4f6;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+        <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; cursor: pointer;" onclick="window.location.href='/staff/os/schedule'">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-weight: 700; color: #111827; font-size: 0.9rem;">${timeStr}</span>
+            <span style="color: #6b7280; font-size: 0.75rem;">${escapeHtml(dateStr)}</span>
+          </div>
+          <div style="font-size: 0.85rem; color: #374151; font-weight: 500;">${displayName}</div>
+        </div>
+        <div style="flex-shrink: 0;">
+          ${isAssigned
+      ? `<span class="status-badge ${statusClass}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">${statusLabel}</span>`
+      : `<button class="btn-accept-schedule" onclick="event.stopPropagation(); acceptSchedule('${escapeHtml(schedule.id)}', this);" style="padding: 5px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; background: #ff679c; color: white; border: none; cursor: pointer; transition: all 0.2s;">受託</button>`
+    }
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // OS課の直近のスケジュール情報を読み込む
@@ -4534,7 +4545,7 @@ async function loadOSNextSchedule(user) {
     const idToken = await getCognitoIdToken();
     const headers = {};
     if (idToken) {
-      headers['Authorization'] = `Bearer ${idToken}`;
+      headers['Authorization'] = `Bearer ${idToken} `;
     }
 
     // スケジュールを取得
