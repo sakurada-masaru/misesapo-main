@@ -4629,6 +4629,7 @@ async function loadOSNextSchedule(user) {
       const minutesLeft = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
 
       let timeLeftText = '';
+      let timeLeftColor = '#ff679c';
       if (hoursLeft > 0) {
         timeLeftText = `あと${hoursLeft}時間${minutesLeft}分`;
       } else if (minutesLeft > 0) {
@@ -4637,7 +4638,47 @@ async function loadOSNextSchedule(user) {
         timeLeftText = 'まもなく';
       } else {
         timeLeftText = '開始時刻を過ぎています';
+        timeLeftColor = '#ef4444';
       }
+
+      // レポート状況とメンバー、サービス内容を並列で読み込み
+      let hasReport = false;
+      let serviceNames = [];
+      let memberNames = [];
+
+      try {
+        // レポートの有無をチェック
+        const reportRes = await fetch(`${API_BASE}/reports?schedule_id=${nextSchedule.id}`, { headers });
+        if (reportRes.ok) {
+          const reports = await reportRes.json();
+          const list = Array.isArray(reports) ? reports : (reports.items || []);
+          // 自分が提出したレポートがあるか確認
+          hasReport = list.some(r => window.DataUtils?.IdUtils?.isSame(r.staff_id, user.id) || r.staff_id === user.id);
+        }
+
+        // サービス名の取得
+        if (nextSchedule.service_items && Array.isArray(nextSchedule.service_items)) {
+          serviceNames = nextSchedule.service_items.map(item => typeof item === 'object' ? item.name : item);
+        } else if (nextSchedule.service_names) {
+          serviceNames = Array.isArray(nextSchedule.service_names) ? nextSchedule.service_names : [nextSchedule.service_names];
+        }
+
+        // メンバー名の取得
+        if (nextSchedule.member_names && Array.isArray(nextSchedule.member_names)) {
+          memberNames = nextSchedule.member_names;
+        } else if (nextSchedule.worker_name) {
+          memberNames = [nextSchedule.worker_name];
+        } else {
+          memberNames = [user.name]; // 自分のみ
+        }
+      } catch (err) {
+        console.warn('[OS Mypage] Additional data load failed:', err);
+      }
+
+      // 打刻状態（開始済みかどうか）
+      const isWorking = nextSchedule.status === 'in_progress';
+      const startedAt = nextSchedule.started_at ? new Date(nextSchedule.started_at) : null;
+      const startedAtStr = startedAt ? startedAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
 
       // ブランド名と店舗名を取得
       const brandName = nextSchedule.brand_name || '';
@@ -4646,31 +4687,92 @@ async function loadOSNextSchedule(user) {
       const displayName = brandName ? `${escapeHtml(brandName)} / ${escapeHtml(storeName)}` : escapeHtml(storeName);
 
       scheduleInfoContent.innerHTML = `
-        <div class="schedule-detail" style="background: #fff; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb;">
-          <div class="schedule-time-section" style="margin-bottom: 12px;">
-            <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px;">
-              <div style="flex: 1;">
-                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 4px;">開始時刻</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: #111827;">
-                  <i class="fas fa-clock" style="margin-right: 8px; color: #ff679c;"></i>
-                  ${timeStr}
-                </div>
+        <div class="schedule-detail" style="background: #fff; padding: 16px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+          <!-- ヘッダー：ステータス -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              ${isWorking
+          ? `<span style="background: #ecfdf5; color: #059669; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;"><i class="fas fa-play-circle"></i> 作業中</span>`
+          : `<span style="background: #fdf2f8; color: #db2777; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;"><i class="fas fa-clock"></i> 未開始</span>`
+        }
+              ${hasReport
+          ? `<span style="background: #eff6ff; color: #2563eb; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;"><i class="fas fa-check-double"></i> レポート済</span>`
+          : `<span style="background: #fff7ed; color: #ea580c; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;"><i class="fas fa-exclamation-circle"></i> レポート未作成</span>`
+        }
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 0.75rem; color: #6b7280;">開始時刻 ${timeStr}</div>
+              <div style="font-size: 0.875rem; color: ${timeLeftColor}; font-weight: 700;">${timeLeftText}</div>
+            </div>
+          </div>
+
+          <!-- 店舗情報 -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
+            <div style="flex: 1;">
+              <div style="font-size: 1.125rem; font-weight: 700; color: #111827; margin-bottom: 4px;">${displayName}</div>
+              <div style="font-size: 0.8125rem; color: #6b7280;"><i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i> ${nextSchedule.location || '現場住所未設定'}</div>
+            </div>
+            <button onclick="window.open('/staff/os/karte.html?store_id=${nextSchedule.store_id || nextSchedule.storeId}', '_blank')" 
+                    style="flex-shrink: 0; background: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+              <i class="fas fa-notes-medical" style="color: #6366f1;"></i> 店舗カルテ
+            </button>
+          </div>
+
+          <!-- 担当メンバー / サービス内容 -->
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 20px;">
+            <div>
+              <div style="font-size: 0.7rem; font-weight: 700; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase;">Assigned Members</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                ${memberNames.map(name => `<span style="background: #fff; border: 1px solid #e5e7eb; color: #374151; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${escapeHtml(name)}</span>`).join('')}
               </div>
-              <div style="text-align: right;">
-                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 4px;">${dateStr}</div>
-                <div style="font-size: 0.875rem; color: #ff679c; font-weight: 600;">${timeLeftText}</div>
+            </div>
+            <div style="border-top: 1px dashed #e5e7eb; padding-top: 8px;">
+              <div style="font-size: 0.7rem; font-weight: 700; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase;">Services</div>
+              <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                ${serviceNames.map(name => `<span style="background: #ffecf2; color: #ff679c; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">#${escapeHtml(name)}</span>`).join('')}
               </div>
             </div>
           </div>
-          <div class="schedule-store-section" style="padding-top: 12px; border-top: 1px solid #e5e7eb;">
-            <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 4px;">店舗</div>
-            <div style="font-size: 1rem; font-weight: 600; color: #111827;">
-              <i class="fas fa-store" style="margin-right: 8px; color: #6b7280;"></i>
-              ${displayName}
-            </div>
+
+          <!-- 案件ベースの作業開始・終了ボタン -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            ${!isWorking
+          ? `<button class="btn-attendance" onclick="startWork('${nextSchedule.id}', this)" style="grid-column: 1 / -1; background: #ff679c; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer;">
+                  <i class="fas fa-play" style="margin-right: 8px;"></i> 作業開始をつける
+                </button>`
+          : `
+                <div style="grid-column: 1 / -1; background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 10px; text-align: center; margin-bottom: 8px;">
+                   <div style="font-size: 0.8125rem; color: #065f46; font-weight: 600;">作業中（${startedAtStr}開始）</div>
+                </div>
+                <button class="btn-attendance" onclick="handleReportCreation('${nextSchedule.id}')" style="background: white; border: 2px solid #ff679c; color: #ff679c; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 0.875rem; cursor: pointer;">
+                  <i class="fas fa-edit"></i> レポート作成
+                </button>
+                <button class="btn-attendance" onclick="completeWork('${nextSchedule.id}', ${hasReport}, this)" style="background: #374151; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 0.875rem; cursor: pointer;">
+                  <i class="fas fa-check-circle"></i> 作業終了
+                </button>
+              `
+        }
           </div>
         </div>
       `;
+
+      // 旧来の出退勤ボタンを非表示にする（OSユーザーのみ）
+      const oldAttendanceGrid = document.querySelector('.attendance-today-grid');
+      if (oldAttendanceGrid) {
+        oldAttendanceGrid.style.display = 'none';
+        const oldAttendanceHeader = document.querySelector('#attendance .container-header');
+        if (oldAttendanceHeader) {
+          const infoBox = document.createElement('div');
+          infoBox.style.padding = '8px 12px';
+          infoBox.style.background = '#fef2f2';
+          infoBox.style.color = '#991b1b';
+          infoBox.style.fontSize = '0.75rem';
+          infoBox.style.borderRadius = '6px';
+          infoBox.style.marginTop = '8px';
+          infoBox.innerHTML = '<i class="fas fa-info-circle"></i> OS課は案件ごとの「作業開始」ボタンを使用してください。';
+          oldAttendanceGrid.parentElement.appendChild(infoBox);
+        }
+      }
     } else {
       scheduleInfoContent.innerHTML = `
         <div class="schedule-empty" style="text-align: center; padding: 20px; color: #6b7280;">
@@ -4803,8 +4905,177 @@ async function startWork(scheduleId, btn) {
     showErrorMessage('作業開始に失敗しました: ' + error.message);
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '作業開始';
+      btn.innerHTML = '作業開始をつける';
     }
+  }
+}
+
+// 作業終了
+async function completeWork(scheduleId, hasReport, btn) {
+  // レポート未作成のチェック
+  if (!hasReport) {
+    const goToReport = await showConfirmDialog('レポートが未作成です', '作業を終了する前に、本案件のレポート作成を完了してください。', 'レポート作成に進む', '閉じる');
+    if (goToReport) {
+      handleReportCreation(scheduleId);
+    }
+    return;
+  }
+
+  if (!confirm('作業を終了しますか？')) return;
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 終了中...';
+    }
+
+    const headers = await buildAuthHeaders(true);
+    const updateData = {
+      status: 'completed',
+      completed_at: new Date().toISOString()
+    };
+
+    const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(updateData)
+    });
+
+    if (!response.ok) throw new Error('作業終了に失敗しました');
+
+    showSuccessMessage('作業を完了しました！お疲れ様でした。');
+    setTimeout(() => window.location.reload(), 1500);
+
+  } catch (error) {
+    console.error('[OS Mypage] Complete work error:', error);
+    showErrorMessage('作業終了に失敗しました: ' + error.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '作業終了';
+    }
+  }
+}
+
+/**
+ * レポート作成フロー（サービス選択モーダル付き）
+ */
+async function handleReportCreation(scheduleId) {
+  if (!scheduleId) return;
+
+  try {
+    const headers = await buildAuthHeaders();
+    const response = await fetch(`${API_BASE}/schedules/${scheduleId}`, { headers });
+    if (!response.ok) throw new Error('案件情報の取得に失敗しました');
+
+    const schedule = await response.json();
+    const serviceItems = schedule.service_items || schedule.service_names || [];
+
+    if (serviceItems.length > 0) {
+      const selected = await showServiceSelectionModal(scheduleId, serviceItems);
+      if (selected) {
+        window.location.href = `/staff/os/reports/new?schedule_id=${scheduleId}&services=${encodeURIComponent(selected.join(','))}`;
+      }
+    } else {
+      window.location.href = `/staff/os/reports/new?schedule_id=${scheduleId}`;
+    }
+  } catch (err) {
+    console.error('[ReportCreation] Error:', err);
+    window.location.href = `/staff/os/reports/new?schedule_id=${scheduleId}`;
+  }
+}
+
+/**
+ * サービス内容選択モーダルを表示
+ */
+function showServiceSelectionModal(scheduleId, serviceItems) {
+  return new Promise(resolve => {
+    if (!serviceItems || serviceItems.length === 0) {
+      resolve([]);
+      return;
+    }
+
+    const items = serviceItems.map(item => {
+      const name = typeof item === 'object' ? item.name : item;
+      return { id: name, name: name };
+    });
+
+    const modalHTML = `
+      <div id="service-selection-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:20000;display:flex;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:white;padding:24px;border-radius:16px;max-width:440px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+          <h3 style="margin-top:0;font-size:1.25rem;color:#111827;display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-tasks" style="color:#ff679c;"></i>
+            担当サービスの選択
+          </h3>
+          <p style="font-size:0.875rem;color:#6b7280;margin:8px 0 20px;">本日の案件のうち、あなたが担当する項目をすべて選択してください。</p>
+          <div style="max-height:300px;overflow-y:auto;display:grid;gap:10px;margin-bottom:24px;">
+            ${items.map(item => `
+              <label style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#fff7f9'" onmouseout="this.style.background='white'">
+                <input type="checkbox" name="service-item" value="${escapeHtml(item.name)}" style="width:20px;height:20px;accent-color:#ff679c;">
+                <span style="font-weight:600;color:#374151;">${escapeHtml(item.name)}</span>
+              </label>
+            `).join('')}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <button id="service-cancel-btn" style="background:#f3f4f6;color:#374151;border:none;padding:12px;border-radius:8px;font-weight:700;cursor:pointer;">キャンセル</button>
+            <button id="service-confirm-btn" style="background:#ff679c;color:white;border:none;padding:12px;border-radius:8px;font-weight:700;cursor:pointer;">作成に進む</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    const modal = document.getElementById('service-selection-modal');
+
+    modal.querySelector('#service-confirm-btn').onclick = () => {
+      const selected = Array.from(modal.querySelectorAll('input[name="service-item"]:checked')).map(i => i.value);
+      if (selected.length === 0) {
+        alert('少なくとも1つの項目を選択してください。');
+        return;
+      }
+      modal.remove();
+      resolve(selected);
+    };
+
+    modal.querySelector('#service-cancel-btn').onclick = () => {
+      modal.remove();
+      resolve(null);
+    };
+  });
+}
+
+/**
+ * クイックメニューからのレポート作成制御（強化版）
+ */
+async function handleQuickReportClick(event) {
+  event.preventDefault();
+
+  // 現在作業中の案件セクションを確認
+  const nextScheduleSection = document.getElementById('schedule-info-content');
+  const workingBadge = nextScheduleSection?.querySelector('.fa-play-circle');
+
+  if (!workingBadge) {
+    await showConfirmDialog(
+      '作業が開始されていません',
+      'レポートを作成するには、先にマイページの「直近の清掃案件」から【作業開始】を記録してください。',
+      'OK',
+      ''
+    );
+    return;
+  }
+
+  // 作業中ボタン（レポート作成）からscheduleIdを取得
+  const reportBtn = nextScheduleSection.querySelector('button[onclick*="handleReportCreation"]');
+  let scheduleId = null;
+  if (reportBtn) {
+    const onclick = reportBtn.getAttribute('onclick');
+    const match = onclick.match(/handleReportCreation\('([^']+)'\)/);
+    if (match) scheduleId = match[1];
+  }
+
+  if (scheduleId) {
+    handleReportCreation(scheduleId);
+  } else {
+    window.location.href = '/staff/os/reports/new';
   }
 }
 

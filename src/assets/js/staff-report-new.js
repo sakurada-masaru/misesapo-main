@@ -105,7 +105,7 @@
       karteRow.style.display = 'block';
       const btnViewKarte = document.getElementById('btn-view-karte');
       if (btnViewKarte) {
-        btnViewKarte.onclick = () => window.open(`/staff/os/karte?store_id=${storeId}`, '_blank');
+        btnViewKarte.onclick = () => window.open(`/staff/os/karte.html?store_id=${storeId}`, '_blank');
       }
     }
     const endTime = addMinutesToTime(time, duration) || (schedule.scheduled_end_time || '');
@@ -804,16 +804,23 @@
         if (!existingArea) {
           const toggleBtnId = tabType === 'proposal' ? 'section-add-toggle-btn-proposal' : 'section-add-toggle-btn';
           const hintId = tabType === 'proposal' ? 'section-add-hint-proposal' : 'section-add-hint';
+          const isProposal = tabType === 'proposal';
 
           // HTMLを再作成
           const sectionAddIconsAreaHTML = `
           <div class="section-add-icons-area" id="${sectionAddIconsAreaId}">
             <div class="section-add-hint" id="${hintId}">
-              <span>↓New section↓</span>
+              <span>↓セクションを追加↓</span>
             </div>
-            <button type="button" class="section-add-toggle-btn" id="${toggleBtnId}">
-              <i class="fas fa-plus"></i>
-            </button>
+            <div style="display: flex; gap: 12px; justify-content: center; align-items: center;">
+              <button type="button" class="section-add-toggle-btn" id="${toggleBtnId}" title="空のセクションを追加">
+                <i class="fas fa-plus"></i>
+              </button>
+              <button type="button" class="btn-add-from-master" onclick="window.openServiceSelectionModalFromReport(${isProposal})" style="background: #4f46e5; color: white; border: none; padding: 10px 16px; border-radius: 20px; font-size: 0.875rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <i class="fas fa-search-plus"></i>
+                <span>マスタから追加</span>
+              </button>
+            </div>
           </div>
         `;
           reportContent.insertAdjacentHTML('beforeend', sectionAddIconsAreaHTML);
@@ -7206,8 +7213,16 @@
   };
 
   // フォーム送信
+  let isConfirmed = false;
   async function handleSubmit(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
+
+    // OS課ユーザーの場合はプレビューを強制
+    const isOsUser = window.location.pathname.includes('/staff/os/');
+    if (isOsUser && !isConfirmed) {
+      window.openPreviewModal();
+      return;
+    }
 
     // 送信されたフォームを取得（新規作成タブまたは次回ご提案タブ）
     const form = e.target;
@@ -7466,6 +7481,16 @@
 
       const result = await response.json();
       console.log('[Submit] Success:', result);
+
+      // 送信完了ダイアログを表示
+      const isOsUser = window.location.pathname.includes('/staff/os/');
+      if (isOsUser) {
+        // OS課向け：完了メッセージとマイページへの誘導
+        await showSuccessModal('レポートの提出を確認。お疲れ様でした。', 'マイページより作業終了を押してください。');
+        window.location.href = '/staff/os/mypage';
+        return;
+      }
+
       console.log('[Submit] Report ID:', result.report_id || result.id);
 
       // レポートIDが返ってきているか確認
@@ -8686,4 +8711,221 @@
       });
     });
   }
+
+  /**
+   * OS課向け：URLパラメータからのサービス項目自動注入
+   */
+  async function handleOsServiceInjection() {
+    const params = new URLSearchParams(window.location.search);
+    const servicesStr = params.get('services');
+    if (!servicesStr) return;
+
+    const selectedServices = servicesStr.split(',').filter(Boolean);
+    if (selectedServices.length === 0) return;
+
+    console.log('[OS Injection] Injecting services:', selectedServices);
+
+    // 読み込み完了を待つ（serviceItemsがフェッチされるまで）
+    let retryCount = 0;
+    while ((!window.serviceItems || window.serviceItems.length === 0) && retryCount < 20) {
+      await new Promise(r => setTimeout(r, 200));
+      retryCount++;
+    }
+
+    // セクションをクリア（初期状態が空であることを想定）
+    const reportContent = document.getElementById('report-content');
+    if (reportContent) reportContent.innerHTML = '';
+    sections = {};
+
+    for (const serviceName of selectedServices) {
+      if (typeof window.addCleaningItemSection === 'function') {
+        window.addCleaningItemSection();
+        const sectionIds = Object.keys(sections);
+        const lastSectionId = sectionIds[sectionIds.length - 1];
+        if (lastSectionId) {
+          updateCleaningItem(lastSectionId, serviceName);
+        }
+      }
+    }
+
+    updateCleaningItemsList();
+  }
+
+  /**
+   * 成功モーダル（OS課用）
+   */
+  async function showSuccessModal(title, message) {
+    return new Promise(resolve => {
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:20000;display:flex;align-items:center;justify-content:center;padding:20px;';
+      modal.innerHTML = `
+      <div style="background:white;padding:24px;border-radius:12px;max-width:400px;width:100%;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <div style="font-size:3rem;color:#10b981;margin-bottom:16px;"><i class="fas fa-check-circle"></i></div>
+        <h3 style="margin-bottom:12px;font-size:1.25rem;">${title}</h3>
+        <p style="color:#4b5563;margin-bottom:24px;line-height:1.5;">${message}</p>
+        <button id="success-modal-close" style="background:#ff679c;color:white;border:none;padding:12px 24px;border-radius:8px;font-weight:700;width:100%;cursor:pointer;">閉じる</button>
+      </div>
+    `;
+      document.body.appendChild(modal);
+      modal.querySelector('#success-modal-close').onclick = () => {
+        modal.remove();
+        resolve();
+      };
+    });
+  }
+
+  // プレビュー画面に「この内容で提出する」ボタンを追加するためのフック
+  const originalOpenPreviewModal = window.openPreviewModal;
+  window.openPreviewModal = async function () {
+    await originalOpenPreviewModal();
+
+    const previewDialog = document.getElementById('preview-dialog');
+    const header = previewDialog?.querySelector('.modal-header');
+    if (header && !header.querySelector('#preview-final-submit')) {
+      const submitBtn = document.createElement('button');
+      submitBtn.id = 'preview-final-submit';
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> この内容で提出する';
+      submitBtn.style.cssText = 'margin-left:auto;margin-right:12px;background:#ff679c;color:white;border:none;padding:8px 16px;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.9rem;';
+      submitBtn.onclick = () => {
+        isConfirmed = true;
+        closePreviewModal();
+        const form = document.getElementById('report-form');
+        if (form) handleSubmit({ preventDefault: () => { }, target: form });
+      };
+      header.insertBefore(submitBtn, header.querySelector('.modal-close'));
+    }
+  };
+
+  // 初期化時にOS課のサービス注入を実行
+  if (window.location.pathname.includes('/staff/os/')) {
+    setTimeout(handleOsServiceInjection, 800);
+  }
+  /**
+   * マスタからサービス項目を選択して一括追加するモーダル（レポート画面用）
+   */
+  window.openServiceSelectionModalFromReport = function (isProposal = false) {
+    const modal = document.getElementById('service-selection-modal-report');
+    const listContainer = document.getElementById('service-selection-list-report');
+    const confirmBtn = document.getElementById('btn-confirm-service-selection-report');
+
+    if (!modal || !listContainer) return;
+
+    // リストを生成
+    listContainer.innerHTML = '';
+
+    // カテゴリごとにグループ化（データがあれば）
+    const categories = [...new Set(serviceItems.map(item => item.category || 'その他'))];
+
+    categories.forEach(category => {
+      const categoryItems = serviceItems.filter(item => (item.category || 'その他') === category);
+      if (categoryItems.length === 0) return;
+
+      const categoryHeader = document.createElement('div');
+      categoryHeader.className = 'service-category-header';
+      categoryHeader.innerHTML = `<strong>${category}</strong>`;
+      categoryHeader.style.cssText = 'padding: 8px 12px; background: #f3f4f6; font-size: 0.9rem; margin-top: 12px; border-radius: 4px;';
+      listContainer.appendChild(categoryHeader);
+
+      categoryItems.forEach(item => {
+        const itemEl = document.createElement('label');
+        itemEl.className = 'service-selection-item';
+        itemEl.style.cssText = 'display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; cursor: pointer;';
+        itemEl.innerHTML = `
+          <input type="checkbox" name="master-service-item" value="${escapeHtml(item.title)}" style="width: 20px; height: 20px; margin-right: 12px;">
+          <span style="font-size: 0.95rem;">${escapeHtml(item.title)}</span>
+        `;
+        listContainer.appendChild(itemEl);
+      });
+    });
+
+    modal.style.display = 'flex';
+
+    // 確定ボタンのイベント
+    confirmBtn.onclick = function () {
+      const selectedTitles = Array.from(document.querySelectorAll('input[name="master-service-item"]:checked'))
+        .map(cb => cb.value);
+
+      if (selectedTitles.length === 0) {
+        modal.style.display = 'none';
+        return;
+      }
+
+      // 選択された項目をセクションとして追加
+      selectedTitles.forEach(title => {
+        sectionCounter++;
+        const sectionId = `section-${sectionCounter}`;
+        sections[sectionId] = { type: 'cleaning', item_name: title, textFields: [], subtitles: [], comments: [] };
+
+        const options = serviceItems.map(si =>
+          `<option value="${escapeHtml(si.title)}" ${(si.title === title) ? 'selected' : ''}>${escapeHtml(si.title)}</option>`
+        ).join('');
+
+        const html = `
+          <div class="section-card" data-section-id="${sectionId}">
+            <div class="section-header">
+              <input type="checkbox" class="section-select-checkbox" data-section-id="${sectionId}" onchange="toggleSectionSelection('${sectionId}')">
+              <span class="section-title"><i class="fas fa-list"></i> 清掃項目</span>
+              <div class="section-header-actions">
+                <button type="button" class="section-copy" onclick="copySection('${sectionId}')" title="コピー">
+                  <i class="fas fa-copy"></i>
+                </button>
+                <button type="button" class="section-delete" onclick="deleteSection('${sectionId}')" title="削除">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            <div class="section-body">
+              <select class="cleaning-item-select" onchange="updateCleaningItem('${sectionId}', this.value)">
+                <option value="">項目を選択</option>
+                ${options}
+                <option value="__other__">その他（自由入力）</option>
+              </select>
+              <input type="text" class="form-input cleaning-item-custom" placeholder="清掃項目名を入力" style="display:none; margin-top:8px;" oninput="updateCleaningItemCustom('${sectionId}', this.value)">
+              <div class="cleaning-item-insert-actions" style="margin-top:16px; display:flex; justify-content:center; gap:12px;">
+                <button type="button" class="cleaning-item-insert-btn" onclick="addImageToCleaningItem('${sectionId}')" title="画像挿入">
+                  <i class="fas fa-image"></i>
+                  <span>画像挿入</span>
+                </button>
+                <button type="button" class="cleaning-item-insert-btn" onclick="addCommentToCleaningItem('${sectionId}')" title="コメント挿入">
+                  <i class="fas fa-comment"></i>
+                  <span>コメント挿入</span>
+                </button>
+                <button type="button" class="cleaning-item-insert-btn" onclick="addSubtitleToCleaningItem('${sectionId}')" title="サブタイトル挿入">
+                  <i class="fas fa-heading"></i>
+                  <span>サブタイトル挿入</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const reportContentId = isProposal ? 'report-content-proposal' : 'report-content';
+        const reportContent = document.getElementById(reportContentId);
+        const sectionAddIconsId = isProposal ? 'section-add-icons-area-proposal' : 'section-add-icons-area';
+        const sectionAddIconsArea = document.getElementById(sectionAddIconsId);
+
+        if (sectionAddIconsArea && sectionAddIconsArea.parentNode === reportContent) {
+          sectionAddIconsArea.insertAdjacentHTML('beforebegin', html);
+        } else {
+          reportContent.insertAdjacentHTML('beforeend', html);
+        }
+
+        const newCard = document.querySelector(`[data-section-id="${sectionId}"]`);
+        if (newCard) {
+          setupSectionDragAndDrop(newCard);
+        }
+      });
+
+      // 後処理
+      const sectionSelectModeBtn = document.getElementById('section-select-mode-btn');
+      if (sectionSelectModeBtn && Object.keys(sections).length > 0) {
+        sectionSelectModeBtn.style.display = 'flex';
+      }
+
+      modal.style.display = 'none';
+      if (typeof autoSave === 'function') autoSave();
+      updateCleaningItemsList();
+    };
+  };
+
 })();
