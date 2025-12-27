@@ -60,14 +60,17 @@
 
 .staff-report-page {
   min-height: 100vh;
-  min-height: 100dvh; /* 動的ビューポート高さ（キーボード対応） */
+  min-height: 100dvh;
+  /* 動的ビューポート高さ（キーボード対応） */
   background: #f5f5f5;
-  padding-top: 0; /* ヘッダーとタブは固定位置なのでpaddingは不要 */
+  padding-top: 0;
+  /* ヘッダーとタブは固定位置なのでpaddingは不要 */
   padding-bottom: 0;
   display: flex;
   flex-direction: column;
   height: 100vh;
-  height: 100dvh; /* 動的ビューポート高さ（キーボード対応） */
+  height: 100dvh;
+  /* 動的ビューポート高さ（キーボード対応） */
   overflow: hidden;
 }
 
@@ -163,14 +166,18 @@
 
 .tab-content {
   display: none;
-  margin-top: 90px; /* 固定ヘッダー（50px）+ タブ（40px）の高さ分 */
+  margin-top: 90px;
+  /* 固定ヘッダー（50px）+ タブ（40px）の高さ分 */
   padding-top: 0;
   height: calc(100vh - 90px);
-  height: calc(100dvh - 90px); /* 動的ビューポート高さ（キーボード対応） */
+  height: calc(100dvh - 90px);
+  /* 動的ビューポート高さ（キーボード対応） */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
   padding-right: 0;
+  padding-bottom: 120px;
+  /* クイックメニュー分の余白 */
 }
 
 /* 非アクティブなタブは確実に非表示にする */
@@ -185,26 +192,26 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
   }
-  
+
   .tab-content::-webkit-scrollbar {
     width: 8px;
   }
-  
+
   .tab-content::-webkit-scrollbar-track {
     background: transparent;
     border-radius: 4px;
   }
-  
+
   .tab-content::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.3);
     border-radius: 4px;
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
-  
+
   .tab-content::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.5);
   }
-  
+
   /* スクロール位置インジケーター（◯） */
   .scroll-indicator {
     position: fixed;
@@ -221,7 +228,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     border: 2px solid rgba(255, 255, 255, 0.9);
   }
-  
+
   .scroll-indicator.visible {
     opacity: 1;
   }
@@ -269,7 +276,8 @@
   font-size: 0.75rem;
   color: #FF679C;
   white-space: nowrap;
-  display: none; /* デフォルトでは非表示 */
+  display: none;
+  /* デフォルトでは非表示 */
   font-weight: 600;
   animation: none;
 }
@@ -280,10 +288,13 @@
 }
 
 @keyframes floatHint {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
     opacity: 1;
   }
+
   50% {
     transform: translateY(-4px);
     opacity: 0.8;
@@ -526,20 +537,20 @@
     width: 90%;
     max-width: 90%;
   }
-  
+
   .details-btn-text {
     display: none;
   }
-  
+
   .details-btn {
     padding: 6px;
     min-width: 36px;
   }
-  
+
   .details-hint {
     font-size: 0.7rem;
   }
-  
+
   .details-hint-wrapper {
     gap: 4px;
   }
@@ -586,7 +597,8 @@
   min-width: 0;
   margin: 0;
   padding: 0;
-  gap: 2px; /* ラベルとプレースホルダーの間隔を狭める */
+  gap: 2px;
+  /* ラベルとプレースホルダーの間隔を狭める */
 }
 
 .form-row.three-col {
@@ -651,7 +663,8 @@
   color: #fff;
   min-width: fit-content;
   text-align: left;
-  margin-bottom: 2px; /* ラベルとプレースホルダーの間隔を狭める */
+  margin-bottom: 2px;
+  /* ラベルとプレースホルダーの間隔を狭める */
   padding-left: 0;
   display: block;
 }
@@ -668,7 +681,8 @@
   min-width: 0;
   position: relative;
   width: 100%;
-  height: 38px; /* ブランド名、開始時刻、終了時刻と高さを統一 */
+  height: 38px;
+  /* ブランド名、開始時刻、終了時刻と高さを統一 */
   margin: 0;
   padding: 0;
 }
@@ -680,21 +694,25 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af !important; /* 灰色で表示 */
+  color: #9ca3af !important;
+  /* 灰色で表示 */
   font-weight: 500;
   pointer-events: none;
-  z-index: 2; /* z-indexを上げて確実に表示 */
+  z-index: 2;
+  /* z-indexを上げて確実に表示 */
   font-size: 0.9rem;
   white-space: nowrap;
   line-height: 1.5;
-  background: rgba(255, 255, 255, 0.95); /* 背景を白にして可読性を確保 */
+  background: rgba(255, 255, 255, 0.95);
+  /* 背景を白にして可読性を確保 */
   padding: 2px 4px;
   border-radius: 2px;
 }
 
 /* 開始時刻フィールドのプレースホルダーをスピナーボタンの後に表示 */
 .date-time-input-wrapper:has([data-placeholder="開始時間"])::before {
-  left: 40px; /* スピナーボタンの幅分右にずらす */
+  left: 40px;
+  /* スピナーボタンの幅分右にずらす */
 }
 
 /* 値が入力されている場合、またはフォーカス時にプレースホルダーを非表示 */
@@ -718,14 +736,17 @@
   width: 100%;
   box-sizing: border-box;
   color: #111827;
-  background: rgba(255, 255, 255, 0.95); /* 白い背景を追加して可読性を確保 */
-  height: 38px; /* ブランド名、開始時刻、終了時刻と高さを統一 */
+  background: rgba(255, 255, 255, 0.95);
+  /* 白い背景を追加して可読性を確保 */
+  height: 38px;
+  /* ブランド名、開始時刻、終了時刻と高さを統一 */
   line-height: 1.5;
   font-size: 0.9rem;
   margin: 0;
   border: none;
   outline: none;
-  border-radius: 4px; /* 角を丸くして見やすく */
+  border-radius: 4px;
+  /* 角を丸くして見やすく */
 }
 
 .date-time-input::placeholder {
@@ -756,7 +777,8 @@ input[type="date"].date-time-input:invalid::-webkit-datetime-edit-text {
 
 /* 値が入力されていない場合の表示（プレースホルダーが表示されるため、入力フィールド自体は透明に） */
 input[type="date"].date-time-input:invalid {
-  color: transparent; /* プレースホルダーが表示されるため、入力フィールド自体は透明に */
+  color: transparent;
+  /* プレースホルダーが表示されるため、入力フィールド自体は透明に */
 }
 
 /* 値が入力されている場合は黒字で表示 */
@@ -787,7 +809,8 @@ input[type="time"].date-time-input:invalid::-webkit-datetime-edit-text {
 
 /* 値が入力されていない場合の表示（プレースホルダーが表示されるため、入力フィールド自体は透明に） */
 input[type="time"].date-time-input:invalid {
-  color: transparent; /* プレースホルダーが表示されるため、入力フィールド自体は透明に */
+  color: transparent;
+  /* プレースホルダーが表示されるため、入力フィールド自体は透明に */
 }
 
 /* 値が入力されている場合は黒字で表示 */
@@ -831,7 +854,8 @@ input[type="time"].date-time-input::-webkit-outer-spin-button {
 /* time入力フィールドのdatetime-edit要素を左寄せ（スピナーの後に配置） */
 input[type="time"].date-time-input::-webkit-datetime-edit {
   text-align: left;
-  margin-left: 32px; /* スピナーボタンの幅分右にずらす */
+  margin-left: 32px;
+  /* スピナーボタンの幅分右にずらす */
   padding-left: 0;
 }
 
@@ -887,12 +911,13 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   border: none;
   border-radius: 8px;
   font-size: 0.9rem;
-  background: rgba(255,255,255,0.95);
+  background: rgba(255, 255, 255, 0.95);
   color: #111827;
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
-  height: 38px; /* 高さを統一 */
+  height: 38px;
+  /* 高さを統一 */
   line-height: 1.5;
 }
 
@@ -909,7 +934,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
 
 .form-input[readonly] {
   cursor: pointer;
-  background: rgba(255,255,255,0.95);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .form-input::placeholder {
@@ -922,7 +947,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
 .form-input:focus,
 .form-select:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
 /* バリデーション */
@@ -994,7 +1019,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
 }
 
 /* input-with-dropdown内の不要なspan要素を非表示 */
-.input-with-dropdown > span {
+.input-with-dropdown>span {
   display: none !important;
 }
 
@@ -1052,7 +1077,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   right: 0;
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   max-height: 200px;
   overflow-y: auto;
   z-index: 1000;
@@ -1581,6 +1606,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1596,6 +1622,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
     opacity: 1;
     transform: translateY(0);
   }
+
   to {
     opacity: 0;
     transform: translateY(-20px);
@@ -1621,6 +1648,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1644,6 +1672,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
     opacity: 0;
     transform: scale(0.95) translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -1719,7 +1748,8 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
 .section-add-icons-area {
   background: transparent;
   padding: 12px 16px;
-  padding-top: 16px; /* タブの下に隠れないように余白を追加 */
+  padding-top: 16px;
+  /* タブの下に隠れないように余白を追加 */
   display: flex !important;
   flex-direction: column;
   align-items: center;
@@ -1727,7 +1757,8 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   flex-shrink: 0;
   position: relative;
   z-index: 10;
-  margin-top: 0; /* タブの直下から始まるように */
+  margin-top: 0;
+  /* タブの直下から始まるように */
 }
 
 .section-add-toggle-btn {
@@ -1767,10 +1798,12 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   color: #FF679C;
   font-size: 0.75rem;
   font-weight: 600;
-  margin-bottom: 4px; /* +ボタンの上に表示 */
+  margin-bottom: 4px;
+  /* +ボタンの上に表示 */
   animation: bounceHint 1.2s ease-in-out infinite;
   opacity: 1;
-  display: block !important; /* 常に表示 */
+  display: block !important;
+  /* 常に表示 */
   text-align: center;
 }
 
@@ -1779,15 +1812,20 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
 }
 
 @keyframes bounceHint {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) scale(1);
   }
+
   25% {
     transform: translateY(-10px) scale(1.05);
   }
+
   50% {
     transform: translateY(0) scale(1);
   }
+
   75% {
     transform: translateY(-5px) scale(1.02);
   }
@@ -1915,10 +1953,12 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
 /* コンテンツエリア */
 .report-content {
   padding: 12px;
-  padding-top: 12px; /* セクション追加ボタンがタブの下に隠れないように */
+  padding-top: 12px;
+  /* セクション追加ボタンがタブの下に隠れないように */
   flex: 1;
   overflow-y: auto;
-  min-height: 0; /* flexboxでスクロール可能にするために必要 */
+  min-height: 0;
+  /* flexboxでスクロール可能にするために必要 */
 }
 
 /* セクションカード */
@@ -1927,7 +1967,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   border-radius: 12px;
   margin-bottom: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   cursor: move;
   position: relative;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -1937,7 +1977,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
 .section-card.dragging {
   opacity: 0.5;
   transform: scale(0.98);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .section-card.drag-over {
@@ -2430,7 +2470,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
   padding: 8px;
   color: #fff;
   font-size: 0.7rem;
@@ -2516,7 +2556,8 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   background: #fff;
   border-top: 1px solid #e5e7eb;
   padding: 8px 12px;
-  display: none !important; /* 画面下部のセクション呼び出しボタンを非表示 */
+  display: none !important;
+  /* 画面下部のセクション呼び出しボタンを非表示 */
   gap: 6px;
   flex-shrink: 0;
 }
@@ -2623,7 +2664,8 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
-  display: none; /* デフォルトで非表示 */
+  display: none;
+  /* デフォルトで非表示 */
   align-items: flex-end;
   justify-content: center;
 }
@@ -2640,7 +2682,7 @@ input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
   max-height: 85vh;
   background: #fff;
   border-radius: 16px 16px 0 0;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
 }
@@ -3077,7 +3119,7 @@ body.dark-mode .submit-section {
   background: #fff;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border-left: 4px solid #f59e0b;
 }
 
@@ -3216,7 +3258,7 @@ body.dark-mode .submit-section {
   .modal-dialog {
     align-items: flex-end;
   }
-  
+
   .modal-dialog .modal-content {
     width: 100%;
     max-width: 100%;
@@ -3250,30 +3292,30 @@ body.dark-mode .modal-footer {
   .page-header-fixed {
     padding: 0 8px;
   }
-  
+
   .page-title {
     font-size: 0.95rem;
   }
-  
+
   .back-btn,
   .help-btn {
     width: 32px;
     height: 32px;
   }
-  
+
   .tab-btn {
     font-size: 0.8rem;
     padding: 10px 8px;
   }
-  
+
   .tab-btn span {
     display: none;
   }
-  
+
   .report-header-section {
     padding: 10px;
   }
-  
+
   /* 日付・開始時刻・終了時刻を水平方向に並べる（320px以下） */
   .form-row.three-col.date-time-row {
     display: grid !important;
@@ -3281,7 +3323,7 @@ body.dark-mode .modal-footer {
     gap: 6px;
     margin-bottom: 8px;
   }
-  
+
   /* パネル内では別行に */
   .side-panel-content .report-header-section .form-row.three-col.date-time-row {
     display: flex !important;
@@ -3289,63 +3331,64 @@ body.dark-mode .modal-footer {
     grid-template-columns: none !important;
     gap: 12px !important;
   }
-  
+
   .side-panel-content .report-header-section .form-row.three-col.date-time-row .date-time-group {
     width: 100% !important;
     flex: 1 1 auto !important;
     max-width: 100% !important;
   }
-  
+
   .form-row.three-col.date-time-row .date-time-group {
     min-width: 0;
     width: 100%;
   }
-  
+
   .form-row.two-col {
     gap: 10px;
   }
-  
+
   .form-row.three-col:not(.date-time-row) {
     gap: 10px;
   }
-  
+
   .form-row.three-col.date-time-row {
     gap: 6px;
   }
-  
+
   .date-time-label {
     font-size: 0.65rem;
-    margin-bottom: 2px; /* ラベルとプレースホルダーの間隔を狭める */
+    margin-bottom: 2px;
+    /* ラベルとプレースホルダーの間隔を狭める */
   }
-  
+
   /* 日付・時刻入力フィールドのスタイルを統一 */
   .date-time-input {
     font-size: 0.75rem;
     padding: 8px 12px;
     height: 38px;
   }
-  
+
   /* プレースホルダーのフォントサイズを統一 */
   .date-time-input-wrapper:has([data-placeholder])::before {
     font-size: 0.75rem;
     left: 12px;
   }
-  
+
   .date-time-input::placeholder {
     font-size: 0.75rem;
   }
-  
+
   .form-input,
   .form-select {
     font-size: 0.85rem;
     padding: 10px;
   }
-  
+
   .btn-add {
     font-size: 0.75rem;
     padding: 10px 8px;
   }
-  
+
   .btn-add span {
     display: none;
   }
@@ -3356,15 +3399,15 @@ body.dark-mode .modal-footer {
   .page-header-fixed {
     padding: 0 10px;
   }
-  
+
   .page-title {
     font-size: 1rem;
   }
-  
+
   .report-header-section {
     padding: 12px;
   }
-  
+
   /* 日付・開始時刻・終了時刻を水平方向に並べる（SP版） */
   .form-row.three-col.date-time-row {
     display: grid !important;
@@ -3372,12 +3415,12 @@ body.dark-mode .modal-footer {
     gap: 8px;
     margin-bottom: 8px;
   }
-  
+
   .form-row.three-col.date-time-row .date-time-group {
     min-width: 0;
     width: 100%;
   }
-  
+
   /* パネル内では別行に */
   .side-panel-content .report-header-section .form-row.three-col.date-time-row {
     display: flex !important;
@@ -3385,35 +3428,36 @@ body.dark-mode .modal-footer {
     grid-template-columns: none !important;
     gap: 12px !important;
   }
-  
+
   .side-panel-content .report-header-section .form-row.three-col.date-time-row .date-time-group {
     width: 100% !important;
     flex: 1 1 auto !important;
     max-width: 100% !important;
   }
-  
+
   .form-row.two-col {
     gap: 12px;
   }
-  
+
   .form-row.three-col:not(.date-time-row) {
     gap: 12px;
   }
-  
+
   .form-row.three-col.date-time-row {
     gap: 8px;
   }
-  
+
   .date-time-label {
     font-size: 0.7rem;
-    margin-bottom: 2px; /* ラベルとプレースホルダーの間隔を狭める */
+    margin-bottom: 2px;
+    /* ラベルとプレースホルダーの間隔を狭める */
   }
-  
+
   .form-row.three-col-inline {
     flex-wrap: wrap;
     gap: 8px;
   }
-  
+
   .form-row.three-col-inline .date-time-group {
     flex: 1 1 100%;
     border-right: none;
@@ -3421,62 +3465,65 @@ body.dark-mode .modal-footer {
     padding-right: 0;
     padding-bottom: 8px;
   }
-  
+
   .form-row.three-col-inline .date-time-group:last-child {
     border-bottom: none;
     padding-bottom: 0;
   }
-  
+
   /* 単独の.form-row内の.date-time-groupの幅を確保 */
   .form-row:not(.two-col):not(.three-col):not(.three-col-inline) .date-time-group {
     width: 100%;
   }
-  
+
   .form-row:not(.two-col):not(.three-col):not(.three-col-inline) .form-group {
     width: 100%;
   }
-  
+
   .date-time-label {
     font-size: 0.8rem;
     min-width: 50px;
   }
-  
+
   /* 日付・時刻入力フィールドのスタイルを統一 */
   .date-time-input {
     font-size: 0.8rem;
     padding: 8px 12px;
     height: 38px;
   }
-  
+
   /* プレースホルダーのフォントサイズを統一 */
   .date-time-input-wrapper:has([data-placeholder])::before {
     font-size: 0.8rem;
     left: 12px;
-    color: #9ca3af !important; /* 灰色で表示 */
-    display: block !important; /* SP版でも確実に表示 */
+    color: #9ca3af !important;
+    /* 灰色で表示 */
+    display: block !important;
+    /* SP版でも確実に表示 */
   }
-  
+
   /* 開始時間フィールドのプレースホルダーをスピナーボタンの後に表示 */
   .date-time-input-wrapper:has([data-placeholder="開始時間"])::before {
-    left: 40px; /* スピナーボタンの幅分右にずらす */
+    left: 40px;
+    /* スピナーボタンの幅分右にずらす */
   }
-  
+
   /* 終了時刻フィールドのプレースホルダー */
   .date-time-input-wrapper:has([data-placeholder="終了時刻"])::before {
     left: 12px;
   }
-  
+
   /* 値が入力されている場合、またはフォーカス時にプレースホルダーを非表示 */
   .date-time-input-wrapper:has(input[value]:not([value=""]))::before,
   .date-time-input-wrapper:has(input:focus)::before,
   .date-time-input-wrapper:has(input:valid:not(:placeholder-shown))::before {
     display: none !important;
   }
-  
+
   .date-time-input::placeholder {
     font-size: 0.8rem;
   }
-  
+
   /* time入力フィールドのスピナーボタン（プラス/マイナス）を左側に配置（SP版） */
   input[type="time"].date-time-input::-webkit-inner-spin-button,
   input[type="time"].date-time-input::-webkit-outer-spin-button {
@@ -3488,146 +3535,155 @@ body.dark-mode .modal-footer {
     transform: translateY(-50%);
     height: 20px !important;
     width: 20px !important;
-    opacity: 1 !important; /* SP版でも確実に表示 */
-    display: block !important; /* SP版でも確実に表示 */
+    opacity: 1 !important;
+    /* SP版でも確実に表示 */
+    display: block !important;
+    /* SP版でも確実に表示 */
     cursor: pointer !important;
     -webkit-appearance: none !important;
     appearance: none !important;
   }
-  
+
   /* time入力フィールドのdatetime-edit要素を左寄せ（スピナーの後に配置）（SP版） */
   input[type="time"].date-time-input::-webkit-datetime-edit {
     text-align: left;
-    margin-left: 32px; /* スピナーボタンの幅分右にずらす */
+    margin-left: 32px;
+    /* スピナーボタンの幅分右にずらす */
     padding-left: 0;
   }
-  
+
   /* time入力フィールドのpaddingを調整（SP版） */
   input[type="time"].date-time-input {
-    padding-left: 12px !important; /* スピナーボタンのスペースを確保 */
+    padding-left: 12px !important;
+    /* スピナーボタンのスペースを確保 */
   }
-  
+
   input[type="time"].date-time-input::-webkit-datetime-edit-hour-field,
   input[type="time"].date-time-input::-webkit-datetime-edit-minute-field {
     text-align: left;
     padding-left: 0;
     margin-left: 0;
   }
-  
+
   /* 値が入力されていない場合の表示（SP版） */
   input[type="time"].date-time-input:invalid {
-    color: transparent; /* プレースホルダーが表示されるため、入力フィールド自体は透明に */
+    color: transparent;
+    /* プレースホルダーが表示されるため、入力フィールド自体は透明に */
   }
-  
+
   /* 値が入力されている場合は黒字で表示（SP版） */
   input[type="time"].date-time-input:valid {
     color: #111827;
   }
-  
+
   /* 値が入力されていない場合の表示（SP版） */
   input[type="date"].date-time-input:invalid {
-    color: transparent; /* プレースホルダーが表示されるため、入力フィールド自体は透明に */
+    color: transparent;
+    /* プレースホルダーが表示されるため、入力フィールド自体は透明に */
   }
-  
+
   /* 値が入力されている場合は黒字で表示（SP版） */
   input[type="date"].date-time-input:valid {
     color: #111827;
   }
-  
+
   .form-input,
   .form-select {
     font-size: 0.9rem;
     padding: 10px 12px;
-    min-height: 44px; /* タッチターゲットサイズ */
+    min-height: 44px;
+    /* タッチターゲットサイズ */
   }
-  
+
   .image-stock-section {
     padding: 12px;
   }
-  
+
   .image-stock-grid {
     gap: 6px;
   }
-  
+
   .image-stock-item {
     width: 60px;
     height: 60px;
   }
-  
+
   .section-card {
     margin: 8px;
     padding: 12px;
   }
-  
+
   .section-header {
     padding: 8px 0;
   }
-  
+
   .section-title {
     font-size: 0.9rem;
   }
-  
+
   .btn-add {
-    min-height: 44px; /* タッチターゲットサイズ */
+    min-height: 44px;
+    /* タッチターゲットサイズ */
     padding: 12px 16px;
     font-size: 0.85rem;
   }
-  
+
   .add-buttons-footer {
     padding: 12px;
     gap: 8px;
     flex-wrap: wrap;
   }
-  
+
   .add-buttons-footer .btn-add {
     flex: 1 1 calc(50% - 4px);
     min-width: calc(50% - 4px);
   }
-  
+
   .submit-section {
     padding: 12px;
     gap: 8px;
   }
-  
+
   .btn-submit,
   .btn-preview {
-    min-height: 48px; /* タッチターゲットサイズ */
+    min-height: 48px;
+    /* タッチターゲットサイズ */
     font-size: 0.9rem;
     padding: 12px 20px;
   }
-  
+
   .modal-content {
     width: 95vw;
     max-width: 95vw;
     margin: 10px;
     max-height: calc(100vh - 20px);
   }
-  
+
   .modal-header,
   .modal-footer {
     padding: 12px;
   }
-  
+
   .modal-body {
     padding: 12px;
   }
-  
+
   .toast-container {
     width: calc(100% - 20px);
     max-width: calc(100% - 20px);
     left: 10px;
     transform: none;
   }
-  
+
   .confirm-dialog {
     width: 90vw;
     max-width: 90vw;
   }
-  
+
   .image-list {
     gap: 6px;
   }
-  
+
   .image-thumb {
     width: 120px;
     height: 120px;
@@ -3639,7 +3695,7 @@ body.dark-mode .modal-footer {
   .report-header-section {
     padding: 14px;
   }
-  
+
   /* 日付・開始時刻・終了時刻を水平方向に並べる（768px以下） */
   .form-row.three-col.date-time-row {
     display: grid !important;
@@ -3647,12 +3703,12 @@ body.dark-mode .modal-footer {
     gap: 8px;
     margin-bottom: 8px;
   }
-  
+
   .form-row.three-col.date-time-row .date-time-group {
     min-width: 0;
     width: 100%;
   }
-  
+
   /* パネル内では別行に */
   .side-panel-content .report-header-section .form-row.three-col.date-time-row {
     display: flex !important;
@@ -3660,80 +3716,81 @@ body.dark-mode .modal-footer {
     grid-template-columns: none !important;
     gap: 12px !important;
   }
-  
+
   .side-panel-content .report-header-section .form-row.three-col.date-time-row .date-time-group {
     width: 100% !important;
     flex: 1 1 auto !important;
     max-width: 100% !important;
   }
-  
+
   .form-row.two-col {
     gap: 12px;
   }
-  
+
   .form-row.three-col.date-time-row {
     gap: 8px;
   }
-  
+
   .date-time-label {
     font-size: 0.75rem;
-    margin-bottom: 2px; /* ラベルとプレースホルダーの間隔を狭める */
+    margin-bottom: 2px;
+    /* ラベルとプレースホルダーの間隔を狭める */
   }
-  
+
   .form-row.three-col-inline {
     gap: 8px;
   }
-  
+
   .form-row.three-col-inline .date-time-group {
     gap: 4px;
     padding-right: 10px;
   }
-  
+
   .date-time-label {
     font-size: 0.8rem;
     min-width: 45px;
   }
-  
+
   .date-time-input {
     font-size: 0.85rem;
     padding: 9px 10px;
   }
-  
+
   .date-time-icon {
     font-size: 0.8rem;
   }
-  
+
   .form-input,
   .form-select {
     padding: 9px 12px;
     font-size: 0.9rem;
   }
-  
+
   .image-stock-section {
     padding: 14px;
   }
-  
+
   .section-card {
     margin: 10px 12px;
   }
-  
+
   .btn-add {
     padding: 11px 14px;
   }
-  
+
   .add-buttons-footer {
     padding: 14px;
   }
-  
+
   .submit-section {
     padding: 14px;
   }
-  
+
   .modal-content {
     width: 90vw;
     max-width: 600px;
   }
-  
+
   .confirm-dialog {
     width: 85vw;
     max-width: 400px;
@@ -3745,15 +3802,15 @@ body.dark-mode .modal-footer {
   .report-header-section {
     padding: 14px 16px;
   }
-  
+
   .form-row.two-col {
     gap: 12px;
   }
-  
+
   .section-card {
     margin: 8px 0px;
   }
-  
+
   .modal-content {
     max-width: 700px;
   }
@@ -3761,15 +3818,17 @@ body.dark-mode .modal-footer {
 
 /* タッチデバイス向けの最適化 */
 @media (hover: none) and (pointer: coarse) {
+
   /* タッチデバイスでのホバー効果を無効化 */
   .image-stock-item:hover {
     transform: none;
   }
-  
+
   .image-stock-item-remove {
-    opacity: 1; /* タッチデバイスでは常に表示 */
+    opacity: 1;
+    /* タッチデバイスでは常に表示 */
   }
-  
+
   /* タップフィードバック */
   .btn-add:active,
   .btn-submit:active,
@@ -3778,7 +3837,7 @@ body.dark-mode .modal-footer {
     transform: scale(0.95);
     transition: transform 0.1s;
   }
-  
+
   /* タッチターゲットの最小サイズ確保 */
   .dropdown-arrow-btn,
   .section-delete {
@@ -3788,7 +3847,7 @@ body.dark-mode .modal-footer {
     align-items: center;
     justify-content: center;
   }
-  
+
   /* 画像削除ボタンのサイズを適切に調整 */
   .image-thumb-remove,
   .image-stock-item-remove {
@@ -3798,7 +3857,7 @@ body.dark-mode .modal-footer {
     min-height: 18px;
     font-size: 0.6rem;
   }
-  
+
   /* スクロールの改善 */
   .tab-content,
   .modal-body,
@@ -3809,7 +3868,9 @@ body.dark-mode .modal-footer {
 }
 
 /* 高解像度ディスプレイ対応 */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+
   .image-thumb img,
   .image-stock-item img {
     image-rendering: -webkit-optimize-contrast;
@@ -3828,24 +3889,33 @@ html {
 
 /* プレビューモーダル */
 .modal-overlay.preview-modal {
-  display: none !important; /* プレビューモーダルはデフォルトで非表示 */
-  background: rgba(255, 255, 255, 0.98) !important; /* 背景をほぼ白に */
-  backdrop-filter: blur(2px) !important; /* 軽いブラー効果 */
-  align-items: center !important; /* 中央配置 */
-  justify-content: center !important; /* 中央配置 */
+  display: none !important;
+  /* プレビューモーダルはデフォルトで非表示 */
+  background: rgba(255, 255, 255, 0.98) !important;
+  /* 背景をほぼ白に */
+  backdrop-filter: blur(2px) !important;
+  /* 軽いブラー効果 */
+  align-items: center !important;
+  /* 中央配置 */
+  justify-content: center !important;
+  /* 中央配置 */
 }
 
 .modal-overlay.preview-modal.show {
-  display: flex !important; /* showクラスが付いたときのみ表示 */
+  display: flex !important;
+  /* showクラスが付いたときのみ表示 */
 }
 
 .modal-overlay.preview-modal .modal-content {
   max-width: 90vw;
   max-height: 90vh;
   width: 100%;
-  background: white !important; /* モーダルコンテンツの背景も白に */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important; /* 軽い影で区別 */
-  border-radius: 0 !important; /* 角丸を削除 */
+  background: white !important;
+  /* モーダルコンテンツの背景も白に */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+  /* 軽い影で区別 */
+  border-radius: 0 !important;
+  /* 角丸を削除 */
 }
 
 .preview-body {
@@ -3872,7 +3942,7 @@ html {
   font-weight: 600;
   color: #111827;
   margin-bottom: 8px;
-  }
+}
 
 .preview-store {
   font-size: 1rem;
@@ -3993,4 +4063,3 @@ html {
 }
 
 /* 送信ボタンセクション */
-

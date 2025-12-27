@@ -3059,6 +3059,11 @@ def get_reports(event, headers):
         if status_filter:
             filter_expressions.append(Attr('status').eq(status_filter))
         
+        # スケジュールIDフィルター
+        schedule_id_filter = query_params.get('schedule_id')
+        if schedule_id_filter:
+            filter_expressions.append(Attr('schedule_id').eq(schedule_id_filter))
+        
         # 清掃員の場合は自分のレポートのみ
         if not is_admin and user_uid:
             filter_expressions.append(Attr('staff_id').eq(user_uid))

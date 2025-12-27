@@ -1,5 +1,5 @@
 const API_BASE = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
-const REPORT_API = 'https://2z0ui5xfxb.execute-api.ap-northeast-1.amazonaws.com/prod';
+const REPORT_API = 'https://51bhoxkbxd.execute-api.ap-northeast-1.amazonaws.com/prod';
 let currentUser = null;
 let attendanceRecords = {};
 let currentCalendarDate = new Date();
@@ -2227,6 +2227,54 @@ async function refreshCognitoToken() {
 }
 
 // Cognito ID Token取得（従業員認証用）
+// トークンの有効期限をチェック
+function isTokenExpired(token) {
+  if (!token) return true;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const exp = payload.exp * 1000;
+    return Date.now() >= exp;
+  } catch (e) {
+    return true;
+  }
+}
+
+// Cognitoトークンをリフレッシュ
+async function refreshCognitoToken() {
+  if (typeof AmazonCognitoIdentity === 'undefined') return null;
+
+  try {
+    const config = window.CognitoConfig || {};
+    if (!config.userPoolId || !config.clientId) return null;
+
+    const poolData = {
+      UserPoolId: config.userPoolId,
+      ClientId: config.clientId
+    };
+    const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+    const cognitoUser = userPool.getCurrentUser();
+
+    if (!cognitoUser) return null;
+
+    return new Promise((resolve) => {
+      cognitoUser.getSession((err, session) => {
+        if (err || !session || !session.isValid()) {
+          resolve(null);
+          return;
+        }
+
+        // セッションが有効なら新しいトークンを取得
+        const newToken = session.getIdToken().getJwtToken();
+        localStorage.setItem('cognito_id_token', newToken);
+        resolve(newToken);
+      });
+    });
+  } catch (e) {
+    console.warn('Error refreshing token:', e);
+    return null;
+  }
+}
+
 async function getCognitoIdToken() {
   try {
     // 1. localStorageから直接取得

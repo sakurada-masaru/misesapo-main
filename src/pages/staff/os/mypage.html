@@ -51,7 +51,7 @@
       };
 
       if (!isOsUser()) {
-        window.location.replace('/staff/os/mypage');
+        window.location.replace('/staff/signin.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
       }
     })();
   </script>
