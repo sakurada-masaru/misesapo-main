@@ -4762,15 +4762,19 @@ async function loadOSNextSchedule(user) {
         oldAttendanceGrid.style.display = 'none';
         const oldAttendanceHeader = document.querySelector('#attendance .container-header');
         if (oldAttendanceHeader) {
-          const infoBox = document.createElement('div');
-          infoBox.style.padding = '8px 12px';
-          infoBox.style.background = '#fef2f2';
-          infoBox.style.color = '#991b1b';
-          infoBox.style.fontSize = '0.75rem';
-          infoBox.style.borderRadius = '6px';
-          infoBox.style.marginTop = '8px';
-          infoBox.innerHTML = '<i class="fas fa-info-circle"></i> OS課は案件ごとの「作業開始」ボタンを使用してください。';
-          oldAttendanceGrid.parentElement.appendChild(infoBox);
+          // 既にメッセージが表示されているか確認
+          if (!document.getElementById('os-attendance-warning')) {
+            const infoBox = document.createElement('div');
+            infoBox.id = 'os-attendance-warning';
+            infoBox.style.padding = '8px 12px';
+            infoBox.style.background = '#fef2f2';
+            infoBox.style.color = '#991b1b';
+            infoBox.style.fontSize = '0.75rem';
+            infoBox.style.borderRadius = '6px';
+            infoBox.style.marginTop = '8px';
+            infoBox.innerHTML = '<i class="fas fa-info-circle"></i> OS課は案件ごとの「作業開始」ボタンを使用してください。';
+            oldAttendanceGrid.parentElement.appendChild(infoBox);
+          }
         }
       }
     } else {
